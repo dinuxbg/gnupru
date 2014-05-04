@@ -31,7 +31,7 @@
 
 # Use the same build options for each core.
 CROSS_COMPILE ?= pru-
-CFLAGS += -g -fomit-frame-pointer -nostdlib -Os
+CFLAGS += -g -Os
 CFLAGS += -Wall -Wextra
 LDFLAGS += -nostdlib -lgcc
 

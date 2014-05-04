@@ -1,4 +1,4 @@
-From 59da534f55d6d096a1e0e8107848b89124b0cb1f Mon Sep 17 00:00:00 2001
+From af89c58451dcc98c27764af258b81f909c6086cf Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Mon, 30 Dec 2013 23:47:32 +0200
 Subject: [PATCH] Initial TI PRU GCC port
@@ -7,31 +7,32 @@ Although not very well tested, core functionality should be there.
 
 Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---
- .gitignore                         |    2 +
- config.sub                         |    2 +
- configure                          |    4 +
- configure.ac                       |    4 +
- gcc/common/config/pru/pru-common.c |   47 +
- gcc/config.gcc                     |    9 +
- gcc/config/pru/constraints.md      |   59 ++
- gcc/config/pru/predicates.md       |   97 +++
- gcc/config/pru/pru-protos.h        |   59 ++
- gcc/config/pru/pru.c               | 1667 ++++++++++++++++++++++++++++++++++++
- gcc/config/pru/pru.h               |  396 +++++++++
- gcc/config/pru/pru.md              |  533 ++++++++++++
- gcc/config/pru/pru.opt             |   20 +
- gcc/config/pru/t-pru               |   22 +
- libgcc/config.host                 |    6 +
- libgcc/config/pru/lib2bitcountHI.c |   43 +
- libgcc/config/pru/lib2divHI.c      |   42 +
- libgcc/config/pru/lib2divQI.c      |   43 +
- libgcc/config/pru/lib2divSI.c      |   42 +
- libgcc/config/pru/lib2mul.c        |   58 ++
- libgcc/config/pru/lib2shift.c      |   48 ++
- libgcc/config/pru/pru-divmod.h     |  117 +++
- libgcc/config/pru/pru-mul.h        |   42 +
- libgcc/config/pru/t-pru            |   38 +
- 24 files changed, 3400 insertions(+)
+ .gitignore                            |    3 +
+ config.sub                            |    2 +
+ configure                             |    4 +
+ configure.ac                          |    4 +
+ gcc/common/config/pru/pru-common.c    |   44 +
+ gcc/config.gcc                        |    8 +
+ gcc/config/pru/constraints.md         |   64 ++
+ gcc/config/pru/predicates.md          |   98 ++
+ gcc/config/pru/pru-protos.h           |   58 ++
+ gcc/config/pru/pru.c                  | 1577 +++++++++++++++++++++++++++++++++
+ gcc/config/pru/pru.h                  |  388 ++++++++
+ gcc/config/pru/pru.md                 |  441 +++++++++
+ gcc/config/pru/pru.opt                |   20 +
+ gcc/config/pru/t-pru                  |   22 +
+ gcc/testsuite/lib/target-supports.exp |    4 +-
+ libgcc/config.host                    |    6 +
+ libgcc/config/pru/lib2bitcountHI.c    |   43 +
+ libgcc/config/pru/lib2divHI.c         |   42 +
+ libgcc/config/pru/lib2divQI.c         |   43 +
+ libgcc/config/pru/lib2divSI.c         |   42 +
+ libgcc/config/pru/lib2mul.c           |   58 ++
+ libgcc/config/pru/lib2shift.c         |   48 +
+ libgcc/config/pru/pru-divmod.h        |  117 +++
+ libgcc/config/pru/pru-mul.h           |   42 +
+ libgcc/config/pru/t-pru               |   38 +
+ 25 files changed, 3215 insertions(+), 1 deletion(-)
  create mode 100644 gcc/common/config/pru/pru-common.c
  create mode 100644 gcc/config/pru/constraints.md
  create mode 100644 gcc/config/pru/predicates.md
@@ -52,28 +53,29 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 libgcc/config/pru/t-pru
 
 diff --git a/.gitignore b/.gitignore
-index bda55a3..b8d521a 100644
+index bda55a3..7e4410e 100644
 --- a/.gitignore
 +++ b/.gitignore
-@@ -40,3 +40,5 @@ core
+@@ -40,3 +40,6 @@ core
  !core/
  
  lost+found
 +
 +cscope.*
++.*.swp
 diff --git a/config.sub b/config.sub
-index 61cb4bc..614a59d 100755
+index d654d03..28338ca 100755
 --- a/config.sub
 +++ b/config.sub
-@@ -300,6 +300,7 @@ case $basic_machine in
- 	| or1k | or32 \
+@@ -301,6 +301,7 @@ case $basic_machine in
+ 	| open8 | or1k | or1knd | or32 \
  	| pdp10 | pdp11 | pj | pjl \
  	| powerpc | powerpc64 | powerpc64le | powerpcle \
 +	| pru \
  	| pyramid \
  	| rl78 | rx \
  	| score \
-@@ -418,6 +419,7 @@ case $basic_machine in
+@@ -422,6 +423,7 @@ case $basic_machine in
  	| orion-* \
  	| pdp10-* | pdp11-* | pj-* | pjl-* | pn-* | power-* \
  	| powerpc-* | powerpc64-* | powerpc64le-* | powerpcle-* \
@@ -113,10 +115,10 @@ index 3c7b1ff..36367c5 100644
      # doesn't fault for those - instead, it gives a build-time error
 diff --git a/gcc/common/config/pru/pru-common.c b/gcc/common/config/pru/pru-common.c
 new file mode 100644
-index 0000000..7b22ea0
+index 0000000..46e73bd
 --- /dev/null
 +++ b/gcc/common/config/pru/pru-common.c
-@@ -0,0 +1,47 @@
+@@ -0,0 +1,44 @@
 +/* Common hooks for TI PRU
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +
@@ -153,50 +155,46 @@ index 0000000..7b22ea0
 +    { OPT_LEVELS_NONE, 0, NULL, 0 }
 +  };
 +
-+#undef TARGET_DEFAULT_TARGET_FLAGS
-+#define TARGET_DEFAULT_TARGET_FLAGS TARGET_DEFAULT
-+
 +#undef TARGET_OPTION_OPTIMIZATION_TABLE
 +#define TARGET_OPTION_OPTIMIZATION_TABLE pru_option_optimization_table
 +
 +/* Disable exceptions for now */
 +#undef TARGET_EXCEPT_UNWIND_INFO
-+#define TARGET_EXCEPT_UNWIND_INFO UI_NONE
++#define TARGET_EXCEPT_UNWIND_INFO sjlj_except_unwind_info
 +
 +struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index 3c55c88..5f3bba8 100644
+index 81205ff..36675c0 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -447,6 +447,10 @@ powerpc*-*-*)
+@@ -446,6 +446,9 @@ powerpc*-*-*)
  	esac
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
 +pru-*-*)
 +	cpu_type=pru
-+	extra_options="${extra_options} g.opt"
 +	;;
  rs6000*-*-*)
  	need_64bit_hwint=yes
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
-@@ -2368,6 +2372,11 @@ powerpcle-*-eabi*)
+@@ -2344,6 +2347,11 @@ powerpcle-*-eabi*)
  	extra_options="${extra_options} rs6000/sysv4.opt"
  	use_gcc_stdint=wrap
  	;;
 +pru*-*-*)
 +	tm_file="dbxelf.h elfos.h newlib-stdint.h ${tm_file}"
-+	target_has_targetm_common=no
 +	tmake_file="${tmake_file} pru/t-pru"
++	use_gcc_stdint=wrap
 +	;;
  rs6000-ibm-aix4.[3456789]* | powerpc-ibm-aix4.[3456789]*)
  	tm_file="rs6000/biarch64.h ${tm_file} rs6000/aix.h rs6000/aix43.h rs6000/xcoff.h rs6000/aix-stdint.h"
  	tmake_file="rs6000/t-aix43 t-slibgcc"
 diff --git a/gcc/config/pru/constraints.md b/gcc/config/pru/constraints.md
 new file mode 100644
-index 0000000..e772d11
+index 0000000..0f86c98
 --- /dev/null
 +++ b/gcc/config/pru/constraints.md
-@@ -0,0 +1,59 @@
+@@ -0,0 +1,64 @@
 +;; Constraint definitions for TI PRU.
 +;; Copyright (C) 2014 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -252,16 +250,21 @@ index 0000000..e772d11
 +  (and (match_code "const_int")
 +       (match_test "ival >= 0 && ival <= 31")))
 +
++(define_constraint "M"
++  "An unsigned 8-bit constant."
++  (and (match_code "const_int")
++       (match_test "UBYTE_INT (-ival)")))
++
 +(define_constraint "T"
 +  "A text segment (program memory) constant label."
 +  (match_test "text_segment_operand (op, VOIDmode)"))
 +
 diff --git a/gcc/config/pru/predicates.md b/gcc/config/pru/predicates.md
 new file mode 100644
-index 0000000..fb28ac8
+index 0000000..3c98d3e
 --- /dev/null
 +++ b/gcc/config/pru/predicates.md
-@@ -0,0 +1,97 @@
+@@ -0,0 +1,98 @@
 +;; Predicate definitions for TI PRU.
 +;; Copyright (C) 2014 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -339,7 +342,7 @@ index 0000000..fb28ac8
 +;; Return true if OP is a text segment reference.
 +;; This is needed for program memory address expressions. Stolen from AVR.
 +(define_predicate "text_segment_operand"
-+  (match_code "code_label,label_ref,symbol_ref,plus,const")
++  (match_code "code_label,label_ref,symbol_ref,plus,minus,const")
 +{
 +  switch (GET_CODE (op))
 +    {
@@ -350,6 +353,7 @@ index 0000000..fb28ac8
 +    case SYMBOL_REF :
 +      return SYMBOL_REF_FUNCTION_P (op);
 +    case PLUS :
++    case MINUS :
 +      /* Assume canonical format of symbol + constant.
 +	 Fall through.  */
 +    case CONST :
@@ -361,10 +365,10 @@ index 0000000..fb28ac8
 +
 diff --git a/gcc/config/pru/pru-protos.h b/gcc/config/pru/pru-protos.h
 new file mode 100644
-index 0000000..b24479b
+index 0000000..091665c
 --- /dev/null
 +++ b/gcc/config/pru/pru-protos.h
-@@ -0,0 +1,59 @@
+@@ -0,0 +1,58 @@
 +/* Subroutine declarations for TI PRU target support.
 +   Copyright (C) 2012-2014 Free Software Foundation, Inc.
 +   Contributed by Jonah Graham (jgraham@altera.com).
@@ -400,7 +404,6 @@ index 0000000..b24479b
 +extern void pru_adjust_call_address (rtx *);
 +
 +extern rtx pru_get_return_address (int);
-+extern void pru_set_return_address (rtx, rtx);
 +
 +extern const char * pru_output_sign_extend (rtx *, bool);
 +extern const char * pru_output_signed_cbranch (rtx *, bool);
@@ -426,10 +429,10 @@ index 0000000..b24479b
 +#endif /* GCC_PRU_PROTOS_H */
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
 new file mode 100644
-index 0000000..64d605e
+index 0000000..3bf4ab3
 --- /dev/null
 +++ b/gcc/config/pru/pru.c
-@@ -0,0 +1,1667 @@
+@@ -0,0 +1,1577 @@
 +/* Target machine subroutines for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -501,8 +504,10 @@ index 0000000..64d605e
 +  int args_size;
 +  /* Number of bytes needed to store registers in frame.  */
 +  int save_reg_size;
-+   /* Offset from new stack pointer to store registers.  */
++  /* Offset from new stack pointer to store registers.  */
 +  int save_regs_offset;
++  /* Offset from save_regs_offset to store frame pointer register.  */
++  int fp_save_offset;
 +  /* != 0 if frame layout already calculated.  */
 +  int initialized;
 +};
@@ -543,18 +548,15 @@ index 0000000..64d605e
 +	save_reg_size += 4;
 +      }
 +
-+  /* If we call eh_return, we need to save the EH data registers.  */
-+  if (crtl->calls_eh_return)
++  cfun->machine->fp_save_offset = 0;
++  if (save_mask & (1 << HARD_FRAME_POINTER_REGNUM))
 +    {
-+      unsigned i;
-+      unsigned r;
-+      
-+      for (i = 0; (r = EH_RETURN_DATA_REGNO (i)) != INVALID_REGNUM; i++)
-+	if (!(save_mask & (1 << r)))
-+	  {
-+	    save_mask |= 1 << r;
-+	    save_reg_size += 4;
-+	  }
++      int fp_save_offset = 0;
++      for (regno = 0; regno < HARD_FRAME_POINTER_REGNUM; regno++)
++	if (save_mask & (1 << regno))
++	  fp_save_offset += 4;
++
++      cfun->machine->fp_save_offset = fp_save_offset;
 +    }
 +
 +  save_reg_size = PRU_STACK_ALIGN (save_reg_size);
@@ -597,16 +599,54 @@ index 0000000..64d605e
 +  RTX_FRAME_RELATED_P (insn) = 1;
 +}
 +
-+/* Temp regno used inside prologue/epilogue.  */
-+#define TEMP_REG_NUM 8
++/* Add a const_int to the stack pointer register. */
++static rtx
++pru_add_to_sp (int addendum, const enum reg_note kind)
++{
++  /* Temporary regno used inside prologue/epilogue. */
++  const int temp_reg_num = 6;
++  rtx insn;
++
++  rtx sp_adjust
++    = gen_rtx_SET (VOIDmode, stack_pointer_rtx,
++		   plus_constant (Pmode, stack_pointer_rtx, addendum));
++  if (UBYTE_INT (addendum) || UBYTE_INT (-addendum))
++    insn = emit_insn (sp_adjust);
++  else
++    {
++      /* Help the compiler to cope with an arbitrary integer constant.
++	 Reload has finished so we can't expect the compiler to
++	 auto-allocate a temporary register. But we know that call-saved
++	 registers are not live yet, so we utilize them. */
++      rtx tmp = gen_rtx_REG (Pmode, temp_reg_num);
++      if (addendum < 0)
++	{
++	  emit_move_insn (tmp, gen_int_mode (-addendum, Pmode));
++	  insn = emit_insn (gen_sub2_insn (stack_pointer_rtx, tmp));
++	}
++      else
++	{
++	  emit_move_insn (tmp, gen_int_mode (addendum, Pmode));
++	  insn = emit_insn (gen_add2_insn (stack_pointer_rtx, tmp));
++	}
++    }
++
++  /* Attach the sp_adjust as a note indicating what happened.  */
++  if (kind != REG_NOTE_MAX)
++    add_reg_note (insn, kind, sp_adjust);
++
++  RTX_FRAME_RELATED_P (insn) = 1;
++
++  return insn;
++}
 +
 +void
 +pru_expand_prologue (void)
 +{
-+  unsigned int regno;
++  int regno;
 +  int total_frame_size, save_offset;
-+  int sp_offset; /* offset from base_reg to final stack value.  */
-+  int fp_offset; /* offset from base_reg to final fp value.  */
++  int sp_offset;      /* offset from base_reg to final stack value.  */
++  int save_regs_base; /* offset from base_reg to register save area.  */
 +  rtx insn;
 +
 +  total_frame_size = pru_compute_frame_layout ();
@@ -618,30 +658,27 @@ index 0000000..64d605e
 +  if (!UBYTE_INT (total_frame_size))
 +    {
 +      /* We need an intermediary point, this will point at the spill block.  */
-+      insn = emit_insn
-+	(gen_add2_insn (stack_pointer_rtx,
-+			gen_int_mode (cfun->machine->save_regs_offset
-+				      - total_frame_size, Pmode)));
-+      RTX_FRAME_RELATED_P (insn) = 1;
-+
-+      fp_offset = 0;
++      insn = pru_add_to_sp (cfun->machine->save_regs_offset
++			     - total_frame_size,
++			     REG_NOTE_MAX);
++      save_regs_base = 0;
 +      sp_offset = -cfun->machine->save_regs_offset;
 +    }
 +  else if (total_frame_size)
 +    {
-+      insn = emit_insn (gen_add2_insn (stack_pointer_rtx,
-+				       gen_int_mode (-total_frame_size,
++      insn = emit_insn (gen_sub2_insn (stack_pointer_rtx,
++				       gen_int_mode (total_frame_size,
 +						     Pmode)));
 +      RTX_FRAME_RELATED_P (insn) = 1;
-+      fp_offset = cfun->machine->save_regs_offset;
++      save_regs_base = cfun->machine->save_regs_offset;
 +      sp_offset = 0;
 +    }
 +  else
-+    fp_offset = sp_offset = 0;
++    save_regs_base = sp_offset = 0;
 +
-+  save_offset = fp_offset + cfun->machine->save_reg_size;
++  save_offset = save_regs_base + cfun->machine->save_reg_size;
 +
-+  for (regno = LAST_GP_REG; regno > 0; regno--)
++  for (regno = LAST_GP_REG; regno >= 0; regno--)
 +    if (cfun->machine->save_mask & (1 << regno))
 +      {
 +	save_offset -= 4;
@@ -650,29 +687,15 @@ index 0000000..64d605e
 +
 +  if (frame_pointer_needed)
 +    {
++      int fp_save_offset = save_regs_base + cfun->machine->fp_save_offset;
 +      insn = emit_insn (gen_add3_insn (hard_frame_pointer_rtx,
 +				       stack_pointer_rtx,
-+				       gen_int_mode (fp_offset, Pmode)));
++				       gen_int_mode (fp_save_offset, Pmode)));
 +      RTX_FRAME_RELATED_P (insn) = 1;
 +    }
 +
 +  if (sp_offset)
-+    {
-+      rtx sp_adjust
-+	= gen_rtx_SET (VOIDmode, stack_pointer_rtx,
-+		       plus_constant (Pmode, stack_pointer_rtx, sp_offset));
-+      if (UBYTE_INT (sp_offset))
-+	insn = emit_insn (sp_adjust);
-+      else
-+	{
-+	  rtx tmp = gen_rtx_REG (Pmode, TEMP_REG_NUM);
-+	  emit_move_insn (tmp, gen_int_mode (sp_offset, Pmode));
-+	  insn = emit_insn (gen_add2_insn (stack_pointer_rtx, tmp));
-+	  /* Attach the sp_adjust as a note indicating what happened.  */
-+	  add_reg_note (insn, REG_FRAME_RELATED_EXPR, sp_adjust);
-+	}
-+      RTX_FRAME_RELATED_P (insn) = 1;
-+    }
++      insn = pru_add_to_sp (sp_offset, REG_FRAME_RELATED_EXPR);
 +
 +  /* If we are profiling, make sure no instructions are scheduled before
 +     the call to mcount.  */
@@ -686,7 +709,7 @@ index 0000000..64d605e
 +  rtx insn, cfa_adj;
 +  int total_frame_size;
 +  int sp_adjust, save_offset;
-+  unsigned int regno;
++  int regno;
 +
 +  if (!sibcall_p && pru_can_use_return_insn ())
 +    {
@@ -700,7 +723,9 @@ index 0000000..64d605e
 +  if (frame_pointer_needed)
 +    {
 +      /* Recover the stack pointer.  */
-+      insn = emit_move_insn (stack_pointer_rtx, hard_frame_pointer_rtx);
++      insn = emit_insn (gen_add3_insn
++			(stack_pointer_rtx, hard_frame_pointer_rtx,
++			 gen_int_mode (-cfun->machine->fp_save_offset, Pmode)));
 +      cfa_adj = plus_constant (Pmode, stack_pointer_rtx,
 +			       (total_frame_size
 +				- cfun->machine->save_regs_offset));
@@ -712,15 +737,8 @@ index 0000000..64d605e
 +    }
 +  else if (!UBYTE_INT (total_frame_size))
 +    {
-+      rtx tmp = gen_rtx_REG (Pmode, TEMP_REG_NUM);
-+      emit_move_insn (tmp, gen_int_mode (cfun->machine->save_regs_offset,
-+					 Pmode));
-+      insn = emit_insn (gen_add2_insn (stack_pointer_rtx, tmp));
-+      cfa_adj = gen_rtx_SET (VOIDmode, stack_pointer_rtx,
-+			     plus_constant (Pmode, stack_pointer_rtx,
-+					    cfun->machine->save_regs_offset));
-+      add_reg_note (insn, REG_CFA_ADJUST_CFA, cfa_adj);
-+      RTX_FRAME_RELATED_P (insn) = 1;
++      insn = pru_add_to_sp (cfun->machine->save_regs_offset,
++			    REG_CFA_ADJUST_CFA);
 +      save_offset = 0;
 +      sp_adjust = total_frame_size - cfun->machine->save_regs_offset;
 +    }
@@ -732,7 +750,7 @@ index 0000000..64d605e
 +  
 +  save_offset += cfun->machine->save_reg_size;
 +
-+  for (regno = LAST_GP_REG; regno > 0; regno--)
++  for (regno = LAST_GP_REG; regno >= 0; regno--)
 +    if (cfun->machine->save_mask & (1 << regno))
 +      {
 +	save_offset -= 4;
@@ -740,19 +758,7 @@ index 0000000..64d605e
 +      }
 +
 +  if (sp_adjust)
-+    {
-+      insn = emit_insn (gen_add2_insn (stack_pointer_rtx,
-+				       gen_int_mode (sp_adjust, Pmode)));
-+      cfa_adj = gen_rtx_SET (VOIDmode, stack_pointer_rtx,
-+			     plus_constant (Pmode, stack_pointer_rtx,
-+					    sp_adjust));
-+      add_reg_note (insn, REG_CFA_ADJUST_CFA, cfa_adj);
-+      RTX_FRAME_RELATED_P (insn) = 1;
-+    }
-+
-+  /* Add in the __builtin_eh_return stack adjustment.  */
-+  if (crtl->calls_eh_return)
-+    emit_insn (gen_add2_insn (stack_pointer_rtx, EH_RETURN_STACKADJ_RTX));
++      insn = pru_add_to_sp (sp_adjust, REG_CFA_ADJUST_CFA);
 +
 +  if (!sibcall_p)
 +    emit_jump_insn (gen_simple_return ());
@@ -767,41 +773,6 @@ index 0000000..64d605e
 +    return const0_rtx;
 +
 +  return get_hard_reg_initial_val (Pmode, RA_REGNO);
-+}
-+
-+/* Emit code to change the current function's return address to
-+   ADDRESS.  SCRATCH is available as a scratch register, if needed.
-+   ADDRESS and SCRATCH are both word-mode GPRs.  */
-+void
-+pru_set_return_address (rtx address, rtx scratch)
-+{
-+  pru_compute_frame_layout ();
-+  if (cfun->machine->save_mask & (1 << RA_REGNO))
-+    {
-+      unsigned offset = cfun->machine->save_reg_size - 4;
-+      rtx base;
-+      
-+      if (frame_pointer_needed)
-+	base = hard_frame_pointer_rtx;
-+      else
-+	{
-+	  base = stack_pointer_rtx;
-+	  offset += cfun->machine->save_regs_offset;
-+
-+	  if (!UBYTE_INT (offset))
-+	    {
-+	      emit_move_insn (scratch, gen_int_mode (offset, Pmode));
-+	      emit_insn (gen_add2_insn (scratch, base));
-+	      base = scratch;
-+	      offset = 0;
-+	    }
-+	}
-+      if (offset)
-+	base = plus_constant (Pmode, base, offset);
-+      emit_move_insn (gen_rtx_MEM (Pmode, base), address);
-+    }
-+  else
-+    emit_move_insn (gen_rtx_REG (Pmode, RA_REGNO), address);
 +}
 +
 +/* Implement FUNCTION_PROFILER macro.  */
@@ -892,7 +863,8 @@ index 0000000..64d605e
 +    /* If we are asked for the frame pointer offset, then adjust OFFSET
 +       by the offset from the frame pointer to the stack pointer.  */
 +  if (to == HARD_FRAME_POINTER_REGNUM)
-+    offset -= cfun->machine->save_regs_offset;
++    offset -= (cfun->machine->save_regs_offset
++	       + cfun->machine->fp_save_offset);
 +
 +  return offset;
 +}
@@ -951,14 +923,9 @@ index 0000000..64d605e
 +  switch (code)
 +    {
 +      case CONST_INT:
-+        if (INTVAL (x) == 0)
++        if (UBYTE_INT (INTVAL (x)))
 +          {
-+            *total = COSTS_N_INSNS (0);
-+            return true;
-+          }
-+        else if (UBYTE_INT (INTVAL (x)))
-+          {
-+            *total = COSTS_N_INSNS (2);
++            *total = COSTS_N_INSNS (1);
 +            return true;
 +          }
 +        else
@@ -976,21 +943,9 @@ index 0000000..64d605e
 +          return true;
 +        }
 +
-+      case AND:
-+	{
-+	  /* Recognize 'nor' insn pattern.  */
-+	  if (GET_CODE (XEXP (x, 0)) == NOT
-+	      && GET_CODE (XEXP (x, 1)) == NOT)
-+	    {
-+	      *total = COSTS_N_INSNS (1);
-+	      return true;
-+	    }
-+	  return false;
-+	}
-+
 +      case MULT:
 +        {
-+          *total = COSTS_N_INSNS (1);
++          *total = COSTS_N_INSNS (8);
 +          return false;
 +        }
 +      case SIGN_EXTEND:
@@ -1343,49 +1298,6 @@ index 0000000..64d605e
 +  return flags;
 +}
 +
-+
-+/* Implement TARGET_LEGITIMIZE_ADDRESS.  */
-+static rtx
-+pru_legitimize_address (rtx x, rtx oldx ATTRIBUTE_UNUSED,
-+			  enum machine_mode mode ATTRIBUTE_UNUSED)
-+{
-+  if (CONSTANT_P (x))
-+    return x;
-+
-+  /* TODO - should we remove this function entirely? */
-+
-+  /* For the TLS LE (Local Exec) model, the compiler may try to
-+     combine constant offsets with unspec relocs, creating address RTXs
-+     looking like this:
-+     (plus:SI (reg:SI 23 r23)
-+              (const:SI
-+                (plus:SI
-+                  (unspec:SI [(symbol_ref:SI ("var"))] UNSPEC_ADD_TLS_LE)
-+                  (const_int 48 [0x30]))))
-+
-+     This usually happens when 'var' is a thread-local struct variable,
-+     and access of a field in var causes the addend.
-+
-+     We typically want this combining, so transform the above into this
-+     form, which is allowed:
-+     (plus:SI (reg:SI 23 r23)
-+              (const:SI
-+                (unspec:SI
-+                  [(const:SI
-+                     (plus:SI (symbol_ref:SI ("var"))
-+                              (const_int 48 [0x30])))] UNSPEC_ADD_TLS_LE)))
-+
-+     Which will be output as '%tls_le(var+48)(r23)' in assembly.  */
-+  if (GET_CODE (x) == PLUS
-+      && GET_CODE (XEXP (x, 0)) == REG
-+      && GET_CODE (XEXP (x, 1)) == CONST)
-+    {
-+      rtx unspec, offset = XEXP (x, 0);
-+      split_const (XEXP (x, 1), &unspec, &offset);
-+    }
-+
-+  return x;
-+}
 +
 +/* Main expander function for RTL moves.  */
 +int
@@ -1802,6 +1714,10 @@ index 0000000..64d605e
 +  rtx ctx_reg = force_reg (Pmode, cxt);
 +  rtx addr = force_reg (Pmode, XEXP (m_tramp, 0));
 +
++  /* Architectural limitation: PMEM cannot be accessed. So until
++     trampolines are fixed, bail early and warn user.
++     Don't forget to also adjust TRAMPOLINE_SIZE accordingly. */
++  sorry("no nested functions yet for pru");
 +  emit_library_call (gen_rtx_SYMBOL_REF (Pmode, "__trampoline_setup"),
 +		     LCT_NORMAL, VOIDmode, 3, addr, Pmode, fnaddr, Pmode,
 +		     ctx_reg, Pmode);
@@ -2067,9 +1983,6 @@ index 0000000..64d605e
 +#undef TARGET_MUST_PASS_IN_STACK
 +#define TARGET_MUST_PASS_IN_STACK must_pass_in_stack_var_size
 +
-+#undef TARGET_LEGITIMIZE_ADDRESS
-+#define TARGET_LEGITIMIZE_ADDRESS pru_legitimize_address
-+
 +#undef TARGET_LEGITIMATE_ADDRESS_P
 +#define TARGET_LEGITIMATE_ADDRESS_P pru_legitimate_address_p
 +
@@ -2099,10 +2012,10 @@ index 0000000..64d605e
 +#include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
 new file mode 100644
-index 0000000..4ac7f2a
+index 0000000..99a0ace
 --- /dev/null
 +++ b/gcc/config/pru/pru.h
-@@ -0,0 +1,396 @@
+@@ -0,0 +1,388 @@
 +/* Definitions of target machine for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -2132,6 +2045,8 @@ index 0000000..4ac7f2a
 +    {                                               \
 +      builtin_define_std ("__PRU__");               \
 +      builtin_define_std ("__pru__");               \
++      /* Trampolines are disabled for now. */	    \
++      builtin_define_std ("NO_TRAMPOLINES");        \
 +    }                                               \
 +  while (0)
 +
@@ -2254,8 +2169,6 @@ index 0000000..4ac7f2a
 +  ((GET_MODE_SIZE (MODE) + UNITS_PER_WORD - 1) / UNITS_PER_WORD)
 +
 +/* Tests for various kinds of constants used in the PRU port.  */
-+
-+#define UPPER16_INT(X) (((X) & 0xffff) == 0)
 +#define SHIFT_INT(X) ((X) >= 0 && (X) <= 31)
 +
 +#define UHWORD_INT(X) ((X) >= 0 && (X) < 0x10000)
@@ -2278,6 +2191,7 @@ index 0000000..4ac7f2a
 +
 +/* Stack layout.  */
 +#define STACK_GROWS_DOWNWARD
++#undef FRAME_GROWS_DOWNWARD
 +#define STARTING_FRAME_OFFSET 0
 +#define FIRST_PARM_OFFSET(FUNDECL) 0
 +
@@ -2417,7 +2331,7 @@ index 0000000..4ac7f2a
 +  do									\
 +    {									\
 +      fputs (integer_asm_op (POINTER_SIZE / BITS_PER_UNIT, TRUE), FILE); \
-+      fprintf (FILE, ".L%u\n", (unsigned) (VALUE));			\
++      fprintf (FILE, "%%pmem(.L%u)\n", (unsigned) (VALUE));		\
 +    }									\
 +  while (0)
 +
@@ -2425,7 +2339,7 @@ index 0000000..4ac7f2a
 +  do									\
 +    {									\
 +      fputs (integer_asm_op (POINTER_SIZE / BITS_PER_UNIT, TRUE), STREAM); \
-+      fprintf (STREAM, ".L%u-.L%u\n", (unsigned) (VALUE), (unsigned) (REL)); \
++      fprintf (STREAM, "%%pmem(.L%u-.L%u)\n", (unsigned) (VALUE), (unsigned) (REL)); \
 +    }									\
 +  while (0)
 +
@@ -2474,20 +2388,11 @@ index 0000000..4ac7f2a
 +  ASM_OUTPUT_SKIP((FILE), (SIZE) ? (SIZE) : 1);                         \
 +} while (0)
 +
-+/* Exception handling.  */
-+
-+/* Describe __builtin_eh_return.  */
-+#define EH_RETURN_STACKADJ_RTX gen_rtx_REG (Pmode, LAST_RETVAL_REGNO)
-+#define EH_RETURN_DATA_REGNO(N) ((N) <= (LAST_ARG_REGNO - FIRST_ARG_REGNO) \
-+				 ? (N) + FIRST_ARG_REGNO : INVALID_REGNUM)
-+
-+#define ASM_PREFERRED_EH_DATA_FORMAT(CODE, GLOBAL)	(DW_EH_PE_sdata4)
-+
 +/* Misc. parameters.  */
 +
 +#define STORE_FLAG_VALUE 1
 +#define Pmode SImode
-+#define FUNCTION_MODE QImode
++#define FUNCTION_MODE Pmode
 +
 +#define CASE_VECTOR_MODE Pmode
 +
@@ -2501,10 +2406,10 @@ index 0000000..4ac7f2a
 +#endif /* GCC_PRU_H */
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
 new file mode 100644
-index 0000000..a52d739
+index 0000000..a4df392
 --- /dev/null
 +++ b/gcc/config/pru/pru.md
-@@ -0,0 +1,533 @@
+@@ -0,0 +1,441 @@
 +;; Machine Description for TI PRU.
 +;; Copyright (C) 2014 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -2539,7 +2444,6 @@ index 0000000..a52d739
 +   (LAST_GP_REG           31)	; Last general purpose register (why not 29?)
 +
 +   ;; Target register definitions
-+   (STATIC_CHAIN_REGNUM        12)
 +   (STACK_POINTER_REGNUM       28)
 +   (HARD_FRAME_POINTER_REGNUM  29)
 +   (PC_REGNUM                  32)
@@ -2555,19 +2459,7 @@ index 0000000..a52d739
 +  UNSPECV_BLOCKAGE
 +])
 +
-+(define_c_enum "unspec" [
-+  UNSPEC_EH_RETURN
-+  UNSPEC_SYNC
-+])
-+
 +
-+;;  Instruction scheduler
-+;; TODO - this is total crap, copied from Nios2. Need to rewrite it.
-+
-+; No schedule info is currently available, using an assumption that no
-+; instruction can use the results of the previous instruction without
-+; incuring a stall.
-+
 +; length of an instruction (in bytes)
 +(define_attr "length" "" (const_int 4))
 +(define_attr "type" 
@@ -2577,42 +2469,6 @@ index 0000000..a52d739
 +(define_asm_attributes
 + [(set_attr "length" "4")
 +  (set_attr "type" "complex")])
-+
-+(define_automaton "pru")
-+(automata_option "v")
-+;(automata_option "no-minimization")
-+(automata_option "ndfa")
-+
-+(define_cpu_unit "cpu" "pru")
-+
-+(define_insn_reservation "complex" 1
-+  (eq_attr "type" "complex")
-+  "cpu")
-+
-+(define_insn_reservation "control" 1
-+  (eq_attr "type" "control")
-+  "cpu")
-+
-+(define_insn_reservation "alu" 1
-+  (eq_attr "type" "alu")
-+  "cpu")
-+
-+(define_insn_reservation "cond_alu" 1
-+  (eq_attr "type" "cond_alu")
-+  "cpu")
-+
-+(define_insn_reservation "st" 1
-+  (eq_attr "type" "st")
-+  "cpu")
-+  
-+; shifts, lds have three cycle latency
-+(define_insn_reservation "ld" 3
-+  (eq_attr "type" "ld")
-+  "cpu")
-+
-+(define_insn_reservation "shift" 3
-+  (eq_attr "type" "shift")
-+  "cpu")
 +
 +(include "predicates.md")
 +(include "constraints.md")
@@ -2683,7 +2539,7 @@ index 0000000..a52d739
 +  [(set (match_operand:SI 0 "register_operand"            "")
 +        (plus:SI (match_operand:SI 1 "register_operand"   "")
 +                 (match_operand:SI 2 "nonmemory_operand" "")))]
-+  ""
++  "!reload_in_progress && !reload_completed"
 +  {
 +    if (GET_CODE (operands[2]) == REG || GET_CODE (operands[2]) == SUBREG)
 +      {
@@ -2713,47 +2569,25 @@ index 0000000..a52d739
 +  [(set (match_operand:SI 0 "register_operand"           "")
 +        (plus:SI (match_operand:SI 1 "register_operand"  "")
 +                 (match_operand:SI 2 "const_int_operand" "")))]
-+  ""
-+  "{
-+  /* Cope with the possibility that ops 0 and 1 are the same register.  */
-+  if (rtx_equal_p (operands[0], operands[1]))
-+    {
-+      if (reload_in_progress || reload_completed)
-+        {
-+          emit_insn (gen_pru_addsi3_imm (operands[0], operands[1], operands[2]));
-+        }
-+      else
-+        {
-+          operands[2] = force_reg (SImode, operands[2]);
-+          emit_insn (gen_pru_addsi3 (operands[0], operands[0], operands[2]));
-+        }
-+    }
-+  else
-+    {
-+      emit_insn (gen_movsi (operands[0], operands[2]));
-+      emit_insn (gen_pru_addsi3 (operands[0], operands[0], operands[1]));
-+    }
-+  DONE;
-+  }"
++  "!reload_in_progress && !reload_completed"
++  {
++    rtx tmp = force_reg (SImode, operands[2]);
++    emit_insn (gen_pru_addsi3 (operands[0], operands[1], tmp));
++    DONE;
++  }
 +)
 +
 +
 +(define_insn "pru_addsi3"
-+  [(set (match_operand:SI 0 "register_operand"            "=r")
-+        (plus:SI (match_operand:SI 1 "register_operand"   "r")
-+                 (match_operand:SI 2 "reg_or_ubyte_operand" "rI")))]
++  [(set (match_operand:SI 0 "register_operand"            "=r,=r,=r")
++        (plus:SI (match_operand:SI 1 "register_operand"   "r,r,r")
++                 (match_operand:SI 2 "nonmemory_operand" "r,I,M")))]
 +  ""
-+  "add\\t%0, %1, %2"
++  "@
++   add\\t%0, %1, %2
++   add\\t%0, %1, %2
++   sub\\t%0, %1, -(%2)"
 +  [(set_attr "type" "alu")])
-+
-+(define_insn "pru_addsi3_imm"
-+  [(set (match_operand:SI 0 "register_operand"            "=r")
-+        (plus:SI (match_operand:SI 1 "register_operand"   "r")
-+                 (match_operand:SI 2 "const_int_operand" "i")))]
-+  ""
-+  "add\\t%0.b0, %1.b0, (%2) & 0xff\;adc\\t%0.b1, %1.b1, (%2 >> 8) & 0xff\;adc\\t%0.b2, %1.b2, (%2 >> 16) & 0xff\;adc\\t%0.b3, %1.b3, (%2 >> 24) & 0xff"
-+  [(set_attr "type" "alu")
-+   (set_attr "length" "16")])
 +
 +(define_insn "subsi3"
 +  [(set (match_operand:SI 0 "register_operand"           "=r,=r,=r")
@@ -2818,7 +2652,6 @@ index 0000000..a52d739
 +;; TODO - add clrbit, setbit, min, max
 +
 +
-+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; REVISE BELOW  TODO ;;;;;;;;;;;;;;;;;;;;;
 +;; Prologue, Epilogue and Return
 +
 +(define_expand "prologue"
@@ -2866,32 +2699,6 @@ index 0000000..a52d739
 +  [(set_attr "type" "unknown")
 +   (set_attr "length" "0")])
 +
-+;; This is used in compiling the unwind routines.
-+(define_expand "eh_return"
-+  [(use (match_operand 0 "general_operand"))]
-+  ""
-+{
-+  if (GET_MODE (operands[0]) != Pmode)
-+    operands[0] = convert_to_mode (Pmode, operands[0], 0);
-+  emit_insn (gen_eh_set_ra (operands[0]));
-+  DONE;
-+})
-+
-+;; Modify the return address for EH return.  We can't expand this
-+;; until we know where it will be put in the stack frame.
-+
-+(define_insn_and_split "eh_set_ra"
-+  [(unspec [(match_operand:SI 0 "register_operand" "r")] UNSPEC_EH_RETURN)
-+   (clobber (match_scratch:SI 1 "=&r"))]
-+  ""
-+  "#"
-+  "reload_completed"
-+  [(const_int 0)]
-+{
-+  pru_set_return_address (operands[0], operands[1]);
-+  DONE;
-+})
-+
 +
 +;;  Jumps and calls
 +
@@ -2926,7 +2733,7 @@ index 0000000..a52d739
 +  "pru_adjust_call_address (&operands[1]);")
 +
 +(define_insn "*call"
-+  [(call (mem:QI (match_operand:SI 0 "call_operand" "ir"))
++  [(call (mem:SI (match_operand:SI 0 "call_operand" "ir"))
 +         (match_operand 1 "" ""))
 +   (clobber (reg:SI RA_REGNO))]
 +  ""
@@ -2935,7 +2742,7 @@ index 0000000..a52d739
 +
 +(define_insn "*call_value"
 +  [(set (match_operand 0 "" "")
-+        (call (mem:QI (match_operand:SI 1 "call_operand" "ir"))
++        (call (mem:SI (match_operand:SI 1 "call_operand" "ir"))
 +              (match_operand 2 "" "")))
 +   (clobber (reg:SI RA_REGNO))]
 +  ""
@@ -2958,7 +2765,7 @@ index 0000000..a52d739
 +  "pru_adjust_call_address (&operands[1]);")
 +
 +(define_insn "*sibcall"
-+ [(call (mem:QI (match_operand:SI 0 "call_operand" "ij"))
++ [(call (mem:SI (match_operand:SI 0 "call_operand" "ij"))
 +        (match_operand 1 "" ""))
 +  (return)]
 +  ""
@@ -2967,7 +2774,7 @@ index 0000000..a52d739
 +
 +(define_insn "*sibcall_value"
 + [(set (match_operand 0 "register_operand" "")
-+       (call (mem:QI (match_operand:SI 1 "call_operand" "ij"))
++       (call (mem:SI (match_operand:SI 1 "call_operand" "ij"))
 +             (match_operand 2 "" "")))
 +  (return)]
 +  ""
@@ -2989,8 +2796,6 @@ index 0000000..a52d739
 +;; into account the worst case of having a signed comparison with a
 +;; "far taken branch" label, which amounts to 7 instructions.
 +;;
-+;; TODO - take into account signed/unsigned when calculating length
-+;;
 +;; TODO - define qbbs/qbbc, and possibly then re-define sign_extend and
 +;; sign compares as define_split's.
 +
@@ -3004,7 +2809,8 @@ index 0000000..a52d739
 +       (pc)))]
 +  ""
 +{
-+  bool is_near = (get_attr_length (insn) == 4);
++  const int length = (get_attr_length (insn));
++  const bool is_near = (length == 20 || length == 4);
 +
 +  if (pru_signed_cmp_operator (operands[0], VOIDmode))
 +    {
@@ -3025,9 +2831,16 @@ index 0000000..a52d739
 +  [(set_attr "type" "control")
 +   (set (attr "length") 
 +        (if_then_else
-+            (and (ge (minus (match_dup 1) (pc)) (const_int -2048))
-+                 (le (minus (match_dup 1) (pc)) (const_int 2012)))
-+            (const_int 4) (const_int 8)))])
++            (and (ge (minus (match_dup 3) (pc)) (const_int -2020))
++                 (le (minus (match_dup 3) (pc)) (const_int 2016)))
++            (if_then_else
++		(match_test "pru_signed_cmp_operator (operands[0], VOIDmode)")
++		    (const_int 20)
++		    (const_int 4))
++            (if_then_else
++		(match_test "pru_signed_cmp_operator (operands[0], VOIDmode)")
++		    (const_int 28)
++		    (const_int 8))))])
 +
 +
 +;;  Misc. patterns
@@ -3092,8 +2905,30 @@ index 0000000..e33f2de
 +
 +#MULTILIB_OPTIONS    = mmcu=pru
 +
+diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
+index ef370fe..fdfb019 100644
+--- a/gcc/testsuite/lib/target-supports.exp
++++ b/gcc/testsuite/lib/target-supports.exp
+@@ -437,7 +437,8 @@ proc check_effective_target_trampolines { } {
+     if { [istarget avr-*-*]
+ 	 || [istarget msp430-*-*]
+ 	 || [istarget hppa2.0w-hp-hpux11.23]
+-	 || [istarget hppa64-hp-hpux11.23] } {
++	 || [istarget hppa64-hp-hpux11.23]
++	 || [istarget pru-*-*] } {
+ 	return 0;
+     }
+     return 1
+@@ -535,6 +536,7 @@ proc check_profiling_available { test_what } {
+ 	     || [istarget picochip-*-*]
+ 	     || [istarget powerpc-*-eabi*]
+ 	     || [istarget powerpc-*-elf]
++	     || [istarget pru-*-*]
+ 	     || [istarget rx-*-*]	
+ 	     || [istarget tic6x-*-elf]
+ 	     || [istarget xstormy16-*]
 diff --git a/libgcc/config.host b/libgcc/config.host
-index f4a7428..68b2ef3 100644
+index f4a7428..3a25c82 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
 @@ -165,6 +165,9 @@ nios2*-*-*)
@@ -3111,7 +2946,7 @@ index f4a7428..68b2ef3 100644
  	extra_parts="$extra_parts crtbegin.o crtend.o crtbeginS.o crtendS.o crtbeginT.o ecrti.o ecrtn.o ncrti.o ncrtn.o"
  	;;
 +pru-*-*)
-+	tmake_file="$tm_file t-crtstuff t-fdpbit pru/t-pru"
++	tmake_file="$tm_file t-fdpbit pru/t-pru"
 +	;;
  rs6000-ibm-aix4.[3456789]* | powerpc-ibm-aix4.[3456789]*)
  	md_unwind_header=rs6000/aix-unwind.h
@@ -3644,5 +3479,5 @@ index 0000000..d764c88
 +# mode: Makefile
 +# End:
 -- 
-1.9.2
+2.0.0.rc0
 
