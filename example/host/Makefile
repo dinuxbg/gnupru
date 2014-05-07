@@ -35,7 +35,7 @@ CFLAGS += -g -O2
 CFLAGS += -Wall -Wextra -Werror
 LDFLAGS += -lpthread -lelf
 
-OBJS := pload.o prussdrv.o
+OBJS := pload.o prussdrv.o md5.o md5-data.o
 
 EXE := pload
 

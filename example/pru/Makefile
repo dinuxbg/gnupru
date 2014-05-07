@@ -37,7 +37,7 @@ LDFLAGS += -nostdlib -lgcc
 
 # List of object files to compile for each PRU core.
 OBJS0 := crt.o main0.o
-OBJS1 := crt.o main1.o
+OBJS1 := crt.o main1.o md5.o md5-data.o
 
 # Where to output compiled objects
 OUT := out

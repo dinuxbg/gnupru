@@ -5,11 +5,14 @@
 #include <string.h>
 #include <stdint.h>
 #include <err.h>
+#include <errno.h>
 
 #include <libelf.h>
 
 #include "prussdrv.h"
 #include "pruss_intc_mapping.h"
+
+#include "md5.h"
 
 #define AM33XX_PRUSS_IRAM_SIZE               8192
 #define AM33XX_PRUSS_DRAM_SIZE               8192
@@ -155,6 +158,86 @@ static int pru_close_elf(struct prufw *fw)
 	return 0;
 }
 
+extern const char random_data_buf[];
+extern const int random_data_buf_size;
+
+static int pru_find_symbol_addr(struct prufw *fw, const char *symstr,
+				uint32_t *addr)
+{
+	int symbol_count, i;
+	Elf *elf;
+	Elf_Scn *scn = NULL;
+	Elf32_Shdr *shdr;
+	Elf_Data *edata = NULL;
+
+	elf = elf_begin(fw->elf.fd, ELF_C_READ, NULL);
+
+	while((scn = elf_nextscn(elf, scn)) != NULL) {
+		shdr = elf32_getshdr(scn);
+
+		if(shdr->sh_type != SHT_SYMTAB)
+			continue;
+
+		edata = elf_getdata(scn, edata);
+		symbol_count = shdr->sh_size / shdr->sh_entsize;
+
+		for(i = 0; i < symbol_count; i++) {
+			Elf32_Sym *sym;
+			const char *s;
+
+			sym = &((Elf32_Sym *)edata->d_buf)[i];
+			s = elf_strptr(elf, shdr->sh_link, sym->st_name);
+
+			if ((ELF32_ST_BIND(sym->st_info) == STB_GLOBAL)
+				&& ELF32_ST_TYPE(sym->st_info) == STT_OBJECT
+				&& !strcmp(symstr, s)) {
+
+				*addr = sym->st_value;
+				printf("%s: %08x\n", symstr, sym->st_value);
+				return 0;
+
+			}
+		}
+	}
+
+	return -1;
+}
+
+static int pru_check_md5sum(struct prufw *fw)
+{
+	MD5_CTX md5ctx;
+	unsigned char md5pru[16];
+	unsigned char md5ref[16];
+	uint32_t md5_offset;
+
+	MD5_Init(&md5ctx);
+	MD5_Update(&md5ctx, random_data_buf, random_data_buf_size);
+	MD5_Final(md5ref, &md5ctx);
+
+	if (pru_find_symbol_addr(fw, "md5res", &md5_offset)) {
+		warnx("no MD5 buffer found in PRU%d firmware\n", fw->coreid);
+		return -EIO;
+	}
+
+	memcpy(md5pru, (uint8_t *)fw->dmem + md5_offset, sizeof(md5pru));
+
+	if (memcmp(md5pru, md5ref, sizeof(md5ref))) {
+		unsigned int i;
+		uint8_t *host = (void *)md5ref;
+		uint8_t *pru = (void *)md5pru;
+
+		warnx("PRU%d: MD5 mismatch!\n", fw->coreid);
+		printf("HOST PRU\n");
+		for (i = 0; i < sizeof(md5ref); i++) {
+			printf("%02x   %02x\n", *host++, *pru++);
+		}
+
+		return -EIO;
+	}
+
+	return 0;
+}
+
 int main (int argc, char *argv[])
 {
 	tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
@@ -188,14 +271,16 @@ int main (int argc, char *argv[])
 	prussdrv_pru_enable(1);
 
 	/* let it run for some time */
-	usleep(30 * 1000 * 1000);
+	usleep(5 * 1000 * 1000);
 
 	/* disable PRU and close memory mapping */
 	printf("Stopping PRU... ");
 	fflush(stdout);
 	prussdrv_pru_disable(0);
 	prussdrv_pru_disable(1);
-	
+
+	pru_check_md5sum(&fw[1]);
+
 	pru_close_elf(&fw[0]);
 	pru_close_elf(&fw[1]);
 	prussdrv_exit();

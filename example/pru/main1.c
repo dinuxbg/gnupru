@@ -28,6 +28,8 @@
 
 #include "pru.h"
 
+#include "md5.h"
+
 /* A very rought estimate. TODO - do it properly! */
 static void delay_cycles(unsigned int n)
 {
@@ -43,9 +45,18 @@ static void delay_us(unsigned int us)
 	delay_cycles (us * (1000 / 5));
 }
 
+extern const char random_data_buf[];
+extern const int random_data_buf_size;
+unsigned char md5res[16];
+
 int main(void)
 {
+	MD5_CTX md5ctx;
 	unsigned int c;
+
+	MD5_Init(&md5ctx);
+	MD5_Update(&md5ctx, random_data_buf, random_data_buf_size);
+	MD5_Final(md5res, &md5ctx);
 
 	for (c = 0; ; c++) {
 		set_r30(c & 1 ? 0xffff : 0x0000);
