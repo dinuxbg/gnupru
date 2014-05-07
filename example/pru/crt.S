@@ -26,18 +26,29 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE. */
 
+/* Minimal startup to keep us going until newlib proper is ported. */
+
 #define STACK_ADDRESS_TOP	0x2000
 
 .extern main
 
 .section .reset
 .global _start
+.global _abort
 
 _start:
 	/* For the PRU in AM33xx, load the end of Data SRAM */
 	ldi sp, STACK_ADDRESS_TOP
 	/* DATA and BSS are handled by the loader, so nothing to do here. */
-	jmp main
+	/* ... */
+	/* Just in case someone tries to access argc and argv[] */
+	ldi r0, 0
+	ldi r1, 0
+	/* Call user entry and abort if it ever returns */
+	call main
+	jmp abort
 
 abort:
+	halt
+	/* just in case host inadvertently restarts us */
 	jmp abort

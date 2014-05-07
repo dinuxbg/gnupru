@@ -30,7 +30,7 @@ Then, to build the host loader (running on the beaglebone):
 	cd example/host
 	make
 
-Finally, to see a blinking led for 30 second on P9_31:
+Finally, to see a blinking led for 30 second on P9_27:
 
 	modprobe uio_pruss
 	echo BB-BONE-PRU-01 > /sys/devices/bone_capemgr.8/slots

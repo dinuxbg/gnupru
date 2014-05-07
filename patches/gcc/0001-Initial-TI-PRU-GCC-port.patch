@@ -1,4 +1,4 @@
-From af89c58451dcc98c27764af258b81f909c6086cf Mon Sep 17 00:00:00 2001
+From 497b3b1ed9655c1f012b643e69515bc3127156ba Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Mon, 30 Dec 2013 23:47:32 +0200
 Subject: [PATCH] Initial TI PRU GCC port
@@ -13,12 +13,12 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  configure.ac                          |    4 +
  gcc/common/config/pru/pru-common.c    |   44 +
  gcc/config.gcc                        |    8 +
- gcc/config/pru/constraints.md         |   64 ++
- gcc/config/pru/predicates.md          |   98 ++
- gcc/config/pru/pru-protos.h           |   58 ++
- gcc/config/pru/pru.c                  | 1577 +++++++++++++++++++++++++++++++++
- gcc/config/pru/pru.h                  |  388 ++++++++
- gcc/config/pru/pru.md                 |  441 +++++++++
+ gcc/config/pru/constraints.md         |   60 ++
+ gcc/config/pru/predicates.md          |   98 +++
+ gcc/config/pru/pru-protos.h           |   46 +
+ gcc/config/pru/pru.c                  | 1519 +++++++++++++++++++++++++++++++++
+ gcc/config/pru/pru.h                  |  376 ++++++++
+ gcc/config/pru/pru.md                 |  457 ++++++++++
  gcc/config/pru/pru.opt                |   20 +
  gcc/config/pru/t-pru                  |   22 +
  gcc/testsuite/lib/target-supports.exp |    4 +-
@@ -28,11 +28,11 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgcc/config/pru/lib2divQI.c         |   43 +
  libgcc/config/pru/lib2divSI.c         |   42 +
  libgcc/config/pru/lib2mul.c           |   58 ++
- libgcc/config/pru/lib2shift.c         |   48 +
+ libgcc/config/pru/lib2shift.c         |   48 ++
  libgcc/config/pru/pru-divmod.h        |  117 +++
  libgcc/config/pru/pru-mul.h           |   42 +
  libgcc/config/pru/t-pru               |   38 +
- 25 files changed, 3215 insertions(+), 1 deletion(-)
+ 25 files changed, 3145 insertions(+), 1 deletion(-)
  create mode 100644 gcc/common/config/pru/pru-common.c
  create mode 100644 gcc/config/pru/constraints.md
  create mode 100644 gcc/config/pru/predicates.md
@@ -84,10 +84,10 @@ index d654d03..28338ca 100755
  	| rl78-* | romp-* | rs6000-* | rx-* \
  	| sh-* | sh[1234]-* | sh[24]a-* | sh[24]aeb-* | sh[23]e-* | sh[34]eb-* | sheb-* | shbe-* \
 diff --git a/configure b/configure
-index 3f217a2..5033662 100755
+index cf6457a..fbdfa39 100755
 --- a/configure
 +++ b/configure
-@@ -3264,6 +3264,10 @@ case "${target}" in
+@@ -3274,6 +3274,10 @@ case "${target}" in
    powerpc-*-aix* | rs6000-*-aix*)
      noconfigdirs="$noconfigdirs target-libssp"
      ;;
@@ -99,7 +99,7 @@ index 3f217a2..5033662 100755
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
 diff --git a/configure.ac b/configure.ac
-index 3c7b1ff..36367c5 100644
+index 9048cd1..5764237 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -592,6 +592,10 @@ case "${target}" in
@@ -164,10 +164,10 @@ index 0000000..46e73bd
 +
 +struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index 81205ff..36675c0 100644
+index 80bb3db..332c8a8 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -446,6 +446,9 @@ powerpc*-*-*)
+@@ -432,6 +432,9 @@ powerpc*-*-*)
  	esac
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
@@ -175,9 +175,9 @@ index 81205ff..36675c0 100644
 +	cpu_type=pru
 +	;;
  rs6000*-*-*)
- 	need_64bit_hwint=yes
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
-@@ -2344,6 +2347,11 @@ powerpcle-*-eabi*)
+ 	;;
+@@ -2347,6 +2350,11 @@ powerpcle-*-eabi*)
  	extra_options="${extra_options} rs6000/sysv4.opt"
  	use_gcc_stdint=wrap
  	;;
@@ -191,10 +191,10 @@ index 81205ff..36675c0 100644
  	tmake_file="rs6000/t-aix43 t-slibgcc"
 diff --git a/gcc/config/pru/constraints.md b/gcc/config/pru/constraints.md
 new file mode 100644
-index 0000000..0f86c98
+index 0000000..e307b63
 --- /dev/null
 +++ b/gcc/config/pru/constraints.md
-@@ -0,0 +1,64 @@
+@@ -0,0 +1,60 @@
 +;; Constraint definitions for TI PRU.
 +;; Copyright (C) 2014 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -221,17 +221,13 @@ index 0000000..0f86c98
 +;;  J: 0 to 65535
 +;;  K: -255 to 0
 +;;  L: 0 to 31 (for shift counts)
++;;  M: -255 to 0 (for converting ADD to SUB with suitable UBYTE OP2)
 +;;  T: Text segment label. Needed to know when to select %pmem relocation.
 +;;
 +;; We use the following built-in register classes:
 +;;
 +;;  r: general purpose register (r0..r31)
 +;;  m: memory operand
-+;;
-+;; Register constraints
-+
-+(define_register_constraint "j" "SIB_REGS"
-+  "A register suitable for an indirect sibcall.")
 +
 +;; Integer constraints
 +
@@ -365,10 +361,10 @@ index 0000000..3c98d3e
 +
 diff --git a/gcc/config/pru/pru-protos.h b/gcc/config/pru/pru-protos.h
 new file mode 100644
-index 0000000..091665c
+index 0000000..2db4b42
 --- /dev/null
 +++ b/gcc/config/pru/pru-protos.h
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,46 @@
 +/* Subroutine declarations for TI PRU target support.
 +   Copyright (C) 2012-2014 Free Software Foundation, Inc.
 +   Contributed by Jonah Graham (jgraham@altera.com).
@@ -400,9 +396,6 @@ index 0000000..091665c
 +extern void pru_function_profiler (FILE *, int);
 +
 +#ifdef RTX_CODE
-+extern int pru_emit_move_sequence (rtx *, enum machine_mode);
-+extern void pru_adjust_call_address (rtx *);
-+
 +extern rtx pru_get_return_address (int);
 +
 +extern const char * pru_output_sign_extend (rtx *, bool);
@@ -415,24 +408,15 @@ index 0000000..091665c
 +  /* selection logic is the same - PRU instructions are quite orthogonal */
 +  return pru_regno_ok_for_base_p (regno, strict_p);
 +}
-+
-+#ifdef TREE_CODE
-+#ifdef ARGS_SIZE_RTX
-+/* expr.h defines both ARGS_SIZE_RTX and `enum direction' */
-+extern enum direction pru_function_arg_padding (enum machine_mode, const_tree);
-+extern enum direction pru_block_reg_padding (enum machine_mode, tree, int);
-+#endif /* ARGS_SIZE_RTX */
-+
-+#endif /* TREE_CODE */
 +#endif /* RTX_CODE */
 +
 +#endif /* GCC_PRU_PROTOS_H */
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
 new file mode 100644
-index 0000000..3bf4ab3
+index 0000000..f822898
 --- /dev/null
 +++ b/gcc/config/pru/pru.c
-@@ -0,0 +1,1577 @@
+@@ -0,0 +1,1519 @@
 +/* Target machine subroutines for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -485,6 +469,7 @@ index 0000000..3bf4ab3
 +#include "stor-layout.h"
 +#include "varasm.h"
 +#include "calls.h"
++#include "builtins.h"
 +
 +/* Forward function declarations.  */
 +static bool prologue_saved_reg_p (unsigned);
@@ -603,8 +588,6 @@ index 0000000..3bf4ab3
 +static rtx
 +pru_add_to_sp (int addendum, const enum reg_note kind)
 +{
-+  /* Temporary regno used inside prologue/epilogue. */
-+  const int temp_reg_num = 6;
 +  rtx insn;
 +
 +  rtx sp_adjust
@@ -618,7 +601,7 @@ index 0000000..3bf4ab3
 +	 Reload has finished so we can't expect the compiler to
 +	 auto-allocate a temporary register. But we know that call-saved
 +	 registers are not live yet, so we utilize them. */
-+      rtx tmp = gen_rtx_REG (Pmode, temp_reg_num);
++      rtx tmp = gen_rtx_REG (Pmode, PROLOGUE_TEMP_REGNO);
 +      if (addendum < 0)
 +	{
 +	  emit_move_insn (tmp, gen_int_mode (-addendum, Pmode));
@@ -678,6 +661,7 @@ index 0000000..3bf4ab3
 +
 +  save_offset = save_regs_base + cfun->machine->save_reg_size;
 +
++  /* TODO - load multiple consecutive regs with one instruction */
 +  for (regno = LAST_GP_REG; regno >= 0; regno--)
 +    if (cfun->machine->save_mask & (1 << regno))
 +      {
@@ -723,9 +707,9 @@ index 0000000..3bf4ab3
 +  if (frame_pointer_needed)
 +    {
 +      /* Recover the stack pointer.  */
-+      insn = emit_insn (gen_add3_insn
++      insn = emit_insn (gen_sub3_insn
 +			(stack_pointer_rtx, hard_frame_pointer_rtx,
-+			 gen_int_mode (-cfun->machine->fp_save_offset, Pmode)));
++			 gen_int_mode (cfun->machine->fp_save_offset, Pmode)));
 +      cfa_adj = plus_constant (Pmode, stack_pointer_rtx,
 +			       (total_frame_size
 +				- cfun->machine->save_regs_offset));
@@ -887,7 +871,7 @@ index 0000000..3bf4ab3
 +static struct machine_function *
 +pru_init_machine_status (void)
 +{
-+  return ggc_alloc_cleared_machine_function ();
++  return ggc_cleared_alloc<machine_function> ();
 +}
 +
 +/* Implement TARGET_OPTION_OVERRIDE.  */
@@ -1299,41 +1283,6 @@ index 0000000..3bf4ab3
 +}
 +
 +
-+/* Main expander function for RTL moves.  */
-+int
-+pru_emit_move_sequence (rtx *operands, enum machine_mode mode)
-+{
-+  rtx to = operands[0];
-+  rtx from = operands[1];
-+
-+  /* TODO - inform GCC that PRU supports constant offset to the main 
-+   * address stored in a register
-+   */
-+  if (!register_operand (to, mode) && !register_operand (from, mode))
-+    {
-+      gcc_assert (can_create_pseudo_p ());
-+      from = copy_to_mode_reg (mode, from);
-+    }
-+
-+  operands[0] = to;
-+  operands[1] = from;
-+  return 0;
-+}
-+
-+/* The function with address *ADDR is being called.  If the address
-+   needs to be loaded from the GOT, emit the instruction to do so and
-+   update *ADDR to point to the rtx for the loaded value.  */
-+void
-+pru_adjust_call_address (rtx *call_op ATTRIBUTE_UNUSED)
-+{
-+  /* ddd: TODO: not really needed. Just issue a direct call - no need for the register mumbo-jumbo */
-+#if 0
-+  rtx addr;
-+  gcc_assert (MEM_P (*call_op));
-+  addr = XEXP (*call_op, 0);
-+#endif
-+}
-+
 +
 +/* Output assembly language related definitions.  */
 +
@@ -1357,6 +1306,7 @@ index 0000000..3bf4ab3
 +     x: for registers with size (e.g. R0.b0, R3.w0)
 +     H: for %hi
 +     L: for %lo
++     N: prints next register (upper 32bits of a 64bit REG couple)
 +     P: prints swapped condition.
 +     Q: prints swapped and reversed condition.
 +     R: prints reversed condition.
@@ -1405,6 +1355,12 @@ index 0000000..3bf4ab3
 +      if (letter == 0)
 +        {
 +          fprintf (file, "%s", reg_names[REGNO (op)]);
++          return;
++        }
++      else if (letter == 'N')
++        {
++	  gcc_assert (REGNO (op) < 29);
++          fprintf (file, "%s", reg_names[REGNO (op) + 1]);
 +          return;
 +        }
 +      else if (letter == 'x')
@@ -1671,36 +1627,6 @@ index 0000000..3bf4ab3
 +    cum->regs_used = NUM_ARG_REGS;
 +  else
 +    cum->regs_used += param_size;
-+}
-+
-+enum direction
-+pru_function_arg_padding (enum machine_mode mode, const_tree type)
-+{
-+  /* On little-endian targets, the first byte of every stack argument
-+     is passed in the first byte of the stack slot.  */
-+  if (!BYTES_BIG_ENDIAN)
-+    return upward;
-+
-+  /* Otherwise, integral types are padded downward: the last byte of a
-+     stack argument is passed in the last byte of the stack slot.  */
-+  if (type != 0
-+      ? INTEGRAL_TYPE_P (type) || POINTER_TYPE_P (type)
-+      : GET_MODE_CLASS (mode) == MODE_INT)
-+    return downward;
-+
-+  /* Arguments smaller than a stack slot are padded downward.  */
-+  if (mode != BLKmode)
-+    return (GET_MODE_BITSIZE (mode) >= PARM_BOUNDARY) ? upward : downward;
-+
-+  return ((int_size_in_bytes (type) >= (PARM_BOUNDARY / BITS_PER_UNIT))
-+	  ? upward : downward);
-+}
-+
-+enum direction
-+pru_block_reg_padding (enum machine_mode mode, tree type,
-+                         int first ATTRIBUTE_UNUSED)
-+{
-+  return pru_function_arg_padding (mode, type);
 +}
 +
 +/* Emit RTL insns to initialize the variable parts of a trampoline.
@@ -2012,10 +1938,10 @@ index 0000000..3bf4ab3
 +#include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
 new file mode 100644
-index 0000000..99a0ace
+index 0000000..22921b6
 --- /dev/null
 +++ b/gcc/config/pru/pru.h
-@@ -0,0 +1,388 @@
+@@ -0,0 +1,376 @@
 +/* Definitions of target machine for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -2103,9 +2029,6 @@ index 0000000..99a0ace
 +   34     fake_ap          Fake Argument Pointer (always eliminated)
 +   35                      First Pseudo Register
 +
-+   In addition, r12 is used as the static chain register and r13, r14, and r15
-+   are clobbered by PLT code sequences.  
-+
 +   The definitions for all the hard register numbers are located in pru.md.
 +*/
 +
@@ -2138,7 +2061,6 @@ index 0000000..99a0ace
 +enum reg_class
 +{
 +  NO_REGS,
-+  SIB_REGS,
 +  GP_REGS,
 +  ALL_REGS,
 +  LIM_REG_CLASSES
@@ -2148,7 +2070,6 @@ index 0000000..99a0ace
 +
 +#define REG_CLASS_NAMES   \
 +  {  "NO_REGS",           \
-+     "SIB_REGS",          \
 +     "GP_REGS",           \
 +     "ALL_REGS" }
 +
@@ -2157,7 +2078,6 @@ index 0000000..99a0ace
 +#define REG_CLASS_CONTENTS                      \
 +  {                                             \
 +    /* NO_REGS  */ { 0, 0},                     \
-+    /* SIB_REGS */ { 0xfff0, 0},                \
 +    /* GP_REGS  */ {~0, 0},                     \
 +    /* ALL_REGS */ {~0,~0}                      \
 +  }
@@ -2186,7 +2106,7 @@ index 0000000..99a0ace
 +
 +#define EXIT_IGNORE_STACK 1
 +
-+/* Trampolines ??? */
++/* Trampolines not supported yet. */
 +#define TRAMPOLINE_SIZE 0
 +
 +/* Stack layout.  */
@@ -2226,15 +2146,6 @@ index 0000000..99a0ace
 +
 +#define INIT_CUMULATIVE_ARGS(CUM, FNTYPE, LIBNAME, FNDECL, N_NAMED_ARGS) \
 +  do { (CUM).regs_used = 0; } while (0)
-+
-+#define FUNCTION_ARG_PADDING(MODE, TYPE) \
-+  (pru_function_arg_padding ((MODE), (TYPE)))
-+
-+#define PAD_VARARGS_DOWN \
-+  (FUNCTION_ARG_PADDING (TYPE_MODE (type), type) == downward)
-+
-+#define BLOCK_REG_PADDING(MODE, TYPE, FIRST) \
-+  (pru_block_reg_padding ((MODE), (TYPE), (FIRST)))
 +
 +#define FUNCTION_ARG_REGNO_P(REGNO) \
 +  ((REGNO) >= FIRST_ARG_REGNO && (REGNO) <= LAST_ARG_REGNO)
@@ -2397,19 +2308,22 @@ index 0000000..99a0ace
 +#define CASE_VECTOR_MODE Pmode
 +
 +/* TODO - revisit */
-+#define TRULY_NOOP_TRUNCATION(OUTPREC, INPREC) 1
++#define TRULY_NOOP_TRUNCATION(OUTPREC, INPREC)	1
 +
-+#define LOAD_EXTEND_OP(MODE) (ZERO_EXTEND)
++#undef LOAD_EXTEND_OP
 +
-+#define WORD_REGISTER_OPERATIONS
++#define WORD_REGISTER_OPERATIONS		1
++
++#define HAS_LONG_UNCOND_BRANCH			1
++#define HAS_LONG_COND_BRANCH			1
 +
 +#endif /* GCC_PRU_H */
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
 new file mode 100644
-index 0000000..a4df392
+index 0000000..fff8c82
 --- /dev/null
 +++ b/gcc/config/pru/pru.md
-@@ -0,0 +1,441 @@
+@@ -0,0 +1,457 @@
 +;; Machine Description for TI PRU.
 +;; Copyright (C) 2014 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -2438,10 +2352,11 @@ index 0000000..a4df392
 +   (LAST_ARG_REGNO         3)	;
 +   (FIRST_RETVAL_REGNO     4)	; Return value registers
 +   (LAST_RETVAL_REGNO      5)	;
++   (PROLOGUE_TEMP_REGNO    6)	; Temporary register to use in prologue
 +
 +   (RA_REGNO              27)	; Return address register
 +   (FP_REGNO	          29)	; Frame pointer register
-+   (LAST_GP_REG           31)	; Last general purpose register (why not 29?)
++   (LAST_GP_REG           31)	; Last general purpose register
 +
 +   ;; Target register definitions
 +   (STACK_POINTER_REGNUM       28)
@@ -2478,20 +2393,12 @@ index 0000000..a4df392
 +
 +;; Move instructions
 +
-+(define_expand "mov<mode>"
-+  [(set (match_operand:XI 0 "nonimmediate_operand" "")
-+        (match_operand:XI 1 "general_operand" ""))]
-+  ""
-+{
-+  if (pru_emit_move_sequence (operands, <MODE>mode))
-+    DONE;
-+})
-+
 +;; Assume that Program Mem (T constraint) can fit in 16 bits!
-+(define_insn "mov<mode>_internal"
++(define_insn "mov<mode>"
 +  [(set (match_operand:XI 0 "nonimmediate_operand" "=m,r,r,r,r,r")
 +        (match_operand:XI 1 "general_operand"       "r,m,r,T,J,i"))]
-+  "(which_alternative == 5) ? (<MODE>mode == SImode) : true"
++;  "(which_alternative == 5) ? (<MODE>mode == SImode) : true"
++  ""
 +  "@
 +    sbbo\\t%1, %0, %S0
 +    lbbo\\t%0, %1, %S1
@@ -2523,7 +2430,7 @@ index 0000000..a4df392
 +;; signed operations in PRU's ALU.
 +
 +(define_insn "extend<EQS:mode><EQD:mode>2"
-+  [(set (match_operand:EQD 0 "register_operand"                      "=r,=r")
++  [(set (match_operand:EQD 0 "register_operand"                      "=r,r")
 +        (sign_extend:EQD (match_operand:EQS 1 "nonimmediate_operand"  "r,m")))]
 +  ""
 +  {
@@ -2579,8 +2486,8 @@ index 0000000..a4df392
 +
 +
 +(define_insn "pru_addsi3"
-+  [(set (match_operand:SI 0 "register_operand"            "=r,=r,=r")
-+        (plus:SI (match_operand:SI 1 "register_operand"   "r,r,r")
++  [(set (match_operand:SI 0 "register_operand"            "=r,r,r")
++        (plus:SI (match_operand:SI 1 "register_operand"   "%r,r,r")
 +                 (match_operand:SI 2 "nonmemory_operand" "r,I,M")))]
 +  ""
 +  "@
@@ -2589,8 +2496,20 @@ index 0000000..a4df392
 +   sub\\t%0, %1, -(%2)"
 +  [(set_attr "type" "alu")])
 +
++(define_insn "adddi3"
++  [(set (match_operand:DI 0 "register_operand"            "=r,r,r")
++        (plus:DI (match_operand:DI 1 "register_operand"   "%r,r,r")
++                 (match_operand:DI 2 "reg_or_ubyte_operand" "r,I,M")))]
++  ""
++  "@
++   add\\t%0, %1, %2\;adc\\t%N0, %N1, %N2
++   add\\t%0, %1, %2\;adc\\t%N0, %N1, 0
++   sub\\t%0, %1, -(%2)\;suc\\t%N0, %N1, 0"
++  [(set_attr "type" "alu,alu,alu")
++   (set_attr "length" "8,8,8")])
++
 +(define_insn "subsi3"
-+  [(set (match_operand:SI 0 "register_operand"           "=r,=r,=r")
++  [(set (match_operand:SI 0 "register_operand"           "=r,r,r")
 +        (minus:SI (match_operand:SI 1 "reg_or_ubyte_operand" "r,r,I")
 +                  (match_operand:SI 2 "reg_or_ubyte_operand" "r,I,r")))]
 +  ""
@@ -2600,6 +2519,17 @@ index 0000000..a4df392
 +   rsb\\t%0, %2, %1"
 +  [(set_attr "type" "alu")])
 +
++(define_insn "subdi3"
++  [(set (match_operand:DI 0 "register_operand"            "=r,r,r")
++        (minus:DI (match_operand:DI 1 "register_operand"   "r,r,I")
++                 (match_operand:DI 2 "reg_or_ubyte_operand" "r,I,r")))]
++  ""
++  "@
++   sub\\t%0, %1, %2\;suc\\t%N0, %N1, %N2
++   sub\\t%0, %1, %2\;suc\\t%N0, %N1, %0
++   rsb\\t%0, %2, %1\;rsc\\t%N0, %N2, 0"
++  [(set_attr "type" "alu,alu,alu")
++   (set_attr "length" "8,8,8")])
 +
 +
 +;;  Negate and ones complement
@@ -2649,7 +2579,7 @@ index 0000000..a4df392
 +  ""
 +  "<shift_asm>\\t%0, %1, %2"
 +  [(set_attr "type" "shift")])
-+;; TODO - add clrbit, setbit, min, max
++;; TODO - add clrbit, setbit,
 +
 +
 +;; Prologue, Epilogue and Return
@@ -2722,7 +2652,7 @@ index 0000000..a4df392
 +                    (match_operand 1 "" ""))
 +              (clobber (reg:SI RA_REGNO))])]
 +  ""
-+  "pru_adjust_call_address (&operands[0]);")
++  "")
 +
 +(define_expand "call_value"
 +  [(parallel [(set (match_operand 0 "" "")
@@ -2730,7 +2660,7 @@ index 0000000..a4df392
 +                         (match_operand 2 "" "")))
 +              (clobber (reg:SI RA_REGNO))])]
 +  ""
-+  "pru_adjust_call_address (&operands[1]);")
++  "")
 +
 +(define_insn "*call"
 +  [(call (mem:SI (match_operand:SI 0 "call_operand" "ir"))
@@ -2754,7 +2684,7 @@ index 0000000..a4df392
 +                    (match_operand 1 "" ""))
 +              (return)])]
 +  ""
-+  "pru_adjust_call_address (&operands[0]);")
++  "")
 +
 +(define_expand "sibcall_value"
 +  [(parallel [(set (match_operand 0 "" "")
@@ -2762,10 +2692,10 @@ index 0000000..a4df392
 +                         (match_operand 2 "" "")))
 +              (return)])]
 +  ""
-+  "pru_adjust_call_address (&operands[1]);")
++  "")
 +
 +(define_insn "*sibcall"
-+ [(call (mem:SI (match_operand:SI 0 "call_operand" "ij"))
++ [(call (mem:SI (match_operand:SI 0 "call_operand" "ir"))
 +        (match_operand 1 "" ""))
 +  (return)]
 +  ""
@@ -2774,7 +2704,7 @@ index 0000000..a4df392
 +
 +(define_insn "*sibcall_value"
 + [(set (match_operand 0 "register_operand" "")
-+       (call (mem:SI (match_operand:SI 1 "call_operand" "ij"))
++       (call (mem:SI (match_operand:SI 1 "call_operand" "ir"))
 +             (match_operand 2 "" "")))
 +  (return)]
 +  ""
@@ -2906,7 +2836,7 @@ index 0000000..e33f2de
 +#MULTILIB_OPTIONS    = mmcu=pru
 +
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index ef370fe..fdfb019 100644
+index 03ddab4..25a4982 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
 @@ -437,7 +437,8 @@ proc check_effective_target_trampolines { } {
@@ -2928,7 +2858,7 @@ index ef370fe..fdfb019 100644
  	     || [istarget tic6x-*-elf]
  	     || [istarget xstormy16-*]
 diff --git a/libgcc/config.host b/libgcc/config.host
-index f4a7428..3a25c82 100644
+index 5f13a9f..7aa2e79 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
 @@ -165,6 +165,9 @@ nios2*-*-*)
@@ -2941,7 +2871,7 @@ index f4a7428..3a25c82 100644
  rs6000*-*-*)
  	;;
  score*-*-*)
-@@ -1002,6 +1005,9 @@ powerpcle-*-eabi*)
+@@ -1016,6 +1019,9 @@ powerpcle-*-eabi*)
  	tmake_file="${tmake_file} rs6000/t-ppccomm rs6000/t-crtstuff t-crtstuff-pic t-fdpbit"
  	extra_parts="$extra_parts crtbegin.o crtend.o crtbeginS.o crtendS.o crtbeginT.o ecrti.o ecrtn.o ncrti.o ncrtn.o"
  	;;
@@ -3479,5 +3409,5 @@ index 0000000..d764c88
 +# mode: Makefile
 +# End:
 -- 
-2.0.0.rc0
+2.0.0
 
