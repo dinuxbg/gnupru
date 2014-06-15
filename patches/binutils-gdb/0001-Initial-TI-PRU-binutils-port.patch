@@ -1,4 +1,4 @@
-From 54fd1371cd91c63261c0830166c573c44d8d0212 Mon Sep 17 00:00:00 2001
+From ebb6a219d51b457c8e20957fd6c6e0a3dabe0d3c Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sun, 23 Feb 2014 22:25:35 +0200
 Subject: [PATCH 1/2] Initial TI PRU binutils port
@@ -4832,7 +4832,7 @@ index 0000000..614a19b
 +}
 diff --git a/opcodes/pru-opc.c b/opcodes/pru-opc.c
 new file mode 100644
-index 0000000..8c46f5e
+index 0000000..39cba54
 --- /dev/null
 +++ b/opcodes/pru-opc.c
 @@ -0,0 +1,217 @@
@@ -5027,13 +5027,13 @@ index 0000000..8c46f5e
 +   PRU_INSN_MACRO, no_overflow},
 +  { "ret", "",
 +   OP_MATCH_JMP
-+     | (RSEL_31_0 << OP_SH_RS2SEL) | (26 << OP_SH_RS2),
++     | (RSEL_31_0 << OP_SH_RS2SEL) | (27 << OP_SH_RS2),
 +   OP_MASK_FMT2_OP | OP_MASK_SUBOP
 +     | OP_MASK_RS2SEL | OP_MASK_RS2 | OP_MASK_IO,
 +   PRU_INSN_MACRO, unsigned_immed16_overflow},
 +  { "call", "j",
 +   OP_MATCH_JAL
-+     | (RSEL_31_0 << OP_SH_RDSEL) | (26 << OP_SH_RD),
++     | (RSEL_31_0 << OP_SH_RDSEL) | (27 << OP_SH_RD),
 +   OP_MASK_FMT2_OP | OP_MASK_SUBOP
 +     | OP_MASK_RDSEL | OP_MASK_RD,
 +   PRU_INSN_MACRO, unsigned_immed16_overflow},
