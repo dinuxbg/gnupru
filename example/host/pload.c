@@ -82,7 +82,7 @@ static int pru_open_elf(struct pruelf *elf, const char *filename)
 			elf->data = scn;
 			elf->data_shdr = shdr;
 		}
-		printf ("Parsing section %s\n", name);
+		/* printf ("Parsing section %s\n", name); */
 	}
 
 	if (!elf->data)
@@ -223,7 +223,7 @@ static int pru_check_md5sum(struct prufw *fw)
 
 	if (memcmp(md5pru, md5ref, sizeof(md5ref))) {
 		unsigned int i;
-		uint8_t *host = (void *)md5ref;
+		const uint8_t *host = (void *)md5ref;
 		uint8_t *pru = (void *)md5pru;
 
 		warnx("PRU%d: MD5 mismatch!\n", fw->coreid);
@@ -234,6 +234,9 @@ static int pru_check_md5sum(struct prufw *fw)
 
 		return -EIO;
 	}
+
+	printf("MD5 sum has been successfully calculated by PRU%d.\n",
+			fw->coreid);
 
 	return 0;
 }
@@ -262,7 +265,7 @@ int main (int argc, char *argv[])
 	ret = pru_load_elf(0, &fw[0], argv[1]);
 	if (ret)
 		errx(EXIT_FAILURE, "could not load \"%s\".\n", argv[1]);
-	pru_load_elf(1, &fw[1], argv[2]);
+	ret = pru_load_elf(1, &fw[1], argv[2]);
 	if (ret)
 		errx(EXIT_FAILURE, "could not load \"%s\".\n", argv[2]);
 
