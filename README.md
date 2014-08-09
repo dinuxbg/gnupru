@@ -5,7 +5,7 @@ This is a port of the PRU I/O CPU core that is present in TI Sitara AM33xx SoCs.
 
 This initial release is preliminary and just a proof-of-concept. It might have some serious bugs, so be warned. That said, there is a working LED blinking demo :)
 
-This project has no relation to the rumored TI PRU C compiler.
+This project has no relation to the TI PRU C compiler. ABI differences between GCC PRU and TI PRU C are tracked in https://github.com/dinuxbg/gnupru/wiki
 
 ## Building
 The toolchain is published as a series of patches inside the patches subdirectory.
@@ -44,10 +44,9 @@ Finally, to see a blinking led for 30 second on P9_27:
 
 ## TODO
 When not fixing bugs, I intend to work on the following items:
- * Need to review the GCC function prologue handling. Current code is a direct copy of the Nios2 code and might not be correct or optimal for PRU. 
+ * Need to review the GCC function prologue handling. Current code is a direct copy of the Nios2 code and might not be correct or optimal for PRU.
  * Look again at the linker port. There's too much code for such a simple CPU.
  * Utilize the MAC instruction in libgcc.
- * Finalize ABI.
  * Write testcases for GCC, GAS and LD.
  * Port newlib. Write useful macros for PRU-specific functionality.
  * Port GDB.
