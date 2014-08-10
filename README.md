@@ -3,7 +3,7 @@
 ## Introduction
 This is a port of the PRU I/O CPU core that is present in TI Sitara AM33xx SoCs. Older PRU core versions are not supported because, frankly, all I have is a beaglebone.
 
-This initial release is preliminary and just a proof-of-concept. It might have some serious bugs, so be warned. That said, there is a working LED blinking demo :)
+This initial release is preliminary and just a proof-of-concept. It might have some serious bugs, so be warned. That said, go ahead and try it :) I routinely do basic sanity checks with the two given examples: blinking LED and MD5 calculation.
 
 This project has no relation to the TI PRU C compiler. ABI differences between GCC PRU and TI PRU C are tracked in https://github.com/dinuxbg/gnupru/wiki
 
