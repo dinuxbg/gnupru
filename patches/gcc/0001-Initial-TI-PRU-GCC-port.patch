@@ -1,7 +1,7 @@
-From c2f0b58b981bee64305ee688b19ef0df90139643 Mon Sep 17 00:00:00 2001
+From 345f73bd968f8b1262f56c699454b9781a66f921 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Mon, 30 Dec 2013 23:47:32 +0200
-Subject: [PATCH 1/4] Initial TI PRU GCC port
+Subject: [PATCH 1/2] Initial TI PRU GCC port
 
 Although not very well tested, core functionality should be there.
 
@@ -19,9 +19,9 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  gcc/config/pru/pru-ldst-multiple.ml   |  145 +
  gcc/config/pru/pru-protos.h           |   46 +
  gcc/config/pru/pru.c                  | 1556 +++++++++
- gcc/config/pru/pru.h                  |  388 +++
+ gcc/config/pru/pru.h                  |  394 +++
  gcc/config/pru/pru.md                 |  537 +++
- gcc/config/pru/pru.opt                |   20 +
+ gcc/config/pru/pru.opt                |   23 +
  gcc/config/pru/t-pru                  |   22 +
  gcc/doc/md.texi                       |   19 +
  gcc/testsuite/lib/target-supports.exp |    4 +-
@@ -30,12 +30,12 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgcc/config/pru/lib2divHI.c         |   42 +
  libgcc/config/pru/lib2divQI.c         |   43 +
  libgcc/config/pru/lib2divSI.c         |   42 +
- libgcc/config/pru/lib2mul.c           |   58 +
+ libgcc/config/pru/lib2mul.c           |   41 +
  libgcc/config/pru/lib2shift.c         |   48 +
+ libgcc/config/pru/muldi3.S            |   59 +
  libgcc/config/pru/pru-divmod.h        |  117 +
- libgcc/config/pru/pru-mul.h           |   42 +
- libgcc/config/pru/t-pru               |   38 +
- 28 files changed, 9545 insertions(+), 1 deletion(-)
+ libgcc/config/pru/t-pru               |   41 +
+ 28 files changed, 9557 insertions(+), 1 deletion(-)
  create mode 100644 gcc/common/config/pru/pru-common.c
  create mode 100644 gcc/config/pru/constraints.md
  create mode 100644 gcc/config/pru/predicates.md
@@ -53,8 +53,8 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 libgcc/config/pru/lib2divSI.c
  create mode 100644 libgcc/config/pru/lib2mul.c
  create mode 100644 libgcc/config/pru/lib2shift.c
+ create mode 100644 libgcc/config/pru/muldi3.S
  create mode 100644 libgcc/config/pru/pru-divmod.h
- create mode 100644 libgcc/config/pru/pru-mul.h
  create mode 100644 libgcc/config/pru/t-pru
 
 diff --git a/.gitignore b/.gitignore
@@ -89,10 +89,10 @@ index 88a0cb4..1fbd23d 100755
  	| rl78-* | romp-* | rs6000-* | rx-* \
  	| sh-* | sh[1234]-* | sh[24]a-* | sh[24]aeb-* | sh[23]e-* | sh[34]eb-* | sheb-* | shbe-* \
 diff --git a/configure b/configure
-index c8b20b6..debcff7 100755
+index 55fca62..9b747cc 100755
 --- a/configure
 +++ b/configure
-@@ -3274,6 +3274,10 @@ case "${target}" in
+@@ -3233,6 +3233,10 @@ case "${target}" in
    powerpc-*-aix* | rs6000-*-aix*)
      noconfigdirs="$noconfigdirs target-libssp"
      ;;
@@ -104,7 +104,7 @@ index c8b20b6..debcff7 100755
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
 diff --git a/configure.ac b/configure.ac
-index 163de5f..4c73b63 100644
+index 2dc657f..8297e8f 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -592,6 +592,10 @@ case "${target}" in
@@ -169,10 +169,10 @@ index 0000000..46e73bd
 +
 +struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index e1f1532..3b03396 100644
+index a33bce9..4c18a69 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -433,6 +433,9 @@ powerpc*-*-*)
+@@ -429,6 +429,9 @@ powerpc*-*-*)
  	esac
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
@@ -182,7 +182,7 @@ index e1f1532..3b03396 100644
  rs6000*-*-*)
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
-@@ -2357,6 +2360,11 @@ powerpcle-*-eabi*)
+@@ -2350,6 +2353,11 @@ powerpcle-*-eabi*)
  	extra_options="${extra_options} rs6000/sysv4.opt"
  	use_gcc_stdint=wrap
  	;;
@@ -8244,10 +8244,10 @@ index 0000000..548aec4
 +#include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
 new file mode 100644
-index 0000000..dd9eac2
+index 0000000..abcce5e
 --- /dev/null
 +++ b/gcc/config/pru/pru.h
-@@ -0,0 +1,388 @@
+@@ -0,0 +1,394 @@
 +/* Definitions of target machine for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -8281,6 +8281,12 @@ index 0000000..dd9eac2
 +      builtin_define_std ("NO_TRAMPOLINES");        \
 +    }                                               \
 +  while (0)
++
++#undef  STARTFILE_SPEC
++#define STARTFILE_SPEC "%{!pg:%{minrt:crt0-minrt.o%s}%{!minrt:crt0.o%s}} -lgcc"
++
++#undef  ENDFILE_SPEC
++#define ENDFILE_SPEC "-lgloss"
 +
 +/* Storage layout.  */
 +
@@ -9181,10 +9187,10 @@ index 0000000..c55aa05
 +
 diff --git a/gcc/config/pru/pru.opt b/gcc/config/pru/pru.opt
 new file mode 100644
-index 0000000..584fbde
+index 0000000..f3f38b7
 --- /dev/null
 +++ b/gcc/config/pru/pru.opt
-@@ -0,0 +1,20 @@
+@@ -0,0 +1,23 @@
 +; Options for the TI PRU port of the compiler.
 +; Copyright (C) 2012-2014 Free Software Foundation, Inc.
 +; Contributed by Altera and Mentor Graphics, Inc.
@@ -9205,6 +9211,9 @@ index 0000000..584fbde
 +; along with GCC; see the file COPYING3.  If not see
 +; <http://www.gnu.org/licenses/>.
 +
++minrt
++Target Report Mask(MINRT) RejectNegative
++Use a minimum runtime (no static initializers or ctors) for memory-constrained devices.
 diff --git a/gcc/config/pru/t-pru b/gcc/config/pru/t-pru
 new file mode 100644
 index 0000000..e33f2de
@@ -9234,10 +9243,10 @@ index 0000000..e33f2de
 +#MULTILIB_OPTIONS    = mmcu=pru
 +
 diff --git a/gcc/doc/md.texi b/gcc/doc/md.texi
-index dd78611..9fad364 100644
+index 80e8bd6..17f648e 100644
 --- a/gcc/doc/md.texi
 +++ b/gcc/doc/md.texi
-@@ -3337,6 +3337,25 @@ A memory reference that is encoded within the opcode.
+@@ -3309,6 +3309,25 @@ A memory reference that is encoded within the opcode.
  
  @end table
  
@@ -9264,7 +9273,7 @@ index dd78611..9fad364 100644
  @table @code
  
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index fa5137e..8663acc 100644
+index 52929b9..278af11 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
 @@ -437,7 +437,8 @@ proc check_effective_target_trampolines { } {
@@ -9277,8 +9286,8 @@ index fa5137e..8663acc 100644
  	return 0;
      }
      return 1
-@@ -535,6 +536,7 @@ proc check_profiling_available { test_what } {
- 	     || [istarget picochip-*-*]
+@@ -534,6 +535,7 @@ proc check_profiling_available { test_what } {
+ 	     || [istarget nios2-*-elf]
  	     || [istarget powerpc-*-eabi*]
  	     || [istarget powerpc-*-elf]
 +	     || [istarget pru-*-*]
@@ -9286,7 +9295,7 @@ index fa5137e..8663acc 100644
  	     || [istarget tic6x-*-elf]
  	     || [istarget xstormy16-*]
 diff --git a/libgcc/config.host b/libgcc/config.host
-index 54fe538..1160c93 100644
+index 2f6569b..067f70c 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
 @@ -165,6 +165,9 @@ nios2*-*-*)
@@ -9299,7 +9308,7 @@ index 54fe538..1160c93 100644
  rs6000*-*-*)
  	;;
  score*-*-*)
-@@ -1016,6 +1019,9 @@ powerpcle-*-eabi*)
+@@ -1015,6 +1018,9 @@ powerpcle-*-eabi*)
  	tmake_file="${tmake_file} rs6000/t-ppccomm rs6000/t-crtstuff t-crtstuff-pic t-fdpbit"
  	extra_parts="$extra_parts crtbegin.o crtend.o crtbeginS.o crtendS.o crtbeginT.o ecrti.o ecrtn.o ncrti.o ncrtn.o"
  	;;
@@ -9505,10 +9514,10 @@ index 0000000..1daa91a
 +#include "pru-divmod.h"
 diff --git a/libgcc/config/pru/lib2mul.c b/libgcc/config/pru/lib2mul.c
 new file mode 100644
-index 0000000..2ae7637
+index 0000000..b73326e
 --- /dev/null
 +++ b/libgcc/config/pru/lib2mul.c
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,41 @@
 +/* libgcc routines for PRU
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Red Hat.
@@ -9534,39 +9543,22 @@ index 0000000..2ae7637
 +   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 +   <http://www.gnu.org/licenses/>.  */
 +
-+typedef unsigned int  uint32_type   __attribute__ ((mode (SI)));
-+typedef unsigned int  uint16_type   __attribute__ ((mode (HI)));
-+typedef unsigned int  uint08_type   __attribute__ ((mode (QI)));
++unsigned int __mulsi3 (unsigned int a, unsigned int b)
++{
++  register unsigned int prod asm ("r26");
++  register unsigned int op0 asm ("r28") = a;
++  register unsigned int op1 asm ("r29") = b;
 +
-+#define C3B(a,b,c) a##b##c
-+#define C3(a,b,c) C3B(a,b,c)
++  /* TODO - reimplement via insn patterns! */
++  __asm__ ("ldi\tr25, 0        \n\t"
++	   "xout\t0, r25, 1    \n\t"
++	   "xin\t0, r26, 8        "
++	   : "=r" (prod)             /* output */
++	   : "r" (op0), "r" (op1)    /* input */
++	   : "r25", "r27");          /* clobber CFG (r25), RESHI (r27) */
 +
-+
-+#define UINT_TYPE	uint16_type
-+#define BITS_MINUS_1	15
-+#define NAME_MODE	hi
-+
-+#include "pru-mul.h"
-+
-+#undef UINT_TYPE
-+#undef BITS_MINUS_1
-+#undef NAME_MODE
-+
-+#define UINT_TYPE	uint08_type
-+#define BITS_MINUS_1	7
-+#define NAME_MODE	qi
-+
-+#include "pru-mul.h"
-+
-+#undef UINT_TYPE
-+#undef BITS_MINUS_1
-+#undef NAME_MODE
-+
-+#define UINT_TYPE	uint32_type
-+#define BITS_MINUS_1	31
-+#define NAME_MODE	si
-+
-+#include "pru-mul.h"
++  return prod;
++}
 diff --git a/libgcc/config/pru/lib2shift.c b/libgcc/config/pru/lib2shift.c
 new file mode 100644
 index 0000000..6b01564
@@ -9621,6 +9613,71 @@ index 0000000..6b01564
 +  return in;
 +}
 +
+diff --git a/libgcc/config/pru/muldi3.S b/libgcc/config/pru/muldi3.S
+new file mode 100644
+index 0000000..86243f1
+--- /dev/null
++++ b/libgcc/config/pru/muldi3.S
+@@ -0,0 +1,59 @@
++/*  Copyright (C) 2014 Free Software Foundation, Inc.
++    Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
++
++  This file is free software; you can redistribute it and/or modify it
++  under the terms of the GNU General Public License as published by the
++  Free Software Foundation; either version 3, or (at your option) any
++  later version.
++
++  This file is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++  General Public License for more details.
++
++  Under Section 7 of GPL version 3, you are granted additional
++  permissions described in the GCC Runtime Library Exception, version
++  3.1, as published by the Free Software Foundation.
++
++  You should have received a copy of the GNU General Public License and
++  a copy of the GCC Runtime Library Exception along with this program;
++  see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
++  <http://www.gnu.org/licenses/>.
++
++      (al + C * ah) * (bl + C * bh) =    al * bl
++				       + C * ah * bl
++				       + C * al * bh
++				       + C * C * ah * bh  -> discard, overflow
++	Where C=(1 << 32)
++  */
++
++	.global	__muldi3
++	.type	__muldi3,@function
++__muldi3:
++	/* switch to MUL mode */
++	ldi	r25, 0
++	xout	0, r25, 1
++
++	/* + C * ah * bl */
++	mov	r28, r15
++	mov	r29, r16
++	xin	0, r26, 8
++	mov	r15, r26		/* "loose" ah, record only reslo */
++
++	/* + C * al * bh */
++	mov	r28, r14
++	mov	r29, r17
++	xin	0, r26, 8
++	add	r15, r15, r26
++
++	/* + al * bl */
++	/* mov	r28, r14		-> no need, already loaded */
++	mov	r29, r16
++	xin	0, r26, 8
++	mov	r14, r26
++	add	r15, r15, r27
++
++	ret
++
++.Lfe1:
++	.size	__muldi3,.Lfe1-__muldi3
 diff --git a/libgcc/config/pru/pru-divmod.h b/libgcc/config/pru/pru-divmod.h
 new file mode 100644
 index 0000000..5458c3a
@@ -9744,60 +9801,12 @@ index 0000000..5458c3a
 +{
 +  return C3(udivmod,NAME_MODE,4) (a, b, 1);
 +}
-diff --git a/libgcc/config/pru/pru-mul.h b/libgcc/config/pru/pru-mul.h
-new file mode 100644
-index 0000000..01abd39
---- /dev/null
-+++ b/libgcc/config/pru/pru-mul.h
-@@ -0,0 +1,42 @@
-+/* libgcc routines for PRU
-+   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Red Hat.
-+
-+   This file is part of GCC.
-+
-+   GCC is free software; you can redistribute it and/or modify it
-+   under the terms of the GNU General Public License as published
-+   by the Free Software Foundation; either version 3, or (at your
-+   option) any later version.
-+
-+   GCC is distributed in the hope that it will be useful, but WITHOUT
-+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-+   License for more details.
-+
-+   Under Section 7 of GPL version 3, you are granted additional
-+   permissions described in the GCC Runtime Library Exception, version
-+   3.1, as published by the Free Software Foundation.
-+
-+   You should have received a copy of the GNU General Public License and
-+   a copy of the GCC Runtime Library Exception along with this program;
-+   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+UINT_TYPE C3(__mul,NAME_MODE,3)   (UINT_TYPE, UINT_TYPE);
-+UINT_TYPE
-+C3(__mul,NAME_MODE,3) (UINT_TYPE a, UINT_TYPE b)
-+{
-+  UINT_TYPE rv = 0;
-+
-+  char bit;
-+
-+  for (bit=0; b && bit<sizeof(UINT_TYPE)*8; bit++)
-+    {
-+      if (b & 1)
-+	rv += a;
-+      a <<= 1;
-+      b >>= 1;
-+    }
-+  return rv;
-+}
 diff --git a/libgcc/config/pru/t-pru b/libgcc/config/pru/t-pru
 new file mode 100644
-index 0000000..d764c88
+index 0000000..cee615c
 --- /dev/null
 +++ b/libgcc/config/pru/t-pru
-@@ -0,0 +1,38 @@
+@@ -0,0 +1,41 @@
 +# Makefile fragment for building LIBGCC for the TI PRU processor.
 +# Copyright (C) 2011 Free Software Foundation, Inc.
 +# Contributed by Red Hat.
@@ -9828,14 +9837,17 @@ index 0000000..d764c88
 +        $(srcdir)/config/pru/lib2divSI.c \
 +        $(srcdir)/config/pru/lib2bitcountHI.c \
 +        $(srcdir)/config/pru/lib2mul.c \
-+        $(srcdir)/config/pru/lib2shift.c
++        $(srcdir)/config/pru/lib2shift.c \
++        $(srcdir)/config/pru/muldi3.S
 +
 +
 +HOST_LIBGCC2_CFLAGS += -Os -ffunction-sections -fdata-sections
++
++LIB2FUNCS_EXCLUDE = _muldi3 _mulsi3
 +
 +# Local Variables:
 +# mode: Makefile
 +# End:
 -- 
-2.1.0.rc1
+2.1.0
 

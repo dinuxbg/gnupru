@@ -1,7 +1,7 @@
-# This is a port of the GNU GCC and Binutils to the TI PRU I/O processor.
+# Port of GNU GCC and Binutils for the TI PRU I/O processor.
 
 ## Introduction
-This is a port of the PRU I/O CPU core that is present in TI Sitara AM33xx SoCs. Older PRU core versions are not supported because, frankly, all I have is a beaglebone.
+This is a GCC/Binutils port for the PRU I/O CPU core that is present in TI Sitara AM33xx SoCs. Older PRU core versions are not supported because, frankly, all I have is a beaglebone.
 
 This initial release is preliminary and just a proof-of-concept. It might have some serious bugs, so be warned. That said, go ahead and try it :) I routinely do basic sanity checks with the two given examples: blinking LED and MD5 calculation.
 
@@ -24,7 +24,7 @@ See the example subdirectory for a blinking LED demo. To build the PRU firmware:
 	cd example/pru
 	make
 
-Then, to build the host loader (running on the beaglebone):
+Then, to build the UIO-based firmware loader:
 
 	apt-get install libelf-dev	# Needed by loader for parsing the ELF PRU executables
 	cd example/host
@@ -33,7 +33,7 @@ Then, to build the host loader (running on the beaglebone):
 Finally, to see a blinking led for 30 second on P9_27:
 
 	modprobe uio_pruss
-	echo BB-BONE-PRU-01 > /sys/devices/bone_capemgr.8/slots
+	echo BB-BONE-PRU-01 > /sys/devices/bone_capemgr.*/slots
 	cd example/host
 	./out/pload ../pru/out/pru-core0.elf ../pru/out/pru-core1.elf
 
@@ -43,11 +43,11 @@ Finally, to see a blinking led for 30 second on P9_27:
  * Beagleboard.org test debian image has been used for running the blinking LED example: http://beagleboard.org/latest-images/
 
 ## TODO
-When not fixing bugs, I intend to work on the following items:
- * Need to review the GCC function prologue handling. Current code is a direct copy of the Nios2 code and might not be correct or optimal for PRU.
+I intend to scratch my itch on the following items:
+ * Need to review the GCC function prologue handling. Current code is a direct copy of the Nios2 code. It should be correct but is not efficient for PRU.
  * Look again at the linker port. There's too much code for such a simple CPU.
- * Utilize the MAC instruction in libgcc.
  * Write testcases for GCC, GAS and LD.
- * Port newlib. Write useful macros for PRU-specific functionality.
+ * Implement newlib stdio using rpmsg I/O. Write useful macros for PRU-specific functionality.
+ * Make a debian package.
  * Port GDB.
 

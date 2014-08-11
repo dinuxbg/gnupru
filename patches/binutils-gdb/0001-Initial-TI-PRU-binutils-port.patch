@@ -1,4 +1,4 @@
-From be6d49671d5a94c8928c4d61baf21e73bcb898aa Mon Sep 17 00:00:00 2001
+From 2efb8dc045b4ddfbc3d3c4d8aaa744205968456a Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sun, 23 Feb 2014 22:25:35 +0200
 Subject: [PATCH 1/2] Initial TI PRU binutils port
@@ -55,7 +55,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  ld/Makefile.in                  |    5 +
  ld/configure.tgt                |    1 +
  ld/emulparams/pruelf.sh         |   18 +
- ld/scripttempl/pru.sc           |  194 +++++
+ ld/scripttempl/pru.sc           |  193 +++++
  opcodes/Makefile.am             |    2 +
  opcodes/Makefile.in             |    4 +
  opcodes/configure               |    1 +
@@ -64,7 +64,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  opcodes/pru-dis.c               |  265 +++++++
  opcodes/pru-opc.c               |  216 ++++++
  readline/support/config.sub     |    2 +
- 57 files changed, 4292 insertions(+), 1 deletion(-)
+ 57 files changed, 4291 insertions(+), 1 deletion(-)
  create mode 100644 bfd/cpu-pru.c
  create mode 100644 bfd/elf32-pru.c
  create mode 100644 gas/config/tc-pru.c
@@ -219,7 +219,7 @@ index 44c9199..cbe55f1 100644
      &bfd_rl78_arch,
      &bfd_rx_arch,
 diff --git a/bfd/bfd-in2.h b/bfd/bfd-in2.h
-index 8c77c81..3b3e9da 100644
+index 27fc3fe..a448e1b 100644
 --- a/bfd/bfd-in2.h
 +++ b/bfd/bfd-in2.h
 @@ -2281,6 +2281,8 @@ enum bfd_architecture
@@ -250,7 +250,7 @@ index 8c77c81..3b3e9da 100644
    BFD_RELOC_IQ2000_OFFSET_16,
    BFD_RELOC_IQ2000_OFFSET_21,
 diff --git a/bfd/config.bfd b/bfd/config.bfd
-index 1950ca0..a857cfa 100644
+index 7bcb92a..796807d 100644
 --- a/bfd/config.bfd
 +++ b/bfd/config.bfd
 @@ -119,6 +119,7 @@ or1k*|or1knd*)	 targ_archs=bfd_or1k_arch ;;
@@ -273,10 +273,10 @@ index 1950ca0..a857cfa 100644
      targ_defvec=rl78_elf32_vec
      ;;
 diff --git a/bfd/configure b/bfd/configure
-index f3df01c..7067546 100755
+index 243c97f..dbc017d 100755
 --- a/bfd/configure
 +++ b/bfd/configure
-@@ -15436,6 +15436,7 @@ do
+@@ -15506,6 +15506,7 @@ do
      powerpc_pei_vec)		 tb="$tb pei-ppc.lo peigen.lo cofflink.lo" ;;
      powerpc_pei_le_vec)		 tb="$tb pei-ppc.lo peigen.lo cofflink.lo" ;;
      powerpc_xcoff_vec)		 tb="$tb coff-rs6000.lo xcofflink.lo" ;;
@@ -285,10 +285,10 @@ index f3df01c..7067546 100755
      rs6000_xcoff64_vec)		 tb="$tb coff64-rs6000.lo xcofflink.lo aix5ppc-core.lo"; target_size=64 ;;
      rs6000_xcoff64_aix_vec)	 tb="$tb coff64-rs6000.lo xcofflink.lo aix5ppc-core.lo"; target_size=64 ;;
 diff --git a/bfd/configure.ac b/bfd/configure.ac
-index 017304f..8829762 100644
+index ba98e39..81a9e3e 100644
 --- a/bfd/configure.ac
 +++ b/bfd/configure.ac
-@@ -913,6 +913,7 @@ do
+@@ -907,6 +907,7 @@ do
      powerpc_pei_vec)		 tb="$tb pei-ppc.lo peigen.lo cofflink.lo" ;;
      powerpc_pei_le_vec)		 tb="$tb pei-ppc.lo peigen.lo cofflink.lo" ;;
      powerpc_xcoff_vec)		 tb="$tb coff-rs6000.lo xcofflink.lo" ;;
@@ -346,10 +346,10 @@ index 0000000..9a558c3
 +
 +const bfd_arch_info_type bfd_pru_arch = N (32, 32, 0, "pru", TRUE, NULL);
 diff --git a/bfd/elf-bfd.h b/bfd/elf-bfd.h
-index a06c54b..c2d20e8 100644
+index dc343ec..878d6a0 100644
 --- a/bfd/elf-bfd.h
 +++ b/bfd/elf-bfd.h
-@@ -424,6 +424,7 @@ enum elf_target_id
+@@ -421,6 +421,7 @@ enum elf_target_id
    OR1K_ELF_DATA,
    PPC32_ELF_DATA,
    PPC64_ELF_DATA,
@@ -1451,7 +1451,7 @@ index 3e55db5..ddf15e7 100644
    // Old MSP430 objects used 0x1059 (EM_MSP430 is correct).
    // Old FR30 objects used 0x3330 (EM_FR30 is correct).
 diff --git a/gas/Makefile.am b/gas/Makefile.am
-index 5727c75..2f8947d 100644
+index 55c86b2..49b9c17f 100644
 --- a/gas/Makefile.am
 +++ b/gas/Makefile.am
 @@ -171,6 +171,7 @@ TARGET_CPU_CFILES = \
@@ -1471,7 +1471,7 @@ index 5727c75..2f8947d 100644
  	config/tc-rx.h \
  	config/tc-s390.h \
 diff --git a/gas/Makefile.in b/gas/Makefile.in
-index be2711b..154d184 100644
+index 5dc250f..c024d9d 100644
 --- a/gas/Makefile.in
 +++ b/gas/Makefile.in
 @@ -440,6 +440,7 @@ TARGET_CPU_CFILES = \
@@ -1490,7 +1490,7 @@ index be2711b..154d184 100644
  	config/tc-rl78.h \
  	config/tc-rx.h \
  	config/tc-s390.h \
-@@ -864,6 +866,7 @@ distclean-compile:
+@@ -866,6 +868,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-pdp11.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-pj.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-ppc.Po@am__quote@
@@ -1498,7 +1498,7 @@ index be2711b..154d184 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-rl78.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-rx.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-s390.Po@am__quote@
-@@ -1569,6 +1572,20 @@ tc-ppc.obj: config/tc-ppc.c
+@@ -1571,6 +1574,20 @@ tc-ppc.obj: config/tc-ppc.c
  @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
  @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tc-ppc.obj `if test -f 'config/tc-ppc.c'; then $(CYGPATH_W) 'config/tc-ppc.c'; else $(CYGPATH_W) '$(srcdir)/config/tc-ppc.c'; fi`
  
@@ -3243,10 +3243,10 @@ index 0000000..f4c4121
 +
 +#endif /* TC_PRU */
 diff --git a/gas/configure.tgt b/gas/configure.tgt
-index 9319d33..215a815 100644
+index d07d445..047bf78 100644
 --- a/gas/configure.tgt
 +++ b/gas/configure.tgt
-@@ -379,6 +379,8 @@ case ${generic_target} in
+@@ -384,6 +384,8 @@ case ${generic_target} in
    ppc-*-kaos*)				fmt=elf ;;
    ppc-*-lynxos*)			fmt=elf em=lynx ;;
  
@@ -3256,7 +3256,7 @@ index 9319d33..215a815 100644
    s390-*-tpf*)				fmt=elf ;;
  
 diff --git a/gas/po/POTFILES.in b/gas/po/POTFILES.in
-index dc63835..03db21d 100644
+index d1fd07f..e23567f 100644
 --- a/gas/po/POTFILES.in
 +++ b/gas/po/POTFILES.in
 @@ -129,6 +129,8 @@ config/tc-pj.c
@@ -4241,10 +4241,10 @@ index 9f56ca1..b8f1671 100644
    $(srcdir)/emultempl/generic.em $(srcdir)/scripttempl/aout.sc ${GEN_DEPENDS}
  
 diff --git a/ld/configure.tgt b/ld/configure.tgt
-index 33fb378..fde2ec2 100644
+index 24e36d1..652f957 100644
 --- a/ld/configure.tgt
 +++ b/ld/configure.tgt
-@@ -603,6 +603,7 @@ powerpc-*-aix*)		targ_emul=aixppc ;;
+@@ -604,6 +604,7 @@ powerpc-*-aix*)		targ_emul=aixppc ;;
  powerpc-*-beos*)	targ_emul=aixppc ;;
  powerpc-*-windiss*)	targ_emul=elf32ppcwindiss ;;
  powerpc-*-lynxos*)	targ_emul=ppclynx ;;
@@ -4278,10 +4278,10 @@ index 0000000..8cfd10f
 +ENTRY=_start
 diff --git a/ld/scripttempl/pru.sc b/ld/scripttempl/pru.sc
 new file mode 100644
-index 0000000..381792a
+index 0000000..6c2f00d
 --- /dev/null
 +++ b/ld/scripttempl/pru.sc
-@@ -0,0 +1,194 @@
+@@ -0,0 +1,193 @@
 +cat <<EOF
 +OUTPUT_FORMAT("${OUTPUT_FORMAT}","${OUTPUT_FORMAT}","${OUTPUT_FORMAT}")
 +OUTPUT_ARCH(${ARCH})
@@ -4354,13 +4354,31 @@ index 0000000..381792a
 +  .rel.plt     ${RELOCATING-0} : { *(.rel.plt)		}
 +  .rela.plt    ${RELOCATING-0} : { *(.rela.plt)		}
 +
-+  /* Internal text space or external memory.  */
++  /* Internal text space. */
 +  .text ${RELOCATING-0} :
 +  {
-+    *(.reset)
-+    KEEP(*(.reset))
++    ${RELOCATING+. = ALIGN(4);}
 +
-+    ${RELOCATING+ *(.text*)}
++    *(.init0)  /* Start here after reset.  */
++    KEEP (*(.init0))
++    *(.init1)
++    KEEP (*(.init1))
++    *(.init2)
++    KEEP (*(.init2))
++    *(.init3)
++    KEEP (*(.init3))
++    *(.init4)
++    KEEP (*(.init4))
++    *(.init5)
++    KEEP (*(.init5))
++    *(.init6)  /* C++ constructors.  */
++    KEEP (*(.init6))
++    *(.init7)
++    KEEP (*(.init7))
++    *(.init8)
++    KEEP (*(.init8))
++    *(.init9)
++    KEEP (*(.init9))
 +
 +    ${CONSTRUCTING+ __ctors_start = . ; }
 +    ${CONSTRUCTING+ *(.ctors) }
@@ -4371,33 +4389,13 @@ index 0000000..381792a
 +    KEEP(SORT(*)(.ctors))
 +    KEEP(SORT(*)(.dtors))
 +
-+    /* From this point on, we don't bother about wether the insns are
-+       below or above the 16 bits boundary.  */
-+    *(.init0)  /* Start here after reset.  */
-+    KEEP (*(.init0))
-+    *(.init1)
-+    KEEP (*(.init1))
-+    *(.init2)  /* Clear __zero_reg__, set up stack pointer.  */
-+    KEEP (*(.init2))
-+    *(.init3)
-+    KEEP (*(.init3))
-+    *(.init4)  /* Initialize data and BSS.  */
-+    KEEP (*(.init4))
-+    *(.init5)
-+    KEEP (*(.init5))
-+    *(.init6)  /* C++ constructors.  */
-+    KEEP (*(.init6))
-+    *(.init7)
-+    KEEP (*(.init7))
-+    *(.init8)
-+    KEEP (*(.init8))
-+    *(.init9)  /* Call main().  */
-+    KEEP (*(.init9))
++    ${RELOCATING+. = ALIGN(4);}
 +    *(.text)
 +    ${RELOCATING+. = ALIGN(4);}
-+    ${RELOCATING+ *(.text.*)}
++    *(.text.*)
 +    ${RELOCATING+. = ALIGN(4);}
-+    *(.fini9)  /* _exit() starts here.  */
++
++    *(.fini9)
 +    KEEP (*(.fini9))
 +    *(.fini8)
 +    KEEP (*(.fini8))
@@ -4422,16 +4420,15 @@ index 0000000..381792a
 +
 +  .data        ${RELOCATING-0} :
 +  {
-+    /* Data memory is at address 0. But NULL should be an invalid address!
-+     * So ignore the first word to satisfy the C compiler.
-+     *
-+     * TODO - can we put the NULL address into use? */
-+    . += 4;
++    ${RELOCATING+ *(.data.atzero*)}
++    /* DATA memory starts at address 0. So to avoid placing a valid static
++       variable at the invalid NULL address, we introduce the .data.atzero
++       section. If CRT can make some use of it - great. Otherwise skip a
++       word. In all cases .data/.bss sections must start at non-zero. */
++    . += (. == 0 ? 4 : 0);
++
 +    ${RELOCATING+ PROVIDE (__data_start = .) ; }
-+    /* --gc-sections will delete empty .data. This leads to wrong start
-+       addresses for subsequent sections because -Tdata= from the command
-+       line will have no effect, see PR13697.  Thus, keep .data  */
-+    KEEP (*(.data))
++    *(.data)
 +    ${RELOCATING+ *(.data*)}
 +    *(.rodata)  /* We need to include .rodata here if gcc is used */
 +    ${RELOCATING+ *(.rodata*)} /* with -fdata-sections.  */
@@ -4459,6 +4456,8 @@ index 0000000..381792a
 +    ${RELOCATING+ _end = . ;  }
 +    ${RELOCATING+ PROVIDE (__heap_start = .) ; }
 +  } ${RELOCATING+ > data}
++
++  ${RELOCATING+ _stack = ORIGIN(data) + LENGTH(data);}
 +
 +  /* Stabs debugging sections.  */
 +  .stab 0 : { *(.stab) }
@@ -5073,5 +5072,5 @@ index d07267e..9b6f5dd 100755
  	| romp-* | rs6000-* \
  	| sh-* | sh[1234]-* | sh[24]a-* | sh[23]e-* | sh[34]eb-* | sheb-* | shbe-* \
 -- 
-2.1.0.rc1
+2.1.0
 

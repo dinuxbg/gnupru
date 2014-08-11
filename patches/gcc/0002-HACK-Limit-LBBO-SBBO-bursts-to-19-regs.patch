@@ -1,7 +1,7 @@
-From 754844bd83c2ec79f86cedc1b2565b5bc8aaa226 Mon Sep 17 00:00:00 2001
+From b0bc018760504ef3f5a05123a2398b5b969d1e13 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Mon, 28 Jul 2014 23:10:08 +0300
-Subject: [PATCH 2/4] HACK: Limit LBBO/SBBO bursts to 19 regs
+Subject: [PATCH 2/2] HACK: Limit LBBO/SBBO bursts to 19 regs
 
 Until gcc/genextract.c is fixed to work with gargantuan
 machine-generated insn patterns, limit PRU bursts to 19 registers.
@@ -3267,5 +3267,5 @@ index c55aa05..8c9f745 100644
        || GET_CODE (operands[1]) != REG
        || (REGNO (operands[1]) + INTVAL (operands[2]) - 1) > LAST_NONIO_GP_REG)
 -- 
-2.1.0.rc1
+2.1.0
 
