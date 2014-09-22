@@ -29,11 +29,9 @@
 #ifndef PRU_H
 #define PRU_H
 
-/* due to lack of a C library, define some useful stuff here */
-typedef unsigned long long uint64_t;
-typedef unsigned int uint32_t;
-typedef unsigned short uint16_t;
-typedef unsigned char uint8_t;
+#include <stdint.h>
+
+/* TODO - cleanup macros below and move them to newlib! */
 
 static inline void set_r30(uint32_t val)
 {

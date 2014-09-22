@@ -33,11 +33,14 @@
 CROSS_COMPILE ?= pru-
 CFLAGS += -g -Os
 CFLAGS += -Wall -Wextra
-LDFLAGS += -nostdlib -lgcc
+
+# Define this to squeeze code size by removing atexit, exit, constructors
+# and destructors from CRT.
+CFLAGS += -minrt
 
 # List of object files to compile for each PRU core.
-OBJS0 := crt.o main0.o
-OBJS1 := crt.o main1.o md5.o md5-data.o
+OBJS0 := main0.o
+OBJS1 := main1.o md5.o md5-data.o
 
 # Where to output compiled objects
 OUT := out

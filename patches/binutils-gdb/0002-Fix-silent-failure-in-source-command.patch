@@ -1,4 +1,4 @@
-From c221b24e45e38d9963c713cad76da201dddcf3e6 Mon Sep 17 00:00:00 2001
+From cad6a02f20e3bdd6bd933226e23c47d02575fcd5 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sun, 15 Jun 2014 09:58:48 +0300
 Subject: [PATCH 2/2] Fix silent failure in source command
@@ -35,5 +35,5 @@ index 030cb7d..dbbce09 100644
  }
  fragment()
 -- 
-2.1.0.rc1
+2.1.0
 
