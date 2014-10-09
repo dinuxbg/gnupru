@@ -1,4 +1,4 @@
-From d08fa037beca4b393fe0dd3035e87b75d5b02e02 Mon Sep 17 00:00:00 2001
+From 3f1f4b3a1e9d742a4529f8ebdd797e27d0ec5fa7 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Thu, 1 May 2014 16:43:07 +0300
 Subject: [PATCH] Initial PRU port
@@ -20,26 +20,29 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgloss/pru/close.c                 |   25 +
  libgloss/pru/configure               | 3791 ++++++++++++++++++++++++++++++++++
  libgloss/pru/configure.in            |   66 +
- libgloss/pru/crt0.S                  |   57 +
- libgloss/pru/exit.c                  |   27 +
+ libgloss/pru/crt0.S                  |   69 +
+ libgloss/pru/exit.c                  |   31 +
  libgloss/pru/fstat.c                 |   30 +
  libgloss/pru/getpid.c                |   25 +
+ libgloss/pru/isatty.c                |   27 +
  libgloss/pru/kill.c                  |   28 +
- libgloss/pru/lseek.c                 |   31 +
- libgloss/pru/open.c                  |   30 +
+ libgloss/pru/lseek.c                 |   34 +
+ libgloss/pru/open.c                  |   33 +
  libgloss/pru/print.c                 |   27 +
  libgloss/pru/putnum.c                |   41 +
  libgloss/pru/raise.c                 |   22 +
  libgloss/pru/read.c                  |   39 +
- libgloss/pru/rpmsg-inbyte.c          |   25 +
- libgloss/pru/rpmsg-outbyte.c         |   22 +
+ libgloss/pru/rpmsg-inbyte.c          |   26 +
+ libgloss/pru/rpmsg-outbyte.c         |   24 +
  libgloss/pru/sbrk.c                  |   42 +
- libgloss/pru/stat.c                  |   30 +
- libgloss/pru/unlink.c                |   28 +
- libgloss/pru/write.c                 |   39 +
- newlib/configure.host                |   14 +-
+ libgloss/pru/stat.c                  |   33 +
+ libgloss/pru/syscall.S               |   31 +
+ libgloss/pru/syscall.h               |   21 +
+ libgloss/pru/unlink.c                |   31 +
+ libgloss/pru/write.c                 |   36 +
+ newlib/configure.host                |   12 +-
  newlib/libc/include/machine/ieeefp.h |    4 +
- 29 files changed, 4927 insertions(+), 1 deletion(-)
+ 32 files changed, 5032 insertions(+), 1 deletion(-)
  create mode 100644 libgloss/pru/Makefile.in
  create mode 100644 libgloss/pru/aclocal.m4
  create mode 100644 libgloss/pru/close.c
@@ -49,6 +52,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 libgloss/pru/exit.c
  create mode 100644 libgloss/pru/fstat.c
  create mode 100644 libgloss/pru/getpid.c
+ create mode 100644 libgloss/pru/isatty.c
  create mode 100644 libgloss/pru/kill.c
  create mode 100644 libgloss/pru/lseek.c
  create mode 100644 libgloss/pru/open.c
@@ -60,6 +64,8 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 libgloss/pru/rpmsg-outbyte.c
  create mode 100644 libgloss/pru/sbrk.c
  create mode 100644 libgloss/pru/stat.c
+ create mode 100644 libgloss/pru/syscall.S
+ create mode 100644 libgloss/pru/syscall.h
  create mode 100644 libgloss/pru/unlink.c
  create mode 100644 libgloss/pru/write.c
 
@@ -114,7 +120,7 @@ index 80313d0..4dfea7c 100644
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
 diff --git a/libgloss/configure b/libgloss/configure
-index 41d91d6..5e6e368 100755
+index aaef579..3024c94 100755
 --- a/libgloss/configure
 +++ b/libgloss/configure
 @@ -705,6 +705,7 @@ arm
@@ -125,7 +131,7 @@ index 41d91d6..5e6e368 100755
  libnosys'
  
  # Initialize some variables set by options.
-@@ -2560,6 +2561,11 @@ case "${target}" in
+@@ -2559,6 +2560,11 @@ case "${target}" in
  	subdirs="$subdirs iq2000"
  
  	;;
@@ -138,10 +144,10 @@ index 41d91d6..5e6e368 100755
  
  
 diff --git a/libgloss/configure.in b/libgloss/configure.in
-index 14287e7..cfd5362 100644
+index 93cc369..bcca3aa 100644
 --- a/libgloss/configure.in
 +++ b/libgloss/configure.in
-@@ -160,6 +160,9 @@ case "${target}" in
+@@ -159,6 +159,9 @@ case "${target}" in
    iq2000-*-*)
  	AC_CONFIG_SUBDIRS([iq2000])
  	;;
@@ -153,7 +159,7 @@ index 14287e7..cfd5362 100644
  dnl For now, don't bother configuring testsuite
 diff --git a/libgloss/pru/Makefile.in b/libgloss/pru/Makefile.in
 new file mode 100644
-index 0000000..0addc0d
+index 0000000..209af1d
 --- /dev/null
 +++ b/libgloss/pru/Makefile.in
 @@ -0,0 +1,122 @@
@@ -208,9 +214,9 @@ index 0000000..0addc0d
 +
 +# object files needed
 +OBJS = \
-+	close.o exit.o fstat.o getpid.o kill.o lseek.o open.o print.o \
-+	putnum.o raise.o read.o rpmsg-inbyte.o rpmsg-outbyte.o sbrk.o \
-+	stat.o unlink.o write.o
++	close.o exit.o fstat.o getpid.o isatty.o kill.o lseek.o open.o \
++	print.o putnum.o raise.o read.o rpmsg-inbyte.o rpmsg-outbyte.o \
++	sbrk.o stat.o syscall.o unlink.o write.o
 +
 +# Object files specific to particular targets.
 +EVALOBJS = ${OBJS}
@@ -4531,10 +4537,10 @@ index 0000000..2a4c946
 +AC_OUTPUT
 diff --git a/libgloss/pru/crt0.S b/libgloss/pru/crt0.S
 new file mode 100644
-index 0000000..2b0324f
+index 0000000..63d7fba
 --- /dev/null
 +++ b/libgloss/pru/crt0.S
-@@ -0,0 +1,57 @@
+@@ -0,0 +1,69 @@
 +/* crt0.S -- PRU startup code
 + *
 + * Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -4558,8 +4564,17 @@ index 0000000..2b0324f
 +	.section .init0
 +	.global	_start
 +_start:
-+	/* Initialize stack pointer. We assume it is somewhere in SRAM. */
-+	ldi	sp, _stack
++	/* Initialize stack pointer. */
++#if 0
++	/* TODO - introduce linker relaxation in order to elegantly
++	   optimize cases like this. We can get by a single "ldi" if
++	   the MSB 16 bits are zero. */
++	ldi	sp, _stack_top
++#else
++	ldi	sp.w2, %hi(_stack_top)
++	ldi	sp.w0, %lo(_stack_top)
++#endif
++
 +	/* DATA and BSS are handled by the loader, so nothing to do here. */
 +
 +#if !defined(MINRT)
@@ -4574,7 +4589,10 @@ index 0000000..2b0324f
 +	call	atexit
 +.Lweak_atexit:
 +	/* Call the global/static constructors */
++	ldi	r14, %pmem(_init)
++	qbeq	.Lweak_init, r14, 0
 +	call	_init
++.Lweak_init:
 +#endif
 +	
 +	/* Just in case main() tries to access argc, argv[] and envp. */
@@ -4594,10 +4612,10 @@ index 0000000..2b0324f
 +	jmp	__crt_exit
 diff --git a/libgloss/pru/exit.c b/libgloss/pru/exit.c
 new file mode 100644
-index 0000000..6bca947
+index 0000000..cc93cbe
 --- /dev/null
 +++ b/libgloss/pru/exit.c
-@@ -0,0 +1,27 @@
+@@ -0,0 +1,31 @@
 +/* exit.c -- exit trap binding.
 + *
 + * Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -4612,7 +4630,9 @@ index 0000000..6bca947
 + * the new terms are clearly indicated on the first page of each file where
 + * they apply.
 + */
++#include <stdint.h>
 +#include <_ansi.h>
++#include "syscall.h"
 +
 +/*
 + * _exit --  Halt, so remoteproc can see we exited.
@@ -4622,7 +4642,9 @@ index 0000000..6bca947
 +       int val)
 +{
 +    while (1) {
-+	asm("halt");
++	/* Even without rpmsg, the "halt" instruction from the syscall
++	   function will stop PRU. */
++	syscall1 (SYS_EXIT, val);
 +    }
 +}
 diff --git a/libgloss/pru/fstat.c b/libgloss/pru/fstat.c
@@ -4692,6 +4714,39 @@ index 0000000..eee2ac0
 +{
 +  return __MYPID;
 +}
+diff --git a/libgloss/pru/isatty.c b/libgloss/pru/isatty.c
+new file mode 100644
+index 0000000..e3c3205
+--- /dev/null
++++ b/libgloss/pru/isatty.c
+@@ -0,0 +1,27 @@
++/* isatty.c -- chek the terminal device.
++ * 
++ * Copyright (c) 1995 Cygnus Support
++ *
++ * The authors hereby grant permission to use, copy, modify, distribute,
++ * and license this software and its documentation for any purpose, provided
++ * that existing copyright notices are retained in all copies and that this
++ * notice is included verbatim in any distributions. No written agreement,
++ * license, or royalty fee is required for any of the authorized uses.
++ * Modifications to this software may be copyrighted by their authors
++ * and need not follow the licensing terms described here, provided that
++ * the new terms are clearly indicated on the first page of each file where
++ * they apply.
++ */
++#include "glue.h"
++
++/*
++ * isatty -- returns 1 if connected to a terminal device,
++ *           returns 0 if not. Since we're hooked up to a
++ *           serial port, we'll say yes _AND return a 1.
++ */
++int
++_DEFUN (_isatty, (fd),
++       int fd)
++{
++  return (1);
++}
 diff --git a/libgloss/pru/kill.c b/libgloss/pru/kill.c
 new file mode 100644
 index 0000000..43a3597
@@ -4728,10 +4783,10 @@ index 0000000..43a3597
 +}
 diff --git a/libgloss/pru/lseek.c b/libgloss/pru/lseek.c
 new file mode 100644
-index 0000000..5f7eb73
+index 0000000..c0b296c
 --- /dev/null
 +++ b/libgloss/pru/lseek.c
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,34 @@
 +/* lseek.c -- move read/write pointer.
 + *
 + * Copyright (c) 1995, 1999 Cygnus Support
@@ -4750,6 +4805,9 @@ index 0000000..5f7eb73
 +#include <errno.h>
 +#include "glue.h"
 +
++#undef errno
++extern int errno;
++
 +/*
 + * lseek --  we return an error.
 + */
@@ -4765,10 +4823,10 @@ index 0000000..5f7eb73
 +
 diff --git a/libgloss/pru/open.c b/libgloss/pru/open.c
 new file mode 100644
-index 0000000..a9e9959
+index 0000000..2e85f37
 --- /dev/null
 +++ b/libgloss/pru/open.c
-@@ -0,0 +1,30 @@
+@@ -0,0 +1,33 @@
 +/* open.c -- open a file.
 + * 
 + * Copyright (c) 1995, 1999 Cygnus Support
@@ -4786,6 +4844,9 @@ index 0000000..a9e9959
 +#include <errno.h>
 +#include "glue.h"
 +
++#undef errno
++extern int errno;
++
 +/*
 + * open -- open a file descriptor. We don't have a filesystem, so
 + *         we return an error.
@@ -4801,7 +4862,7 @@ index 0000000..a9e9959
 +}
 diff --git a/libgloss/pru/print.c b/libgloss/pru/print.c
 new file mode 100644
-index 0000000..d0d2bce
+index 0000000..4b0b214
 --- /dev/null
 +++ b/libgloss/pru/print.c
 @@ -0,0 +1,27 @@
@@ -4819,7 +4880,9 @@ index 0000000..d0d2bce
 + * the new terms are clearly indicated on the first page of each file where
 + * they apply.
 + */
++#include <stdint.h>
 +#include "glue.h"
++#include "syscall.h"
 +
 +/*
 + * print -- do a raw print of a string
@@ -4828,9 +4891,7 @@ index 0000000..d0d2bce
 +_DEFUN (_print, (ptr),
 +char *ptr)
 +{
-+  while (*ptr) {
-+    outbyte (*ptr++);
-+  }
++  syscall1 (SYS_PUTS, (uint32_t) ptr);
 +}
 diff --git a/libgloss/pru/putnum.c b/libgloss/pru/putnum.c
 new file mode 100644
@@ -4954,10 +5015,10 @@ index 0000000..009718a
 +}
 diff --git a/libgloss/pru/rpmsg-inbyte.c b/libgloss/pru/rpmsg-inbyte.c
 new file mode 100644
-index 0000000..e218c9a
+index 0000000..b30e42b
 --- /dev/null
 +++ b/libgloss/pru/rpmsg-inbyte.c
-@@ -0,0 +1,25 @@
+@@ -0,0 +1,26 @@
 +/* inbyte.c -- inbyte function for remoteproc
 + *
 + * Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -4980,15 +5041,16 @@ index 0000000..e218c9a
 +
 +{
 +    /* TODO - implement me! */
++	/* TODO - see https://github.com/abhishek-kakkar/BeagleLogic/beaglelogic-firmware/pru_syscalls.h */
 +    return -1;
 +}
 +
 diff --git a/libgloss/pru/rpmsg-outbyte.c b/libgloss/pru/rpmsg-outbyte.c
 new file mode 100644
-index 0000000..c4da9b0
+index 0000000..892d8bc
 --- /dev/null
 +++ b/libgloss/pru/rpmsg-outbyte.c
-@@ -0,0 +1,22 @@
+@@ -0,0 +1,24 @@
 +/* rpmsg-outbyte.c -- outbyte function for AM33xx PRU remoteproc
 + *
 + * Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -5003,13 +5065,15 @@ index 0000000..c4da9b0
 + * the new terms are clearly indicated on the first page of each file where
 + * they apply.
 + */
++#include <stdint.h>
 +#include <_ansi.h>
++#include "syscall.h"
 +
 +void
 +_DEFUN (outbyte, (ch),
 +	char ch)
 +{
-+    /* TODO - implement me */
++  syscall1 (SYS_PUTC, ch);
 +}
 diff --git a/libgloss/pru/sbrk.c b/libgloss/pru/sbrk.c
 new file mode 100644
@@ -5061,10 +5125,10 @@ index 0000000..8449589
 +}
 diff --git a/libgloss/pru/stat.c b/libgloss/pru/stat.c
 new file mode 100644
-index 0000000..401a6b5
+index 0000000..d37554d
 --- /dev/null
 +++ b/libgloss/pru/stat.c
-@@ -0,0 +1,30 @@
+@@ -0,0 +1,33 @@
 +/* stat.c -- Get the status of a file.
 + *
 + * Copyright (c) 1995, 1999 Cygnus Support
@@ -5083,6 +5147,9 @@ index 0000000..401a6b5
 +#include <errno.h>
 +#include "glue.h"
 +
++#undef errno
++extern int errno;
++
 +/*
 + * stat -- Since we have no file system, we just return an error.
 + */
@@ -5095,12 +5162,76 @@ index 0000000..401a6b5
 +  return (-1);
 +}
 +
+diff --git a/libgloss/pru/syscall.S b/libgloss/pru/syscall.S
+new file mode 100644
+index 0000000..86ba23b
+--- /dev/null
++++ b/libgloss/pru/syscall.S
+@@ -0,0 +1,31 @@
++/* crt0.S -- PRU startup code
++ *
++ * Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
++ *
++ * The authors hereby grant permission to use, copy, modify, distribute,
++ * and license this software and its documentation for any purpose, provided
++ * that existing copyright notices are retained in all copies and that this
++ * notice is included verbatim in any distributions. No written agreement,
++ * license, or royalty fee is required for any of the authorized uses.
++ * Modifications to this software may be copyrighted by their authors
++ * and need not follow the licensing terms described here, provided that
++ * the new terms are clearly indicated on the first page of each file where
++ * they apply.
++ */
++#include "newlib.h"
++
++#define SYSCALL_VALUE	35  /* (1 << 5) | (19 - 16) = 35 */
++
++
++	/* Due to ABI, all syscalls with up tp 15 arguments contain
++	   the same insturction sequences. So we squash them to save space. */
++	.text
++	.global	syscall
++	.global	syscall1
++	.global	syscall2
++syscall:
++syscall1:
++syscall2:
++	ldi	r31, SYSCALL_VALUE
++	halt
++	ret
+diff --git a/libgloss/pru/syscall.h b/libgloss/pru/syscall.h
+new file mode 100644
+index 0000000..7854857
+--- /dev/null
++++ b/libgloss/pru/syscall.h
+@@ -0,0 +1,21 @@
++
++#ifndef LIBGLOSS_SYSCALL_H
++#define LIBGLOSS_SYSCALL_H
++
++/* Definitions taken from:
++   https://github.com/abhishek-kakkar/BeagleLogic/beaglelogic-firmware/pru_syscalls.h
++ */
++#define SYS_HALT	    0
++#define SYS_PUTC	    1
++#define SYS_EXIT	    2
++#define SYS_PUTS	    3
++
++#define SYS_DOWNCALL_READY   254
++#define SYS_DOWNCALL_DONE    255
++
++extern int syscall (uint32_t sysn);
++extern int syscall1 (uint32_t sysn, uint32_t arg1);
++extern int syscall2 (uint32_t sysn, uint32_t arg1, uint32_t arg2);
++
++#endif	/* LIBGLOSS_SYSCALL_H */
++
 diff --git a/libgloss/pru/unlink.c b/libgloss/pru/unlink.c
 new file mode 100644
-index 0000000..16dda14f
+index 0000000..5ff0eef
 --- /dev/null
 +++ b/libgloss/pru/unlink.c
-@@ -0,0 +1,28 @@
+@@ -0,0 +1,31 @@
 +/* unlink.c -- remove a file.
 + * 
 + * Copyright (c) 1995, 1999 Cygnus Support
@@ -5118,6 +5249,9 @@ index 0000000..16dda14f
 +#include <errno.h>
 +#include "glue.h"
 +
++#undef errno
++extern int errno;
++
 +/*
 + * unlink -- since we have no file system, 
 + *           we just return an error.
@@ -5131,10 +5265,10 @@ index 0000000..16dda14f
 +}
 diff --git a/libgloss/pru/write.c b/libgloss/pru/write.c
 new file mode 100644
-index 0000000..7f39fd1
+index 0000000..5bc5596
 --- /dev/null
 +++ b/libgloss/pru/write.c
-@@ -0,0 +1,39 @@
+@@ -0,0 +1,36 @@
 +/* write.c -- write bytes to an output device.
 + *
 + * Copyright (c) 1995, 1999 Cygnus Support
@@ -5167,15 +5301,12 @@ index 0000000..7f39fd1
 +  int i;
 +
 +  for (i = 0; i < nbytes; i++) {
-+    if (*(buf + i) == '\n') {
-+      outbyte ('\r');
-+    }
 +    outbyte (*(buf + i));
 +  }
 +  return (nbytes);
 +}
 diff --git a/newlib/configure.host b/newlib/configure.host
-index 447f1c1..887e269 100644
+index 447f1c1..903be56 100644
 --- a/newlib/configure.host
 +++ b/newlib/configure.host
 @@ -80,7 +80,7 @@ case "${target_optspace}:${host}" in
@@ -5187,32 +5318,30 @@ index 447f1c1..887e269 100644
      newlib_cflags="${newlib_cflags} -Os"
      ;;
    no:* | :*)
-@@ -250,6 +250,10 @@ case "${host_cpu}" in
+@@ -250,6 +250,13 @@ case "${host_cpu}" in
    powerpc*)
  	machine_dir=powerpc
  	;;
 +  pru*)
 +	newlib_cflags="${newlib_cflags} -DPREFER_SIZE_OVER_SPEED"
++	newlib_cflags="${newlib_cflags} -DNO_EXEC"
++	newlib_cflags="${newlib_cflags} -DSMALL_MEMORY"
 +	default_newlib_nano_malloc="yes"
++	default_newlib_atexit_dynamic_alloc="no"
 +	;;
    rl78)
  	machine_dir=rl78
  	newlib_cflags="${newlib_cflags} -DPREFER_SIZE_OVER_SPEED -DSMALL_MEMORY"
-@@ -772,6 +776,14 @@ case "${host}" in
- 	default_newlib_io_long_long="yes"
+@@ -768,6 +775,9 @@ case "${host}" in
+ 	newlib_cflags="${newlib_cflags} -DHAVE_OPENDIR -DHAVE_RENAME -DHAVE_FCNTL -D_NO_POSIX_SPAWN"
  	syscall_dir=syscalls
  	;;
 +  pru*)
-+	newlib_cflags="${newlib_cflags} -DNO_EXEC"
-+	newlib_cflags="${newlib_cflags} -DSMALL_MEMORY"
-+	newlib_cflags="${newlib_cflags} -DMISSING_SYSCALL_NAMES"
-+	newlib_cflags="${newlib_cflags} -D_REENT_SMALL"
-+	default_newlib_nano_malloc="yes"
-+	default_newlib_atexit_dynamic_alloc="no"
++	syscall_dir=syscalls
 +	;;
-   sparc-sun-sunos*)
- 	newlib_cflags="${newlib_cflags} -DSIGNAL_PROVIDED"
- 	;;
+   sh*-*-*)
+ 	default_newlib_io_long_long="yes"
+ 	syscall_dir=syscalls
 diff --git a/newlib/libc/include/machine/ieeefp.h b/newlib/libc/include/machine/ieeefp.h
 index 8304a1b..64451a9 100644
 --- a/newlib/libc/include/machine/ieeefp.h
@@ -5229,5 +5358,5 @@ index 8304a1b..64451a9 100644
  #define __IEEE_LITTLE_ENDIAN
  #define __SMALL_BITFIELDS	/* 16 Bit INT */
 -- 
-2.1.0
+2.1.3
 

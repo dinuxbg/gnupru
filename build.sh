@@ -4,9 +4,9 @@
 
 # On which upstream commits to apply patches. I frequently rebase so
 # expect these to be somewhat random.
-GCC_BASECOMMIT=88df51ffcbc63a1654d11a7686b5cd790b3e3c37
-BINUTILS_BASECOMMIT=57cbd724c3212b40a328b1d21403bb0d96736687
-NEWLIB_BASECOMMIT=8e86e7599aefb63189c52c959018468cf78f2366
+GCC_BASECOMMIT=bd09c0bdb0ea577910089800a3854f393abce681
+BINUTILS_BASECOMMIT=1ada499f30b82fe7ab3636154ce0d39ebc06ec55
+NEWLIB_BASECOMMIT=7b7f00a77e3ff36eec1c5a88085c30a812214b83
 
 GCC_GIT=https://github.com/mirrors/gcc.git
 BINUTILS_GIT=https://github.com/bminor/binutils-gdb.git
@@ -49,7 +49,7 @@ prepare_source()
 build_binutils()
 {
   cd $BUILD/binutils-gdb
-  $SRC/binutils-gdb/configure --target=pru --prefix=$PREFIX --disable-nls --disable-gdb || die Could not configure Binutils
+  $SRC/binutils-gdb/configure --target=pru --prefix=$PREFIX --disable-nls || die Could not configure Binutils
   make -j4 || die Could not build Binutils
   make install || die Could not install Binutils
 }
@@ -68,7 +68,7 @@ build_gcc_pass()
 build_newlib()
 {
   cd $BUILD/newlib
-  $SRC/newlib/configure --target=pru --prefix=$PREFIX --enable-newlib-nano-formatted-io --disable-newlib-multithread || die Could not configure Newlib
+  $SRC/newlib/configure --target=pru --prefix=$PREFIX --disable-newlib-fvwrite-in-streamio --enable-newlib-nano-formatted-io --disable-newlib-multithread || die Could not configure Newlib
   make -j4 || die Could not build Newlib
   make install || die Could not install Newlib
 }

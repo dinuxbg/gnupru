@@ -1,4 +1,4 @@
-From b0bc018760504ef3f5a05123a2398b5b969d1e13 Mon Sep 17 00:00:00 2001
+From 224ceb50f111f6c1a83e665977d1118317860a4d Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Mon, 28 Jul 2014 23:10:08 +0300
 Subject: [PATCH 2/2] HACK: Limit LBBO/SBBO bursts to 19 regs
@@ -3235,7 +3235,7 @@ index bcf22f8..8d286ca 100644
      write_pattern_1 "lbbo" "load" nregs false write_ldm_set;
      write_pattern_1 "sbbo" "store" nregs true write_stm_set;
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
-index c55aa05..8c9f745 100644
+index f6f00bd..2caaf5d 100644
 --- a/gcc/config/pru/pru.md
 +++ b/gcc/config/pru/pru.md
 @@ -42,6 +42,11 @@
@@ -3267,5 +3267,5 @@ index c55aa05..8c9f745 100644
        || GET_CODE (operands[1]) != REG
        || (REGNO (operands[1]) + INTVAL (operands[2]) - 1) > LAST_NONIO_GP_REG)
 -- 
-2.1.0
+2.1.3
 

@@ -1,9 +1,11 @@
 # Port of GNU GCC and Binutils for the TI PRU I/O processor.
 
 ## Introduction
-This is a GCC/Binutils port for the PRU I/O CPU core that is present in TI Sitara AM33xx SoCs. Older PRU core versions are not supported because, frankly, all I have is a beaglebone.
+This is an unofficial GCC/Binutils port for the PRU I/O CPU core that is present in TI Sitara AM33xx SoCs. Older PRU core versions are not supported because, frankly, all I have is a beaglebone.
 
-This initial release is preliminary and just a proof-of-concept. It might have some serious bugs, so be warned. That said, go ahead and try it :) I routinely do basic sanity checks with the two given examples: blinking LED and MD5 calculation.
+This initial release is preliminary and just a proof-of-concept. It might have some serious bugs, so be warned. That said, go ahead and try it :) I routinely do basic sanity checks with the examples in https://github.com/dinuxbg/pru-gcc-examples .
+
+Bug reports should be filed in https://github.com/dinuxbg/gnupru/issues . For general questions please use http://beagleboard.org/Community/Forums .
 
 This project has no relation to the TI PRU C compiler. ABI differences between GCC PRU and TI PRU C are tracked in https://github.com/dinuxbg/gnupru/wiki
 
@@ -30,7 +32,7 @@ Then, to build the UIO-based firmware loader:
 	cd example/host
 	make
 
-Finally, to see a blinking led for 30 second on P9_27:
+Finally, to see a blinking led for 30 seconds on P9_27:
 
 	modprobe uio_pruss
 	echo BB-BONE-PRU-01 > /sys/devices/bone_capemgr.*/slots

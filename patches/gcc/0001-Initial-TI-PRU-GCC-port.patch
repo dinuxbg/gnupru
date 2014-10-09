@@ -1,4 +1,4 @@
-From 345f73bd968f8b1262f56c699454b9781a66f921 Mon Sep 17 00:00:00 2001
+From 6dac65d262ff65e8236b565ae401dc656f31310a Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Mon, 30 Dec 2013 23:47:32 +0200
 Subject: [PATCH 1/2] Initial TI PRU GCC port
@@ -18,8 +18,8 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  gcc/config/pru/pru-ldst-multiple.md   | 5998 +++++++++++++++++++++++++++++++++
  gcc/config/pru/pru-ldst-multiple.ml   |  145 +
  gcc/config/pru/pru-protos.h           |   46 +
- gcc/config/pru/pru.c                  | 1556 +++++++++
- gcc/config/pru/pru.h                  |  394 +++
+ gcc/config/pru/pru.c                  | 1586 +++++++++
+ gcc/config/pru/pru.h                  |  393 +++
  gcc/config/pru/pru.md                 |  537 +++
  gcc/config/pru/pru.opt                |   23 +
  gcc/config/pru/t-pru                  |   22 +
@@ -35,7 +35,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgcc/config/pru/muldi3.S            |   59 +
  libgcc/config/pru/pru-divmod.h        |  117 +
  libgcc/config/pru/t-pru               |   41 +
- 28 files changed, 9557 insertions(+), 1 deletion(-)
+ 28 files changed, 9586 insertions(+), 1 deletion(-)
  create mode 100644 gcc/common/config/pru/pru-common.c
  create mode 100644 gcc/config/pru/constraints.md
  create mode 100644 gcc/config/pru/predicates.md
@@ -89,10 +89,10 @@ index 88a0cb4..1fbd23d 100755
  	| rl78-* | romp-* | rs6000-* | rx-* \
  	| sh-* | sh[1234]-* | sh[24]a-* | sh[24]aeb-* | sh[23]e-* | sh[34]eb-* | sheb-* | shbe-* \
 diff --git a/configure b/configure
-index 55fca62..9b747cc 100755
+index 96225b5..e1994dd 100755
 --- a/configure
 +++ b/configure
-@@ -3233,6 +3233,10 @@ case "${target}" in
+@@ -3309,6 +3309,10 @@ case "${target}" in
    powerpc-*-aix* | rs6000-*-aix*)
      noconfigdirs="$noconfigdirs target-libssp"
      ;;
@@ -104,10 +104,10 @@ index 55fca62..9b747cc 100755
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
 diff --git a/configure.ac b/configure.ac
-index 2dc657f..8297e8f 100644
+index b27fb1d..a668ced 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -592,6 +592,10 @@ case "${target}" in
+@@ -663,6 +663,10 @@ case "${target}" in
    powerpc-*-aix* | rs6000-*-aix*)
      noconfigdirs="$noconfigdirs target-libssp"
      ;;
@@ -169,10 +169,10 @@ index 0000000..46e73bd
 +
 +struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index a33bce9..4c18a69 100644
+index bef56e2..278475e 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -429,6 +429,9 @@ powerpc*-*-*)
+@@ -436,6 +436,9 @@ powerpc*-*-*)
  	esac
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
@@ -182,7 +182,7 @@ index a33bce9..4c18a69 100644
  rs6000*-*-*)
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
-@@ -2350,6 +2353,11 @@ powerpcle-*-eabi*)
+@@ -2381,6 +2384,11 @@ powerpcle-*-eabi*)
  	extra_options="${extra_options} rs6000/sysv4.opt"
  	use_gcc_stdint=wrap
  	;;
@@ -6682,10 +6682,10 @@ index 0000000..2db4b42
 +#endif /* GCC_PRU_PROTOS_H */
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
 new file mode 100644
-index 0000000..548aec4
+index 0000000..446ffa4
 --- /dev/null
 +++ b/gcc/config/pru/pru.c
-@@ -0,0 +1,1556 @@
+@@ -0,0 +1,1586 @@
 +/* Target machine subroutines for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -6721,9 +6721,18 @@ index 0000000..548aec4
 +#include "flags.h"
 +#include "recog.h"
 +#include "expr.h"
++#include "insn-codes.h"
 +#include "optabs.h"
 +#include "function.h"
 +#include "ggc.h"
++#include "predict.h"
++#include "dominance.h"
++#include "cfg.h"
++#include "cfgrtl.h"
++#include "cfganal.h"
++#include "lcm.h"
++#include "cfgbuild.h"
++#include "cfgcleanup.h"
 +#include "basic-block.h"
 +#include "diagnostic-core.h"
 +#include "toplev.h"
@@ -6788,7 +6797,7 @@ index 0000000..548aec4
 +
 +  if (cfun->machine->initialized)
 +    return cfun->machine->total_size;
-+  
++
 +  var_size = PRU_STACK_ALIGN (get_frame_size ());
 +  out_args_size = PRU_STACK_ALIGN (crtl->outgoing_args_size);
 +  total_size = var_size + out_args_size;
@@ -7041,7 +7050,7 @@ index 0000000..548aec4
 +      save_offset = cfun->machine->save_regs_offset;
 +      sp_adjust = total_frame_size;
 +    }
-+  
++
 +  regno_start = 0;
 +  do {
 +      regno_start = xbbo_next_reg_cluster (regno_start, &save_offset, false);
@@ -7104,7 +7113,7 @@ index 0000000..548aec4
 +prologue_saved_reg_p (unsigned regno)
 +{
 +  gcc_assert (GP_REG_P (regno));
-+  
++
 +  if (df_regs_ever_live_p (regno) && !call_used_regs[regno])
 +    return true;
 +
@@ -7333,7 +7342,7 @@ index 0000000..548aec4
 +|---------+---------+------------+------------+------------+------------|
 +| 1       | 0       | true       | true       | false      | false      |
 +|---------+---------+------------+------------+------------+------------|
-+| 1       | 1       | OP1 > OP2  | OP1 >= OP2 | OP1 < OP2  | OP1 <= OP2 |
++| 1       | 1       | OP1 < OP2  | OP1 <= OP2 | OP1 > OP2  | OP1 >= OP2 |
 +`---------'---------'------------'------------'------------+------------'
 +
 +
@@ -7341,7 +7350,7 @@ index 0000000..548aec4
 +  LT:
 +                    qbbc OP1_POS, OP1, 31
 +  OP1_NEG:          qbbc BRANCH_TAKEN_LABEL, OP2, 31
-+  OP1_NEG_OP2_NEG:  qbgt BRANCH_TAKEN_LABEL, OP2, OP1
++  OP1_NEG_OP2_NEG:  qblt BRANCH_TAKEN_LABEL, OP2, OP1
 +                    ; jmp OUT -> can be eliminated because we'll take the
 +                    ; following branch. OP2.b31 is guaranteed to be 1
 +                    ; by the time we get here.
@@ -7355,78 +7364,137 @@ index 0000000..548aec4
 +
 +*/
 +
-+const char *
-+pru_output_signed_cbranch (rtx *operands, bool is_near)
++static const char *
++pru_output_ltle_signed_cbranch (rtx *operands, bool is_near)
 +{
 +  static char buf[1024];
 +  enum rtx_code code = GET_CODE (operands[0]);
 +  rtx op1;
 +  rtx op2;
 +  const char *cmp_opstr;
-+  const char *ncmp_opstr;
 +  int bufi = 0;
 +
-+  if (code ==  LT || code == LE) {
-+    op1 = operands[1];
-+    op2 = operands[2];
-+  } else {
-+    /* Swap operands and comparison op, thus translating the
-+       second half of the table to the first one. */
-+    op2 = operands[1];
-+    op1 = operands[2];
-+    if (code == GT)
-+      code = LT;
-+    else if (code == GE)
-+      code = LE;
-+    else
-+      gcc_unreachable();
-+  }
++  op1 = operands[1];
++  op2 = operands[2];
 +
 +  gcc_assert (GET_CODE (op1) == REG && GET_CODE (op2) == REG);
 +
 +  /* determine the comparison operators for positive and negative operands */
-+  if (code == LT) {
-+	  cmp_opstr = "qblt";
-+	  ncmp_opstr = "qbgt";
-+  } else if (code == LE) {
-+	  cmp_opstr = "qble";
-+	  ncmp_opstr = "qbge";
-+  } else {
-+	  gcc_unreachable();
-+  }
++  if (code == LT)
++      cmp_opstr = "qblt";
++  else if (code == LE)
++      cmp_opstr = "qble";
++  else
++      gcc_unreachable();
 +
-+  if (is_near) {
-+    bufi = snprintf (buf, sizeof(buf),
-+        "qbbc\t.+12, %%x1, %d\n\t"
-+        "qbbc\t%%l3, %%x2, %d\n\t"            /* OP1_NEG         */
-+        "%s\t%%l3, %%x2, %%x1\n\t"            /* OP1_NEG_OP2_NEG */
-+        "qbbs\t.+8, %%x2, %d\n\t"             /* OP1_POS         */
-+        "%s\t%%l3, %%x2, %%x1",               /* OP1_POS_OP2_POS */
-+        sign_bit_position(op1),
-+        sign_bit_position(op2),
-+	ncmp_opstr,
-+        sign_bit_position(op2),
-+	cmp_opstr);
-+   } else {
-+     bufi = snprintf (buf, sizeof(buf),
-+        "qbbc\t.+12, %%x1, %d\n\t"
-+        "qbbc\t.+20, %%x2, %d\n\t"            /* OP1_NEG         */
-+        "%s\t.+16, %%x2, %%x1\n\t"            /* OP1_NEG_OP2_NEG */
-+        "qbbs\t.+16, %%x2, %d\n\t"            /* OP1_POS         */
-+        "%s\t.+8, %%x2, %%x1\n\t"             /* OP1_POS_OP2_POS */
-+        "jmp\t.+8\n\t"                        /* jmp OUT */
-+        "jmp\t%%l3",                          /* BRANCH_TAKEN_LABEL */
-+        sign_bit_position(op1),
-+        sign_bit_position(op2),
-+        ncmp_opstr,
-+        sign_bit_position(op2),
-+        cmp_opstr);
-+  }
-+ 
++  if (is_near)
++    {
++      bufi = snprintf (buf, sizeof(buf),
++		       "qbbc\t.+12, %%x1, %d\n\t"
++		       "qbbc\t%%l3, %%x2, %d\n\t"   /* OP1_NEG         */
++		       "%s\t%%l3, %%x2, %%x1\n\t"   /* OP1_NEG_OP2_NEG */
++		       "qbbs\t.+8, %%x2, %d\n\t"    /* OP1_POS         */
++		       "%s\t%%l3, %%x2, %%x1",	    /* OP1_POS_OP2_POS */
++		       sign_bit_position(op1),
++		       sign_bit_position(op2),
++		       cmp_opstr,
++		       sign_bit_position(op2),
++		       cmp_opstr);
++    }
++  else
++    {
++      bufi = snprintf (buf, sizeof(buf),
++		       "qbbc\t.+12, %%x1, %d\n\t"
++		       "qbbc\t.+20, %%x2, %d\n\t"   /* OP1_NEG         */
++		       "%s\t.+16, %%x2, %%x1\n\t"   /* OP1_NEG_OP2_NEG */
++		       "qbbs\t.+16, %%x2, %d\n\t"   /* OP1_POS         */
++		       "%s\t.+8, %%x2, %%x1\n\t"    /* OP1_POS_OP2_POS */
++		       "jmp\t.+8\n\t"               /* jmp OUT */
++		       "jmp\t%%l3",		    /* BRANCH_TAKEN_LABEL */
++		       sign_bit_position(op1),
++		       sign_bit_position(op2),
++		       cmp_opstr,
++		       sign_bit_position(op2),
++		       cmp_opstr);
++    }
++
 +  gcc_assert (bufi > 0);
 +  gcc_assert ((unsigned int)bufi < sizeof (buf));
 +
 +  return buf;
++}
++
++static const char *
++pru_output_gtge_signed_cbranch (rtx *operands, bool is_near)
++{
++  static char buf[1024];
++  enum rtx_code code = GET_CODE (operands[0]);
++  rtx op1;
++  rtx op2;
++  const char *cmp_opstr;
++  int bufi = 0;
++
++  op1 = operands[1];
++  op2 = operands[2];
++
++  gcc_assert (GET_CODE (op1) == REG && GET_CODE (op2) == REG);
++
++  /* determine the comparison operators for positive and negative operands */
++  if (code == GT)
++      cmp_opstr = "qbgt";
++  else if (code == GE)
++      cmp_opstr = "qbge";
++  else
++    gcc_unreachable();
++
++  if (is_near)
++    {
++      bufi = snprintf (buf, sizeof(buf),
++		       "qbbs\t.+12, %%x1, %d\n\t"
++		       "qbbs\t%%l3, %%x2, %d\n\t"   /* OP1_POS         */
++		       "%s\t%%l3, %%x2, %%x1\n\t"   /* OP1_POS_OP2_POS */
++		       "qbbc\t.+8, %%x2, %d\n\t"    /* OP1_NEG         */
++		       "%s\t%%l3, %%x2, %%x1",      /* OP1_NEG_OP2_NEG */
++		       sign_bit_position(op1),
++		       sign_bit_position(op2),
++		       cmp_opstr,
++		       sign_bit_position(op2),
++		       cmp_opstr);
++    }
++  else
++    {
++      bufi = snprintf (buf, sizeof(buf),
++		       "qbbs\t.+12, %%x1, %d\n\t"
++		       "qbbs\t.+20, %%x2, %d\n\t"   /* OP1_POS         */
++		       "%s\t.+16, %%x2, %%x1\n\t"   /* OP1_POS_OP2_POS */
++		       "qbbc\t.+16, %%x2, %d\n\t"   /* OP1_NEG         */
++		       "%s\t.+8, %%x2, %%x1\n\t"    /* OP1_NEG_OP2_NEG */
++		       "jmp\t.+8\n\t"               /* jmp OUT */
++		       "jmp\t%%l3",                 /* BRANCH_TAKEN_LABEL */
++		       sign_bit_position(op1),
++		       sign_bit_position(op2),
++		       cmp_opstr,
++		       sign_bit_position(op2),
++		       cmp_opstr);
++    }
++
++  gcc_assert (bufi > 0);
++  gcc_assert ((unsigned int)bufi < sizeof (buf));
++
++  return buf;
++}
++
++const char *
++pru_output_signed_cbranch (rtx *operands, bool is_near)
++{
++  enum rtx_code code = GET_CODE (operands[0]);
++
++  if (code == LT || code == LE)
++    return pru_output_ltle_signed_cbranch (operands, is_near);
++  else if (code == GT || code == GE)
++    return pru_output_gtge_signed_cbranch (operands, is_near);
++  else
++      gcc_unreachable();
 +}
 +
 +/*
@@ -7447,51 +7515,55 @@ index 0000000..548aec4
 +
 +  /* Determine normal and reversed comparison operators for both positive
 +     operands. This enables us to go completely unsigned.
-+   
++
 +     NOTE: We cannot use the R print modifier because we convert signed
 +     comparison operators to unsigned ones. */
-+  switch (code) {
++  switch (code)
++    {
 +    case LT: cmp_opstr = "qblt"; rcmp_opstr = "qbge"; break;
 +    case LE: cmp_opstr = "qble"; rcmp_opstr = "qbgt"; break;
 +    case GT: cmp_opstr = "qbgt"; rcmp_opstr = "qble"; break;
 +    case GE: cmp_opstr = "qbge"; rcmp_opstr = "qblt"; break;
 +    default: gcc_unreachable();
-+  }
++    }
 +
 +  /* OP2 is a constant unsigned byte - utilize this info to generate
 +     optimized code. We can "remove half" of the op table above because
 +     we know that OP2.b31 = 0 (remember that 0 <= OP2 <= 255). */
-+  if (code == LT || code == LE) {
-+    if (is_near)
-+      snprintf (buf, sizeof(buf),
-+          "qbbs\t.+8, %%x1, %d\n\t"
-+          "%s\t%%l3, %%x1, %%x2",
-+          regop_sign_bit_pos,
-+          cmp_opstr);
-+     else
-+      snprintf (buf, sizeof(buf),
-+          "qbbs\t.+12, %%x1, %d\n\t"
-+          "%s\t.+8, %%x1, %%x2\n\t"
-+          "jmp\t%%l3",
-+          regop_sign_bit_pos,
-+          rcmp_opstr);
-+  } else if (code == GT || code == GE) {
-+    if (is_near)
-+      snprintf (buf, sizeof(buf),
-+          "qbbs\t%%l3, %%x1, %d\n\t"
-+          "%s\t%%l3, %%x1, %%x2",
-+          regop_sign_bit_pos,
-+          cmp_opstr);
-+     else
-+      snprintf (buf, sizeof(buf),
-+          "qbbs\t.+8, %%x1, %d\n\t"
-+          "%s\t.+8, %%x1, %%x2\n\t"
-+          "jmp\t%%l3",
-+          regop_sign_bit_pos,
-+          rcmp_opstr);
-+  } else {
++  if (code == LT || code == LE)
++    {
++      if (is_near)
++	snprintf (buf, sizeof(buf),
++		  "qbbs\t.+8, %%x1, %d\n\t"
++		  "%s\t%%l3, %%x1, %%x2",
++		  regop_sign_bit_pos,
++		  cmp_opstr);
++      else
++	snprintf (buf, sizeof(buf),
++		  "qbbs\t.+12, %%x1, %d\n\t"
++		  "%s\t.+8, %%x1, %%x2\n\t"
++		  "jmp\t%%l3",
++		  regop_sign_bit_pos,
++		  rcmp_opstr);
++    }
++  else if (code == GT || code == GE)
++    {
++      if (is_near)
++	snprintf (buf, sizeof(buf),
++		  "qbbs\t%%l3, %%x1, %d\n\t"
++		  "%s\t%%l3, %%x1, %%x2",
++		  regop_sign_bit_pos,
++		  cmp_opstr);
++      else
++	snprintf (buf, sizeof(buf),
++		  "qbbs\t.+8, %%x1, %d\n\t"
++		  "%s\t.+8, %%x1, %%x2\n\t"
++		  "jmp\t%%l3",
++		  regop_sign_bit_pos,
++		  rcmp_opstr);
++    }
++  else
 +    gcc_unreachable();
-+  }
 +
 +  return buf;
 +}
@@ -7543,7 +7615,7 @@ index 0000000..548aec4
 +
 +/* Implement TARGET_LEGITIMATE_ADDRESS_P.  */
 +static bool
-+pru_legitimate_address_p (enum machine_mode mode ATTRIBUTE_UNUSED,
++pru_legitimate_address_p (machine_mode mode ATTRIBUTE_UNUSED,
 +			    rtx operand, bool strict_p)
 +{
 +  switch (GET_CODE (operand))
@@ -7575,19 +7647,6 @@ index 0000000..548aec4
 +    }
 +  return false;
 +}
-+
-+/* Implement TARGET_SECTION_TYPE_FLAGS.  */
-+
-+static unsigned int
-+pru_section_type_flags (tree decl, const char *name, int reloc)
-+{
-+  unsigned int flags;
-+
-+  flags = default_section_type_flags (decl, name, reloc);
-+
-+  return flags;
-+}
-+
 +
 +
 +/* Output assembly language related definitions.  */
@@ -7863,11 +7922,11 @@ index 0000000..548aec4
 +   (otherwise it is an extra parameter matching an ellipsis).  */
 +
 +static rtx
-+pru_function_arg (cumulative_args_t cum_v, enum machine_mode mode,
++pru_function_arg (cumulative_args_t cum_v, machine_mode mode,
 +		    const_tree type ATTRIBUTE_UNUSED,
 +		    bool named ATTRIBUTE_UNUSED)
 +{
-+  CUMULATIVE_ARGS *cum = get_cumulative_args (cum_v); 
++  CUMULATIVE_ARGS *cum = get_cumulative_args (cum_v);
 +  rtx return_rtx = NULL_RTX;
 +
 +  if (cum->regs_used < NUM_ARG_REGS)
@@ -7882,10 +7941,10 @@ index 0000000..548aec4
 +
 +static int
 +pru_arg_partial_bytes (cumulative_args_t cum_v,
-+                         enum machine_mode mode, tree type ATTRIBUTE_UNUSED,
++                         machine_mode mode, tree type ATTRIBUTE_UNUSED,
 +                         bool named ATTRIBUTE_UNUSED)
 +{
-+  CUMULATIVE_ARGS *cum = get_cumulative_args (cum_v); 
++  CUMULATIVE_ARGS *cum = get_cumulative_args (cum_v);
 +  HOST_WIDE_INT param_size;
 +
 +  if (mode == BLKmode)
@@ -7911,11 +7970,11 @@ index 0000000..548aec4
 +   may not be available.  */
 +
 +static void
-+pru_function_arg_advance (cumulative_args_t cum_v, enum machine_mode mode,
++pru_function_arg_advance (cumulative_args_t cum_v, machine_mode mode,
 +			    const_tree type ATTRIBUTE_UNUSED,
 +			    bool named ATTRIBUTE_UNUSED)
 +{
-+  CUMULATIVE_ARGS *cum = get_cumulative_args (cum_v); 
++  CUMULATIVE_ARGS *cum = get_cumulative_args (cum_v);
 +  HOST_WIDE_INT param_size;
 +
 +  if (mode == BLKmode)
@@ -7935,26 +7994,6 @@ index 0000000..548aec4
 +    cum->regs_used += param_size;
 +}
 +
-+/* Emit RTL insns to initialize the variable parts of a trampoline.
-+   FNADDR is an RTX for the address of the function's pure code.
-+   CXT is an RTX for the static chain value for the function.
-+   On Nios II, we handle this by a library call.  */
-+static void
-+pru_trampoline_init (rtx m_tramp, tree fndecl, rtx cxt)
-+{
-+  rtx fnaddr = XEXP (DECL_RTL (fndecl), 0);
-+  rtx ctx_reg = force_reg (Pmode, cxt);
-+  rtx addr = force_reg (Pmode, XEXP (m_tramp, 0));
-+
-+  /* Architectural limitation: PMEM cannot be accessed. So until
-+     trampolines are fixed, bail early and warn user.
-+     Don't forget to also adjust TRAMPOLINE_SIZE accordingly. */
-+  sorry("no nested functions yet for pru");
-+  emit_library_call (gen_rtx_SYMBOL_REF (Pmode, "__trampoline_setup"),
-+		     LCT_NORMAL, VOIDmode, 3, addr, Pmode, fnaddr, Pmode,
-+		     ctx_reg, Pmode);
-+}
-+
 +/* Implement TARGET_FUNCTION_VALUE.  */
 +static rtx
 +pru_function_value (const_tree ret_type, const_tree fn ATTRIBUTE_UNUSED,
@@ -7965,7 +8004,7 @@ index 0000000..548aec4
 +
 +/* Implement TARGET_LIBCALL_VALUE.  */
 +static rtx
-+pru_libcall_value (enum machine_mode mode, const_rtx fun ATTRIBUTE_UNUSED)
++pru_libcall_value (machine_mode mode, const_rtx fun ATTRIBUTE_UNUSED)
 +{
 +  return gen_rtx_REG (mode, FIRST_RETVAL_REGNO);
 +}
@@ -7989,10 +8028,10 @@ index 0000000..548aec4
 +   own va_arg type.  */
 +static void
 +pru_setup_incoming_varargs (cumulative_args_t cum_v,
-+                              enum machine_mode mode, tree type,
++                              machine_mode mode, tree type,
 +                              int *pretend_size, int second_time)
 +{
-+  CUMULATIVE_ARGS *cum = get_cumulative_args (cum_v); 
++  CUMULATIVE_ARGS *cum = get_cumulative_args (cum_v);
 +  CUMULATIVE_ARGS local_cum;
 +  cumulative_args_t local_cum_v = pack_cumulative_args (&local_cum);
 +  int regs_to_push;
@@ -8045,7 +8084,7 @@ index 0000000..548aec4
 +static rtx
 +pru_expand_builtin (tree exp, rtx target ATTRIBUTE_UNUSED,
 +                      rtx subtarget ATTRIBUTE_UNUSED,
-+                      enum machine_mode mode ATTRIBUTE_UNUSED,
++                      machine_mode mode ATTRIBUTE_UNUSED,
 +		      int ignore ATTRIBUTE_UNUSED)
 +{
 +  tree fndecl = TREE_OPERAND (CALL_EXPR_FN (exp), 0);
@@ -8166,9 +8205,6 @@ index 0000000..548aec4
 +#undef TARGET_ASM_INTEGER
 +#define TARGET_ASM_INTEGER pru_assemble_integer
 +
-+#undef  TARGET_SECTION_TYPE_FLAGS
-+#define TARGET_SECTION_TYPE_FLAGS  pru_section_type_flags
-+
 +#undef TARGET_INIT_BUILTINS
 +#define TARGET_INIT_BUILTINS pru_init_builtins
 +#undef TARGET_EXPAND_BUILTIN
@@ -8191,9 +8227,6 @@ index 0000000..548aec4
 +#undef TARGET_ARG_PARTIAL_BYTES
 +#define TARGET_ARG_PARTIAL_BYTES pru_arg_partial_bytes
 +
-+#undef TARGET_TRAMPOLINE_INIT
-+#define TARGET_TRAMPOLINE_INIT pru_trampoline_init
-+
 +#undef TARGET_FUNCTION_VALUE
 +#define TARGET_FUNCTION_VALUE pru_function_value
 +
@@ -8205,9 +8238,6 @@ index 0000000..548aec4
 +
 +#undef TARGET_RETURN_IN_MEMORY
 +#define TARGET_RETURN_IN_MEMORY pru_return_in_memory
-+
-+#undef TARGET_PROMOTE_PROTOTYPES
-+#define TARGET_PROMOTE_PROTOTYPES hook_bool_const_tree_true
 +
 +#undef TARGET_SETUP_INCOMING_VARARGS
 +#define TARGET_SETUP_INCOMING_VARARGS pru_setup_incoming_varargs
@@ -8244,10 +8274,10 @@ index 0000000..548aec4
 +#include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
 new file mode 100644
-index 0000000..abcce5e
+index 0000000..2477c0b
 --- /dev/null
 +++ b/gcc/config/pru/pru.h
-@@ -0,0 +1,394 @@
+@@ -0,0 +1,393 @@
 +/* Definitions of target machine for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -8430,8 +8460,7 @@ index 0000000..abcce5e
 +
 +#define EXIT_IGNORE_STACK 1
 +
-+/* Trampolines not supported yet. */
-+#define TRAMPOLINE_SIZE 0
++#define TRAMPOLINE_SIZE 4
 +
 +/* Stack layout.  */
 +#define STACK_GROWS_DOWNWARD
@@ -8644,7 +8673,7 @@ index 0000000..abcce5e
 +#endif /* GCC_PRU_H */
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
 new file mode 100644
-index 0000000..c55aa05
+index 0000000..f6f00bd
 --- /dev/null
 +++ b/gcc/config/pru/pru.md
 @@ -0,0 +1,537 @@
@@ -9139,7 +9168,7 @@ index 0000000..c55aa05
 +       (match_operator 0 "ordered_comparison_operator"
 +         [(match_operand:XI 1 "register_operand" "r,r")
 +          (match_operand:XI 2 "reg_or_ubyte_operand" "r,I")])
-+       (label_ref (match_operand 3 ""))
++       (label_ref (match_operand 3 "" ""))
 +       (pc)))]
 +  ""
 +{
@@ -9243,10 +9272,10 @@ index 0000000..e33f2de
 +#MULTILIB_OPTIONS    = mmcu=pru
 +
 diff --git a/gcc/doc/md.texi b/gcc/doc/md.texi
-index 80e8bd6..17f648e 100644
+index b8e5ac5..763eed1 100644
 --- a/gcc/doc/md.texi
 +++ b/gcc/doc/md.texi
-@@ -3309,6 +3309,25 @@ A memory reference that is encoded within the opcode.
+@@ -3312,6 +3312,25 @@ A memory reference that is encoded within the opcode.
  
  @end table
  
@@ -9273,12 +9302,12 @@ index 80e8bd6..17f648e 100644
  @table @code
  
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index 52929b9..278af11 100644
+index 02b2b77..6ca800f 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
-@@ -437,7 +437,8 @@ proc check_effective_target_trampolines { } {
-     if { [istarget avr-*-*]
+@@ -438,7 +438,8 @@ proc check_effective_target_trampolines { } {
  	 || [istarget msp430-*-*]
+ 	 || [istarget nvptx-*-*]
  	 || [istarget hppa2.0w-hp-hpux11.23]
 -	 || [istarget hppa64-hp-hpux11.23] } {
 +	 || [istarget hppa64-hp-hpux11.23]
@@ -9286,8 +9315,8 @@ index 52929b9..278af11 100644
  	return 0;
      }
      return 1
-@@ -534,6 +535,7 @@ proc check_profiling_available { test_what } {
- 	     || [istarget nios2-*-elf]
+@@ -536,6 +537,7 @@ proc check_profiling_available { test_what } {
+ 	     || [istarget nvptx-*-*]
  	     || [istarget powerpc-*-eabi*]
  	     || [istarget powerpc-*-elf]
 +	     || [istarget pru-*-*]
@@ -9295,7 +9324,7 @@ index 52929b9..278af11 100644
  	     || [istarget tic6x-*-elf]
  	     || [istarget xstormy16-*]
 diff --git a/libgcc/config.host b/libgcc/config.host
-index 2f6569b..067f70c 100644
+index 9903d15..6e59082 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
 @@ -165,6 +165,9 @@ nios2*-*-*)
@@ -9307,8 +9336,8 @@ index 2f6569b..067f70c 100644
 +	;;
  rs6000*-*-*)
  	;;
- score*-*-*)
-@@ -1015,6 +1018,9 @@ powerpcle-*-eabi*)
+ sparc64*-*-*)
+@@ -1032,6 +1035,9 @@ powerpcle-*-eabi*)
  	tmake_file="${tmake_file} rs6000/t-ppccomm rs6000/t-crtstuff t-crtstuff-pic t-fdpbit"
  	extra_parts="$extra_parts crtbegin.o crtend.o crtbeginS.o crtendS.o crtbeginT.o ecrti.o ecrtn.o ncrti.o ncrtn.o"
  	;;
@@ -9849,5 +9878,5 @@ index 0000000..cee615c
 +# mode: Makefile
 +# End:
 -- 
-2.1.0
+2.1.3
 
