@@ -1,4 +1,4 @@
-From 97db6e508df5471e2ca81d0708fc2f8c08cce717 Mon Sep 17 00:00:00 2001
+From ceaa3007d34ce8d34ed3f0b49578d041d47e0d45 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sun, 23 Feb 2014 22:25:35 +0200
 Subject: [PATCH 1/5] Initial TI PRU binutils port
@@ -67,7 +67,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  ld/Makefile.in                   |     5 +
  ld/configure.tgt                 |     1 +
  ld/emulparams/pruelf.sh          |    18 +
- ld/scripttempl/pru.sc            |   193 +
+ ld/scripttempl/pru.sc            |   201 +
  opcodes/Makefile.am              |     2 +
  opcodes/Makefile.in              |     4 +
  opcodes/configure                |     1 +
@@ -83,11 +83,11 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  sim/pru/config.in                |   146 +
  sim/pru/configure                | 15235 +++++++++++++++++++++++++++++++++++++
  sim/pru/configure.ac             |    10 +
- sim/pru/interp.c                 |   982 +++
- sim/pru/pru.h                    |    89 +
+ sim/pru/interp.c                 |   992 +++
+ sim/pru/pru.h                    |    95 +
  sim/pru/pru.isa                  |   250 +
  sim/pru/sim-main.h               |    81 +
- 80 files changed, 22396 insertions(+), 3 deletions(-)
+ 80 files changed, 22420 insertions(+), 3 deletions(-)
  create mode 100644 bfd/cpu-pru.c
  create mode 100644 bfd/elf32-pru.c
  create mode 100644 gas/config/tc-pru.c
@@ -5556,19 +5556,24 @@ index 0000000..8cfd10f
 +ENTRY=_start
 diff --git a/ld/scripttempl/pru.sc b/ld/scripttempl/pru.sc
 new file mode 100644
-index 0000000..9d574e4
+index 0000000..ff43a97
 --- /dev/null
 +++ b/ld/scripttempl/pru.sc
-@@ -0,0 +1,193 @@
+@@ -0,0 +1,201 @@
 +cat <<EOF
 +OUTPUT_FORMAT("${OUTPUT_FORMAT}","${OUTPUT_FORMAT}","${OUTPUT_FORMAT}")
 +OUTPUT_ARCH(${ARCH})
 +
 +MEMORY
 +{
-+  text   (x)   : ORIGIN = $TEXT_ORIGIN, LENGTH = $TEXT_LENGTH
-+  data   (rw!x) : ORIGIN = $DATA_ORIGIN, LENGTH = $DATA_LENGTH
++  imem   (x)   : ORIGIN = $TEXT_ORIGIN, LENGTH = $TEXT_LENGTH
++  dmem   (rw!x) : ORIGIN = $DATA_ORIGIN, LENGTH = $DATA_LENGTH
 +}
++
++__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32;
++__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512;
++
++${RELOCATING+ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ; }
 +
 +SECTIONS
 +{
@@ -5694,7 +5699,7 @@ index 0000000..9d574e4
 +    *(.fini0)  /* Infinite loop after program termination.  */
 +    KEEP (*(.fini0))
 +    ${RELOCATING+ _etext = . ; }
-+  } ${RELOCATING+ > text}
++  } ${RELOCATING+ > imem}
 +
 +  .data        ${RELOCATING-0} :
 +  {
@@ -5714,7 +5719,7 @@ index 0000000..9d574e4
 +    ${RELOCATING+. = ALIGN(4);}
 +    ${RELOCATING+ _edata = . ; }
 +    ${RELOCATING+ PROVIDE (__data_end = .) ; }
-+  } ${RELOCATING+ > data }
++  } ${RELOCATING+ > dmem }
 +
 +  .bss ${RELOCATING-0} :
 +  {
@@ -5723,7 +5728,7 @@ index 0000000..9d574e4
 +    ${RELOCATING+ *(.bss*)}
 +    *(COMMON)
 +    ${RELOCATING+ PROVIDE (__bss_end = .) ; }
-+  } ${RELOCATING+ > data}
++  } ${RELOCATING+ > dmem}
 +
 +  /* Global data not cleared after reset.  */
 +  .noinit ${RELOCATING-0}:
@@ -5733,9 +5738,12 @@ index 0000000..9d574e4
 +    ${RELOCATING+ PROVIDE (__noinit_end = .) ; }
 +    ${RELOCATING+ _end = . ;  }
 +    ${RELOCATING+ PROVIDE (__heap_start = .) ; }
-+  } ${RELOCATING+ > data}
-+
-+  ${RELOCATING+ _stack_top = ORIGIN(data) + LENGTH(data);}
++    ${RELOCATING+ . += __HEAP_SIZE ; }
++    /* Stack is not here really. It will be put at the end of DMEM.
++       But we take into account its size here, in order to allow
++       for MEMORY overflow checking during link time. */
++    ${RELOCATING+ . += __STACK_SIZE ; }
++  } ${RELOCATING+ > dmem}
 +
 +  /* Stabs debugging sections.  */
 +  .stab 0 : { *(.stab) }
@@ -21979,10 +21987,10 @@ index 0000000..847e8e8
 +SIM_AC_OUTPUT
 diff --git a/sim/pru/interp.c b/sim/pru/interp.c
 new file mode 100644
-index 0000000..3dd3d0a
+index 0000000..e88a14b
 --- /dev/null
 +++ b/sim/pru/interp.c
-@@ -0,0 +1,982 @@
+@@ -0,0 +1,992 @@
 +/* Simulator for PRU processor
 +   Copyright 2014 Free Software Foundation, Inc.
 +   Inspired by the Microblase simulator
@@ -22019,11 +22027,14 @@ index 0000000..3dd3d0a
 +#define NUM_ELEM(A) (sizeof (A) / sizeof (A)[0])
 +#endif
 +
++#define max(a,b) ((a) > (b) ? (a) : (b))
++
 +host_callback *callback;
 +struct sim_state pru_state;
 +static char *myname;
 +static int issue_messages = 0;
 +static int tracing = 0;
++static int sim_dmem_size = DMEM_DEFAULT_SIZE;
 +
 +/* DMEM zero address is perfectly valid. But if CRT leaves the first word
 +   alone, we can use it as a trap to catch NULL pointer access. */
@@ -22240,18 +22251,15 @@ index 0000000..3dd3d0a
 +    }
 +}
 +
-+
-+/* Default to a 8 Kbyte D/I memory space.  */
-+static int sim_dmem_size = 8 * 1024;
-+static int sim_imem_size = 8 * 1024;
-+
++/* Set DMEM size. The binutils sim HAL has no notion for separate address
++   spaces, so we take the easy route and always use the maximum possible
++   IMEM size (256KB). */
 +void
-+sim_size (int dsize, int isize)
++sim_size (int dsize)
 +{
 +  sim_dmem_size = dsize;
-+  sim_imem_size = isize;
 +  CPU.dsize = sim_dmem_size;
-+  CPU.isize = sim_imem_size;
++  CPU.isize = IMEM_DEFAULT_SIZE;
 +
 +  if (CPU.dmem)
 +    free (CPU.dmem);
@@ -22289,8 +22297,8 @@ index 0000000..3dd3d0a
 +static void
 +init_pointers ()
 +{
-+  if (CPU.dsize != sim_dmem_size || CPU.isize != sim_imem_size)
-+    sim_size (sim_dmem_size, sim_imem_size);
++  if (CPU.dsize != sim_dmem_size)
++    sim_size (sim_dmem_size);
 +}
 +
 +static void
@@ -22763,7 +22771,6 @@ index 0000000..3dd3d0a
 +  /*  SIM_DESC sd = sim_state_alloc(kind, alloc);*/
 +
 +  int odsize = sim_dmem_size;
-+  int oisize = sim_imem_size;
 +  myname = argv[0];
 +  callback = cb;
 +
@@ -22771,8 +22778,8 @@ index 0000000..3dd3d0a
 +    issue_messages = 1;
 +
 +  /* Discard and reacquire memory -- start with a clean slate.  */
-+  sim_size (1, 4);		/* small */
-+  sim_size (odsize, oisize);	/* and back again */
++  sim_size (1);		/* small */
++  sim_size (odsize);	/* and back again */
 +
 +  set_initial_gprs ();	/* Reset the GPR registers.  */
 +
@@ -22794,6 +22801,8 @@ index 0000000..3dd3d0a
 +SIM_RC
 +sim_load (SIM_DESC sd, const char *prog, bfd *abfd, int from_tty)
 +{
++  unsigned long text_size;
++
 +  /* Do the right thing for ELF executables; this turns out to be
 +     just about the right thing for any object format that:
 +       - we crack using BFD routines
@@ -22858,8 +22867,17 @@ index 0000000..3dd3d0a
 +	return SIM_RC_FAIL;
 +      }
 +
-+    sim_dmem_size = (unsigned long) max_dmem_addr;
-+    sim_imem_size = (unsigned long) max_imem_addr & IMEM_ADDR_MASK;
++    sim_dmem_size = max (DMEM_DEFAULT_SIZE, (unsigned long) max_dmem_addr);
++
++    text_size = (unsigned long) max_imem_addr & IMEM_ADDR_MASK;
++
++    if (text_size >= IMEM_DEFAULT_SIZE)
++      {
++	bfd_close (handle);
++	printf ("Text segment (%lu bytes) cannot fit in IMEM (%lu bytes)\n",
++		text_size, IMEM_DEFAULT_SIZE);
++	return SIM_RC_FAIL;
++      }
 +
 +    /* Clean up after ourselves.  */
 +    bfd_close (handle);
@@ -22967,10 +22985,10 @@ index 0000000..3dd3d0a
 +}
 diff --git a/sim/pru/pru.h b/sim/pru/pru.h
 new file mode 100644
-index 0000000..c8a8597
+index 0000000..4285fd5
 --- /dev/null
 +++ b/sim/pru/pru.h
-@@ -0,0 +1,89 @@
+@@ -0,0 +1,95 @@
 +#ifndef PRU_H
 +#define PRU_H
 +
@@ -22996,6 +23014,12 @@ index 0000000..c8a8597
 +#define IMEM_ADDR_MASK	((1u << 23) - 1)
 +/* TODO - how to handle the dual address space? */
 +#define MAX_DMEM_ADDR	IMEM_ADDR_MASK
++
++/* Define memory sizes to allocate for simulated target. Sizes are
++   artificially large to accommodate execution of compiler test suite.
++   Please synchronize with the linker script for prusim target. */
++#define DMEM_DEFAULT_SIZE (1024 * 1024)	  /* 1MB should be enough */
++#define IMEM_DEFAULT_SIZE (64 * 4 * 1024) /* 16-bit word addressable space */
 +
 +#define CPU     pru_state.cpu[0].pru_cpu
 +

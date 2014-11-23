@@ -1,4 +1,4 @@
-From 6ecc995ea55fb2d3d41a275bcd253ecd2c418b8f Mon Sep 17 00:00:00 2001
+From b3c7144d5eec1b8d3201aafdabb3b744cb28db15 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sun, 15 Jun 2014 09:58:48 +0300
 Subject: [PATCH 2/5] Fix silent failure in source command

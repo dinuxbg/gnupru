@@ -1,4 +1,4 @@
-From 3f1f4b3a1e9d742a4529f8ebdd797e27d0ec5fa7 Mon Sep 17 00:00:00 2001
+From 56a84792bce96716513a63354c32ac5b5960f024 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Thu, 1 May 2014 16:43:07 +0300
 Subject: [PATCH] Initial PRU port
@@ -10,39 +10,47 @@ TODO:
 
 Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---
- config.sub                           |    2 +
- configure                            |    4 +
- configure.ac                         |    4 +
- libgloss/configure                   |    6 +
- libgloss/configure.in                |    3 +
- libgloss/pru/Makefile.in             |  122 ++
- libgloss/pru/aclocal.m4              |  344 +++
- libgloss/pru/close.c                 |   25 +
- libgloss/pru/configure               | 3791 ++++++++++++++++++++++++++++++++++
- libgloss/pru/configure.in            |   66 +
- libgloss/pru/crt0.S                  |   69 +
- libgloss/pru/exit.c                  |   31 +
- libgloss/pru/fstat.c                 |   30 +
- libgloss/pru/getpid.c                |   25 +
- libgloss/pru/isatty.c                |   27 +
- libgloss/pru/kill.c                  |   28 +
- libgloss/pru/lseek.c                 |   34 +
- libgloss/pru/open.c                  |   33 +
- libgloss/pru/print.c                 |   27 +
- libgloss/pru/putnum.c                |   41 +
- libgloss/pru/raise.c                 |   22 +
- libgloss/pru/read.c                  |   39 +
- libgloss/pru/rpmsg-inbyte.c          |   26 +
- libgloss/pru/rpmsg-outbyte.c         |   24 +
- libgloss/pru/sbrk.c                  |   42 +
- libgloss/pru/stat.c                  |   33 +
- libgloss/pru/syscall.S               |   31 +
- libgloss/pru/syscall.h               |   21 +
- libgloss/pru/unlink.c                |   31 +
- libgloss/pru/write.c                 |   36 +
- newlib/configure.host                |   12 +-
- newlib/libc/include/machine/ieeefp.h |    4 +
- 32 files changed, 5032 insertions(+), 1 deletion(-)
+ config.sub                                        |    2 +
+ configure                                         |    4 +
+ configure.ac                                      |    4 +
+ libgloss/configure                                |    6 +
+ libgloss/configure.in                             |    3 +
+ libgloss/pru/Makefile.in                          |  132 +
+ libgloss/pru/aclocal.m4                           |  344 ++
+ libgloss/pru/close.c                              |   25 +
+ libgloss/pru/configure                            | 3791 +++++++++++++++++++++
+ libgloss/pru/configure.in                         |   66 +
+ libgloss/pru/crt0.S                               |   69 +
+ libgloss/pru/exit.c                               |   31 +
+ libgloss/pru/fstat.c                              |   30 +
+ libgloss/pru/getpid.c                             |   25 +
+ libgloss/pru/isatty.c                             |   27 +
+ libgloss/pru/kill.c                               |   28 +
+ libgloss/pru/ldscripts/gen-ld-scripts.sh          |   61 +
+ libgloss/pru/ldscripts/pruelf-am335x.pru0.x       |  215 ++
+ libgloss/pru/ldscripts/pruelf-am335x.pru1.x       |  215 ++
+ libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x |  215 ++
+ libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x |  215 ++
+ libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x |  215 ++
+ libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x |  215 ++
+ libgloss/pru/ldscripts/pruelf-sim.x               |  215 ++
+ libgloss/pru/lseek.c                              |   34 +
+ libgloss/pru/open.c                               |   33 +
+ libgloss/pru/print.c                              |   27 +
+ libgloss/pru/putnum.c                             |   41 +
+ libgloss/pru/raise.c                              |   22 +
+ libgloss/pru/read.c                               |   39 +
+ libgloss/pru/rpmsg-inbyte.c                       |   26 +
+ libgloss/pru/rpmsg-outbyte.c                      |   24 +
+ libgloss/pru/sbrk.c                               |   42 +
+ libgloss/pru/stat.c                               |   33 +
+ libgloss/pru/syscall.S                            |   31 +
+ libgloss/pru/syscall.h                            |   21 +
+ libgloss/pru/unlink.c                             |   31 +
+ libgloss/pru/write.c                              |   36 +
+ newlib/configure.host                             |   12 +-
+ newlib/libc/include/machine/ieeefp.h              |    4 +
+ 40 files changed, 6608 insertions(+), 1 deletion(-)
  create mode 100644 libgloss/pru/Makefile.in
  create mode 100644 libgloss/pru/aclocal.m4
  create mode 100644 libgloss/pru/close.c
@@ -54,6 +62,14 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 libgloss/pru/getpid.c
  create mode 100644 libgloss/pru/isatty.c
  create mode 100644 libgloss/pru/kill.c
+ create mode 100755 libgloss/pru/ldscripts/gen-ld-scripts.sh
+ create mode 100644 libgloss/pru/ldscripts/pruelf-am335x.pru0.x
+ create mode 100644 libgloss/pru/ldscripts/pruelf-am335x.pru1.x
+ create mode 100644 libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
+ create mode 100644 libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
+ create mode 100644 libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
+ create mode 100644 libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
+ create mode 100644 libgloss/pru/ldscripts/pruelf-sim.x
  create mode 100644 libgloss/pru/lseek.c
  create mode 100644 libgloss/pru/open.c
  create mode 100644 libgloss/pru/print.c
@@ -159,10 +175,10 @@ index 93cc369..bcca3aa 100644
  dnl For now, don't bother configuring testsuite
 diff --git a/libgloss/pru/Makefile.in b/libgloss/pru/Makefile.in
 new file mode 100644
-index 0000000..209af1d
+index 0000000..eddad0a
 --- /dev/null
 +++ b/libgloss/pru/Makefile.in
-@@ -0,0 +1,122 @@
+@@ -0,0 +1,132 @@
 +# Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
 +#
 +# The authors hereby grant permission to use, copy, modify, distribute,
@@ -212,6 +228,9 @@ index 0000000..209af1d
 +OBJDUMP = `t='$(program_transform_name)'; echo objdump | sed -e $$t`
 +OBJCOPY = `t='$(program_transform_name)'; echo objcopy | sed -e $$t`
 +
++# linker scripts
++SCRIPTS = `ls ${srcdir}/ldscripts/*.x`
++
 +# object files needed
 +OBJS = \
 +	close.o exit.o fstat.o getpid.o isatty.o kill.o lseek.o open.o \
@@ -245,7 +264,10 @@ index 0000000..209af1d
 +.S.o:
 +	$(CC) $(CFLAGS_FOR_TARGET) $(INCLUDES) $(CFLAGS) -c $<
 +
-+all: ${OUTPUTS}
++all: ${OUTPUTS} copy_scripts_to_objdir
++
++copy_scripts_to_objdir: $(srcdir)/ldscripts/gen-ld-scripts.sh
++	cp $(SCRIPTS) $(objdir)
 +
 +#
 +# here's where we build the library for each target
@@ -271,9 +293,13 @@ index 0000000..209af1d
 +	rm -f Makefile config.status $(OUTPUTS)
 +
 +.PHONY: install info install-info clean-info
-+install: 
++install: $(OUTPUTS) $(srcdir)/ldscripts/gen-ld-scripts.sh
 +	for outputs in ${OUTPUTS}; do\
 +	 ${INSTALL_DATA} $${outputs} ${tooldir}/lib${MULTISUBDIR}/$${outputs}; \
++	done
++	for s in $(SCRIPTS); do \
++	  b=`basename $$s`; \
++	  ${INSTALL_DATA} $$s ${tooldir}/lib${MULTISUBDIR}/$$b ;\
 +	done
 +
 +info:
@@ -4781,6 +4807,1620 @@ index 0000000..43a3597
 +    _exit(sig);
 +  return 0;
 +}
+diff --git a/libgloss/pru/ldscripts/gen-ld-scripts.sh b/libgloss/pru/ldscripts/gen-ld-scripts.sh
+new file mode 100755
+index 0000000..822e93a
+--- /dev/null
++++ b/libgloss/pru/ldscripts/gen-ld-scripts.sh
+@@ -0,0 +1,61 @@
++#!/bin/bash
++
++# Generate additional MCU-specific linker scripts by using the
++# default PRU-LD linker script.
++#
++# We do it automatically so that:
++#  1. We only change the default linker script in binutils.
++#  2. All the default script complexity stays in binutils.
++#  3. Here in libgloss we care only to enumerate all PRU variants with
++#     their default memory sizes.
++
++dump_modified()
++{
++  IMEM_SIZE=$1
++  DMEM_SIZE=$2
++  HEAP_SIZE=$3
++  STACK_SIZE=$4
++
++  echo "/* WARNING: automatically generated from the default pru-ld script! */"
++  echo -e "\n\n"
++  pru-ld --verbose | awk "
++BEGIN { LDV_MARKER = 0; }
++{
++  if (\$0 == \"==================================================\" )
++    {
++      LDV_MARKER++;
++    }
++  else if (LDV_MARKER != 1)
++    {
++    }
++  else if (\$0 ~ /^  imem.*ORIGIN =.*LENGTH =/)
++    {
++      print \"  imem   (x)   : ORIGIN = 0x20000000, LENGTH = $IMEM_SIZE\"
++    }
++  else if (\$0 ~ /^  dmem.*ORIGIN =.*LENGTH =/)
++    {
++      print \"  dmem   (rw!x) : ORIGIN = 0x0, LENGTH = $DMEM_SIZE\"
++    }
++  else if (\$0 ~ /^__HEAP_SIZE = DEFINED/)
++    {
++      print \"__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : $HEAP_SIZE ;\";
++    }
++  else if (\$0 ~ /^__STACK_SIZE = DEFINED/)
++    {
++      print \"__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : $STACK_SIZE ;\";
++    }
++  else
++    {
++      print \$0;
++    }
++}"
++}
++
++#             IMEM DMEM   HEAP_SIZE    STACK_SIZE
++dump_modified 256K 1024K  "256 * 1024" "64 * 1024" | tee pruelf-sim.x
++dump_modified 8K   8K     "32"         "512"       | tee pruelf-am335x.pru0.x
++dump_modified 8K   8K     "32"         "512"       | tee pruelf-am335x.pru1.x
++dump_modified 4K   4K     "32"         "256"       | tee pruelf-am437x.icss0.pru0.x
++dump_modified 4K   4K     "32"         "256"       | tee pruelf-am437x.icss0.pru1.x
++dump_modified 8K   8K     "32"         "512"       | tee pruelf-am437x.icss1.pru0.x
++dump_modified 8K   8K     "32"         "512"       | tee pruelf-am437x.icss1.pru1.x
+diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru0.x b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
+new file mode 100644
+index 0000000..06ce33b
+--- /dev/null
++++ b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
+@@ -0,0 +1,215 @@
++/* WARNING: automatically generated from the default pru-ld script! */
++
++
++
++/* Default linker script, for normal executables */
++OUTPUT_FORMAT("elf32-pru","elf32-pru","elf32-pru")
++OUTPUT_ARCH(pru)
++MEMORY
++{
++  imem   (x)   : ORIGIN = 0x20000000, LENGTH = 8K
++  dmem   (rw!x) : ORIGIN = 0x0, LENGTH = 8K
++}
++__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
++__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
++ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++SECTIONS
++{
++  /* Read-only sections, merged into text segment: */
++  .hash          : { *(.hash)		}
++  .dynsym        : { *(.dynsym)		}
++  .dynstr        : { *(.dynstr)		}
++  .gnu.version   : { *(.gnu.version)	}
++  .gnu.version_d   : { *(.gnu.version_d)	}
++  .gnu.version_r   : { *(.gnu.version_r)	}
++  .rel.init      : { *(.rel.init)		}
++  .rela.init     : { *(.rela.init)	}
++  .rel.text      :
++    {
++      *(.rel.text)
++      *(.rel.text.*)
++      *(.rel.gnu.linkonce.t*)
++    }
++  .rela.text     :
++    {
++      *(.rela.text)
++      *(.rela.text.*)
++      *(.rela.gnu.linkonce.t*)
++    }
++  .rel.fini      : { *(.rel.fini)		}
++  .rela.fini     : { *(.rela.fini)	}
++  .rel.rodata    :
++    {
++      *(.rel.rodata)
++      *(.rel.rodata.*)
++      *(.rel.gnu.linkonce.r*)
++    }
++  .rela.rodata   :
++    {
++      *(.rela.rodata)
++      *(.rela.rodata.*)
++      *(.rela.gnu.linkonce.r*)
++    }
++  .rel.data      :
++    {
++      *(.rel.data)
++      *(.rel.data.*)
++      *(.rel.gnu.linkonce.d*)
++    }
++  .rela.data     :
++    {
++      *(.rela.data)
++      *(.rela.data.*)
++      *(.rela.gnu.linkonce.d*)
++    }
++  .rel.ctors     : { *(.rel.ctors)	}
++  .rela.ctors    : { *(.rela.ctors)	}
++  .rel.dtors     : { *(.rel.dtors)	}
++  .rela.dtors    : { *(.rela.dtors)	}
++  .rel.got       : { *(.rel.got)		}
++  .rela.got      : { *(.rela.got)		}
++  .rel.bss       : { *(.rel.bss)		}
++  .rela.bss      : { *(.rela.bss)		}
++  .rel.plt       : { *(.rel.plt)		}
++  .rela.plt      : { *(.rela.plt)		}
++  /* Internal text space. */
++  .text   :
++  {
++    . = ALIGN(4);
++    *(.init0)  /* Start here after reset.  */
++    KEEP (*(.init0))
++    *(.init1)
++    KEEP (*(.init1))
++    *(.init2)
++    KEEP (*(.init2))
++    *(.init3)
++    KEEP (*(.init3))
++    *(.init4)
++    KEEP (*(.init4))
++    *(.init5)
++    KEEP (*(.init5))
++    *(.init6)  /* C++ constructors.  */
++    KEEP (*(.init6))
++    *(.init7)
++    KEEP (*(.init7))
++    *(.init8)
++    KEEP (*(.init8))
++    *(.init9)
++    KEEP (*(.init9))
++     __ctors_start = . ;
++     *(.ctors)
++     __ctors_end = . ;
++     __dtors_start = . ;
++     *(.dtors)
++     __dtors_end = . ;
++    KEEP(SORT(*)(.ctors))
++    KEEP(SORT(*)(.dtors))
++    . = ALIGN(4);
++    *(.text)
++    . = ALIGN(4);
++    *(.text.*)
++    . = ALIGN(4);
++    *(.fini9)
++    KEEP (*(.fini9))
++    *(.fini8)
++    KEEP (*(.fini8))
++    *(.fini7)
++    KEEP (*(.fini7))
++    *(.fini6)  /* C++ destructors.  */
++    KEEP (*(.fini6))
++    *(.fini5)
++    KEEP (*(.fini5))
++    *(.fini4)
++    KEEP (*(.fini4))
++    *(.fini3)
++    KEEP (*(.fini3))
++    *(.fini2)
++    KEEP (*(.fini2))
++    *(.fini1)
++    KEEP (*(.fini1))
++    *(.fini0)  /* Infinite loop after program termination.  */
++    KEEP (*(.fini0))
++     _etext = . ;
++  }  > imem
++  .data          :
++  {
++     *(.data.atzero*)
++    /* DATA memory starts at address 0. So to avoid placing a valid static
++       variable at the invalid NULL address, we introduce the .data.atzero
++       section. If CRT can make some use of it - great. Otherwise skip a
++       word. In all cases .data/.bss sections must start at non-zero. */
++    . += (. == 0 ? 4 : 0);
++     PROVIDE (__data_start = .) ;
++    *(.data)
++     *(.data*)
++    *(.rodata)  /* We need to include .rodata here if gcc is used */
++     *(.rodata*) /* with -fdata-sections.  */
++    *(.gnu.linkonce.d*)
++    . = ALIGN(4);
++     _edata = . ;
++     PROVIDE (__data_end = .) ;
++  }  > dmem
++  .bss   :
++  {
++     PROVIDE (__bss_start = .) ;
++    *(.bss)
++     *(.bss*)
++    *(COMMON)
++     PROVIDE (__bss_end = .) ;
++  }  > dmem
++  /* Global data not cleared after reset.  */
++  .noinit  :
++  {
++     PROVIDE (__noinit_start = .) ;
++    *(.noinit*)
++     PROVIDE (__noinit_end = .) ;
++     _end = . ;
++     PROVIDE (__heap_start = .) ;
++     . += __HEAP_SIZE ;
++    /* Stack is not here really. It will be put at the end of DMEM.
++       But we take into account its size here, in order to allow
++       for MEMORY overflow checking during link time. */
++     . += __STACK_SIZE ;
++  }  > dmem
++  /* Stabs debugging sections.  */
++  .stab 0 : { *(.stab) }
++  .stabstr 0 : { *(.stabstr) }
++  .stab.excl 0 : { *(.stab.excl) }
++  .stab.exclstr 0 : { *(.stab.exclstr) }
++  .stab.index 0 : { *(.stab.index) }
++  .stab.indexstr 0 : { *(.stab.indexstr) }
++  .comment 0 : { *(.comment) }
++  .note.gnu.build-id : { *(.note.gnu.build-id) }
++  /* DWARF debug sections.
++     Symbols in the DWARF debugging sections are relative to the beginning
++     of the section so we begin them at 0.  */
++  /* DWARF 1 */
++  .debug          0 : { *(.debug) }
++  .line           0 : { *(.line) }
++  /* GNU DWARF 1 extensions */
++  .debug_srcinfo  0 : { *(.debug_srcinfo) }
++  .debug_sfnames  0 : { *(.debug_sfnames) }
++  /* DWARF 1.1 and DWARF 2 */
++  .debug_aranges  0 : { *(.debug_aranges) }
++  .debug_pubnames 0 : { *(.debug_pubnames) }
++  /* DWARF 2 */
++  .debug_info     0 : { *(.debug_info .gnu.linkonce.wi.*) }
++  .debug_abbrev   0 : { *(.debug_abbrev) }
++  .debug_line     0 : { *(.debug_line .debug_line.* .debug_line_end ) }
++  .debug_frame    0 : { *(.debug_frame) }
++  .debug_str      0 : { *(.debug_str) }
++  .debug_loc      0 : { *(.debug_loc) }
++  .debug_macinfo  0 : { *(.debug_macinfo) }
++  /* SGI/MIPS DWARF 2 extensions */
++  .debug_weaknames 0 : { *(.debug_weaknames) }
++  .debug_funcnames 0 : { *(.debug_funcnames) }
++  .debug_typenames 0 : { *(.debug_typenames) }
++  .debug_varnames  0 : { *(.debug_varnames) }
++  /* DWARF 3 */
++  .debug_pubtypes 0 : { *(.debug_pubtypes) }
++  .debug_ranges   0 : { *(.debug_ranges) }
++  /* DWARF Extension.  */
++  .debug_macro    0 : { *(.debug_macro) }
++}
++
++
+diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru1.x b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
+new file mode 100644
+index 0000000..06ce33b
+--- /dev/null
++++ b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
+@@ -0,0 +1,215 @@
++/* WARNING: automatically generated from the default pru-ld script! */
++
++
++
++/* Default linker script, for normal executables */
++OUTPUT_FORMAT("elf32-pru","elf32-pru","elf32-pru")
++OUTPUT_ARCH(pru)
++MEMORY
++{
++  imem   (x)   : ORIGIN = 0x20000000, LENGTH = 8K
++  dmem   (rw!x) : ORIGIN = 0x0, LENGTH = 8K
++}
++__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
++__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
++ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++SECTIONS
++{
++  /* Read-only sections, merged into text segment: */
++  .hash          : { *(.hash)		}
++  .dynsym        : { *(.dynsym)		}
++  .dynstr        : { *(.dynstr)		}
++  .gnu.version   : { *(.gnu.version)	}
++  .gnu.version_d   : { *(.gnu.version_d)	}
++  .gnu.version_r   : { *(.gnu.version_r)	}
++  .rel.init      : { *(.rel.init)		}
++  .rela.init     : { *(.rela.init)	}
++  .rel.text      :
++    {
++      *(.rel.text)
++      *(.rel.text.*)
++      *(.rel.gnu.linkonce.t*)
++    }
++  .rela.text     :
++    {
++      *(.rela.text)
++      *(.rela.text.*)
++      *(.rela.gnu.linkonce.t*)
++    }
++  .rel.fini      : { *(.rel.fini)		}
++  .rela.fini     : { *(.rela.fini)	}
++  .rel.rodata    :
++    {
++      *(.rel.rodata)
++      *(.rel.rodata.*)
++      *(.rel.gnu.linkonce.r*)
++    }
++  .rela.rodata   :
++    {
++      *(.rela.rodata)
++      *(.rela.rodata.*)
++      *(.rela.gnu.linkonce.r*)
++    }
++  .rel.data      :
++    {
++      *(.rel.data)
++      *(.rel.data.*)
++      *(.rel.gnu.linkonce.d*)
++    }
++  .rela.data     :
++    {
++      *(.rela.data)
++      *(.rela.data.*)
++      *(.rela.gnu.linkonce.d*)
++    }
++  .rel.ctors     : { *(.rel.ctors)	}
++  .rela.ctors    : { *(.rela.ctors)	}
++  .rel.dtors     : { *(.rel.dtors)	}
++  .rela.dtors    : { *(.rela.dtors)	}
++  .rel.got       : { *(.rel.got)		}
++  .rela.got      : { *(.rela.got)		}
++  .rel.bss       : { *(.rel.bss)		}
++  .rela.bss      : { *(.rela.bss)		}
++  .rel.plt       : { *(.rel.plt)		}
++  .rela.plt      : { *(.rela.plt)		}
++  /* Internal text space. */
++  .text   :
++  {
++    . = ALIGN(4);
++    *(.init0)  /* Start here after reset.  */
++    KEEP (*(.init0))
++    *(.init1)
++    KEEP (*(.init1))
++    *(.init2)
++    KEEP (*(.init2))
++    *(.init3)
++    KEEP (*(.init3))
++    *(.init4)
++    KEEP (*(.init4))
++    *(.init5)
++    KEEP (*(.init5))
++    *(.init6)  /* C++ constructors.  */
++    KEEP (*(.init6))
++    *(.init7)
++    KEEP (*(.init7))
++    *(.init8)
++    KEEP (*(.init8))
++    *(.init9)
++    KEEP (*(.init9))
++     __ctors_start = . ;
++     *(.ctors)
++     __ctors_end = . ;
++     __dtors_start = . ;
++     *(.dtors)
++     __dtors_end = . ;
++    KEEP(SORT(*)(.ctors))
++    KEEP(SORT(*)(.dtors))
++    . = ALIGN(4);
++    *(.text)
++    . = ALIGN(4);
++    *(.text.*)
++    . = ALIGN(4);
++    *(.fini9)
++    KEEP (*(.fini9))
++    *(.fini8)
++    KEEP (*(.fini8))
++    *(.fini7)
++    KEEP (*(.fini7))
++    *(.fini6)  /* C++ destructors.  */
++    KEEP (*(.fini6))
++    *(.fini5)
++    KEEP (*(.fini5))
++    *(.fini4)
++    KEEP (*(.fini4))
++    *(.fini3)
++    KEEP (*(.fini3))
++    *(.fini2)
++    KEEP (*(.fini2))
++    *(.fini1)
++    KEEP (*(.fini1))
++    *(.fini0)  /* Infinite loop after program termination.  */
++    KEEP (*(.fini0))
++     _etext = . ;
++  }  > imem
++  .data          :
++  {
++     *(.data.atzero*)
++    /* DATA memory starts at address 0. So to avoid placing a valid static
++       variable at the invalid NULL address, we introduce the .data.atzero
++       section. If CRT can make some use of it - great. Otherwise skip a
++       word. In all cases .data/.bss sections must start at non-zero. */
++    . += (. == 0 ? 4 : 0);
++     PROVIDE (__data_start = .) ;
++    *(.data)
++     *(.data*)
++    *(.rodata)  /* We need to include .rodata here if gcc is used */
++     *(.rodata*) /* with -fdata-sections.  */
++    *(.gnu.linkonce.d*)
++    . = ALIGN(4);
++     _edata = . ;
++     PROVIDE (__data_end = .) ;
++  }  > dmem
++  .bss   :
++  {
++     PROVIDE (__bss_start = .) ;
++    *(.bss)
++     *(.bss*)
++    *(COMMON)
++     PROVIDE (__bss_end = .) ;
++  }  > dmem
++  /* Global data not cleared after reset.  */
++  .noinit  :
++  {
++     PROVIDE (__noinit_start = .) ;
++    *(.noinit*)
++     PROVIDE (__noinit_end = .) ;
++     _end = . ;
++     PROVIDE (__heap_start = .) ;
++     . += __HEAP_SIZE ;
++    /* Stack is not here really. It will be put at the end of DMEM.
++       But we take into account its size here, in order to allow
++       for MEMORY overflow checking during link time. */
++     . += __STACK_SIZE ;
++  }  > dmem
++  /* Stabs debugging sections.  */
++  .stab 0 : { *(.stab) }
++  .stabstr 0 : { *(.stabstr) }
++  .stab.excl 0 : { *(.stab.excl) }
++  .stab.exclstr 0 : { *(.stab.exclstr) }
++  .stab.index 0 : { *(.stab.index) }
++  .stab.indexstr 0 : { *(.stab.indexstr) }
++  .comment 0 : { *(.comment) }
++  .note.gnu.build-id : { *(.note.gnu.build-id) }
++  /* DWARF debug sections.
++     Symbols in the DWARF debugging sections are relative to the beginning
++     of the section so we begin them at 0.  */
++  /* DWARF 1 */
++  .debug          0 : { *(.debug) }
++  .line           0 : { *(.line) }
++  /* GNU DWARF 1 extensions */
++  .debug_srcinfo  0 : { *(.debug_srcinfo) }
++  .debug_sfnames  0 : { *(.debug_sfnames) }
++  /* DWARF 1.1 and DWARF 2 */
++  .debug_aranges  0 : { *(.debug_aranges) }
++  .debug_pubnames 0 : { *(.debug_pubnames) }
++  /* DWARF 2 */
++  .debug_info     0 : { *(.debug_info .gnu.linkonce.wi.*) }
++  .debug_abbrev   0 : { *(.debug_abbrev) }
++  .debug_line     0 : { *(.debug_line .debug_line.* .debug_line_end ) }
++  .debug_frame    0 : { *(.debug_frame) }
++  .debug_str      0 : { *(.debug_str) }
++  .debug_loc      0 : { *(.debug_loc) }
++  .debug_macinfo  0 : { *(.debug_macinfo) }
++  /* SGI/MIPS DWARF 2 extensions */
++  .debug_weaknames 0 : { *(.debug_weaknames) }
++  .debug_funcnames 0 : { *(.debug_funcnames) }
++  .debug_typenames 0 : { *(.debug_typenames) }
++  .debug_varnames  0 : { *(.debug_varnames) }
++  /* DWARF 3 */
++  .debug_pubtypes 0 : { *(.debug_pubtypes) }
++  .debug_ranges   0 : { *(.debug_ranges) }
++  /* DWARF Extension.  */
++  .debug_macro    0 : { *(.debug_macro) }
++}
++
++
+diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
+new file mode 100644
+index 0000000..37f4775
+--- /dev/null
++++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
+@@ -0,0 +1,215 @@
++/* WARNING: automatically generated from the default pru-ld script! */
++
++
++
++/* Default linker script, for normal executables */
++OUTPUT_FORMAT("elf32-pru","elf32-pru","elf32-pru")
++OUTPUT_ARCH(pru)
++MEMORY
++{
++  imem   (x)   : ORIGIN = 0x20000000, LENGTH = 4K
++  dmem   (rw!x) : ORIGIN = 0x0, LENGTH = 4K
++}
++__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
++__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 256 ;
++ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++SECTIONS
++{
++  /* Read-only sections, merged into text segment: */
++  .hash          : { *(.hash)		}
++  .dynsym        : { *(.dynsym)		}
++  .dynstr        : { *(.dynstr)		}
++  .gnu.version   : { *(.gnu.version)	}
++  .gnu.version_d   : { *(.gnu.version_d)	}
++  .gnu.version_r   : { *(.gnu.version_r)	}
++  .rel.init      : { *(.rel.init)		}
++  .rela.init     : { *(.rela.init)	}
++  .rel.text      :
++    {
++      *(.rel.text)
++      *(.rel.text.*)
++      *(.rel.gnu.linkonce.t*)
++    }
++  .rela.text     :
++    {
++      *(.rela.text)
++      *(.rela.text.*)
++      *(.rela.gnu.linkonce.t*)
++    }
++  .rel.fini      : { *(.rel.fini)		}
++  .rela.fini     : { *(.rela.fini)	}
++  .rel.rodata    :
++    {
++      *(.rel.rodata)
++      *(.rel.rodata.*)
++      *(.rel.gnu.linkonce.r*)
++    }
++  .rela.rodata   :
++    {
++      *(.rela.rodata)
++      *(.rela.rodata.*)
++      *(.rela.gnu.linkonce.r*)
++    }
++  .rel.data      :
++    {
++      *(.rel.data)
++      *(.rel.data.*)
++      *(.rel.gnu.linkonce.d*)
++    }
++  .rela.data     :
++    {
++      *(.rela.data)
++      *(.rela.data.*)
++      *(.rela.gnu.linkonce.d*)
++    }
++  .rel.ctors     : { *(.rel.ctors)	}
++  .rela.ctors    : { *(.rela.ctors)	}
++  .rel.dtors     : { *(.rel.dtors)	}
++  .rela.dtors    : { *(.rela.dtors)	}
++  .rel.got       : { *(.rel.got)		}
++  .rela.got      : { *(.rela.got)		}
++  .rel.bss       : { *(.rel.bss)		}
++  .rela.bss      : { *(.rela.bss)		}
++  .rel.plt       : { *(.rel.plt)		}
++  .rela.plt      : { *(.rela.plt)		}
++  /* Internal text space. */
++  .text   :
++  {
++    . = ALIGN(4);
++    *(.init0)  /* Start here after reset.  */
++    KEEP (*(.init0))
++    *(.init1)
++    KEEP (*(.init1))
++    *(.init2)
++    KEEP (*(.init2))
++    *(.init3)
++    KEEP (*(.init3))
++    *(.init4)
++    KEEP (*(.init4))
++    *(.init5)
++    KEEP (*(.init5))
++    *(.init6)  /* C++ constructors.  */
++    KEEP (*(.init6))
++    *(.init7)
++    KEEP (*(.init7))
++    *(.init8)
++    KEEP (*(.init8))
++    *(.init9)
++    KEEP (*(.init9))
++     __ctors_start = . ;
++     *(.ctors)
++     __ctors_end = . ;
++     __dtors_start = . ;
++     *(.dtors)
++     __dtors_end = . ;
++    KEEP(SORT(*)(.ctors))
++    KEEP(SORT(*)(.dtors))
++    . = ALIGN(4);
++    *(.text)
++    . = ALIGN(4);
++    *(.text.*)
++    . = ALIGN(4);
++    *(.fini9)
++    KEEP (*(.fini9))
++    *(.fini8)
++    KEEP (*(.fini8))
++    *(.fini7)
++    KEEP (*(.fini7))
++    *(.fini6)  /* C++ destructors.  */
++    KEEP (*(.fini6))
++    *(.fini5)
++    KEEP (*(.fini5))
++    *(.fini4)
++    KEEP (*(.fini4))
++    *(.fini3)
++    KEEP (*(.fini3))
++    *(.fini2)
++    KEEP (*(.fini2))
++    *(.fini1)
++    KEEP (*(.fini1))
++    *(.fini0)  /* Infinite loop after program termination.  */
++    KEEP (*(.fini0))
++     _etext = . ;
++  }  > imem
++  .data          :
++  {
++     *(.data.atzero*)
++    /* DATA memory starts at address 0. So to avoid placing a valid static
++       variable at the invalid NULL address, we introduce the .data.atzero
++       section. If CRT can make some use of it - great. Otherwise skip a
++       word. In all cases .data/.bss sections must start at non-zero. */
++    . += (. == 0 ? 4 : 0);
++     PROVIDE (__data_start = .) ;
++    *(.data)
++     *(.data*)
++    *(.rodata)  /* We need to include .rodata here if gcc is used */
++     *(.rodata*) /* with -fdata-sections.  */
++    *(.gnu.linkonce.d*)
++    . = ALIGN(4);
++     _edata = . ;
++     PROVIDE (__data_end = .) ;
++  }  > dmem
++  .bss   :
++  {
++     PROVIDE (__bss_start = .) ;
++    *(.bss)
++     *(.bss*)
++    *(COMMON)
++     PROVIDE (__bss_end = .) ;
++  }  > dmem
++  /* Global data not cleared after reset.  */
++  .noinit  :
++  {
++     PROVIDE (__noinit_start = .) ;
++    *(.noinit*)
++     PROVIDE (__noinit_end = .) ;
++     _end = . ;
++     PROVIDE (__heap_start = .) ;
++     . += __HEAP_SIZE ;
++    /* Stack is not here really. It will be put at the end of DMEM.
++       But we take into account its size here, in order to allow
++       for MEMORY overflow checking during link time. */
++     . += __STACK_SIZE ;
++  }  > dmem
++  /* Stabs debugging sections.  */
++  .stab 0 : { *(.stab) }
++  .stabstr 0 : { *(.stabstr) }
++  .stab.excl 0 : { *(.stab.excl) }
++  .stab.exclstr 0 : { *(.stab.exclstr) }
++  .stab.index 0 : { *(.stab.index) }
++  .stab.indexstr 0 : { *(.stab.indexstr) }
++  .comment 0 : { *(.comment) }
++  .note.gnu.build-id : { *(.note.gnu.build-id) }
++  /* DWARF debug sections.
++     Symbols in the DWARF debugging sections are relative to the beginning
++     of the section so we begin them at 0.  */
++  /* DWARF 1 */
++  .debug          0 : { *(.debug) }
++  .line           0 : { *(.line) }
++  /* GNU DWARF 1 extensions */
++  .debug_srcinfo  0 : { *(.debug_srcinfo) }
++  .debug_sfnames  0 : { *(.debug_sfnames) }
++  /* DWARF 1.1 and DWARF 2 */
++  .debug_aranges  0 : { *(.debug_aranges) }
++  .debug_pubnames 0 : { *(.debug_pubnames) }
++  /* DWARF 2 */
++  .debug_info     0 : { *(.debug_info .gnu.linkonce.wi.*) }
++  .debug_abbrev   0 : { *(.debug_abbrev) }
++  .debug_line     0 : { *(.debug_line .debug_line.* .debug_line_end ) }
++  .debug_frame    0 : { *(.debug_frame) }
++  .debug_str      0 : { *(.debug_str) }
++  .debug_loc      0 : { *(.debug_loc) }
++  .debug_macinfo  0 : { *(.debug_macinfo) }
++  /* SGI/MIPS DWARF 2 extensions */
++  .debug_weaknames 0 : { *(.debug_weaknames) }
++  .debug_funcnames 0 : { *(.debug_funcnames) }
++  .debug_typenames 0 : { *(.debug_typenames) }
++  .debug_varnames  0 : { *(.debug_varnames) }
++  /* DWARF 3 */
++  .debug_pubtypes 0 : { *(.debug_pubtypes) }
++  .debug_ranges   0 : { *(.debug_ranges) }
++  /* DWARF Extension.  */
++  .debug_macro    0 : { *(.debug_macro) }
++}
++
++
+diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
+new file mode 100644
+index 0000000..37f4775
+--- /dev/null
++++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
+@@ -0,0 +1,215 @@
++/* WARNING: automatically generated from the default pru-ld script! */
++
++
++
++/* Default linker script, for normal executables */
++OUTPUT_FORMAT("elf32-pru","elf32-pru","elf32-pru")
++OUTPUT_ARCH(pru)
++MEMORY
++{
++  imem   (x)   : ORIGIN = 0x20000000, LENGTH = 4K
++  dmem   (rw!x) : ORIGIN = 0x0, LENGTH = 4K
++}
++__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
++__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 256 ;
++ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++SECTIONS
++{
++  /* Read-only sections, merged into text segment: */
++  .hash          : { *(.hash)		}
++  .dynsym        : { *(.dynsym)		}
++  .dynstr        : { *(.dynstr)		}
++  .gnu.version   : { *(.gnu.version)	}
++  .gnu.version_d   : { *(.gnu.version_d)	}
++  .gnu.version_r   : { *(.gnu.version_r)	}
++  .rel.init      : { *(.rel.init)		}
++  .rela.init     : { *(.rela.init)	}
++  .rel.text      :
++    {
++      *(.rel.text)
++      *(.rel.text.*)
++      *(.rel.gnu.linkonce.t*)
++    }
++  .rela.text     :
++    {
++      *(.rela.text)
++      *(.rela.text.*)
++      *(.rela.gnu.linkonce.t*)
++    }
++  .rel.fini      : { *(.rel.fini)		}
++  .rela.fini     : { *(.rela.fini)	}
++  .rel.rodata    :
++    {
++      *(.rel.rodata)
++      *(.rel.rodata.*)
++      *(.rel.gnu.linkonce.r*)
++    }
++  .rela.rodata   :
++    {
++      *(.rela.rodata)
++      *(.rela.rodata.*)
++      *(.rela.gnu.linkonce.r*)
++    }
++  .rel.data      :
++    {
++      *(.rel.data)
++      *(.rel.data.*)
++      *(.rel.gnu.linkonce.d*)
++    }
++  .rela.data     :
++    {
++      *(.rela.data)
++      *(.rela.data.*)
++      *(.rela.gnu.linkonce.d*)
++    }
++  .rel.ctors     : { *(.rel.ctors)	}
++  .rela.ctors    : { *(.rela.ctors)	}
++  .rel.dtors     : { *(.rel.dtors)	}
++  .rela.dtors    : { *(.rela.dtors)	}
++  .rel.got       : { *(.rel.got)		}
++  .rela.got      : { *(.rela.got)		}
++  .rel.bss       : { *(.rel.bss)		}
++  .rela.bss      : { *(.rela.bss)		}
++  .rel.plt       : { *(.rel.plt)		}
++  .rela.plt      : { *(.rela.plt)		}
++  /* Internal text space. */
++  .text   :
++  {
++    . = ALIGN(4);
++    *(.init0)  /* Start here after reset.  */
++    KEEP (*(.init0))
++    *(.init1)
++    KEEP (*(.init1))
++    *(.init2)
++    KEEP (*(.init2))
++    *(.init3)
++    KEEP (*(.init3))
++    *(.init4)
++    KEEP (*(.init4))
++    *(.init5)
++    KEEP (*(.init5))
++    *(.init6)  /* C++ constructors.  */
++    KEEP (*(.init6))
++    *(.init7)
++    KEEP (*(.init7))
++    *(.init8)
++    KEEP (*(.init8))
++    *(.init9)
++    KEEP (*(.init9))
++     __ctors_start = . ;
++     *(.ctors)
++     __ctors_end = . ;
++     __dtors_start = . ;
++     *(.dtors)
++     __dtors_end = . ;
++    KEEP(SORT(*)(.ctors))
++    KEEP(SORT(*)(.dtors))
++    . = ALIGN(4);
++    *(.text)
++    . = ALIGN(4);
++    *(.text.*)
++    . = ALIGN(4);
++    *(.fini9)
++    KEEP (*(.fini9))
++    *(.fini8)
++    KEEP (*(.fini8))
++    *(.fini7)
++    KEEP (*(.fini7))
++    *(.fini6)  /* C++ destructors.  */
++    KEEP (*(.fini6))
++    *(.fini5)
++    KEEP (*(.fini5))
++    *(.fini4)
++    KEEP (*(.fini4))
++    *(.fini3)
++    KEEP (*(.fini3))
++    *(.fini2)
++    KEEP (*(.fini2))
++    *(.fini1)
++    KEEP (*(.fini1))
++    *(.fini0)  /* Infinite loop after program termination.  */
++    KEEP (*(.fini0))
++     _etext = . ;
++  }  > imem
++  .data          :
++  {
++     *(.data.atzero*)
++    /* DATA memory starts at address 0. So to avoid placing a valid static
++       variable at the invalid NULL address, we introduce the .data.atzero
++       section. If CRT can make some use of it - great. Otherwise skip a
++       word. In all cases .data/.bss sections must start at non-zero. */
++    . += (. == 0 ? 4 : 0);
++     PROVIDE (__data_start = .) ;
++    *(.data)
++     *(.data*)
++    *(.rodata)  /* We need to include .rodata here if gcc is used */
++     *(.rodata*) /* with -fdata-sections.  */
++    *(.gnu.linkonce.d*)
++    . = ALIGN(4);
++     _edata = . ;
++     PROVIDE (__data_end = .) ;
++  }  > dmem
++  .bss   :
++  {
++     PROVIDE (__bss_start = .) ;
++    *(.bss)
++     *(.bss*)
++    *(COMMON)
++     PROVIDE (__bss_end = .) ;
++  }  > dmem
++  /* Global data not cleared after reset.  */
++  .noinit  :
++  {
++     PROVIDE (__noinit_start = .) ;
++    *(.noinit*)
++     PROVIDE (__noinit_end = .) ;
++     _end = . ;
++     PROVIDE (__heap_start = .) ;
++     . += __HEAP_SIZE ;
++    /* Stack is not here really. It will be put at the end of DMEM.
++       But we take into account its size here, in order to allow
++       for MEMORY overflow checking during link time. */
++     . += __STACK_SIZE ;
++  }  > dmem
++  /* Stabs debugging sections.  */
++  .stab 0 : { *(.stab) }
++  .stabstr 0 : { *(.stabstr) }
++  .stab.excl 0 : { *(.stab.excl) }
++  .stab.exclstr 0 : { *(.stab.exclstr) }
++  .stab.index 0 : { *(.stab.index) }
++  .stab.indexstr 0 : { *(.stab.indexstr) }
++  .comment 0 : { *(.comment) }
++  .note.gnu.build-id : { *(.note.gnu.build-id) }
++  /* DWARF debug sections.
++     Symbols in the DWARF debugging sections are relative to the beginning
++     of the section so we begin them at 0.  */
++  /* DWARF 1 */
++  .debug          0 : { *(.debug) }
++  .line           0 : { *(.line) }
++  /* GNU DWARF 1 extensions */
++  .debug_srcinfo  0 : { *(.debug_srcinfo) }
++  .debug_sfnames  0 : { *(.debug_sfnames) }
++  /* DWARF 1.1 and DWARF 2 */
++  .debug_aranges  0 : { *(.debug_aranges) }
++  .debug_pubnames 0 : { *(.debug_pubnames) }
++  /* DWARF 2 */
++  .debug_info     0 : { *(.debug_info .gnu.linkonce.wi.*) }
++  .debug_abbrev   0 : { *(.debug_abbrev) }
++  .debug_line     0 : { *(.debug_line .debug_line.* .debug_line_end ) }
++  .debug_frame    0 : { *(.debug_frame) }
++  .debug_str      0 : { *(.debug_str) }
++  .debug_loc      0 : { *(.debug_loc) }
++  .debug_macinfo  0 : { *(.debug_macinfo) }
++  /* SGI/MIPS DWARF 2 extensions */
++  .debug_weaknames 0 : { *(.debug_weaknames) }
++  .debug_funcnames 0 : { *(.debug_funcnames) }
++  .debug_typenames 0 : { *(.debug_typenames) }
++  .debug_varnames  0 : { *(.debug_varnames) }
++  /* DWARF 3 */
++  .debug_pubtypes 0 : { *(.debug_pubtypes) }
++  .debug_ranges   0 : { *(.debug_ranges) }
++  /* DWARF Extension.  */
++  .debug_macro    0 : { *(.debug_macro) }
++}
++
++
+diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
+new file mode 100644
+index 0000000..06ce33b
+--- /dev/null
++++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
+@@ -0,0 +1,215 @@
++/* WARNING: automatically generated from the default pru-ld script! */
++
++
++
++/* Default linker script, for normal executables */
++OUTPUT_FORMAT("elf32-pru","elf32-pru","elf32-pru")
++OUTPUT_ARCH(pru)
++MEMORY
++{
++  imem   (x)   : ORIGIN = 0x20000000, LENGTH = 8K
++  dmem   (rw!x) : ORIGIN = 0x0, LENGTH = 8K
++}
++__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
++__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
++ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++SECTIONS
++{
++  /* Read-only sections, merged into text segment: */
++  .hash          : { *(.hash)		}
++  .dynsym        : { *(.dynsym)		}
++  .dynstr        : { *(.dynstr)		}
++  .gnu.version   : { *(.gnu.version)	}
++  .gnu.version_d   : { *(.gnu.version_d)	}
++  .gnu.version_r   : { *(.gnu.version_r)	}
++  .rel.init      : { *(.rel.init)		}
++  .rela.init     : { *(.rela.init)	}
++  .rel.text      :
++    {
++      *(.rel.text)
++      *(.rel.text.*)
++      *(.rel.gnu.linkonce.t*)
++    }
++  .rela.text     :
++    {
++      *(.rela.text)
++      *(.rela.text.*)
++      *(.rela.gnu.linkonce.t*)
++    }
++  .rel.fini      : { *(.rel.fini)		}
++  .rela.fini     : { *(.rela.fini)	}
++  .rel.rodata    :
++    {
++      *(.rel.rodata)
++      *(.rel.rodata.*)
++      *(.rel.gnu.linkonce.r*)
++    }
++  .rela.rodata   :
++    {
++      *(.rela.rodata)
++      *(.rela.rodata.*)
++      *(.rela.gnu.linkonce.r*)
++    }
++  .rel.data      :
++    {
++      *(.rel.data)
++      *(.rel.data.*)
++      *(.rel.gnu.linkonce.d*)
++    }
++  .rela.data     :
++    {
++      *(.rela.data)
++      *(.rela.data.*)
++      *(.rela.gnu.linkonce.d*)
++    }
++  .rel.ctors     : { *(.rel.ctors)	}
++  .rela.ctors    : { *(.rela.ctors)	}
++  .rel.dtors     : { *(.rel.dtors)	}
++  .rela.dtors    : { *(.rela.dtors)	}
++  .rel.got       : { *(.rel.got)		}
++  .rela.got      : { *(.rela.got)		}
++  .rel.bss       : { *(.rel.bss)		}
++  .rela.bss      : { *(.rela.bss)		}
++  .rel.plt       : { *(.rel.plt)		}
++  .rela.plt      : { *(.rela.plt)		}
++  /* Internal text space. */
++  .text   :
++  {
++    . = ALIGN(4);
++    *(.init0)  /* Start here after reset.  */
++    KEEP (*(.init0))
++    *(.init1)
++    KEEP (*(.init1))
++    *(.init2)
++    KEEP (*(.init2))
++    *(.init3)
++    KEEP (*(.init3))
++    *(.init4)
++    KEEP (*(.init4))
++    *(.init5)
++    KEEP (*(.init5))
++    *(.init6)  /* C++ constructors.  */
++    KEEP (*(.init6))
++    *(.init7)
++    KEEP (*(.init7))
++    *(.init8)
++    KEEP (*(.init8))
++    *(.init9)
++    KEEP (*(.init9))
++     __ctors_start = . ;
++     *(.ctors)
++     __ctors_end = . ;
++     __dtors_start = . ;
++     *(.dtors)
++     __dtors_end = . ;
++    KEEP(SORT(*)(.ctors))
++    KEEP(SORT(*)(.dtors))
++    . = ALIGN(4);
++    *(.text)
++    . = ALIGN(4);
++    *(.text.*)
++    . = ALIGN(4);
++    *(.fini9)
++    KEEP (*(.fini9))
++    *(.fini8)
++    KEEP (*(.fini8))
++    *(.fini7)
++    KEEP (*(.fini7))
++    *(.fini6)  /* C++ destructors.  */
++    KEEP (*(.fini6))
++    *(.fini5)
++    KEEP (*(.fini5))
++    *(.fini4)
++    KEEP (*(.fini4))
++    *(.fini3)
++    KEEP (*(.fini3))
++    *(.fini2)
++    KEEP (*(.fini2))
++    *(.fini1)
++    KEEP (*(.fini1))
++    *(.fini0)  /* Infinite loop after program termination.  */
++    KEEP (*(.fini0))
++     _etext = . ;
++  }  > imem
++  .data          :
++  {
++     *(.data.atzero*)
++    /* DATA memory starts at address 0. So to avoid placing a valid static
++       variable at the invalid NULL address, we introduce the .data.atzero
++       section. If CRT can make some use of it - great. Otherwise skip a
++       word. In all cases .data/.bss sections must start at non-zero. */
++    . += (. == 0 ? 4 : 0);
++     PROVIDE (__data_start = .) ;
++    *(.data)
++     *(.data*)
++    *(.rodata)  /* We need to include .rodata here if gcc is used */
++     *(.rodata*) /* with -fdata-sections.  */
++    *(.gnu.linkonce.d*)
++    . = ALIGN(4);
++     _edata = . ;
++     PROVIDE (__data_end = .) ;
++  }  > dmem
++  .bss   :
++  {
++     PROVIDE (__bss_start = .) ;
++    *(.bss)
++     *(.bss*)
++    *(COMMON)
++     PROVIDE (__bss_end = .) ;
++  }  > dmem
++  /* Global data not cleared after reset.  */
++  .noinit  :
++  {
++     PROVIDE (__noinit_start = .) ;
++    *(.noinit*)
++     PROVIDE (__noinit_end = .) ;
++     _end = . ;
++     PROVIDE (__heap_start = .) ;
++     . += __HEAP_SIZE ;
++    /* Stack is not here really. It will be put at the end of DMEM.
++       But we take into account its size here, in order to allow
++       for MEMORY overflow checking during link time. */
++     . += __STACK_SIZE ;
++  }  > dmem
++  /* Stabs debugging sections.  */
++  .stab 0 : { *(.stab) }
++  .stabstr 0 : { *(.stabstr) }
++  .stab.excl 0 : { *(.stab.excl) }
++  .stab.exclstr 0 : { *(.stab.exclstr) }
++  .stab.index 0 : { *(.stab.index) }
++  .stab.indexstr 0 : { *(.stab.indexstr) }
++  .comment 0 : { *(.comment) }
++  .note.gnu.build-id : { *(.note.gnu.build-id) }
++  /* DWARF debug sections.
++     Symbols in the DWARF debugging sections are relative to the beginning
++     of the section so we begin them at 0.  */
++  /* DWARF 1 */
++  .debug          0 : { *(.debug) }
++  .line           0 : { *(.line) }
++  /* GNU DWARF 1 extensions */
++  .debug_srcinfo  0 : { *(.debug_srcinfo) }
++  .debug_sfnames  0 : { *(.debug_sfnames) }
++  /* DWARF 1.1 and DWARF 2 */
++  .debug_aranges  0 : { *(.debug_aranges) }
++  .debug_pubnames 0 : { *(.debug_pubnames) }
++  /* DWARF 2 */
++  .debug_info     0 : { *(.debug_info .gnu.linkonce.wi.*) }
++  .debug_abbrev   0 : { *(.debug_abbrev) }
++  .debug_line     0 : { *(.debug_line .debug_line.* .debug_line_end ) }
++  .debug_frame    0 : { *(.debug_frame) }
++  .debug_str      0 : { *(.debug_str) }
++  .debug_loc      0 : { *(.debug_loc) }
++  .debug_macinfo  0 : { *(.debug_macinfo) }
++  /* SGI/MIPS DWARF 2 extensions */
++  .debug_weaknames 0 : { *(.debug_weaknames) }
++  .debug_funcnames 0 : { *(.debug_funcnames) }
++  .debug_typenames 0 : { *(.debug_typenames) }
++  .debug_varnames  0 : { *(.debug_varnames) }
++  /* DWARF 3 */
++  .debug_pubtypes 0 : { *(.debug_pubtypes) }
++  .debug_ranges   0 : { *(.debug_ranges) }
++  /* DWARF Extension.  */
++  .debug_macro    0 : { *(.debug_macro) }
++}
++
++
+diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
+new file mode 100644
+index 0000000..06ce33b
+--- /dev/null
++++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
+@@ -0,0 +1,215 @@
++/* WARNING: automatically generated from the default pru-ld script! */
++
++
++
++/* Default linker script, for normal executables */
++OUTPUT_FORMAT("elf32-pru","elf32-pru","elf32-pru")
++OUTPUT_ARCH(pru)
++MEMORY
++{
++  imem   (x)   : ORIGIN = 0x20000000, LENGTH = 8K
++  dmem   (rw!x) : ORIGIN = 0x0, LENGTH = 8K
++}
++__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
++__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
++ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++SECTIONS
++{
++  /* Read-only sections, merged into text segment: */
++  .hash          : { *(.hash)		}
++  .dynsym        : { *(.dynsym)		}
++  .dynstr        : { *(.dynstr)		}
++  .gnu.version   : { *(.gnu.version)	}
++  .gnu.version_d   : { *(.gnu.version_d)	}
++  .gnu.version_r   : { *(.gnu.version_r)	}
++  .rel.init      : { *(.rel.init)		}
++  .rela.init     : { *(.rela.init)	}
++  .rel.text      :
++    {
++      *(.rel.text)
++      *(.rel.text.*)
++      *(.rel.gnu.linkonce.t*)
++    }
++  .rela.text     :
++    {
++      *(.rela.text)
++      *(.rela.text.*)
++      *(.rela.gnu.linkonce.t*)
++    }
++  .rel.fini      : { *(.rel.fini)		}
++  .rela.fini     : { *(.rela.fini)	}
++  .rel.rodata    :
++    {
++      *(.rel.rodata)
++      *(.rel.rodata.*)
++      *(.rel.gnu.linkonce.r*)
++    }
++  .rela.rodata   :
++    {
++      *(.rela.rodata)
++      *(.rela.rodata.*)
++      *(.rela.gnu.linkonce.r*)
++    }
++  .rel.data      :
++    {
++      *(.rel.data)
++      *(.rel.data.*)
++      *(.rel.gnu.linkonce.d*)
++    }
++  .rela.data     :
++    {
++      *(.rela.data)
++      *(.rela.data.*)
++      *(.rela.gnu.linkonce.d*)
++    }
++  .rel.ctors     : { *(.rel.ctors)	}
++  .rela.ctors    : { *(.rela.ctors)	}
++  .rel.dtors     : { *(.rel.dtors)	}
++  .rela.dtors    : { *(.rela.dtors)	}
++  .rel.got       : { *(.rel.got)		}
++  .rela.got      : { *(.rela.got)		}
++  .rel.bss       : { *(.rel.bss)		}
++  .rela.bss      : { *(.rela.bss)		}
++  .rel.plt       : { *(.rel.plt)		}
++  .rela.plt      : { *(.rela.plt)		}
++  /* Internal text space. */
++  .text   :
++  {
++    . = ALIGN(4);
++    *(.init0)  /* Start here after reset.  */
++    KEEP (*(.init0))
++    *(.init1)
++    KEEP (*(.init1))
++    *(.init2)
++    KEEP (*(.init2))
++    *(.init3)
++    KEEP (*(.init3))
++    *(.init4)
++    KEEP (*(.init4))
++    *(.init5)
++    KEEP (*(.init5))
++    *(.init6)  /* C++ constructors.  */
++    KEEP (*(.init6))
++    *(.init7)
++    KEEP (*(.init7))
++    *(.init8)
++    KEEP (*(.init8))
++    *(.init9)
++    KEEP (*(.init9))
++     __ctors_start = . ;
++     *(.ctors)
++     __ctors_end = . ;
++     __dtors_start = . ;
++     *(.dtors)
++     __dtors_end = . ;
++    KEEP(SORT(*)(.ctors))
++    KEEP(SORT(*)(.dtors))
++    . = ALIGN(4);
++    *(.text)
++    . = ALIGN(4);
++    *(.text.*)
++    . = ALIGN(4);
++    *(.fini9)
++    KEEP (*(.fini9))
++    *(.fini8)
++    KEEP (*(.fini8))
++    *(.fini7)
++    KEEP (*(.fini7))
++    *(.fini6)  /* C++ destructors.  */
++    KEEP (*(.fini6))
++    *(.fini5)
++    KEEP (*(.fini5))
++    *(.fini4)
++    KEEP (*(.fini4))
++    *(.fini3)
++    KEEP (*(.fini3))
++    *(.fini2)
++    KEEP (*(.fini2))
++    *(.fini1)
++    KEEP (*(.fini1))
++    *(.fini0)  /* Infinite loop after program termination.  */
++    KEEP (*(.fini0))
++     _etext = . ;
++  }  > imem
++  .data          :
++  {
++     *(.data.atzero*)
++    /* DATA memory starts at address 0. So to avoid placing a valid static
++       variable at the invalid NULL address, we introduce the .data.atzero
++       section. If CRT can make some use of it - great. Otherwise skip a
++       word. In all cases .data/.bss sections must start at non-zero. */
++    . += (. == 0 ? 4 : 0);
++     PROVIDE (__data_start = .) ;
++    *(.data)
++     *(.data*)
++    *(.rodata)  /* We need to include .rodata here if gcc is used */
++     *(.rodata*) /* with -fdata-sections.  */
++    *(.gnu.linkonce.d*)
++    . = ALIGN(4);
++     _edata = . ;
++     PROVIDE (__data_end = .) ;
++  }  > dmem
++  .bss   :
++  {
++     PROVIDE (__bss_start = .) ;
++    *(.bss)
++     *(.bss*)
++    *(COMMON)
++     PROVIDE (__bss_end = .) ;
++  }  > dmem
++  /* Global data not cleared after reset.  */
++  .noinit  :
++  {
++     PROVIDE (__noinit_start = .) ;
++    *(.noinit*)
++     PROVIDE (__noinit_end = .) ;
++     _end = . ;
++     PROVIDE (__heap_start = .) ;
++     . += __HEAP_SIZE ;
++    /* Stack is not here really. It will be put at the end of DMEM.
++       But we take into account its size here, in order to allow
++       for MEMORY overflow checking during link time. */
++     . += __STACK_SIZE ;
++  }  > dmem
++  /* Stabs debugging sections.  */
++  .stab 0 : { *(.stab) }
++  .stabstr 0 : { *(.stabstr) }
++  .stab.excl 0 : { *(.stab.excl) }
++  .stab.exclstr 0 : { *(.stab.exclstr) }
++  .stab.index 0 : { *(.stab.index) }
++  .stab.indexstr 0 : { *(.stab.indexstr) }
++  .comment 0 : { *(.comment) }
++  .note.gnu.build-id : { *(.note.gnu.build-id) }
++  /* DWARF debug sections.
++     Symbols in the DWARF debugging sections are relative to the beginning
++     of the section so we begin them at 0.  */
++  /* DWARF 1 */
++  .debug          0 : { *(.debug) }
++  .line           0 : { *(.line) }
++  /* GNU DWARF 1 extensions */
++  .debug_srcinfo  0 : { *(.debug_srcinfo) }
++  .debug_sfnames  0 : { *(.debug_sfnames) }
++  /* DWARF 1.1 and DWARF 2 */
++  .debug_aranges  0 : { *(.debug_aranges) }
++  .debug_pubnames 0 : { *(.debug_pubnames) }
++  /* DWARF 2 */
++  .debug_info     0 : { *(.debug_info .gnu.linkonce.wi.*) }
++  .debug_abbrev   0 : { *(.debug_abbrev) }
++  .debug_line     0 : { *(.debug_line .debug_line.* .debug_line_end ) }
++  .debug_frame    0 : { *(.debug_frame) }
++  .debug_str      0 : { *(.debug_str) }
++  .debug_loc      0 : { *(.debug_loc) }
++  .debug_macinfo  0 : { *(.debug_macinfo) }
++  /* SGI/MIPS DWARF 2 extensions */
++  .debug_weaknames 0 : { *(.debug_weaknames) }
++  .debug_funcnames 0 : { *(.debug_funcnames) }
++  .debug_typenames 0 : { *(.debug_typenames) }
++  .debug_varnames  0 : { *(.debug_varnames) }
++  /* DWARF 3 */
++  .debug_pubtypes 0 : { *(.debug_pubtypes) }
++  .debug_ranges   0 : { *(.debug_ranges) }
++  /* DWARF Extension.  */
++  .debug_macro    0 : { *(.debug_macro) }
++}
++
++
+diff --git a/libgloss/pru/ldscripts/pruelf-sim.x b/libgloss/pru/ldscripts/pruelf-sim.x
+new file mode 100644
+index 0000000..61aa40d
+--- /dev/null
++++ b/libgloss/pru/ldscripts/pruelf-sim.x
+@@ -0,0 +1,215 @@
++/* WARNING: automatically generated from the default pru-ld script! */
++
++
++
++/* Default linker script, for normal executables */
++OUTPUT_FORMAT("elf32-pru","elf32-pru","elf32-pru")
++OUTPUT_ARCH(pru)
++MEMORY
++{
++  imem   (x)   : ORIGIN = 0x20000000, LENGTH = 256K
++  dmem   (rw!x) : ORIGIN = 0x0, LENGTH = 1024K
++}
++__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 256 * 1024 ;
++__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 64 * 1024 ;
++ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++SECTIONS
++{
++  /* Read-only sections, merged into text segment: */
++  .hash          : { *(.hash)		}
++  .dynsym        : { *(.dynsym)		}
++  .dynstr        : { *(.dynstr)		}
++  .gnu.version   : { *(.gnu.version)	}
++  .gnu.version_d   : { *(.gnu.version_d)	}
++  .gnu.version_r   : { *(.gnu.version_r)	}
++  .rel.init      : { *(.rel.init)		}
++  .rela.init     : { *(.rela.init)	}
++  .rel.text      :
++    {
++      *(.rel.text)
++      *(.rel.text.*)
++      *(.rel.gnu.linkonce.t*)
++    }
++  .rela.text     :
++    {
++      *(.rela.text)
++      *(.rela.text.*)
++      *(.rela.gnu.linkonce.t*)
++    }
++  .rel.fini      : { *(.rel.fini)		}
++  .rela.fini     : { *(.rela.fini)	}
++  .rel.rodata    :
++    {
++      *(.rel.rodata)
++      *(.rel.rodata.*)
++      *(.rel.gnu.linkonce.r*)
++    }
++  .rela.rodata   :
++    {
++      *(.rela.rodata)
++      *(.rela.rodata.*)
++      *(.rela.gnu.linkonce.r*)
++    }
++  .rel.data      :
++    {
++      *(.rel.data)
++      *(.rel.data.*)
++      *(.rel.gnu.linkonce.d*)
++    }
++  .rela.data     :
++    {
++      *(.rela.data)
++      *(.rela.data.*)
++      *(.rela.gnu.linkonce.d*)
++    }
++  .rel.ctors     : { *(.rel.ctors)	}
++  .rela.ctors    : { *(.rela.ctors)	}
++  .rel.dtors     : { *(.rel.dtors)	}
++  .rela.dtors    : { *(.rela.dtors)	}
++  .rel.got       : { *(.rel.got)		}
++  .rela.got      : { *(.rela.got)		}
++  .rel.bss       : { *(.rel.bss)		}
++  .rela.bss      : { *(.rela.bss)		}
++  .rel.plt       : { *(.rel.plt)		}
++  .rela.plt      : { *(.rela.plt)		}
++  /* Internal text space. */
++  .text   :
++  {
++    . = ALIGN(4);
++    *(.init0)  /* Start here after reset.  */
++    KEEP (*(.init0))
++    *(.init1)
++    KEEP (*(.init1))
++    *(.init2)
++    KEEP (*(.init2))
++    *(.init3)
++    KEEP (*(.init3))
++    *(.init4)
++    KEEP (*(.init4))
++    *(.init5)
++    KEEP (*(.init5))
++    *(.init6)  /* C++ constructors.  */
++    KEEP (*(.init6))
++    *(.init7)
++    KEEP (*(.init7))
++    *(.init8)
++    KEEP (*(.init8))
++    *(.init9)
++    KEEP (*(.init9))
++     __ctors_start = . ;
++     *(.ctors)
++     __ctors_end = . ;
++     __dtors_start = . ;
++     *(.dtors)
++     __dtors_end = . ;
++    KEEP(SORT(*)(.ctors))
++    KEEP(SORT(*)(.dtors))
++    . = ALIGN(4);
++    *(.text)
++    . = ALIGN(4);
++    *(.text.*)
++    . = ALIGN(4);
++    *(.fini9)
++    KEEP (*(.fini9))
++    *(.fini8)
++    KEEP (*(.fini8))
++    *(.fini7)
++    KEEP (*(.fini7))
++    *(.fini6)  /* C++ destructors.  */
++    KEEP (*(.fini6))
++    *(.fini5)
++    KEEP (*(.fini5))
++    *(.fini4)
++    KEEP (*(.fini4))
++    *(.fini3)
++    KEEP (*(.fini3))
++    *(.fini2)
++    KEEP (*(.fini2))
++    *(.fini1)
++    KEEP (*(.fini1))
++    *(.fini0)  /* Infinite loop after program termination.  */
++    KEEP (*(.fini0))
++     _etext = . ;
++  }  > imem
++  .data          :
++  {
++     *(.data.atzero*)
++    /* DATA memory starts at address 0. So to avoid placing a valid static
++       variable at the invalid NULL address, we introduce the .data.atzero
++       section. If CRT can make some use of it - great. Otherwise skip a
++       word. In all cases .data/.bss sections must start at non-zero. */
++    . += (. == 0 ? 4 : 0);
++     PROVIDE (__data_start = .) ;
++    *(.data)
++     *(.data*)
++    *(.rodata)  /* We need to include .rodata here if gcc is used */
++     *(.rodata*) /* with -fdata-sections.  */
++    *(.gnu.linkonce.d*)
++    . = ALIGN(4);
++     _edata = . ;
++     PROVIDE (__data_end = .) ;
++  }  > dmem
++  .bss   :
++  {
++     PROVIDE (__bss_start = .) ;
++    *(.bss)
++     *(.bss*)
++    *(COMMON)
++     PROVIDE (__bss_end = .) ;
++  }  > dmem
++  /* Global data not cleared after reset.  */
++  .noinit  :
++  {
++     PROVIDE (__noinit_start = .) ;
++    *(.noinit*)
++     PROVIDE (__noinit_end = .) ;
++     _end = . ;
++     PROVIDE (__heap_start = .) ;
++     . += __HEAP_SIZE ;
++    /* Stack is not here really. It will be put at the end of DMEM.
++       But we take into account its size here, in order to allow
++       for MEMORY overflow checking during link time. */
++     . += __STACK_SIZE ;
++  }  > dmem
++  /* Stabs debugging sections.  */
++  .stab 0 : { *(.stab) }
++  .stabstr 0 : { *(.stabstr) }
++  .stab.excl 0 : { *(.stab.excl) }
++  .stab.exclstr 0 : { *(.stab.exclstr) }
++  .stab.index 0 : { *(.stab.index) }
++  .stab.indexstr 0 : { *(.stab.indexstr) }
++  .comment 0 : { *(.comment) }
++  .note.gnu.build-id : { *(.note.gnu.build-id) }
++  /* DWARF debug sections.
++     Symbols in the DWARF debugging sections are relative to the beginning
++     of the section so we begin them at 0.  */
++  /* DWARF 1 */
++  .debug          0 : { *(.debug) }
++  .line           0 : { *(.line) }
++  /* GNU DWARF 1 extensions */
++  .debug_srcinfo  0 : { *(.debug_srcinfo) }
++  .debug_sfnames  0 : { *(.debug_sfnames) }
++  /* DWARF 1.1 and DWARF 2 */
++  .debug_aranges  0 : { *(.debug_aranges) }
++  .debug_pubnames 0 : { *(.debug_pubnames) }
++  /* DWARF 2 */
++  .debug_info     0 : { *(.debug_info .gnu.linkonce.wi.*) }
++  .debug_abbrev   0 : { *(.debug_abbrev) }
++  .debug_line     0 : { *(.debug_line .debug_line.* .debug_line_end ) }
++  .debug_frame    0 : { *(.debug_frame) }
++  .debug_str      0 : { *(.debug_str) }
++  .debug_loc      0 : { *(.debug_loc) }
++  .debug_macinfo  0 : { *(.debug_macinfo) }
++  /* SGI/MIPS DWARF 2 extensions */
++  .debug_weaknames 0 : { *(.debug_weaknames) }
++  .debug_funcnames 0 : { *(.debug_funcnames) }
++  .debug_typenames 0 : { *(.debug_typenames) }
++  .debug_varnames  0 : { *(.debug_varnames) }
++  /* DWARF 3 */
++  .debug_pubtypes 0 : { *(.debug_pubtypes) }
++  .debug_ranges   0 : { *(.debug_ranges) }
++  /* DWARF Extension.  */
++  .debug_macro    0 : { *(.debug_macro) }
++}
++
++
 diff --git a/libgloss/pru/lseek.c b/libgloss/pru/lseek.c
 new file mode 100644
 index 0000000..c0b296c
