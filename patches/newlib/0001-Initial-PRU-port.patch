@@ -1,4 +1,4 @@
-From 56a84792bce96716513a63354c32ac5b5960f024 Mon Sep 17 00:00:00 2001
+From 45a7b05b7aca53a0dff9750a07a95a706336c3ab Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Thu, 1 May 2014 16:43:07 +0300
 Subject: [PATCH] Initial PRU port
@@ -13,8 +13,8 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  config.sub                                        |    2 +
  configure                                         |    4 +
  configure.ac                                      |    4 +
- libgloss/configure                                |    6 +
- libgloss/configure.in                             |    3 +
+ libgloss/configure                                |    5 +
+ libgloss/configure.in                             |    2 +
  libgloss/pru/Makefile.in                          |  132 +
  libgloss/pru/aclocal.m4                           |  344 ++
  libgloss/pru/close.c                              |   25 +
@@ -42,7 +42,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgloss/pru/read.c                               |   39 +
  libgloss/pru/rpmsg-inbyte.c                       |   26 +
  libgloss/pru/rpmsg-outbyte.c                      |   24 +
- libgloss/pru/sbrk.c                               |   42 +
+ libgloss/pru/sbrk.c                               |   44 +
  libgloss/pru/stat.c                               |   33 +
  libgloss/pru/syscall.S                            |   31 +
  libgloss/pru/syscall.h                            |   21 +
@@ -86,18 +86,18 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 libgloss/pru/write.c
 
 diff --git a/config.sub b/config.sub
-index 8b612ab..e649e3f 100755
+index 7ffe373..7403230 100755
 --- a/config.sub
 +++ b/config.sub
-@@ -299,6 +299,7 @@ case $basic_machine in
- 	| or1k | or32 \
+@@ -301,6 +301,7 @@ case $basic_machine in
+ 	| open8 | or1k | or1knd | or32 \
  	| pdp10 | pdp11 | pj | pjl \
  	| powerpc | powerpc64 | powerpc64le | powerpcle \
 +	| pru \
  	| pyramid \
+ 	| riscv32 | riscv64 \
  	| rl78 | rx \
- 	| score \
-@@ -416,6 +417,7 @@ case $basic_machine in
+@@ -427,6 +428,7 @@ case $basic_machine in
  	| orion-* \
  	| pdp10-* | pdp11-* | pj-* | pjl-* | pn-* | power-* \
  	| powerpc-* | powerpc64-* | powerpc64le-* | powerpcle-* \
@@ -136,43 +136,41 @@ index 80313d0..4dfea7c 100644
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
 diff --git a/libgloss/configure b/libgloss/configure
-index aaef579..3024c94 100755
+index 87cf53c..8045120 100755
 --- a/libgloss/configure
 +++ b/libgloss/configure
-@@ -705,6 +705,7 @@ arm
- spu
+@@ -706,6 +706,7 @@ spu
  tic6x
  iq2000
+ or1k
 +pru
  libnosys'
  
  # Initialize some variables set by options.
-@@ -2559,6 +2560,11 @@ case "${target}" in
- 	subdirs="$subdirs iq2000"
+@@ -2564,6 +2565,10 @@ case "${target}" in
+ 	subdirs="$subdirs or1k"
  
  	;;
 +  pru-*-*)
 +	subdirs="$subdirs pru"
 +
 +	;;
-+
  esac
  
  
 diff --git a/libgloss/configure.in b/libgloss/configure.in
-index 93cc369..bcca3aa 100644
+index 74d4fd6..d279b33 100644
 --- a/libgloss/configure.in
 +++ b/libgloss/configure.in
-@@ -159,6 +159,9 @@ case "${target}" in
-   iq2000-*-*)
- 	AC_CONFIG_SUBDIRS([iq2000])
+@@ -161,6 +161,8 @@ case "${target}" in
  	;;
+   or1k-*-* | or1knd-*-* )
+ 	AC_CONFIG_SUBDIRS([or1k])
 +  pru-*-*)
 +	AC_CONFIG_SUBDIRS([pru])
-+	;;
+ 	;;
  esac
  
- dnl For now, don't bother configuring testsuite
 diff --git a/libgloss/pru/Makefile.in b/libgloss/pru/Makefile.in
 new file mode 100644
 index 0000000..eddad0a
@@ -4563,7 +4561,7 @@ index 0000000..2a4c946
 +AC_OUTPUT
 diff --git a/libgloss/pru/crt0.S b/libgloss/pru/crt0.S
 new file mode 100644
-index 0000000..63d7fba
+index 0000000..c568e08
 --- /dev/null
 +++ b/libgloss/pru/crt0.S
 @@ -0,0 +1,69 @@
@@ -4583,22 +4581,22 @@ index 0000000..63d7fba
 + */
 +#include "newlib.h"
 +
-+	.extern	main
++	.extern	_main
 +	.extern	exit
 +
 +	.text
 +	.section .init0
-+	.global	_start
-+_start:
++	.global	__start
++__start:
 +	/* Initialize stack pointer. */
 +#if 0
 +	/* TODO - introduce linker relaxation in order to elegantly
 +	   optimize cases like this. We can get by a single "ldi" if
 +	   the MSB 16 bits are zero. */
-+	ldi	sp, _stack_top
++	ldi	sp, __stack_top
 +#else
-+	ldi	sp.w2, %hi(_stack_top)
-+	ldi	sp.w0, %lo(_stack_top)
++	ldi	sp.w2, %hi(__stack_top)
++	ldi	sp.w0, %lo(__stack_top)
 +#endif
 +
 +	/* DATA and BSS are handled by the loader, so nothing to do here. */
@@ -4606,18 +4604,18 @@ index 0000000..63d7fba
 +#if !defined(MINRT)
 +	/* Make reference to atexit weak to avoid unconditionally pulling in
 +	   support code.  Refer to comments in __atexit.c for more details.  */
-+	.weak	atexit
-+	.weak	_fini
-+	.weak	_init
-+	ldi	r14, %pmem(atexit)
++	.weak	_atexit
++	.weak	__fini
++	.weak	__init
++	ldi	r14, %pmem(_atexit)
 +	qbeq	.Lweak_atexit, r14, 0
-+	ldi	r14, %pmem(_fini)
-+	call	atexit
++	ldi	r14, %pmem(__fini)
++	call	_atexit
 +.Lweak_atexit:
 +	/* Call the global/static constructors */
-+	ldi	r14, %pmem(_init)
++	ldi	r14, %pmem(__init)
 +	qbeq	.Lweak_init, r14, 0
-+	call	_init
++	call	__init
 +.Lweak_init:
 +#endif
 +	
@@ -4625,11 +4623,11 @@ index 0000000..63d7fba
 +	zero	r14, 3 * 4
 +
 +	/* Call main */
-+	call	main
++	call	_main
 +
 +#if !defined(MINRT)
 +	/* Call exit */
-+	call	exit
++	call	_exit
 +#endif
 +
 +	/* We should never reach here. */
@@ -4876,7 +4874,7 @@ index 0000000..822e93a
 +dump_modified 8K   8K     "32"         "512"       | tee pruelf-am437x.icss1.pru1.x
 diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru0.x b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
 new file mode 100644
-index 0000000..06ce33b
+index 0000000..b571ca3
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
 @@ -0,0 +1,215 @@
@@ -4894,7 +4892,8 @@ index 0000000..06ce33b
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
-+ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ PROVIDE (__stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ENTRY (__start)
 +SECTIONS
 +{
 +  /* Read-only sections, merged into text segment: */
@@ -4957,6 +4956,7 @@ index 0000000..06ce33b
 +  /* Internal text space. */
 +  .text   :
 +  {
++     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
@@ -5011,7 +5011,7 @@ index 0000000..06ce33b
 +    KEEP (*(.fini1))
 +    *(.fini0)  /* Infinite loop after program termination.  */
 +    KEEP (*(.fini0))
-+     _etext = . ;
++     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
@@ -5028,7 +5028,6 @@ index 0000000..06ce33b
 +     *(.rodata*) /* with -fdata-sections.  */
 +    *(.gnu.linkonce.d*)
 +    . = ALIGN(4);
-+     _edata = . ;
 +     PROVIDE (__data_end = .) ;
 +  }  > dmem
 +  .bss   :
@@ -5045,7 +5044,6 @@ index 0000000..06ce33b
 +     PROVIDE (__noinit_start = .) ;
 +    *(.noinit*)
 +     PROVIDE (__noinit_end = .) ;
-+     _end = . ;
 +     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
 +    /* Stack is not here really. It will be put at the end of DMEM.
@@ -5097,7 +5095,7 @@ index 0000000..06ce33b
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru1.x b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
 new file mode 100644
-index 0000000..06ce33b
+index 0000000..b571ca3
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
 @@ -0,0 +1,215 @@
@@ -5115,7 +5113,8 @@ index 0000000..06ce33b
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
-+ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ PROVIDE (__stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ENTRY (__start)
 +SECTIONS
 +{
 +  /* Read-only sections, merged into text segment: */
@@ -5178,6 +5177,7 @@ index 0000000..06ce33b
 +  /* Internal text space. */
 +  .text   :
 +  {
++     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
@@ -5232,7 +5232,7 @@ index 0000000..06ce33b
 +    KEEP (*(.fini1))
 +    *(.fini0)  /* Infinite loop after program termination.  */
 +    KEEP (*(.fini0))
-+     _etext = . ;
++     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
@@ -5249,7 +5249,6 @@ index 0000000..06ce33b
 +     *(.rodata*) /* with -fdata-sections.  */
 +    *(.gnu.linkonce.d*)
 +    . = ALIGN(4);
-+     _edata = . ;
 +     PROVIDE (__data_end = .) ;
 +  }  > dmem
 +  .bss   :
@@ -5266,7 +5265,6 @@ index 0000000..06ce33b
 +     PROVIDE (__noinit_start = .) ;
 +    *(.noinit*)
 +     PROVIDE (__noinit_end = .) ;
-+     _end = . ;
 +     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
 +    /* Stack is not here really. It will be put at the end of DMEM.
@@ -5318,7 +5316,7 @@ index 0000000..06ce33b
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
 new file mode 100644
-index 0000000..37f4775
+index 0000000..3cb3fb7
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
 @@ -0,0 +1,215 @@
@@ -5336,7 +5334,8 @@ index 0000000..37f4775
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 256 ;
-+ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ PROVIDE (__stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ENTRY (__start)
 +SECTIONS
 +{
 +  /* Read-only sections, merged into text segment: */
@@ -5399,6 +5398,7 @@ index 0000000..37f4775
 +  /* Internal text space. */
 +  .text   :
 +  {
++     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
@@ -5453,7 +5453,7 @@ index 0000000..37f4775
 +    KEEP (*(.fini1))
 +    *(.fini0)  /* Infinite loop after program termination.  */
 +    KEEP (*(.fini0))
-+     _etext = . ;
++     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
@@ -5470,7 +5470,6 @@ index 0000000..37f4775
 +     *(.rodata*) /* with -fdata-sections.  */
 +    *(.gnu.linkonce.d*)
 +    . = ALIGN(4);
-+     _edata = . ;
 +     PROVIDE (__data_end = .) ;
 +  }  > dmem
 +  .bss   :
@@ -5487,7 +5486,6 @@ index 0000000..37f4775
 +     PROVIDE (__noinit_start = .) ;
 +    *(.noinit*)
 +     PROVIDE (__noinit_end = .) ;
-+     _end = . ;
 +     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
 +    /* Stack is not here really. It will be put at the end of DMEM.
@@ -5539,7 +5537,7 @@ index 0000000..37f4775
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
 new file mode 100644
-index 0000000..37f4775
+index 0000000..3cb3fb7
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
 @@ -0,0 +1,215 @@
@@ -5557,7 +5555,8 @@ index 0000000..37f4775
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 256 ;
-+ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ PROVIDE (__stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ENTRY (__start)
 +SECTIONS
 +{
 +  /* Read-only sections, merged into text segment: */
@@ -5620,6 +5619,7 @@ index 0000000..37f4775
 +  /* Internal text space. */
 +  .text   :
 +  {
++     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
@@ -5674,7 +5674,7 @@ index 0000000..37f4775
 +    KEEP (*(.fini1))
 +    *(.fini0)  /* Infinite loop after program termination.  */
 +    KEEP (*(.fini0))
-+     _etext = . ;
++     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
@@ -5691,7 +5691,6 @@ index 0000000..37f4775
 +     *(.rodata*) /* with -fdata-sections.  */
 +    *(.gnu.linkonce.d*)
 +    . = ALIGN(4);
-+     _edata = . ;
 +     PROVIDE (__data_end = .) ;
 +  }  > dmem
 +  .bss   :
@@ -5708,7 +5707,6 @@ index 0000000..37f4775
 +     PROVIDE (__noinit_start = .) ;
 +    *(.noinit*)
 +     PROVIDE (__noinit_end = .) ;
-+     _end = . ;
 +     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
 +    /* Stack is not here really. It will be put at the end of DMEM.
@@ -5760,7 +5758,7 @@ index 0000000..37f4775
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
 new file mode 100644
-index 0000000..06ce33b
+index 0000000..b571ca3
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
 @@ -0,0 +1,215 @@
@@ -5778,7 +5776,8 @@ index 0000000..06ce33b
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
-+ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ PROVIDE (__stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ENTRY (__start)
 +SECTIONS
 +{
 +  /* Read-only sections, merged into text segment: */
@@ -5841,6 +5840,7 @@ index 0000000..06ce33b
 +  /* Internal text space. */
 +  .text   :
 +  {
++     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
@@ -5895,7 +5895,7 @@ index 0000000..06ce33b
 +    KEEP (*(.fini1))
 +    *(.fini0)  /* Infinite loop after program termination.  */
 +    KEEP (*(.fini0))
-+     _etext = . ;
++     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
@@ -5912,7 +5912,6 @@ index 0000000..06ce33b
 +     *(.rodata*) /* with -fdata-sections.  */
 +    *(.gnu.linkonce.d*)
 +    . = ALIGN(4);
-+     _edata = . ;
 +     PROVIDE (__data_end = .) ;
 +  }  > dmem
 +  .bss   :
@@ -5929,7 +5928,6 @@ index 0000000..06ce33b
 +     PROVIDE (__noinit_start = .) ;
 +    *(.noinit*)
 +     PROVIDE (__noinit_end = .) ;
-+     _end = . ;
 +     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
 +    /* Stack is not here really. It will be put at the end of DMEM.
@@ -5981,7 +5979,7 @@ index 0000000..06ce33b
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
 new file mode 100644
-index 0000000..06ce33b
+index 0000000..b571ca3
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
 @@ -0,0 +1,215 @@
@@ -5999,7 +5997,8 @@ index 0000000..06ce33b
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
-+ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ PROVIDE (__stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ENTRY (__start)
 +SECTIONS
 +{
 +  /* Read-only sections, merged into text segment: */
@@ -6062,6 +6061,7 @@ index 0000000..06ce33b
 +  /* Internal text space. */
 +  .text   :
 +  {
++     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
@@ -6116,7 +6116,7 @@ index 0000000..06ce33b
 +    KEEP (*(.fini1))
 +    *(.fini0)  /* Infinite loop after program termination.  */
 +    KEEP (*(.fini0))
-+     _etext = . ;
++     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
@@ -6133,7 +6133,6 @@ index 0000000..06ce33b
 +     *(.rodata*) /* with -fdata-sections.  */
 +    *(.gnu.linkonce.d*)
 +    . = ALIGN(4);
-+     _edata = . ;
 +     PROVIDE (__data_end = .) ;
 +  }  > dmem
 +  .bss   :
@@ -6150,7 +6149,6 @@ index 0000000..06ce33b
 +     PROVIDE (__noinit_start = .) ;
 +    *(.noinit*)
 +     PROVIDE (__noinit_end = .) ;
-+     _end = . ;
 +     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
 +    /* Stack is not here really. It will be put at the end of DMEM.
@@ -6202,7 +6200,7 @@ index 0000000..06ce33b
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-sim.x b/libgloss/pru/ldscripts/pruelf-sim.x
 new file mode 100644
-index 0000000..61aa40d
+index 0000000..b95cfcd
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-sim.x
 @@ -0,0 +1,215 @@
@@ -6216,11 +6214,12 @@ index 0000000..61aa40d
 +MEMORY
 +{
 +  imem   (x)   : ORIGIN = 0x20000000, LENGTH = 256K
-+  dmem   (rw!x) : ORIGIN = 0x0, LENGTH = 1024K
++  dmem   (rw!x) : ORIGIN = 0x0, LENGTH = 65536K
 +}
-+__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 256 * 1024 ;
-+__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 64 * 1024 ;
-+ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 1024 * 1024 ;
++__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 1024 * 1024 ;
++ PROVIDE (__stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ENTRY (__start)
 +SECTIONS
 +{
 +  /* Read-only sections, merged into text segment: */
@@ -6283,6 +6282,7 @@ index 0000000..61aa40d
 +  /* Internal text space. */
 +  .text   :
 +  {
++     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
@@ -6337,7 +6337,7 @@ index 0000000..61aa40d
 +    KEEP (*(.fini1))
 +    *(.fini0)  /* Infinite loop after program termination.  */
 +    KEEP (*(.fini0))
-+     _etext = . ;
++     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
@@ -6354,7 +6354,6 @@ index 0000000..61aa40d
 +     *(.rodata*) /* with -fdata-sections.  */
 +    *(.gnu.linkonce.d*)
 +    . = ALIGN(4);
-+     _edata = . ;
 +     PROVIDE (__data_end = .) ;
 +  }  > dmem
 +  .bss   :
@@ -6371,7 +6370,6 @@ index 0000000..61aa40d
 +     PROVIDE (__noinit_start = .) ;
 +    *(.noinit*)
 +     PROVIDE (__noinit_end = .) ;
-+     _end = . ;
 +     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
 +    /* Stack is not here really. It will be put at the end of DMEM.
@@ -6717,10 +6715,10 @@ index 0000000..892d8bc
 +}
 diff --git a/libgloss/pru/sbrk.c b/libgloss/pru/sbrk.c
 new file mode 100644
-index 0000000..8449589
+index 0000000..5e63e7c
 --- /dev/null
 +++ b/libgloss/pru/sbrk.c
-@@ -0,0 +1,42 @@
+@@ -0,0 +1,44 @@
 +/* sbrk.c -- allocate memory dynamically.
 + * 
 + * Copyright (c) 1995,1996,1999 Cygnus Support
@@ -6739,6 +6737,8 @@ index 0000000..8449589
 +#include <sys/stat.h>
 +#include "glue.h"
 +
++extern char _heap_start[];
++
 +caddr_t
 +_sbrk (size_t incr)
 +{
@@ -6748,7 +6748,7 @@ index 0000000..8449589
 +
 +  if (heap_end == 0)
 +    {
-+      heap_end = _end;
++      heap_end = _heap_start;
 +    }
 +  prev_heap_end = heap_end;
 +  if (heap_end > sp)
@@ -6804,7 +6804,7 @@ index 0000000..d37554d
 +
 diff --git a/libgloss/pru/syscall.S b/libgloss/pru/syscall.S
 new file mode 100644
-index 0000000..86ba23b
+index 0000000..544deb9
 --- /dev/null
 +++ b/libgloss/pru/syscall.S
 @@ -0,0 +1,31 @@
@@ -6830,12 +6830,12 @@ index 0000000..86ba23b
 +	/* Due to ABI, all syscalls with up tp 15 arguments contain
 +	   the same insturction sequences. So we squash them to save space. */
 +	.text
-+	.global	syscall
-+	.global	syscall1
-+	.global	syscall2
-+syscall:
-+syscall1:
-+syscall2:
++	.global	_syscall
++	.global	_syscall1
++	.global	_syscall2
++_syscall:
++_syscall1:
++_syscall2:
 +	ldi	r31, SYSCALL_VALUE
 +	halt
 +	ret
@@ -6946,7 +6946,7 @@ index 0000000..5bc5596
 +  return (nbytes);
 +}
 diff --git a/newlib/configure.host b/newlib/configure.host
-index 447f1c1..903be56 100644
+index c4773d9..d843a5e 100644
 --- a/newlib/configure.host
 +++ b/newlib/configure.host
 @@ -80,7 +80,7 @@ case "${target_optspace}:${host}" in
@@ -6958,7 +6958,7 @@ index 447f1c1..903be56 100644
      newlib_cflags="${newlib_cflags} -Os"
      ;;
    no:* | :*)
-@@ -250,6 +250,13 @@ case "${host_cpu}" in
+@@ -251,6 +251,13 @@ case "${host_cpu}" in
    powerpc*)
  	machine_dir=powerpc
  	;;
@@ -6972,7 +6972,7 @@ index 447f1c1..903be56 100644
    rl78)
  	machine_dir=rl78
  	newlib_cflags="${newlib_cflags} -DPREFER_SIZE_OVER_SPEED -DSMALL_MEMORY"
-@@ -768,6 +775,9 @@ case "${host}" in
+@@ -769,6 +776,9 @@ case "${host}" in
  	newlib_cflags="${newlib_cflags} -DHAVE_OPENDIR -DHAVE_RENAME -DHAVE_FCNTL -D_NO_POSIX_SPAWN"
  	syscall_dir=syscalls
  	;;
@@ -6998,5 +6998,5 @@ index 8304a1b..64451a9 100644
  #define __IEEE_LITTLE_ENDIAN
  #define __SMALL_BITFIELDS	/* 16 Bit INT */
 -- 
-2.1.3
+2.1.4
 

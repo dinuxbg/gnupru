@@ -4,9 +4,9 @@
 
 # On which upstream commits to apply patches. I frequently rebase so
 # expect these to be somewhat random.
-GCC_BASECOMMIT=bd09c0bdb0ea577910089800a3854f393abce681
-BINUTILS_BASECOMMIT=1ada499f30b82fe7ab3636154ce0d39ebc06ec55
-NEWLIB_BASECOMMIT=7b7f00a77e3ff36eec1c5a88085c30a812214b83
+GCC_BASECOMMIT=d4f5579a0472648c2dfc7a73b3ed49d33128bb94
+BINUTILS_BASECOMMIT=3946f7973c754ed65b7d1e0bf24b8e0618788242
+NEWLIB_BASECOMMIT=183c67027c75ccc0f5b4953ce65a85eaa710e826
 
 GCC_GIT=https://github.com/mirrors/gcc.git
 BINUTILS_GIT=https://github.com/bminor/binutils-gdb.git
@@ -14,9 +14,9 @@ NEWLIB_GIT=git://sourceware.org/git/newlib.git
 
 # If you have already checked out GCC or binutils, then references
 # could save you some bandwidth
-#GCC_GIT_REFERENCE="--reference=$HOME/projects/misc/gcc"
-#BINUTILS_GIT_REFERENCE="--reference=$HOME/projects/misc/binutils-gdb"
-#NEWLIB_GIT_REFERENCE="--reference=$HOME/projects/misc/newlib"
+#GCC_GIT_REFERENCE="--single-branch --reference=$HOME/projects/misc/gcc"
+#BINUTILS_GIT_REFERENCE="--single-branch --reference=$HOME/projects/misc/binutils-gdb"
+#NEWLIB_GIT_REFERENCE="--single-branch --reference=$HOME/projects/misc/newlib"
 
 MAINDIR=`pwd`
 PATCHDIR=`pwd`/patches

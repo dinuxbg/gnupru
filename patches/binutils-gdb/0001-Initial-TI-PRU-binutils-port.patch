@@ -1,4 +1,4 @@
-From ceaa3007d34ce8d34ed3f0b49578d041d47e0d45 Mon Sep 17 00:00:00 2001
+From 3bd5986ddf32cc91ff34d75028ee105e28e0cb89 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sun, 23 Feb 2014 22:25:35 +0200
 Subject: [PATCH 1/5] Initial TI PRU binutils port
@@ -7,87 +7,89 @@ Although not very well tested, core functionality should be there.
 
 Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---
- .gitignore                       |     2 +
- bfd/Makefile.am                  |     4 +
- bfd/Makefile.in                  |     6 +
- bfd/archures.c                   |     4 +
- bfd/bfd-in2.h                    |    14 +
- bfd/config.bfd                   |     5 +
- bfd/configure                    |     1 +
- bfd/configure.ac                 |     1 +
- bfd/cpu-pru.c                    |    43 +
- bfd/elf-bfd.h                    |     1 +
- bfd/elf32-pru.c                  |   919 +++
- bfd/libbfd.h                     |    10 +
- bfd/po/SRC-POTFILES.in           |     2 +
- bfd/reloc.c                      |    23 +
- bfd/targets.c                    |     3 +
- binutils/readelf.c               |    11 +
- config.sub                       |     2 +
- elfcpp/elfcpp.h                  |     3 +-
- gas/Makefile.am                  |     2 +
- gas/Makefile.in                  |    17 +
- gas/config/obj-elf.c             |     4 +
- gas/config/tc-pru.c              |  1620 ++++
- gas/config/tc-pru.h              |    91 +
- gas/configure.tgt                |     2 +
- gas/po/POTFILES.in               |     2 +
- gas/testsuite/gas/pru/alu.d      |    32 +
- gas/testsuite/gas/pru/alu.s      |    30 +
- gas/testsuite/gas/pru/branch.d   |    35 +
- gas/testsuite/gas/pru/branch.s   |    42 +
- gas/testsuite/gas/pru/illegal.l  |     5 +
- gas/testsuite/gas/pru/illegal.s  |    11 +
- gas/testsuite/gas/pru/illegal2.l |     2 +
- gas/testsuite/gas/pru/illegal2.s |     6 +
- gas/testsuite/gas/pru/ldst.d     |    33 +
- gas/testsuite/gas/pru/ldst.s     |    37 +
- gas/testsuite/gas/pru/loop.d     |    13 +
- gas/testsuite/gas/pru/loop.s     |    10 +
- gas/testsuite/gas/pru/misc.d     |    12 +
- gas/testsuite/gas/pru/misc.s     |     6 +
- gas/testsuite/gas/pru/pru.exp    |    26 +
- gas/testsuite/gas/pru/pseudo.d   |    10 +
- gas/testsuite/gas/pru/pseudo.s   |     5 +
- gas/testsuite/gas/pru/xfr.d      |    44 +
- gas/testsuite/gas/pru/xfr.s      |    52 +
- gdb/Makefile.in                  |     5 +-
- gdb/configure.tgt                |     6 +
- gdb/features/Makefile            |     1 +
- gdb/features/pru-cpu.xml         |    43 +
- gdb/features/pru.c               |    53 +
- gdb/features/pru.xml             |    12 +
- gdb/pru-tdep.c                   |   871 +++
- gdb/pru-tdep.h                   |    51 +
- include/dis-asm.h                |     1 +
- include/elf/common.h             |     3 +
- include/elf/pru.h                |    55 +
- include/opcode/pru.h             |   405 +
- ld/Makefile.am                   |     5 +
- ld/Makefile.in                   |     5 +
- ld/configure.tgt                 |     1 +
- ld/emulparams/pruelf.sh          |    18 +
- ld/scripttempl/pru.sc            |   201 +
- opcodes/Makefile.am              |     2 +
- opcodes/Makefile.in              |     4 +
- opcodes/configure                |     1 +
- opcodes/configure.ac             |     1 +
- opcodes/disassemble.c            |     6 +
- opcodes/pru-dis.c                |   269 +
- opcodes/pru-opc.c                |   221 +
- readline/support/config.sub      |     2 +
- sim/configure                    |     8 +
- sim/configure.tgt                |     3 +
- sim/pru/Makefile.in              |    28 +
- sim/pru/aclocal.m4               |   130 +
- sim/pru/config.in                |   146 +
- sim/pru/configure                | 15235 +++++++++++++++++++++++++++++++++++++
- sim/pru/configure.ac             |    10 +
- sim/pru/interp.c                 |   992 +++
- sim/pru/pru.h                    |    95 +
- sim/pru/pru.isa                  |   250 +
- sim/pru/sim-main.h               |    81 +
- 80 files changed, 22420 insertions(+), 3 deletions(-)
+ .gitignore                            |     2 +
+ bfd/Makefile.am                       |     4 +
+ bfd/Makefile.in                       |     6 +
+ bfd/archures.c                        |     4 +
+ bfd/bfd-in2.h                         |    14 +
+ bfd/config.bfd                        |     5 +
+ bfd/configure                         |     1 +
+ bfd/configure.ac                      |     1 +
+ bfd/cpu-pru.c                         |    43 +
+ bfd/elf-bfd.h                         |     1 +
+ bfd/elf32-pru.c                       |   919 ++
+ bfd/libbfd.h                          |    10 +
+ bfd/po/SRC-POTFILES.in                |     2 +
+ bfd/reloc.c                           |    23 +
+ bfd/targets.c                         |     3 +
+ binutils/readelf.c                    |    11 +
+ config.sub                            |     2 +
+ elfcpp/elfcpp.h                       |     3 +-
+ gas/Makefile.am                       |     2 +
+ gas/Makefile.in                       |    17 +
+ gas/config/obj-elf.c                  |     4 +
+ gas/config/tc-pru.c                   |  1623 ++++
+ gas/config/tc-pru.h                   |    91 +
+ gas/configure.tgt                     |     2 +
+ gas/po/POTFILES.in                    |     2 +
+ gas/testsuite/gas/pru/alu.d           |    32 +
+ gas/testsuite/gas/pru/alu.s           |    30 +
+ gas/testsuite/gas/pru/branch.d        |    35 +
+ gas/testsuite/gas/pru/branch.s        |    42 +
+ gas/testsuite/gas/pru/illegal.l       |     5 +
+ gas/testsuite/gas/pru/illegal.s       |    11 +
+ gas/testsuite/gas/pru/illegal2.l      |     2 +
+ gas/testsuite/gas/pru/illegal2.s      |     6 +
+ gas/testsuite/gas/pru/ldst.d          |    33 +
+ gas/testsuite/gas/pru/ldst.s          |    37 +
+ gas/testsuite/gas/pru/loop.d          |    13 +
+ gas/testsuite/gas/pru/loop.s          |    10 +
+ gas/testsuite/gas/pru/misc.d          |    12 +
+ gas/testsuite/gas/pru/misc.s          |     6 +
+ gas/testsuite/gas/pru/pru.exp         |    27 +
+ gas/testsuite/gas/pru/pseudo.d        |    13 +
+ gas/testsuite/gas/pru/pseudo.s        |     8 +
+ gas/testsuite/gas/pru/warn_reglabel.l |     3 +
+ gas/testsuite/gas/pru/warn_reglabel.s |     6 +
+ gas/testsuite/gas/pru/xfr.d           |    44 +
+ gas/testsuite/gas/pru/xfr.s           |    52 +
+ gdb/Makefile.in                       |     5 +-
+ gdb/configure.tgt                     |     6 +
+ gdb/features/Makefile                 |     1 +
+ gdb/features/pru-cpu.xml              |    43 +
+ gdb/features/pru.c                    |    53 +
+ gdb/features/pru.xml                  |    12 +
+ gdb/pru-tdep.c                        |   871 ++
+ gdb/pru-tdep.h                        |    51 +
+ include/dis-asm.h                     |     1 +
+ include/elf/common.h                  |     3 +
+ include/elf/pru.h                     |    55 +
+ include/opcode/pru.h                  |   405 +
+ ld/Makefile.am                        |     5 +
+ ld/Makefile.in                        |     5 +
+ ld/configure.tgt                      |     1 +
+ ld/emulparams/pruelf.sh               |    18 +
+ ld/scripttempl/pru.sc                 |   203 +
+ opcodes/Makefile.am                   |     2 +
+ opcodes/Makefile.in                   |     4 +
+ opcodes/configure                     |     1 +
+ opcodes/configure.ac                  |     1 +
+ opcodes/disassemble.c                 |     6 +
+ opcodes/pru-dis.c                     |   269 +
+ opcodes/pru-opc.c                     |   221 +
+ readline/support/config.sub           |     2 +
+ sim/configure                         |     8 +
+ sim/configure.tgt                     |     3 +
+ sim/pru/Makefile.in                   |    28 +
+ sim/pru/aclocal.m4                    |   130 +
+ sim/pru/config.in                     |   146 +
+ sim/pru/configure                     | 15235 ++++++++++++++++++++++++++++++++
+ sim/pru/configure.ac                  |    10 +
+ sim/pru/interp.c                      |   992 +++
+ sim/pru/pru.h                         |    95 +
+ sim/pru/pru.isa                       |   250 +
+ sim/pru/sim-main.h                    |    81 +
+ 82 files changed, 22441 insertions(+), 3 deletions(-)
  create mode 100644 bfd/cpu-pru.c
  create mode 100644 bfd/elf32-pru.c
  create mode 100644 gas/config/tc-pru.c
@@ -109,6 +111,8 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 gas/testsuite/gas/pru/pru.exp
  create mode 100644 gas/testsuite/gas/pru/pseudo.d
  create mode 100644 gas/testsuite/gas/pru/pseudo.s
+ create mode 100644 gas/testsuite/gas/pru/warn_reglabel.l
+ create mode 100644 gas/testsuite/gas/pru/warn_reglabel.s
  create mode 100644 gas/testsuite/gas/pru/xfr.d
  create mode 100644 gas/testsuite/gas/pru/xfr.s
  create mode 100644 gdb/features/pru-cpu.xml
@@ -143,10 +147,10 @@ index bda55a3..1104322 100644
 +*.swp
 +cscope.*
 diff --git a/bfd/Makefile.am b/bfd/Makefile.am
-index 6f64f06..1d429e0 100644
+index 8aa8748..ea4ba56 100644
 --- a/bfd/Makefile.am
 +++ b/bfd/Makefile.am
-@@ -141,6 +141,7 @@ ALL_MACHINES = \
+@@ -139,6 +139,7 @@ ALL_MACHINES = \
  	cpu-pj.lo \
  	cpu-plugin.lo \
  	cpu-powerpc.lo \
@@ -154,7 +158,7 @@ index 6f64f06..1d429e0 100644
  	cpu-rs6000.lo \
  	cpu-rl78.lo \
  	cpu-rx.lo \
-@@ -225,6 +226,7 @@ ALL_MACHINES_CFILES = \
+@@ -224,6 +225,7 @@ ALL_MACHINES_CFILES = \
  	cpu-pj.c \
  	cpu-plugin.c \
  	cpu-powerpc.c \
@@ -162,7 +166,7 @@ index 6f64f06..1d429e0 100644
  	cpu-rs6000.c \
  	cpu-rl78.c \
  	cpu-rx.c \
-@@ -350,6 +352,7 @@ BFD32_BACKENDS = \
+@@ -352,6 +354,7 @@ BFD32_BACKENDS = \
  	elf32-or1k.lo \
  	elf32-pj.lo \
  	elf32-ppc.lo \
@@ -170,7 +174,7 @@ index 6f64f06..1d429e0 100644
  	elf32-rl78.lo \
  	elf32-rx.lo \
  	elf32-s390.lo \
-@@ -537,6 +540,7 @@ BFD32_BACKENDS_CFILES = \
+@@ -542,6 +545,7 @@ BFD32_BACKENDS_CFILES = \
  	elf32-or1k.c \
  	elf32-pj.c \
  	elf32-ppc.c \
@@ -179,10 +183,10 @@ index 6f64f06..1d429e0 100644
  	elf32-rx.c \
  	elf32-s390.c \
 diff --git a/bfd/Makefile.in b/bfd/Makefile.in
-index 2c385d5..3742e4c 100644
+index 50fbc25..52d535c 100644
 --- a/bfd/Makefile.in
 +++ b/bfd/Makefile.in
-@@ -442,6 +442,7 @@ ALL_MACHINES = \
+@@ -439,6 +439,7 @@ ALL_MACHINES = \
  	cpu-pj.lo \
  	cpu-plugin.lo \
  	cpu-powerpc.lo \
@@ -190,7 +194,7 @@ index 2c385d5..3742e4c 100644
  	cpu-rs6000.lo \
  	cpu-rl78.lo \
  	cpu-rx.lo \
-@@ -526,6 +527,7 @@ ALL_MACHINES_CFILES = \
+@@ -524,6 +525,7 @@ ALL_MACHINES_CFILES = \
  	cpu-pj.c \
  	cpu-plugin.c \
  	cpu-powerpc.c \
@@ -198,7 +202,7 @@ index 2c385d5..3742e4c 100644
  	cpu-rs6000.c \
  	cpu-rl78.c \
  	cpu-rx.c \
-@@ -652,6 +654,7 @@ BFD32_BACKENDS = \
+@@ -653,6 +655,7 @@ BFD32_BACKENDS = \
  	elf32-or1k.lo \
  	elf32-pj.lo \
  	elf32-ppc.lo \
@@ -206,7 +210,7 @@ index 2c385d5..3742e4c 100644
  	elf32-rl78.lo \
  	elf32-rx.lo \
  	elf32-s390.lo \
-@@ -839,6 +842,7 @@ BFD32_BACKENDS_CFILES = \
+@@ -843,6 +846,7 @@ BFD32_BACKENDS_CFILES = \
  	elf32-or1k.c \
  	elf32-pj.c \
  	elf32-ppc.c \
@@ -214,7 +218,7 @@ index 2c385d5..3742e4c 100644
  	elf32-rl78.c \
  	elf32-rx.c \
  	elf32-s390.c \
-@@ -1353,6 +1357,7 @@ distclean-compile:
+@@ -1359,6 +1363,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-pj.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-plugin.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-powerpc.Plo@am__quote@
@@ -222,7 +226,7 @@ index 2c385d5..3742e4c 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-rl78.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-rs6000.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-rx.Plo@am__quote@
-@@ -1440,6 +1445,7 @@ distclean-compile:
+@@ -1447,6 +1452,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-or1k.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-pj.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-ppc.Plo@am__quote@
@@ -231,19 +235,19 @@ index 2c385d5..3742e4c 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-rx.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-s390.Plo@am__quote@
 diff --git a/bfd/archures.c b/bfd/archures.c
-index 5e069b2..3f8e493 100644
+index 067e654..e524019 100644
 --- a/bfd/archures.c
 +++ b/bfd/archures.c
-@@ -497,6 +497,8 @@ DESCRIPTION
- .#define bfd_mach_aarch64_ilp32	32
- .  bfd_arch_nios2,
+@@ -499,6 +499,8 @@ DESCRIPTION
  .#define bfd_mach_nios2	0
-+.  bfd_arch_pru,
+ .  bfd_arch_visium,	{* Visium *}
+ .#define bfd_mach_visium	1
++.  bfd_arch_pru,	{* PRU *}
 +.#define bfd_mach_pru	0
  .  bfd_arch_last
  .  };
  */
-@@ -598,6 +600,7 @@ extern const bfd_arch_info_type bfd_pj_arch;
+@@ -600,6 +602,7 @@ extern const bfd_arch_info_type bfd_pj_arch;
  extern const bfd_arch_info_type bfd_plugin_arch;
  extern const bfd_arch_info_type bfd_powerpc_archs[];
  #define bfd_powerpc_arch bfd_powerpc_archs[0]
@@ -251,7 +255,7 @@ index 5e069b2..3f8e493 100644
  extern const bfd_arch_info_type bfd_rs6000_arch;
  extern const bfd_arch_info_type bfd_rl78_arch;
  extern const bfd_arch_info_type bfd_rx_arch;
-@@ -684,6 +687,7 @@ static const bfd_arch_info_type * const bfd_archures_list[] =
+@@ -687,6 +690,7 @@ static const bfd_arch_info_type * const bfd_archures_list[] =
      &bfd_or1k_arch,
      &bfd_pdp11_arch,
      &bfd_powerpc_arch,
@@ -260,19 +264,19 @@ index 5e069b2..3f8e493 100644
      &bfd_rl78_arch,
      &bfd_rx_arch,
 diff --git a/bfd/bfd-in2.h b/bfd/bfd-in2.h
-index 433b171..e3f158a 100644
+index 7f45316..686fa43 100644
 --- a/bfd/bfd-in2.h
 +++ b/bfd/bfd-in2.h
-@@ -2284,6 +2284,8 @@ enum bfd_architecture
- #define bfd_mach_aarch64_ilp32 32
-   bfd_arch_nios2,
+@@ -2260,6 +2260,8 @@ enum bfd_architecture
  #define bfd_mach_nios2 0
+   bfd_arch_visium,     /* Visium */
+ #define bfd_mach_visium        1
 +  bfd_arch_pru,
 +#define bfd_mach_pru   0
    bfd_arch_last
    };
  
-@@ -5330,6 +5332,18 @@ a matching LO8XG part.  */
+@@ -5306,6 +5308,18 @@ a matching LO8XG part.  */
    BFD_RELOC_NIOS2_CALL_LO,
    BFD_RELOC_NIOS2_CALL_HA,
  
@@ -292,7 +296,7 @@ index 433b171..e3f158a 100644
    BFD_RELOC_IQ2000_OFFSET_16,
    BFD_RELOC_IQ2000_OFFSET_21,
 diff --git a/bfd/config.bfd b/bfd/config.bfd
-index 7bcb92a..796807d 100644
+index a9627f8..264490d 100644
 --- a/bfd/config.bfd
 +++ b/bfd/config.bfd
 @@ -119,6 +119,7 @@ or1k*|or1knd*)	 targ_archs=bfd_or1k_arch ;;
@@ -303,7 +307,7 @@ index 7bcb92a..796807d 100644
  rs6000)		 targ_archs="bfd_rs6000_arch bfd_powerpc_arch" ;;
  s390*)		 targ_archs=bfd_s390_arch ;;
  sh*)		 targ_archs=bfd_sh_arch ;;
-@@ -1315,6 +1316,10 @@ case "${targ}" in
+@@ -1316,6 +1317,10 @@ case "${targ}" in
      targ_selvecs="powerpc_pei_le_vec powerpc_pei_vec powerpc_pe_le_vec powerpc_pe_vec"
      ;;
  
@@ -315,29 +319,29 @@ index 7bcb92a..796807d 100644
      targ_defvec=rl78_elf32_vec
      ;;
 diff --git a/bfd/configure b/bfd/configure
-index 7577f0c..cc345eb 100755
+index f7a9e81..e441f01 100755
 --- a/bfd/configure
 +++ b/bfd/configure
-@@ -15506,6 +15506,7 @@ do
-     powerpc_pei_vec)		 tb="$tb pei-ppc.lo peigen.lo cofflink.lo" ;;
-     powerpc_pei_le_vec)		 tb="$tb pei-ppc.lo peigen.lo cofflink.lo" ;;
-     powerpc_xcoff_vec)		 tb="$tb coff-rs6000.lo xcofflink.lo" ;;
+@@ -15510,6 +15510,7 @@ do
+     powerpc_pei_vec)		 tb="$tb pei-ppc.lo peigen.lo $coff" ;;
+     powerpc_pei_le_vec)		 tb="$tb pei-ppc.lo peigen.lo $coff" ;;
+     powerpc_xcoff_vec)		 tb="$tb coff-rs6000.lo $xcoff" ;;
 +    pru_elf32_vec)		 tb="$tb elf32-pru.lo elf32.lo $elf" ;;
      rl78_elf32_vec)		 tb="$tb elf32-rl78.lo elf32.lo $elf" ;;
-     rs6000_xcoff64_vec)		 tb="$tb coff64-rs6000.lo xcofflink.lo aix5ppc-core.lo"; target_size=64 ;;
-     rs6000_xcoff64_aix_vec)	 tb="$tb coff64-rs6000.lo xcofflink.lo aix5ppc-core.lo"; target_size=64 ;;
+     rs6000_xcoff64_vec)		 tb="$tb coff64-rs6000.lo aix5ppc-core.lo $xcoff"; target_size=64 ;;
+     rs6000_xcoff64_aix_vec)	 tb="$tb coff64-rs6000.lo aix5ppc-core.lo $xcoff"; target_size=64 ;;
 diff --git a/bfd/configure.ac b/bfd/configure.ac
-index ba98e39..81a9e3e 100644
+index 1b709dc..9cb9ea5 100644
 --- a/bfd/configure.ac
 +++ b/bfd/configure.ac
-@@ -907,6 +907,7 @@ do
-     powerpc_pei_vec)		 tb="$tb pei-ppc.lo peigen.lo cofflink.lo" ;;
-     powerpc_pei_le_vec)		 tb="$tb pei-ppc.lo peigen.lo cofflink.lo" ;;
-     powerpc_xcoff_vec)		 tb="$tb coff-rs6000.lo xcofflink.lo" ;;
+@@ -911,6 +911,7 @@ do
+     powerpc_pei_vec)		 tb="$tb pei-ppc.lo peigen.lo $coff" ;;
+     powerpc_pei_le_vec)		 tb="$tb pei-ppc.lo peigen.lo $coff" ;;
+     powerpc_xcoff_vec)		 tb="$tb coff-rs6000.lo $xcoff" ;;
 +    pru_elf32_vec)         	 tb="$tb elf32-pru.lo elf32.lo $elf" ;;
      rl78_elf32_vec)		 tb="$tb elf32-rl78.lo elf32.lo $elf" ;;
-     rs6000_xcoff64_vec)		 tb="$tb coff64-rs6000.lo xcofflink.lo aix5ppc-core.lo"; target_size=64 ;;
-     rs6000_xcoff64_aix_vec)	 tb="$tb coff64-rs6000.lo xcofflink.lo aix5ppc-core.lo"; target_size=64 ;;
+     rs6000_xcoff64_vec)		 tb="$tb coff64-rs6000.lo aix5ppc-core.lo $xcoff"; target_size=64 ;;
+     rs6000_xcoff64_aix_vec)	 tb="$tb coff64-rs6000.lo aix5ppc-core.lo $xcoff"; target_size=64 ;;
 diff --git a/bfd/cpu-pru.c b/bfd/cpu-pru.c
 new file mode 100644
 index 0000000..9a558c3
@@ -388,10 +392,10 @@ index 0000000..9a558c3
 +
 +const bfd_arch_info_type bfd_pru_arch = N (32, 32, 0, "pru", TRUE, NULL);
 diff --git a/bfd/elf-bfd.h b/bfd/elf-bfd.h
-index 0c82278..c62e775 100644
+index 5e53cba..a637100 100644
 --- a/bfd/elf-bfd.h
 +++ b/bfd/elf-bfd.h
-@@ -423,6 +423,7 @@ enum elf_target_id
+@@ -425,6 +425,7 @@ enum elf_target_id
    OR1K_ELF_DATA,
    PPC32_ELF_DATA,
    PPC64_ELF_DATA,
@@ -1325,10 +1329,10 @@ index 0000000..4e3d579
 +
 +#include "elf32-target.h"
 diff --git a/bfd/libbfd.h b/bfd/libbfd.h
-index 6c48f82..ab8a11a 100644
+index 8687ece..33a217e 100644
 --- a/bfd/libbfd.h
 +++ b/bfd/libbfd.h
-@@ -2582,6 +2582,16 @@ static const char *const bfd_reloc_code_real_names[] = { "@@uninitialized@@",
+@@ -2586,6 +2586,16 @@ static const char *const bfd_reloc_code_real_names[] = { "@@uninitialized@@",
    "BFD_RELOC_NIOS2_GOT_HA",
    "BFD_RELOC_NIOS2_CALL_LO",
    "BFD_RELOC_NIOS2_CALL_HA",
@@ -1346,10 +1350,10 @@ index 6c48f82..ab8a11a 100644
    "BFD_RELOC_IQ2000_OFFSET_21",
    "BFD_RELOC_IQ2000_UHI16",
 diff --git a/bfd/po/SRC-POTFILES.in b/bfd/po/SRC-POTFILES.in
-index 3e5cbd0..61c89be 100644
+index 83e393d..83a056e 100644
 --- a/bfd/po/SRC-POTFILES.in
 +++ b/bfd/po/SRC-POTFILES.in
-@@ -116,6 +116,7 @@ cpu-pdp11.c
+@@ -117,6 +117,7 @@ cpu-pdp11.c
  cpu-pj.c
  cpu-plugin.c
  cpu-powerpc.c
@@ -1357,7 +1361,7 @@ index 3e5cbd0..61c89be 100644
  cpu-rl78.c
  cpu-rs6000.c
  cpu-rx.c
-@@ -206,6 +207,7 @@ elf32-nios2.c
+@@ -208,6 +209,7 @@ elf32-nios2.c
  elf32-or1k.c
  elf32-pj.c
  elf32-ppc.c
@@ -1366,10 +1370,10 @@ index 3e5cbd0..61c89be 100644
  elf32-rx.c
  elf32-s390.c
 diff --git a/bfd/reloc.c b/bfd/reloc.c
-index dc47173..6422b39 100644
+index d902a9b..c46807e 100644
 --- a/bfd/reloc.c
 +++ b/bfd/reloc.c
-@@ -6207,6 +6207,29 @@ ENUMDOC
+@@ -6211,6 +6211,29 @@ ENUMDOC
    Relocations used by the Altera Nios II core.
  
  ENUM
@@ -1400,10 +1404,10 @@ index dc47173..6422b39 100644
  ENUMX
    BFD_RELOC_IQ2000_OFFSET_21
 diff --git a/bfd/targets.c b/bfd/targets.c
-index 8323e92..594bb3f 100644
+index 71e59e0..44c3da9 100644
 --- a/bfd/targets.c
 +++ b/bfd/targets.c
-@@ -784,6 +784,7 @@ extern const bfd_target powerpc_pe_le_vec;
+@@ -788,6 +788,7 @@ extern const bfd_target powerpc_pe_le_vec;
  extern const bfd_target powerpc_pei_vec;
  extern const bfd_target powerpc_pei_le_vec;
  extern const bfd_target powerpc_xcoff_vec;
@@ -1411,7 +1415,7 @@ index 8323e92..594bb3f 100644
  extern const bfd_target rl78_elf32_vec;
  extern const bfd_target rs6000_xcoff64_vec;
  extern const bfd_target rs6000_xcoff64_aix_vec;
-@@ -1278,6 +1279,8 @@ static const bfd_target * const _bfd_target_vector[] =
+@@ -1283,6 +1284,8 @@ static const bfd_target * const _bfd_target_vector[] =
  	&powerpc_xcoff_vec,
  #endif
  
@@ -1421,7 +1425,7 @@ index 8323e92..594bb3f 100644
  
  #ifdef BFD64
 diff --git a/binutils/readelf.c b/binutils/readelf.c
-index 964dfc6..b33a8e5 100644
+index d9ddb35..ada9954 100644
 --- a/binutils/readelf.c
 +++ b/binutils/readelf.c
 @@ -137,6 +137,7 @@
@@ -1432,7 +1436,7 @@ index 964dfc6..b33a8e5 100644
  #include "elf/rl78.h"
  #include "elf/rx.h"
  #include "elf/s390.h"
-@@ -720,6 +721,7 @@ guess_is_rela (unsigned int e_machine)
+@@ -739,6 +740,7 @@ guess_is_rela (unsigned int e_machine)
      case EM_OR1K:
      case EM_PPC64:
      case EM_PPC:
@@ -1440,7 +1444,7 @@ index 964dfc6..b33a8e5 100644
      case EM_RL78:
      case EM_RX:
      case EM_S390:
-@@ -1409,6 +1411,10 @@ dump_relocations (FILE * file,
+@@ -1434,6 +1436,10 @@ dump_relocations (FILE * file,
  	case EM_ALTERA_NIOS2:
  	  rtype = elf_nios2_reloc_type (type);
  	  break;
@@ -1451,7 +1455,7 @@ index 964dfc6..b33a8e5 100644
  	}
  
        if (rtype == NULL)
-@@ -2178,6 +2184,7 @@ get_machine_name (unsigned e_machine)
+@@ -2223,6 +2229,7 @@ get_machine_name (unsigned e_machine)
      case EM_TILEGX:		return "Tilera TILE-Gx multicore architecture family";
      case EM_CUDA:		return "NVIDIA CUDA architecture";
      case EM_XGATE:		return "Motorola XGATE embedded processor";
@@ -1459,7 +1463,7 @@ index 964dfc6..b33a8e5 100644
      default:
        snprintf (buff, sizeof (buff), _("<unknown>: 0x%x"), e_machine);
        return buff;
-@@ -10789,6 +10796,8 @@ is_32bit_abs_reloc (unsigned int reloc_type)
+@@ -11083,6 +11090,8 @@ is_32bit_abs_reloc (unsigned int reloc_type)
        return reloc_type == 1; /* R_PPC64_ADDR32.  */
      case EM_PPC:
        return reloc_type == 1; /* R_PPC_ADDR32.  */
@@ -1468,7 +1472,7 @@ index 964dfc6..b33a8e5 100644
      case EM_RL78:
        return reloc_type == 1; /* R_RL78_DIR32.  */
      case EM_RX:
-@@ -11109,6 +11118,8 @@ is_none_reloc (unsigned int reloc_type)
+@@ -11416,6 +11425,8 @@ is_none_reloc (unsigned int reloc_type)
  	      || reloc_type == 19  /* R_XTENSA_DIFF32.  */);
      case EM_METAG:
        return reloc_type == 3; /* R_METAG_NONE.  */
@@ -1478,7 +1482,7 @@ index 964dfc6..b33a8e5 100644
    return FALSE;
  }
 diff --git a/config.sub b/config.sub
-index 88a0cb4..3fc9916 100755
+index 7ffe373..5445010 100755
 --- a/config.sub
 +++ b/config.sub
 @@ -301,6 +301,7 @@ case $basic_machine in
@@ -1487,9 +1491,9 @@ index 88a0cb4..3fc9916 100755
  	| powerpc | powerpc64 | powerpc64le | powerpcle \
 +	| pru \
  	| pyramid \
+ 	| riscv32 | riscv64 \
  	| rl78 | rx \
- 	| score \
-@@ -422,6 +423,7 @@ case $basic_machine in
+@@ -427,6 +428,7 @@ case $basic_machine in
  	| orion-* \
  	| pdp10-* | pdp11-* | pj-* | pjl-* | pn-* | power-* \
  	| powerpc-* | powerpc64-* | powerpc64le-* | powerpcle-* \
@@ -1512,7 +1516,7 @@ index 3e55db5..ddf15e7 100644
    // Old MSP430 objects used 0x1059 (EM_MSP430 is correct).
    // Old FR30 objects used 0x3330 (EM_FR30 is correct).
 diff --git a/gas/Makefile.am b/gas/Makefile.am
-index 55c86b2..49b9c17f 100644
+index f65225f..8419f2f 100644
 --- a/gas/Makefile.am
 +++ b/gas/Makefile.am
 @@ -171,6 +171,7 @@ TARGET_CPU_CFILES = \
@@ -1523,7 +1527,7 @@ index 55c86b2..49b9c17f 100644
  	config/tc-rl78.c \
  	config/tc-rx.c \
  	config/tc-s390.c \
-@@ -242,6 +243,7 @@ TARGET_CPU_HFILES = \
+@@ -243,6 +244,7 @@ TARGET_CPU_HFILES = \
  	config/tc-pdp11.h \
  	config/tc-pj.h \
  	config/tc-ppc.h \
@@ -1532,7 +1536,7 @@ index 55c86b2..49b9c17f 100644
  	config/tc-rx.h \
  	config/tc-s390.h \
 diff --git a/gas/Makefile.in b/gas/Makefile.in
-index 5dc250f..c024d9d 100644
+index c7b3597..d05dea3 100644
 --- a/gas/Makefile.in
 +++ b/gas/Makefile.in
 @@ -440,6 +440,7 @@ TARGET_CPU_CFILES = \
@@ -1543,7 +1547,7 @@ index 5dc250f..c024d9d 100644
  	config/tc-rl78.c \
  	config/tc-rx.c \
  	config/tc-s390.c \
-@@ -511,6 +512,7 @@ TARGET_CPU_HFILES = \
+@@ -512,6 +513,7 @@ TARGET_CPU_HFILES = \
  	config/tc-pdp11.h \
  	config/tc-pj.h \
  	config/tc-ppc.h \
@@ -1551,7 +1555,7 @@ index 5dc250f..c024d9d 100644
  	config/tc-rl78.h \
  	config/tc-rx.h \
  	config/tc-s390.h \
-@@ -866,6 +868,7 @@ distclean-compile:
+@@ -868,6 +870,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-pdp11.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-pj.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-ppc.Po@am__quote@
@@ -1559,7 +1563,7 @@ index 5dc250f..c024d9d 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-rl78.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-rx.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-s390.Po@am__quote@
-@@ -1571,6 +1574,20 @@ tc-ppc.obj: config/tc-ppc.c
+@@ -1574,6 +1577,20 @@ tc-ppc.obj: config/tc-ppc.c
  @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
  @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tc-ppc.obj `if test -f 'config/tc-ppc.c'; then $(CYGPATH_W) 'config/tc-ppc.c'; else $(CYGPATH_W) '$(srcdir)/config/tc-ppc.c'; fi`
  
@@ -1597,10 +1601,10 @@ index e2ef99e..bc6d5f6 100644
  static void obj_elf_type (int);
 diff --git a/gas/config/tc-pru.c b/gas/config/tc-pru.c
 new file mode 100644
-index 0000000..6972ecb
+index 0000000..a88b7f8
 --- /dev/null
 +++ b/gas/config/tc-pru.c
-@@ -0,0 +1,1620 @@
+@@ -0,0 +1,1623 @@
 +/* TI PRU assembler.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -3121,6 +3125,9 @@ index 0000000..6972ecb
 +  /* Record this label for future adjustment after we find out what
 +     kind of data it references, and the required alignment therewith.  */
 +  pru_last_label = lab;
++
++  if (pru_reg_lookup (S_GET_NAME (lab)))
++    as_warn (_("Label \"%s\" matches a CPU register name"), S_GET_NAME (lab));
 +}
 +
 +static inline char *
@@ -3319,10 +3326,10 @@ index 0000000..f4c4121
 +
 +#endif /* TC_PRU */
 diff --git a/gas/configure.tgt b/gas/configure.tgt
-index d07d445..047bf78 100644
+index 0e44880..0ede7ae 100644
 --- a/gas/configure.tgt
 +++ b/gas/configure.tgt
-@@ -384,6 +384,8 @@ case ${generic_target} in
+@@ -385,6 +385,8 @@ case ${generic_target} in
    ppc-*-kaos*)				fmt=elf ;;
    ppc-*-lynxos*)			fmt=elf em=lynx ;;
  
@@ -3332,7 +3339,7 @@ index d07d445..047bf78 100644
    s390-*-tpf*)				fmt=elf ;;
  
 diff --git a/gas/po/POTFILES.in b/gas/po/POTFILES.in
-index d1fd07f..e23567f 100644
+index 3514075..daff0c2 100644
 --- a/gas/po/POTFILES.in
 +++ b/gas/po/POTFILES.in
 @@ -129,6 +129,8 @@ config/tc-pj.c
@@ -3704,10 +3711,10 @@ index 0000000..cfe4d88
 +	slp	0
 diff --git a/gas/testsuite/gas/pru/pru.exp b/gas/testsuite/gas/pru/pru.exp
 new file mode 100644
-index 0000000..e1fb432
+index 0000000..f98ad08
 --- /dev/null
 +++ b/gas/testsuite/gas/pru/pru.exp
-@@ -0,0 +1,26 @@
+@@ -0,0 +1,27 @@
 +# Copyright (C) 2014 Free Software Foundation, Inc.
 +
 +# This program is free software; you can redistribute it and/or modify
@@ -3733,13 +3740,14 @@ index 0000000..e1fb432
 +    
 +    run_list_test "illegal" ""
 +    run_list_test "illegal2" ""
++    run_list_test "warn_reglabel" ""
 +}
 diff --git a/gas/testsuite/gas/pru/pseudo.d b/gas/testsuite/gas/pru/pseudo.d
 new file mode 100644
-index 0000000..6f4ea19
+index 0000000..4a46be6
 --- /dev/null
 +++ b/gas/testsuite/gas/pru/pseudo.d
-@@ -0,0 +1,10 @@
+@@ -0,0 +1,13 @@
 +#objdump: -dr --prefix-addresses --show-raw-insn
 +#name: PRU pseudo
 +
@@ -3750,16 +3758,43 @@ index 0000000..6f4ea19
 +Disassembly of section .text:
 +0+0000 <[^>]*> 1300e2e1 	mov	r1, sp
 +0+0004 <[^>]*> 12e0e0e0 	nop
++0+0008 <[^>]*> 230100e3 	call	00000400 <[^>]*>
++0+000c <[^>]*> 22ea00e3 	call	r10
++0+0010 <[^>]*> 20e30000 	ret
 diff --git a/gas/testsuite/gas/pru/pseudo.s b/gas/testsuite/gas/pru/pseudo.s
 new file mode 100644
-index 0000000..92b6a66
+index 0000000..092f660
 --- /dev/null
 +++ b/gas/testsuite/gas/pru/pseudo.s
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,8 @@
 +# Source file used to test the pseudo instructions.
 +
 +foo:
 +	mov	r1, r2
++	nop
++	call	0x400
++	call	r10
++	ret
+diff --git a/gas/testsuite/gas/pru/warn_reglabel.l b/gas/testsuite/gas/pru/warn_reglabel.l
+new file mode 100644
+index 0000000..eb077f1
+--- /dev/null
++++ b/gas/testsuite/gas/pru/warn_reglabel.l
+@@ -0,0 +1,3 @@
++.*warn_reglabel.s: Assembler messages:
++.*warn_reglabel.s:3: Warning: Label "r30" matches a CPU register name
++.*warn_reglabel.s:5: Warning: Label "r1.b2" matches a CPU register name
+diff --git a/gas/testsuite/gas/pru/warn_reglabel.s b/gas/testsuite/gas/pru/warn_reglabel.s
+new file mode 100644
+index 0000000..d5e46f7
+--- /dev/null
++++ b/gas/testsuite/gas/pru/warn_reglabel.s
+@@ -0,0 +1,6 @@
++# Source file used to test warnings
++
++r30:
++	nop
++r1.b2:
 +	nop
 diff --git a/gas/testsuite/gas/pru/xfr.d b/gas/testsuite/gas/pru/xfr.d
 new file mode 100644
@@ -3870,10 +3905,10 @@ index 0000000..875e1ca
 +	sxchg	253, r10.b2, 124
 +	sxchg	85, r12.b0, 85
 diff --git a/gdb/Makefile.in b/gdb/Makefile.in
-index 1da8af6..63edc5b 100644
+index be69b6f..8c4357d 100644
 --- a/gdb/Makefile.in
 +++ b/gdb/Makefile.in
-@@ -653,7 +653,7 @@ ALL_TARGET_OBS = \
+@@ -673,7 +673,7 @@ ALL_TARGET_OBS = \
  	nios2-tdep.o nios2-linux-tdep.o \
  	nto-tdep.o \
  	ppc-linux-tdep.o ppcfbsd-tdep.o ppcnbsd-tdep.o ppcobsd-tdep.o  \
@@ -3882,7 +3917,7 @@ index 1da8af6..63edc5b 100644
  	rs6000-aix-tdep.o rs6000-tdep.o solib-aix.o ppc-ravenscar-thread.o \
  	rs6000-lynx178-tdep.o \
  	rx-tdep.o \
-@@ -924,7 +924,7 @@ config/djgpp/langinfo.h config/djgpp/nl_types.h darwin-nat.h \
+@@ -945,7 +945,7 @@ config/djgpp/langinfo.h config/djgpp/nl_types.h darwin-nat.h \
  dicos-tdep.h filesystem.h gcore.h gdb_wchar.h hppabsd-tdep.h \
  i386-darwin-tdep.h x86-nat.h linux-record.h moxie-tdep.h nios2-tdep.h \
  osdata.h procfs.h python/py-event.h python/py-events.h python/py-stopevent.h \
@@ -3891,7 +3926,7 @@ index 1da8af6..63edc5b 100644
  record-full.h solib-aix.h \
  solib-darwin.h solib-ia64-hpux.h solib-spu.h windows-nat.h xcoffread.h \
  gnulib/import/extra/snippet/arg-nonnull.h gnulib/import/extra/snippet/c++defs.h \
-@@ -1673,6 +1673,7 @@ ALLDEPFILES = \
+@@ -1696,6 +1696,7 @@ ALLDEPFILES = \
  	ppcnbsd-nat.c ppcnbsd-tdep.c \
  	ppcobsd-nat.c ppcobsd-tdep.c \
  	procfs.c \
@@ -3900,10 +3935,10 @@ index 1da8af6..63edc5b 100644
  	remote-m32r-sdi.c remote-mips.c \
  	remote-sim.c \
 diff --git a/gdb/configure.tgt b/gdb/configure.tgt
-index 1d7f54b..42e9e76 100644
+index 065e797..e8f1ab0 100644
 --- a/gdb/configure.tgt
 +++ b/gdb/configure.tgt
-@@ -454,6 +454,12 @@ powerpc*-*-*)
+@@ -459,6 +459,12 @@ powerpc*-*-*)
  	fi
  	;;
  
@@ -3917,7 +3952,7 @@ index 1d7f54b..42e9e76 100644
  	# Target: S390 running Linux
  	gdb_target_obs="s390-linux-tdep.o solib-svr4.o linux-tdep.o"
 diff --git a/gdb/features/Makefile b/gdb/features/Makefile
-index 7708f5b..75b320f 100644
+index dfdb7c9..706a1a6 100644
 --- a/gdb/features/Makefile
 +++ b/gdb/features/Makefile
 @@ -176,6 +176,7 @@ XMLTOC = \
@@ -4989,7 +5024,7 @@ index 0000000..ca7ba62
 +
 +#endif /* PRU_TDEP_H */
 diff --git a/include/dis-asm.h b/include/dis-asm.h
-index 1b653b5..3e5db5e 100644
+index 7260d59..796afc3 100644
 --- a/include/dis-asm.h
 +++ b/include/dis-asm.h
 @@ -279,6 +279,7 @@ extern int print_insn_ns32k		(bfd_vma, disassemble_info *);
@@ -5001,10 +5036,10 @@ index 1b653b5..3e5db5e 100644
  extern int print_insn_s390		(bfd_vma, disassemble_info *);
  extern int print_insn_sh		(bfd_vma, disassemble_info *);
 diff --git a/include/elf/common.h b/include/elf/common.h
-index e8ae3ac..efb7681 100644
+index 1d68f80..5a64ed0 100644
 --- a/include/elf/common.h
 +++ b/include/elf/common.h
-@@ -391,6 +391,9 @@
+@@ -392,6 +392,9 @@
  /* NIOS magic number - no EABI available.  */
  #define EM_NIOS32		0xFEBB
  
@@ -5487,10 +5522,10 @@ index 0000000..ee8d3ac
 +
 +#endif /* _PRU_H */
 diff --git a/ld/Makefile.am b/ld/Makefile.am
-index 9575f1f..712cde1 100644
+index 3639d50..d720a87 100644
 --- a/ld/Makefile.am
 +++ b/ld/Makefile.am
-@@ -1600,6 +1600,11 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
+@@ -1604,6 +1604,11 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
  eppcpe.c: $(srcdir)/emulparams/ppcpe.sh \
    $(srcdir)/emultempl/pe.em $(srcdir)/scripttempl/ppcpe.sc ${GEN_DEPENDS}
  
@@ -5503,10 +5538,10 @@ index 9575f1f..712cde1 100644
    $(srcdir)/emultempl/generic.em $(srcdir)/scripttempl/aout.sc ${GEN_DEPENDS}
  
 diff --git a/ld/Makefile.in b/ld/Makefile.in
-index 9f56ca1..b8f1671 100644
+index 20d10a1..dff963a 100644
 --- a/ld/Makefile.in
 +++ b/ld/Makefile.in
-@@ -3041,6 +3041,11 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
+@@ -3046,6 +3046,11 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
  eppcpe.c: $(srcdir)/emulparams/ppcpe.sh \
    $(srcdir)/emultempl/pe.em $(srcdir)/scripttempl/ppcpe.sc ${GEN_DEPENDS}
  
@@ -5519,7 +5554,7 @@ index 9f56ca1..b8f1671 100644
    $(srcdir)/emultempl/generic.em $(srcdir)/scripttempl/aout.sc ${GEN_DEPENDS}
  
 diff --git a/ld/configure.tgt b/ld/configure.tgt
-index 24e36d1..652f957 100644
+index 2f7744a..4b65350 100644
 --- a/ld/configure.tgt
 +++ b/ld/configure.tgt
 @@ -604,6 +604,7 @@ powerpc-*-aix*)		targ_emul=aixppc ;;
@@ -5556,10 +5591,10 @@ index 0000000..8cfd10f
 +ENTRY=_start
 diff --git a/ld/scripttempl/pru.sc b/ld/scripttempl/pru.sc
 new file mode 100644
-index 0000000..ff43a97
+index 0000000..41ca866
 --- /dev/null
 +++ b/ld/scripttempl/pru.sc
-@@ -0,0 +1,201 @@
+@@ -0,0 +1,203 @@
 +cat <<EOF
 +OUTPUT_FORMAT("${OUTPUT_FORMAT}","${OUTPUT_FORMAT}","${OUTPUT_FORMAT}")
 +OUTPUT_ARCH(${ARCH})
@@ -5573,7 +5608,9 @@ index 0000000..ff43a97
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512;
 +
-+${RELOCATING+ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ; }
++${RELOCATING+ PROVIDE (__stack_top = ORIGIN(dmem) + LENGTH(dmem)) ; }
++
++${RELOCATING+ENTRY (__start)}
 +
 +SECTIONS
 +{
@@ -5640,6 +5677,8 @@ index 0000000..ff43a97
 +  /* Internal text space. */
 +  .text ${RELOCATING-0} :
 +  {
++    ${RELOCATING+ __text_start = . ; }
++
 +    ${RELOCATING+. = ALIGN(4);}
 +
 +    *(.init0)  /* Start here after reset.  */
@@ -5698,7 +5737,7 @@ index 0000000..ff43a97
 +    KEEP (*(.fini1))
 +    *(.fini0)  /* Infinite loop after program termination.  */
 +    KEEP (*(.fini0))
-+    ${RELOCATING+ _etext = . ; }
++    ${RELOCATING+ __text_end = . ; }
 +  } ${RELOCATING+ > imem}
 +
 +  .data        ${RELOCATING-0} :
@@ -5717,7 +5756,6 @@ index 0000000..ff43a97
 +    ${RELOCATING+ *(.rodata*)} /* with -fdata-sections.  */
 +    *(.gnu.linkonce.d*)
 +    ${RELOCATING+. = ALIGN(4);}
-+    ${RELOCATING+ _edata = . ; }
 +    ${RELOCATING+ PROVIDE (__data_end = .) ; }
 +  } ${RELOCATING+ > dmem }
 +
@@ -5736,7 +5774,6 @@ index 0000000..ff43a97
 +    ${RELOCATING+ PROVIDE (__noinit_start = .) ; }
 +    *(.noinit*)
 +    ${RELOCATING+ PROVIDE (__noinit_end = .) ; }
-+    ${RELOCATING+ _end = . ;  }
 +    ${RELOCATING+ PROVIDE (__heap_start = .) ; }
 +    ${RELOCATING+ . += __HEAP_SIZE ; }
 +    /* Stack is not here really. It will be put at the end of DMEM.
@@ -5762,7 +5799,7 @@ index 0000000..ff43a97
 +}
 +EOF
 diff --git a/opcodes/Makefile.am b/opcodes/Makefile.am
-index 4acc436..8cc4374 100644
+index 9b76239..d35cae6 100644
 --- a/opcodes/Makefile.am
 +++ b/opcodes/Makefile.am
 @@ -221,6 +221,8 @@ TARGET_LIBOPCODES_CFILES = \
@@ -5775,7 +5812,7 @@ index 4acc436..8cc4374 100644
  	rl78-dis.c \
  	rx-decode.c \
 diff --git a/opcodes/Makefile.in b/opcodes/Makefile.in
-index 46ef017..82e980f 100644
+index 4f02d81..750a58d 100644
 --- a/opcodes/Makefile.in
 +++ b/opcodes/Makefile.in
 @@ -494,6 +494,8 @@ TARGET_LIBOPCODES_CFILES = \
@@ -5787,7 +5824,7 @@ index 46ef017..82e980f 100644
  	rl78-decode.c \
  	rl78-dis.c \
  	rx-decode.c \
-@@ -894,6 +896,8 @@ distclean-compile:
+@@ -896,6 +898,8 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pj-opc.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ppc-dis.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ppc-opc.Plo@am__quote@
@@ -5797,7 +5834,7 @@ index 46ef017..82e980f 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rl78-dis.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rx-decode.Plo@am__quote@
 diff --git a/opcodes/configure b/opcodes/configure
-index 556e7a5..34b4393 100755
+index c97bdf6..4c256ac 100755
 --- a/opcodes/configure
 +++ b/opcodes/configure
 @@ -12589,6 +12589,7 @@ if test x${all_targets} = xfalse ; then
@@ -5809,7 +5846,7 @@ index 556e7a5..34b4393 100755
  	bfd_romp_arch)		;;
  	bfd_rs6000_arch)	ta="$ta ppc-dis.lo ppc-opc.lo" ;;
 diff --git a/opcodes/configure.ac b/opcodes/configure.ac
-index b93e855..a79361c 100644
+index 39eb2fb..2dc10ad 100644
 --- a/opcodes/configure.ac
 +++ b/opcodes/configure.ac
 @@ -306,6 +306,7 @@ if test x${all_targets} = xfalse ; then
@@ -5821,7 +5858,7 @@ index b93e855..a79361c 100644
  	bfd_romp_arch)		;;
  	bfd_rs6000_arch)	ta="$ta ppc-dis.lo ppc-opc.lo" ;;
 diff --git a/opcodes/disassemble.c b/opcodes/disassemble.c
-index 0a0814e..bac34a5 100644
+index 63103bb..dee93c7 100644
 --- a/opcodes/disassemble.c
 +++ b/opcodes/disassemble.c
 @@ -72,6 +72,7 @@
@@ -5832,7 +5869,7 @@ index 0a0814e..bac34a5 100644
  #define ARCH_rs6000
  #define ARCH_rl78
  #define ARCH_rx
-@@ -373,6 +374,11 @@ disassembler (abfd)
+@@ -374,6 +375,11 @@ disassembler (abfd)
  	disassemble = print_insn_little_powerpc;
        break;
  #endif
@@ -22985,7 +23022,7 @@ index 0000000..e88a14b
 +}
 diff --git a/sim/pru/pru.h b/sim/pru/pru.h
 new file mode 100644
-index 0000000..4285fd5
+index 0000000..485005b
 --- /dev/null
 +++ b/sim/pru/pru.h
 @@ -0,0 +1,95 @@
@@ -23018,7 +23055,7 @@ index 0000000..4285fd5
 +/* Define memory sizes to allocate for simulated target. Sizes are
 +   artificially large to accommodate execution of compiler test suite.
 +   Please synchronize with the linker script for prusim target. */
-+#define DMEM_DEFAULT_SIZE (1024 * 1024)	  /* 1MB should be enough */
++#define DMEM_DEFAULT_SIZE (64 * 1024 * 1024)	  /* 64MB should be enough */
 +#define IMEM_DEFAULT_SIZE (64 * 4 * 1024) /* 16-bit word addressable space */
 +
 +#define CPU     pru_state.cpu[0].pru_cpu
@@ -23428,5 +23465,5 @@ index 0000000..c19c803
 +#endif /* PRU_SIM_MAIN */
 +
 -- 
-2.1.3
+2.1.4
 
