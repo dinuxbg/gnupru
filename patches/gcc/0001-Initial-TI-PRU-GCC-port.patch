@@ -1,4 +1,4 @@
-From c05e03cfe953d32af054b11c8db9b952861a3a79 Mon Sep 17 00:00:00 2001
+From 0bd73233c61ac52b5eb1fd0e2142b5af5961f4a5 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Mon, 30 Dec 2013 23:47:32 +0200
 Subject: [PATCH 1/2] Initial TI PRU GCC port
@@ -7,36 +7,41 @@ Although not very well tested, core functionality should be there.
 
 Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---
- .gitignore                            |    3 +
- config.sub                            |    2 +
- configure                             |    4 +
- configure.ac                          |    4 +
- gcc/common/config/pru/pru-common.c    |   44 +
- gcc/config.gcc                        |    8 +
- gcc/config/pru/constraints.md         |   60 +
- gcc/config/pru/predicates.md          |  203 ++
- gcc/config/pru/pru-ldst-multiple.md   | 5998 +++++++++++++++++++++++++++++++++
- gcc/config/pru/pru-ldst-multiple.ml   |  145 +
- gcc/config/pru/pru-protos.h           |   46 +
- gcc/config/pru/pru.c                  | 1600 +++++++++
- gcc/config/pru/pru.h                  |  405 +++
- gcc/config/pru/pru.md                 |  537 +++
- gcc/config/pru/pru.opt                |   23 +
- gcc/config/pru/t-pru                  |   22 +
- gcc/doc/md.texi                       |   19 +
- gcc/testsuite/lib/target-supports.exp |    4 +-
- libgcc/config.host                    |    6 +
- libgcc/config/pru/lib2bitcountHI.c    |   43 +
- libgcc/config/pru/lib2divHI.c         |   42 +
- libgcc/config/pru/lib2divQI.c         |   43 +
- libgcc/config/pru/lib2divSI.c         |   42 +
- libgcc/config/pru/lib2mul.c           |   41 +
- libgcc/config/pru/lib2shift.c         |   48 +
- libgcc/config/pru/muldi3.S            |   60 +
- libgcc/config/pru/pru-asm.h           |   36 +
- libgcc/config/pru/pru-divmod.h        |  117 +
- libgcc/config/pru/t-pru               |   41 +
- 29 files changed, 9645 insertions(+), 1 deletion(-)
+ .gitignore                                       |    3 +
+ config.sub                                       |    2 +
+ configure                                        |    4 +
+ configure.ac                                     |    4 +
+ gcc/common/config/pru/pru-common.c               |   44 +
+ gcc/config.gcc                                   |    8 +
+ gcc/config/pru/constraints.md                    |   68 +
+ gcc/config/pru/predicates.md                     |  203 +
+ gcc/config/pru/pru-ldst-multiple.md              | 5998 ++++++++++++++++++++++
+ gcc/config/pru/pru-ldst-multiple.ml              |  145 +
+ gcc/config/pru/pru-protos.h                      |   46 +
+ gcc/config/pru/pru.c                             | 1604 ++++++
+ gcc/config/pru/pru.h                             |  414 ++
+ gcc/config/pru/pru.md                            |  543 ++
+ gcc/config/pru/pru.opt                           |   23 +
+ gcc/config/pru/t-pru                             |   22 +
+ gcc/doc/md.texi                                  |   19 +
+ gcc/testsuite/gcc.c-torture/execute/20101011-1.c |    3 +
+ gcc/testsuite/gcc.dg/20020312-2.c                |    2 +
+ gcc/testsuite/gcc.dg/graphite/isl-ast-gen-if-1.c |    2 +-
+ gcc/testsuite/lib/gcc-dg.exp                     |    5 +
+ gcc/testsuite/lib/target-supports.exp            |    7 +-
+ gcc/testsuite/lib/target-utils.exp               |    3 +
+ libgcc/config.host                               |    6 +
+ libgcc/config/pru/lib2bitcountHI.c               |   43 +
+ libgcc/config/pru/lib2divHI.c                    |   42 +
+ libgcc/config/pru/lib2divQI.c                    |   43 +
+ libgcc/config/pru/lib2divSI.c                    |   42 +
+ libgcc/config/pru/lib2mul.c                      |   41 +
+ libgcc/config/pru/lib2shift.c                    |   48 +
+ libgcc/config/pru/muldi3.S                       |   60 +
+ libgcc/config/pru/pru-asm.h                      |   36 +
+ libgcc/config/pru/pru-divmod.h                   |  117 +
+ libgcc/config/pru/t-pru                          |   41 +
+ 34 files changed, 9688 insertions(+), 3 deletions(-)
  create mode 100644 gcc/common/config/pru/pru-common.c
  create mode 100644 gcc/config/pru/constraints.md
  create mode 100644 gcc/config/pru/predicates.md
@@ -198,10 +203,10 @@ index c5d9ff8..3387ace 100644
  	tmake_file="rs6000/t-aix43 t-slibgcc"
 diff --git a/gcc/config/pru/constraints.md b/gcc/config/pru/constraints.md
 new file mode 100644
-index 0000000..e777089
+index 0000000..b90152f
 --- /dev/null
 +++ b/gcc/config/pru/constraints.md
-@@ -0,0 +1,60 @@
+@@ -0,0 +1,68 @@
 +;; Constraint definitions for TI PRU.
 +;; Copyright (C) 2014 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -235,6 +240,14 @@ index 0000000..e777089
 +;;
 +;;  r: general purpose register (r0..r31)
 +;;  m: memory operand
++;;
++;; The following constraints are intended for internal use only:
++;;  j: jump address register suitable for sibling calls
++
++;; Register constraints
++
++(define_register_constraint "j" "SIB_REGS"
++  "A register suitable for an indirect sibcall.")
 +
 +;; Integer constraints
 +
@@ -6680,10 +6693,10 @@ index 0000000..2db4b42
 +#endif /* GCC_PRU_PROTOS_H */
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
 new file mode 100644
-index 0000000..60c32d0
+index 0000000..1301c21
 --- /dev/null
 +++ b/gcc/config/pru/pru.c
-@@ -0,0 +1,1600 @@
+@@ -0,0 +1,1604 @@
 +/* Target machine subroutines for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -7217,17 +7230,21 @@ index 0000000..60c32d0
 +		 int opno ATTRIBUTE_UNUSED,
 +		 int *total, bool speed ATTRIBUTE_UNUSED)
 +{
++  /* jumps and calls are very cheap on the PRU */
++  if (text_segment_operand (x, VOIDmode))
++    return COSTS_N_INSNS (0);
++
 +  switch (code)
 +    {
 +      case CONST_INT:
 +        if (UBYTE_INT (INTVAL (x)))
 +          {
-+            *total = COSTS_N_INSNS (1);
++            *total = COSTS_N_INSNS (0);
 +            return true;
 +          }
 +        else
 +          {
-+            *total = COSTS_N_INSNS (4);
++            *total = COSTS_N_INSNS (1);
 +            return true;
 +          }
 +
@@ -7236,7 +7253,7 @@ index 0000000..60c32d0
 +      case CONST:
 +      case CONST_DOUBLE:
 +        {
-+          *total = COSTS_N_INSNS (4);
++          *total = COSTS_N_INSNS (1);
 +          return true;
 +        }
 +
@@ -7252,7 +7269,7 @@ index 0000000..60c32d0
 +        }
 +      case ZERO_EXTEND:
 +        {
-+          *total = COSTS_N_INSNS (1);
++          *total = COSTS_N_INSNS (0);
 +          return false;
 +        }
 +
@@ -8286,10 +8303,10 @@ index 0000000..60c32d0
 +#include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
 new file mode 100644
-index 0000000..9b78094
+index 0000000..11b392e
 --- /dev/null
 +++ b/gcc/config/pru/pru.h
-@@ -0,0 +1,405 @@
+@@ -0,0 +1,414 @@
 +/* Definitions of target machine for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -8314,14 +8331,16 @@ index 0000000..9b78094
 +#define GCC_PRU_H
 +
 +/* Define built-in preprocessor macros.  */
-+#define TARGET_CPU_CPP_BUILTINS()                   \
-+  do                                                \
-+    {                                               \
-+      builtin_define_std ("__PRU__");               \
-+      builtin_define_std ("__pru__");               \
++#define TARGET_CPU_CPP_BUILTINS()		    \
++  do						    \
++    {						    \
++      builtin_define_std ("__PRU__");		    \
++      builtin_define_std ("__pru__");		    \
++      builtin_define_std ("__PRU_V3__");	    \
++      builtin_define_std ("__LITTLE_ENDIAN__");	    \
 +      /* Trampolines are disabled for now. */	    \
-+      builtin_define_std ("NO_TRAMPOLINES");        \
-+    }                                               \
++      builtin_define_std ("NO_TRAMPOLINES");	    \
++    }						    \
 +  while (0)
 +
 +#undef  STARTFILE_SPEC
@@ -8376,7 +8395,9 @@ index 0000000..9b78094
 +/* Basic characteristics of PRU registers:
 +
 +   Regno  Name
-+   0-1    r0-r1            Caller Saved Registers
++   0      r0               Caller Saved. Also used as a static chain register.
++   1      r1               Caller Saved. Also used as a temporary by function
++                           profiler and function prologue/epilogue.
 +   2      r2       sp      Stack Pointer
 +   3      r3       ra      Return Address
 +   4      r4       fp      Frame Pointer
@@ -8436,6 +8457,7 @@ index 0000000..9b78094
 +enum reg_class
 +{
 +  NO_REGS,
++  SIB_REGS,
 +  GP_REGS,
 +  ALL_REGS,
 +  LIM_REG_CLASSES
@@ -8445,16 +8467,18 @@ index 0000000..9b78094
 +
 +#define REG_CLASS_NAMES   \
 +  {  "NO_REGS",           \
++     "SIB_REGS",          \
 +     "GP_REGS",           \
 +     "ALL_REGS" }
 +
 +#define GENERAL_REGS ALL_REGS
 +
-+#define REG_CLASS_CONTENTS                      \
-+  {                                             \
-+    /* NO_REGS  */ { 0, 0},                     \
-+    /* GP_REGS  */ {~0, 0},                     \
-+    /* ALL_REGS */ {~0,~0}                      \
++#define REG_CLASS_CONTENTS			\
++  {						\
++    /* NO_REGS  */ { 0, 0},			\
++    /* SIB_REGS */ { 0x3fffc001, 0},		\
++    /* GP_REGS  */ { ~0, 0},			\
++    /* ALL_REGS */ { ~0,~0}			\
 +  }
 +
 +
@@ -8464,7 +8488,7 @@ index 0000000..9b78094
 +  ((GET_MODE_SIZE (MODE) + UNITS_PER_WORD - 1) / UNITS_PER_WORD)
 +
 +/* Arbitrarily set to a non-argument register. */
-+#define STATIC_CHAIN_REGNUM      0
++#define STATIC_CHAIN_REGNUM      0	/* r0 */
 +
 +/* Tests for various kinds of constants used in the PRU port.  */
 +#define SHIFT_INT(X) ((X) >= 0 && (X) <= 31)
@@ -8687,6 +8711,8 @@ index 0000000..9b78094
 +/* TODO - revisit */
 +#define TRULY_NOOP_TRUNCATION(OUTPREC, INPREC)	1
 +
++#define LOGICAL_OP_NON_SHORT_CIRCUIT		0	/* jumps are cheap */
++
 +#undef LOAD_EXTEND_OP
 +
 +#define WORD_REGISTER_OPERATIONS		1
@@ -8697,10 +8723,10 @@ index 0000000..9b78094
 +#endif /* GCC_PRU_H */
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
 new file mode 100644
-index 0000000..e734ea9
+index 0000000..f60ec2c
 --- /dev/null
 +++ b/gcc/config/pru/pru.md
-@@ -0,0 +1,537 @@
+@@ -0,0 +1,543 @@
 +;; Machine Description for TI PRU.
 +;; Copyright (C) 2014 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -8764,6 +8790,12 @@ index 0000000..e734ea9
 +(define_asm_attributes
 + [(set_attr "length" "4")
 +  (set_attr "type" "complex")])
++
++; There is no pipeline, so our scheduling description is simple.
++(define_automaton "pru")
++(define_cpu_unit "cpu" "pru")
++
++(define_insn_reservation "everything" 1 (match_test "true") "cpu")
 +
 +(include "predicates.md")
 +(include "constraints.md")
@@ -9152,19 +9184,19 @@ index 0000000..e734ea9
 +  "")
 +
 +(define_insn "*sibcall"
-+ [(call (mem:SI (match_operand:SI 0 "call_operand" "ir"))
++ [(call (mem:SI (match_operand:SI 0 "call_operand" "ij"))
 +        (match_operand 1 "" ""))
 +  (return)]
-+  ""
++  "SIBLING_CALL_P(insn)"
 +  "jmp\\t%0"
 +  [(set_attr "type" "control")])
 +
 +(define_insn "*sibcall_value"
 + [(set (match_operand 0 "register_operand" "")
-+       (call (mem:SI (match_operand:SI 1 "call_operand" "ir"))
++       (call (mem:SI (match_operand:SI 1 "call_operand" "ij"))
 +             (match_operand 2 "" "")))
 +  (return)]
-+  ""
++  "SIBLING_CALL_P(insn)"
 +  "jmp\\t%1"
 +  [(set_attr "type" "control")])
 +
@@ -9325,8 +9357,64 @@ index 7f0426c..10b734a 100644
  @item RL78---@file{config/rl78/constraints.md}
  @table @code
  
+diff --git a/gcc/testsuite/gcc.c-torture/execute/20101011-1.c b/gcc/testsuite/gcc.c-torture/execute/20101011-1.c
+index 34d0313..ff90620 100644
+--- a/gcc/testsuite/gcc.c-torture/execute/20101011-1.c
++++ b/gcc/testsuite/gcc.c-torture/execute/20101011-1.c
+@@ -74,6 +74,9 @@ __aeabi_idiv0 (int return_value)
+ #elif defined (__nvptx__)
+ /* There isn't even a signal function.  */
+ # define DO_TEST 0
++#elif defined (__pru__)
++/* There isn't even a signal function.  */
++# define DO_TEST 0
+ #else
+ # define DO_TEST 1
+ #endif
+diff --git a/gcc/testsuite/gcc.dg/20020312-2.c b/gcc/testsuite/gcc.dg/20020312-2.c
+index de21741..d63c8e0 100644
+--- a/gcc/testsuite/gcc.dg/20020312-2.c
++++ b/gcc/testsuite/gcc.dg/20020312-2.c
+@@ -106,6 +106,8 @@ extern void abort (void);
+ /* No pic register.  */
+ #elif defined (__nvptx__)
+ /* No pic register.  */
++#elif defined(__PRU__)
++/* No pic register.  */
+ #else
+ # error "Modify the test for your target."
+ #endif
+diff --git a/gcc/testsuite/gcc.dg/graphite/isl-ast-gen-if-1.c b/gcc/testsuite/gcc.dg/graphite/isl-ast-gen-if-1.c
+index 07285a9..30236a8 100644
+--- a/gcc/testsuite/gcc.dg/graphite/isl-ast-gen-if-1.c
++++ b/gcc/testsuite/gcc.dg/graphite/isl-ast-gen-if-1.c
+@@ -29,7 +29,7 @@ int
+ main (void)
+ {
+   int a[50];
+-  foo (a, 50);
++  foo (a, 49);
+   int res = array_sum (a);
+   if (res != 49)
+     abort ();
+diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
+index 6df8ae1..a8001de 100644
+--- a/gcc/testsuite/lib/gcc-dg.exp
++++ b/gcc/testsuite/lib/gcc-dg.exp
+@@ -233,6 +233,11 @@ proc gcc-dg-prune { system text } {
+ 	return "::unsupported::memory full"
+     }
+ 
++    if [regexp "(^|\n)\[^\n\]*: region \[^\n\]* overflowed by \[^\n\]* bytes" $text] {
++	# The format here is important.  See dg.exp.
++	return "::unsupported::memory full"
++    }
++
+     if { [regexp "(^|\n)\[^\n\]*: relocation truncated to fit" $text]
+           && [check_effective_target_tiny] } {
+         return "::unsupported::memory full"
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index a9d8e6c..4804477 100644
+index a9d8e6c..e21c920 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
 @@ -438,7 +438,8 @@ proc check_effective_target_trampolines { } {
@@ -9347,6 +9435,37 @@ index a9d8e6c..4804477 100644
  	     || [istarget rx-*-*]	
  	     || [istarget tic6x-*-elf]
  	     || [istarget xstormy16-*]
+@@ -709,7 +711,7 @@ proc check_effective_target_tls_emulated {} {
+ proc check_effective_target_tls_runtime {} {
+     # MSP430 runtime does not have TLS support, but just
+     # running the test below is insufficient to show this.
+-    if { [istarget msp430-*-*] } {
++    if { [istarget msp430-*-*] || [istarget pru-*-*] } {
+ 	return 0
+     }
+     return [check_runtime tls_runtime {
+@@ -6085,6 +6087,7 @@ proc check_effective_target_logical_op_short_circuit {} {
+ 	 || [istarget s390*-*-*]
+ 	 || [istarget powerpc*-*-*]
+ 	 || [istarget nios2*-*-*]
++	 || [istarget pru*-*-*]
+ 	 || [check_effective_target_arm_cortex_m] } {
+ 	return 1
+     }
+diff --git a/gcc/testsuite/lib/target-utils.exp b/gcc/testsuite/lib/target-utils.exp
+index 1f52adb..a138dbc 100644
+--- a/gcc/testsuite/lib/target-utils.exp
++++ b/gcc/testsuite/lib/target-utils.exp
+@@ -28,6 +28,9 @@
+ load_lib target-supports.exp
+ 
+ proc ${tool}_check_unsupported_p { output } {
++    if [regexp "(^|\n)\[^\n\]*: region \[^\n\]* overflowed by \[^\n\]* bytes" $output] {
++	return "memory full"
++    }
+     if [regexp "(^|\n)\[^\n\]*: region \[^\n\]* is full" $output] {
+ 	return "memory full"
+     }
 diff --git a/libgcc/config.host b/libgcc/config.host
 index b10d725..d7d32d5 100644
 --- a/libgcc/config.host
