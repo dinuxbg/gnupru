@@ -35,7 +35,7 @@ prepare_source()
   local PRJ=$1
   local URL=$2
   local COMMIT=$3
-  local REF=$4
+  local REF="$4"
   git clone $URL $SRC/$PRJ $REF|| die Could not clone $URL
   cd $SRC/$PRJ
   git checkout -b tmp-pru $COMMIT || die Could not checkout $PRJ commit $COMMIT
@@ -60,7 +60,7 @@ build_gcc_pass()
   PASS=$1
   EXTRA_ARGS=$2
   cd $BUILD/gcc
-  $SRC/gcc/configure --target=pru --prefix=$PREFIX --disable-nls --with-newlib --enable-languages=c $EXTRA_ARGS || die Could not configure GCC pass$PASS
+  $SRC/gcc/configure --target=pru --prefix=$PREFIX --disable-nls --with-newlib --with-bugurl="https://github.com/dinuxbg/gnupru/issues" $EXTRA_ARGS || die Could not configure GCC pass$PASS
   make -j4 || die Could not build GCC pass$PASS
   make install || die Could not install GCC pass$PASS
 }
@@ -84,15 +84,15 @@ mkdir -p $BUILD/binutils-gdb
 mkdir -p $BUILD/newlib
 
 # Checkout baseline and apply patches.
-prepare_source binutils-gdb $BINUTILS_GIT $BINUTILS_BASECOMMIT $BINUTILS_GIT_REFERENCE
-prepare_source gcc $GCC_GIT $GCC_BASECOMMIT $GCC_GIT_REFERENCE
-prepare_source newlib $NEWLIB_GIT $NEWLIB_BASECOMMIT $NEWLIB_GIT_REFERENCE
+prepare_source binutils-gdb $BINUTILS_GIT $BINUTILS_BASECOMMIT "$BINUTILS_GIT_REFERENCE"
+prepare_source gcc $GCC_GIT $GCC_BASECOMMIT "$GCC_GIT_REFERENCE"
+prepare_source newlib $NEWLIB_GIT $NEWLIB_BASECOMMIT "$NEWLIB_GIT_REFERENCE"
 
 # Configure, build and install.
 build_binutils
-build_gcc_pass 1 "--without-headers"
+build_gcc_pass 1 "--without-headers --enable-languages=c"
 build_newlib
-build_gcc_pass 2
+build_gcc_pass 2 "--enable-languages=c,c++"
 
 cd $RETDIR
 

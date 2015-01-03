@@ -1,4 +1,4 @@
-From e4ee640b40559c85266cf356d9ade0a253c2588a Mon Sep 17 00:00:00 2001
+From 6a24eec392e8cd3f17476f8828b0a22ebbe26783 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Thu, 1 May 2014 16:43:07 +0300
 Subject: [PATCH] Initial PRU port
@@ -28,13 +28,13 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgloss/pru/isatty.c                             |   27 +
  libgloss/pru/kill.c                               |   28 +
  libgloss/pru/ldscripts/gen-ld-scripts.sh          |   61 +
- libgloss/pru/ldscripts/pruelf-am335x.pru0.x       |  216 +
- libgloss/pru/ldscripts/pruelf-am335x.pru1.x       |  216 +
- libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x |  216 +
- libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x |  216 +
- libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x |  216 +
- libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x |  216 +
- libgloss/pru/ldscripts/pruelf-sim.x               |  216 +
+ libgloss/pru/ldscripts/pruelf-am335x.pru0.x       |  218 +
+ libgloss/pru/ldscripts/pruelf-am335x.pru1.x       |  218 +
+ libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x |  218 +
+ libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x |  218 +
+ libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x |  218 +
+ libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x |  218 +
+ libgloss/pru/ldscripts/pruelf-sim.x               |  218 +
  libgloss/pru/lseek.c                              |   34 +
  libgloss/pru/open.c                               |   33 +
  libgloss/pru/print.c                              |   27 +
@@ -60,7 +60,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  newlib/libc/machine/pru/configure                 | 4748 +++++++++++++++++++++
  newlib/libc/machine/pru/configure.in              |   14 +
  newlib/libc/machine/pru/setjmp.s                  |   46 +
- 51 files changed, 12969 insertions(+), 1 deletion(-)
+ 51 files changed, 12983 insertions(+), 1 deletion(-)
  create mode 100644 libgloss/pru/Makefile.in
  create mode 100644 libgloss/pru/aclocal.m4
  create mode 100644 libgloss/pru/close.c
@@ -4973,10 +4973,10 @@ index 0000000..575a309
 +dump_modified 8K   8K     "32"         "512"       | tee pruelf-am437x.icss1.pru1.x
 diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru0.x b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
 new file mode 100644
-index 0000000..2ea883c
+index 0000000..f2c11ce
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
-@@ -0,0 +1,216 @@
+@@ -0,0 +1,218 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -5112,9 +5112,11 @@ index 0000000..2ea883c
 +       a "valid" NULL address. */
 +     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
++     KEEP (*(.ctors))
 +     __ctors_end = . ;
 +     __dtors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
++     KEEP (*(.dtors))
 +     __dtors_end = . ;
 +    /* DATA memory starts at address 0. So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
@@ -5195,10 +5197,10 @@ index 0000000..2ea883c
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru1.x b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
 new file mode 100644
-index 0000000..2ea883c
+index 0000000..f2c11ce
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
-@@ -0,0 +1,216 @@
+@@ -0,0 +1,218 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -5334,9 +5336,11 @@ index 0000000..2ea883c
 +       a "valid" NULL address. */
 +     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
++     KEEP (*(.ctors))
 +     __ctors_end = . ;
 +     __dtors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
++     KEEP (*(.dtors))
 +     __dtors_end = . ;
 +    /* DATA memory starts at address 0. So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
@@ -5417,10 +5421,10 @@ index 0000000..2ea883c
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
 new file mode 100644
-index 0000000..36339b6
+index 0000000..8f1dc83
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
-@@ -0,0 +1,216 @@
+@@ -0,0 +1,218 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -5556,9 +5560,11 @@ index 0000000..36339b6
 +       a "valid" NULL address. */
 +     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
++     KEEP (*(.ctors))
 +     __ctors_end = . ;
 +     __dtors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
++     KEEP (*(.dtors))
 +     __dtors_end = . ;
 +    /* DATA memory starts at address 0. So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
@@ -5639,10 +5645,10 @@ index 0000000..36339b6
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
 new file mode 100644
-index 0000000..36339b6
+index 0000000..8f1dc83
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
-@@ -0,0 +1,216 @@
+@@ -0,0 +1,218 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -5778,9 +5784,11 @@ index 0000000..36339b6
 +       a "valid" NULL address. */
 +     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
++     KEEP (*(.ctors))
 +     __ctors_end = . ;
 +     __dtors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
++     KEEP (*(.dtors))
 +     __dtors_end = . ;
 +    /* DATA memory starts at address 0. So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
@@ -5861,10 +5869,10 @@ index 0000000..36339b6
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
 new file mode 100644
-index 0000000..2ea883c
+index 0000000..f2c11ce
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
-@@ -0,0 +1,216 @@
+@@ -0,0 +1,218 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -6000,9 +6008,11 @@ index 0000000..2ea883c
 +       a "valid" NULL address. */
 +     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
++     KEEP (*(.ctors))
 +     __ctors_end = . ;
 +     __dtors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
++     KEEP (*(.dtors))
 +     __dtors_end = . ;
 +    /* DATA memory starts at address 0. So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
@@ -6083,10 +6093,10 @@ index 0000000..2ea883c
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
 new file mode 100644
-index 0000000..2ea883c
+index 0000000..f2c11ce
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
-@@ -0,0 +1,216 @@
+@@ -0,0 +1,218 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -6222,9 +6232,11 @@ index 0000000..2ea883c
 +       a "valid" NULL address. */
 +     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
++     KEEP (*(.ctors))
 +     __ctors_end = . ;
 +     __dtors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
++     KEEP (*(.dtors))
 +     __dtors_end = . ;
 +    /* DATA memory starts at address 0. So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
@@ -6305,10 +6317,10 @@ index 0000000..2ea883c
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-sim.x b/libgloss/pru/ldscripts/pruelf-sim.x
 new file mode 100644
-index 0000000..3ce7c7b
+index 0000000..644f948
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-sim.x
-@@ -0,0 +1,216 @@
+@@ -0,0 +1,218 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -6444,9 +6456,11 @@ index 0000000..3ce7c7b
 +       a "valid" NULL address. */
 +     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
++     KEEP (*(.ctors))
 +     __ctors_end = . ;
 +     __dtors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
++     KEEP (*(.dtors))
 +     __dtors_end = . ;
 +    /* DATA memory starts at address 0. So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
