@@ -1,11 +1,7 @@
-From 6a24eec392e8cd3f17476f8828b0a22ebbe26783 Mon Sep 17 00:00:00 2001
+From 943021da7f928129a4d888be0444036caf6c2fe7 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Thu, 1 May 2014 16:43:07 +0300
 Subject: [PATCH] Initial PRU port
-
-TODO:
- - Start adding HW-specific macros.
- - Implement rpmsg I/O support.
 
 Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---
@@ -14,7 +10,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  configure.ac                                      |    4 +
  libgloss/configure                                |    5 +
  libgloss/configure.in                             |    2 +
- libgloss/pru/Makefile.in                          |  133 +
+ libgloss/pru/Makefile.in                          |  142 +
  libgloss/pru/aclocal.m4                           |  344 ++
  libgloss/pru/close.c                              |   25 +
  libgloss/pru/configure                            | 3791 ++++++++++++++++
@@ -25,6 +21,8 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgloss/pru/fstat.c                              |   30 +
  libgloss/pru/getpid.c                             |   25 +
  libgloss/pru/gettimeofday.c                       |   31 +
+ libgloss/pru/include/pru/am335x.h                 |  510 +++
+ libgloss/pru/include/pru/io.h                     |  119 +
  libgloss/pru/isatty.c                             |   27 +
  libgloss/pru/kill.c                               |   28 +
  libgloss/pru/ldscripts/gen-ld-scripts.sh          |   61 +
@@ -60,7 +58,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  newlib/libc/machine/pru/configure                 | 4748 +++++++++++++++++++++
  newlib/libc/machine/pru/configure.in              |   14 +
  newlib/libc/machine/pru/setjmp.s                  |   46 +
- 51 files changed, 12983 insertions(+), 1 deletion(-)
+ 53 files changed, 13621 insertions(+), 1 deletion(-)
  create mode 100644 libgloss/pru/Makefile.in
  create mode 100644 libgloss/pru/aclocal.m4
  create mode 100644 libgloss/pru/close.c
@@ -72,6 +70,8 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 libgloss/pru/fstat.c
  create mode 100644 libgloss/pru/getpid.c
  create mode 100644 libgloss/pru/gettimeofday.c
+ create mode 100644 libgloss/pru/include/pru/am335x.h
+ create mode 100644 libgloss/pru/include/pru/io.h
  create mode 100644 libgloss/pru/isatty.c
  create mode 100644 libgloss/pru/kill.c
  create mode 100755 libgloss/pru/ldscripts/gen-ld-scripts.sh
@@ -154,10 +154,10 @@ index 80313d0..4dfea7c 100644
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
 diff --git a/libgloss/configure b/libgloss/configure
-index 87cf53c..8045120 100755
+index acd3018..ce7a8a2 100755
 --- a/libgloss/configure
 +++ b/libgloss/configure
-@@ -706,6 +706,7 @@ spu
+@@ -707,6 +707,7 @@ spu
  tic6x
  iq2000
  or1k
@@ -165,7 +165,7 @@ index 87cf53c..8045120 100755
  libnosys'
  
  # Initialize some variables set by options.
-@@ -2564,6 +2565,10 @@ case "${target}" in
+@@ -2570,6 +2571,10 @@ case "${target}" in
  	subdirs="$subdirs or1k"
  
  	;;
@@ -177,10 +177,10 @@ index 87cf53c..8045120 100755
  
  
 diff --git a/libgloss/configure.in b/libgloss/configure.in
-index 74d4fd6..d279b33 100644
+index ab3224a..0c89d12 100644
 --- a/libgloss/configure.in
 +++ b/libgloss/configure.in
-@@ -161,6 +161,8 @@ case "${target}" in
+@@ -165,6 +165,8 @@ case "${target}" in
  	;;
    or1k-*-* | or1knd-*-* )
  	AC_CONFIG_SUBDIRS([or1k])
@@ -191,10 +191,10 @@ index 74d4fd6..d279b33 100644
  
 diff --git a/libgloss/pru/Makefile.in b/libgloss/pru/Makefile.in
 new file mode 100644
-index 0000000..d769f9a
+index 0000000..6a7f585
 --- /dev/null
 +++ b/libgloss/pru/Makefile.in
-@@ -0,0 +1,133 @@
+@@ -0,0 +1,142 @@
 +# Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
 +#
 +# The authors hereby grant permission to use, copy, modify, distribute,
@@ -213,6 +213,7 @@ index 0000000..d769f9a
 +objdir = .
 +srcroot = $(srcdir)/../..
 +objroot = $(objdir)/../..
++top_srcdir = @top_srcdir@
 +
 +prefix = @prefix@
 +exec_prefix = @exec_prefix@
@@ -222,6 +223,7 @@ index 0000000..d769f9a
 +
 +bindir = @bindir@
 +libdir = @libdir@
++includedir = @includedir@
 +tooldir = $(exec_prefix)/$(target_alias)
 +
 +# Multilib support variables.
@@ -230,6 +232,8 @@ index 0000000..d769f9a
 +MULTISUBDIR =
 +
 +SHELL =	/bin/sh
++
++mkinstalldirs = $(SHELL) $(top_srcdir)/../../mkinstalldirs
 +
 +CC = @CC@
 +
@@ -317,6 +321,11 @@ index 0000000..d769f9a
 +	for s in $(SCRIPTS); do \
 +	  b=`basename $$s`; \
 +	  ${INSTALL_DATA} $$s ${tooldir}/lib${MULTISUBDIR}/$$b ;\
++	done
++	${mkinstalldirs} ${DESTDIR}${tooldir}/include/pru; \
++	for i in ${srcdir}/include/pru/*.h; do \
++	  b=`basename $$i`; \
++	  $(INSTALL_DATA) $$i $(DESTDIR)$(tooldir)/include/pru/$$b ;\
 +	done
 +
 +info:
@@ -4837,6 +4846,647 @@ index 0000000..7bc01dc
 +    errno = ENOSYS;
 +    return -1;
 +}
+diff --git a/libgloss/pru/include/pru/am335x.h b/libgloss/pru/include/pru/am335x.h
+new file mode 100644
+index 0000000..537d70b
+--- /dev/null
++++ b/libgloss/pru/include/pru/am335x.h
+@@ -0,0 +1,510 @@
++/* pru/am335x.h -- PRU I/O registers definitions for PRU inside AM335x SoCs
++
++   Copyright (c) 2015 Dimitar Dimitrov <dinuxbg@gmail.com>
++   All rights reserved.
++
++   Redistribution and use in source and binary forms, with or without
++   modification, are permitted provided that the following condition
++   is met:
++
++   1. Redistributions of source code must retain the above copyright
++      notice, this list of conditions and the following disclaimer.
++
++   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++   FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++   COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
++   INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
++   (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
++   SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
++   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
++   OF THE POSSIBILITY OF SUCH DAMAGE.
++   */
++
++#ifndef __PRU_AM335X_H__
++#define __PRU_AM335X_H__
++
++
++/* Local memory map (TRM section 4.3.2.1) */
++#define __LOCAL_DATA_RAM_BASE		0x00000000
++#define __PEER_DATA_RAM_BASE		0x00002000
++#define __SHARED_DATA_RAM_BASE		0x00010000
++#define __INTC_BASE			0x00020000
++#define __PRU0_CTRL_REGS_BASE		0x00022000
++#define __PRU1_CTRL_REGS_BASE		0x00024000
++#define __CFG_BASE			0x00026000
++#define __UART0_BASE			0x00028000
++#define __IEP_BASE			0x0002E000
++#define __ECAP0_BASE			0x00030000
++#define __MII_RT_CFG_BASE		0x00032000
++#define __MII_MDIO_BASE			0x00034000
++#define __SYS_OCP_HP0_BASE		0x00080000
++
++/* ====================== PRU CTRL module ====================== */
++#define PRU_CTRL_CONTROL_OFFS		0x00
++#define PRU_CTRL_STATUS_OFFS		0x04
++#define PRU_CTRL_WAKEUP_EN_OFFS		0x08
++#define PRU_CTRL_CYCLE_OFFS		0x0c
++#define PRU_CTRL_STALL_OFFS		0x10
++#define PRU_CTRL_CTBIR0_OFFS		0x20
++#define PRU_CTRL_CTBIR1_OFFS		0x24
++#define PRU_CTRL_CPPR0_OFFS		0x28
++#define PRU_CTRL_CPPR1_OFFS		0x2c
++
++struct __PRU_CONTROL_S {
++	const volatile unsigned int SOFT_RST_N		: 1;
++	volatile unsigned int ENABLE			: 1;
++	volatile unsigned int SLEEPING			: 1;
++	volatile unsigned int COUNTER_ENABLE		: 1;
++	volatile unsigned int __reserved_1		: 4;
++	volatile unsigned int SINGLE_STEP		: 1;
++	volatile unsigned int __reserved_2		: 5;
++	const volatile unsigned int __reserved_3	: 1;
++	const volatile unsigned int RUNSTATE		: 1;
++	volatile unsigned int PCOUNTER_RST_VAL		: 16;
++};
++#define PRU0_CONTROL (*(struct __PRU_CONTROL_S *)((__PRU0_CTRL_REGS_BASE + PRU_CTRL_CONTROL_OFFS)))
++#define PRU1_CONTROL (*(struct __PRU_CONTROL_S *)((__PRU1_CTRL_REGS_BASE + PRU_CTRL_CONTROL_OFFS)))
++
++
++struct __PRU_STATUS_S {
++	volatile unsigned int PCOUNTER			: 16;
++	volatile unsigned int __reserved_1		: 16;
++};
++#define PRU0_STATUS (*(struct __PRU_STATUS_S *)((__PRU0_CTRL_REGS_BASE + PRU_CTRL_STATUS_OFFS)))
++#define PRU1_STATUS (*(struct __PRU_STATUS_S *)((__PRU1_CTRL_REGS_BASE + PRU_CTRL_STATUS_OFFS)))
++
++
++#define PRU0_WAKEUP_EN (*(volatile unsigned int *)((__PRU0_CTRL_REGS_BASE + PRU_CTRL_WAKEUP_EN_OFFS)))
++#define PRU1_WAKEUP_EN (*(volatile unsigned int *)((__PRU1_CTRL_REGS_BASE + PRU_CTRL_WAKEUP_EN_OFFS)))
++
++
++#define PRU0_CYCLE (*(volatile unsigned int *)((__PRU0_CTRL_REGS_BASE + PRU_CTRL_CYCLE_OFFS)))
++#define PRU1_CYCLE (*(volatile unsigned int *)((__PRU1_CTRL_REGS_BASE + PRU_CTRL_CYCLE_OFFS)))
++
++
++#define PRU0_STALL (*(volatile unsigned int *)((__PRU0_CTRL_REGS_BASE + PRU_CTRL_STALL_OFFS)))
++#define PRU1_STALL (*(volatile unsigned int *)((__PRU1_CTRL_REGS_BASE + PRU_CTRL_STALL_OFFS)))
++
++
++struct __PRU_CTBIR0_S {
++	volatile unsigned int C24_BLK_INDEX		: 8;
++	volatile unsigned int __reserved_1		: 8;
++	volatile unsigned int C25_BLK_INDEX		: 8;
++	volatile unsigned int __reserved_2		: 8;
++};
++#define PRU0_CTBIR0 (*(struct __PRU_CTBIR0_S *)((__PRU0_CTRL_REGS_BASE + PRU_CTRL_CTBIR0_OFFS)))
++#define PRU1_CTBIR0 (*(struct __PRU_CTBIR0_S *)((__PRU1_CTRL_REGS_BASE + PRU_CTRL_CTBIR0_OFFS)))
++
++
++struct __PRU_CTBIR1_S {
++	volatile unsigned int C26_BLK_INDEX		: 8;
++	volatile unsigned int __reserved_1		: 8;
++	volatile unsigned int C27_BLK_INDEX		: 8;
++	volatile unsigned int __reserved_2		: 8;
++};
++#define PRU0_CTBIR1 (*(struct __PRU_CTBIR1_S *)((__PRU0_CTRL_REGS_BASE + PRU_CTRL_CTBIR1_OFFS)))
++#define PRU1_CTBIR1 (*(struct __PRU_CTBIR1_S *)((__PRU1_CTRL_REGS_BASE + PRU_CTRL_CTBIR1_OFFS)))
++
++
++struct __PRU_CTPPR0_S {
++	volatile unsigned int C28_POINTER		: 16;
++	volatile unsigned int C29_POINTER		: 16;
++};
++#define PRU0_CTPPR0 (*(struct __PRU_CTPPR0_S *)((__PRU0_CTRL_REGS_BASE + PRU_CTRL_CTPPR0_OFFS)))
++#define PRU1_CTPPR0 (*(struct __PRU_CTPPR0_S *)((__PRU1_CTRL_REGS_BASE + PRU_CTRL_CTPPR0_OFFS)))
++
++
++struct __PRU_CTPPR1_S {
++	volatile unsigned int C30_POINTER		: 16;
++	volatile unsigned int C31_POINTER		: 16;
++};
++#define PRU0_CTPPR1 (*(struct __PRU_CTPPR1_S *)((__PRU0_CTRL_REGS_BASE + PRU_CTRL_CTPPR1_OFFS)))
++#define PRU1_CTPPR1 (*(struct __PRU_CTPPR1_S *)((__PRU1_CTRL_REGS_BASE + PRU_CTRL_CTPPR1_OFFS)))
++
++
++/* ====================== PRU INTC module ====================== */
++#define PRU_INTC_REVID_OFFS		0x00
++#define PRU_INTC_CR_OFFS		0x04
++#define PRU_INTC_GER_OFFS		0x10
++#define PRU_INTC_GNLR_OFFS		0x1C
++#define PRU_INTC_SISR_OFFS		0x20
++#define PRU_INTC_SICR_OFFS		0x24
++#define PRU_INTC_EISR_OFFS		0x28
++#define PRU_INTC_EICR_OFFS		0x2c
++#define PRU_INTC_HIEISR_OFFS		0x34
++#define PRU_INTC_HIDISR_OFFS		0x38
++#define PRU_INTC_GPIR_OFFS		0x80
++#define PRU_INTC_SRSR0_OFFS		0x200
++#define PRU_INTC_SRSR1_OFFS		0x204
++#define PRU_INTC_SECR0_OFFS		0x280
++#define PRU_INTC_SECR1_OFFS		0x284
++#define PRU_INTC_ESR0_OFFS		0x300
++#define PRU_INTC_ESR1_OFFS		0x304
++#define PRU_INTC_ECR0_OFFS		0x380
++#define PRU_INTC_ECR1_OFFS		0x384
++#define PRU_INTC_CMR0_OFFS		0x400
++#define PRU_INTC_CMR1_OFFS		0x404
++#define PRU_INTC_CMR2_OFFS		0x408
++#define PRU_INTC_CMR3_OFFS		0x40c
++#define PRU_INTC_CMR4_OFFS		0x410
++#define PRU_INTC_CMR5_OFFS		0x414
++#define PRU_INTC_CMR6_OFFS		0x418
++#define PRU_INTC_CMR7_OFFS		0x41c
++#define PRU_INTC_CMR8_OFFS		0x420
++#define PRU_INTC_CMR9_OFFS		0x424
++#define PRU_INTC_CMR10_OFFS		0x428
++#define PRU_INTC_CMR11_OFFS		0x42c
++#define PRU_INTC_CMR12_OFFS		0x430
++#define PRU_INTC_CMR13_OFFS		0x434
++#define PRU_INTC_CMR14_OFFS		0x438
++#define PRU_INTC_CMR15_OFFS		0x43c
++#define PRU_INTC_HMR0_OFFS		0x800
++#define PRU_INTC_HMR1_OFFS		0x804
++#define PRU_INTC_HMR2_OFFS		0x808
++#define PRU_INTC_HIPIR0_OFFS		0x900
++#define PRU_INTC_HIPIR1_OFFS		0x904
++#define PRU_INTC_HIPIR2_OFFS		0x908
++#define PRU_INTC_HIPIR3_OFFS		0x90c
++#define PRU_INTC_HIPIR4_OFFS		0x910
++#define PRU_INTC_HIPIR5_OFFS		0x914
++#define PRU_INTC_HIPIR6_OFFS		0x918
++#define PRU_INTC_HIPIR7_OFFS		0x91c
++#define PRU_INTC_HIPIR8_OFFS		0x920
++#define PRU_INTC_HIPIR9_OFFS		0x924
++#define PRU_INTC_SIPR0_OFFS		0xd00
++#define PRU_INTC_SIPR1_OFFS		0xd04
++#define PRU_INTC_SITR0_OFFS		0xd80
++#define PRU_INTC_SITR1_OFFS		0xd84
++#define PRU_INTC_HINLR0_OFFS		0x1100
++#define PRU_INTC_HINLR1_OFFS		0x1104
++#define PRU_INTC_HINLR2_OFFS		0x1108
++#define PRU_INTC_HINLR3_OFFS		0x110c
++#define PRU_INTC_HINLR4_OFFS		0x1110
++#define PRU_INTC_HINLR5_OFFS		0x1114
++#define PRU_INTC_HINLR6_OFFS		0x1118
++#define PRU_INTC_HINLR7_OFFS		0x111c
++#define PRU_INTC_HINLR8_OFFS		0x1120
++#define PRU_INTC_HINLR9_OFFS		0x1124
++#define PRU_INTC_HIER_OFFS		0x1500
++
++
++struct __PRU_INTC_REVID_S {
++	const volatile unsigned int REV_MINOR		: 6;
++	const volatile unsigned int REV_CUSTOM		: 2;
++	const volatile unsigned int REV_MAJOR		: 3;
++	const volatile unsigned int REV_RTL		: 5;
++	const volatile unsigned int REV_MODULE		: 12;
++	const volatile unsigned int __reserved_1	: 2;
++	const volatile unsigned int REV_SCHEME		: 2;
++};
++#define PRU_INTC_REVID (*(struct __PRU_INTC_REVID_S *)((__INTC_BASE + PRU_INTC_REVID_OFFS)))
++
++
++struct __PRU_INTC_CR_S {
++	volatile unsigned int __reserved_1		: 2;
++	volatile unsigned int NEST_MODE			: 2;
++	volatile unsigned int __reserved_2		: 28;
++};
++#define PRU_INTC_CR (*(struct __PRU_INTC_CR_S *)((__INTC_BASE + PRU_INTC_CR_OFFS)))
++
++
++struct __PRU_INTC_GER_S {
++	volatile unsigned int ENABLE_HINT_ANY		: 1;
++	volatile unsigned int __reserved_2		: 30;
++};
++#define PRU_INTC_GER (*(struct __PRU_INTC_GER_S *)((__INTC_BASE + PRU_INTC_GER_OFFS)))
++
++
++struct __PRU_INTC_GNLR_S {
++	volatile unsigned int GLB_NEST_LEVEL		: 9;
++	volatile unsigned int __reserved_1		: 22;
++	volatile unsigned int AUTO_OVERRIDE		: 1;
++};
++#define PRU_INTC_GNLR (*(struct __PRU_INTC_GNLR_S *)((__INTC_BASE + PRU_INTC_GNLR_OFFS)))
++
++
++struct __PRU_INTC_SISR_S {
++	volatile unsigned int STATUS_SET_INDEX		: 10;
++	volatile unsigned int __reserved_1		: 22;
++};
++#define PRU_INTC_SISR (*(struct __PRU_INTC_SISR_S *)((__INTC_BASE + PRU_INTC_SISR_OFFS)))
++
++
++struct __PRU_INTC_SICR_S {
++	volatile unsigned int STATUS_CLR_INDEX		: 10;
++	volatile unsigned int __reserved_1		: 22;
++};
++#define PRU_INTC_SICR (*(struct __PRU_INTC_SICR_S *)((__INTC_BASE + PRU_INTC_SICR_OFFS)))
++
++
++struct __PRU_INTC_EISR_S {
++	volatile unsigned int STATUS_SET_INDEX		: 10;
++	volatile unsigned int __reserved_1		: 22;
++};
++#define PRU_INTC_EISR (*(struct __PRU_INTC_EISR_S *)((__INTC_BASE + PRU_INTC_EISR_OFFS)))
++
++
++struct __PRU_INTC_EICR_S {
++	volatile unsigned int STATUS_CLR_INDEX		: 10;
++	volatile unsigned int __reserved_1		: 22;
++};
++#define PRU_INTC_EICR (*(struct __PRU_INTC_EICR_S *)((__INTC_BASE + PRU_INTC_EICR_OFFS)))
++
++
++struct __PRU_INTC_HIEISR_S {
++	volatile unsigned int HINT_ENABLE_SET_INDEX	: 10;
++	volatile unsigned int __reserved_1		: 22;
++};
++#define PRU_INTC_HIEISR (*(struct __PRU_INTC_HIEISR_S *)((__INTC_BASE + PRU_INTC_HIEISR_OFFS)))
++
++
++struct __PRU_INTC_HIDISR_S {
++	volatile unsigned int HINT_ENABLE_CLR_INDEX	: 10;
++	volatile unsigned int __reserved_1		: 22;
++};
++#define PRU_INTC_HIDISR (*(struct __PRU_INTC_HIDISR_S *)((__INTC_BASE + PRU_INTC_HIDISR_OFFS)))
++
++
++struct __PRU_INTC_GPIR_S {
++	volatile unsigned int GLB_PRI_INTR		: 10;
++	volatile unsigned int __reserved_1		: 21;
++	volatile unsigned int GLB_NONE			: 1;
++};
++#define PRU_INTC_GPIR (*(struct __PRU_INTC_GPIR_S *)((__INTC_BASE + PRU_INTC_GPIR_OFFS)))
++
++
++#define PRU_INTC_SRSR ((volatile unsigned int *)((__INTC_BASE + PRU_INTC_SRSR0_OFFS)))
++#define PRU_INTC_SRSR0 (PRU_INTC_SRSR[0])
++#define PRU_INTC_SRSR1 (PRU_INTC_SRSR[1])
++#define PRU_INTC_SECR ((volatile unsigned int *)((__INTC_BASE + PRU_INTC_SECR0_OFFS)))
++#define PRU_INTC_SECR0 (PRU_INTC_SECR[0])
++#define PRU_INTC_SECR1 (PRU_INTC_SECR[1])
++#define PRU_INTC_ESR ((volatile unsigned int *)((__INTC_BASE + PRU_INTC_ESR0_OFFS)))
++#define PRU_INTC_ESR0 (PRU_INTC_ESR[0])
++#define PRU_INTC_ESR1 (PRU_INTC_ESR[1])
++#define PRU_INTC_ECR ((volatile unsigned int *)((__INTC_BASE + PRU_INTC_ECR0_OFFS)))
++#define PRU_INTC_ECR0 (PRU_INTC_ECR[0])
++#define PRU_INTC_ECR1 (PRU_INTC_ECR[1])
++
++
++struct __PRU_INTC_CMR_S {
++	volatile unsigned int CH_MAP			: 4;
++	volatile unsigned int __reserved_1		: 4;
++} __attribute__((packed));
++#define PRU_INTC_CMR ((struct __PRU_INTC_CMR_S *)(__INTC_BASE + PRU_INTC_CMR0_OFFS))
++
++
++struct __PRU_INTC_HMR_S {
++	volatile unsigned int HINT_MAP			: 4;
++	volatile unsigned int __reserved_1		: 4;
++} __attribute__((packed));
++#define PRU_INTC_HMR ((struct __PRU_INTC_HMR_S *)(__INTC_BASE + PRU_INTC_HMR0_OFFS))
++
++
++struct __PRU_INTC_HIPIR_S {
++	volatile unsigned int PRI_HINT			: 10;
++	volatile unsigned int __reserved_1		: 21;
++	volatile unsigned int NONE_HINT			: 1;
++};
++#define PRU_INTC_HIPIR ((struct __PRU_INTC_HIPIR_S *)(__INTC_BASE + PRU_INTC_HIPIR0_OFFS))
++#define PRU_INTC_HIPIR0 (PRU_INTC_HIPIR[0])
++#define PRU_INTC_HIPIR1 (PRU_INTC_HIPIR[1])
++#define PRU_INTC_HIPIR2 (PRU_INTC_HIPIR[2])
++#define PRU_INTC_HIPIR3 (PRU_INTC_HIPIR[3])
++#define PRU_INTC_HIPIR4 (PRU_INTC_HIPIR[4])
++#define PRU_INTC_HIPIR5 (PRU_INTC_HIPIR[5])
++#define PRU_INTC_HIPIR6 (PRU_INTC_HIPIR[6])
++#define PRU_INTC_HIPIR7 (PRU_INTC_HIPIR[7])
++#define PRU_INTC_HIPIR8 (PRU_INTC_HIPIR[8])
++#define PRU_INTC_HIPIR9 (PRU_INTC_HIPIR[9])
++
++
++#define PRU_INTC_SIPR (*(volatile unsigned int *)((__INTC_BASE + PRU_INTC_SIPR0_OFFS)))
++#define PRU_INTC_SIPR0 (PRU_INTC_SIPR[0])
++#define PRU_INTC_SIPR1 (PRU_INTC_SIPR[1])
++
++
++#define PRU_INTC_SITR (*(volatile unsigned int *)((__INTC_BASE + PRU_INTC_SITR0_OFFS)))
++#define PRU_INTC_SITR0 (PRU_INTC_SITR[0])
++#define PRU_INTC_SITR1 (PRU_INTC_SITR[1])
++
++
++struct __PRU_INTC_HINLR_S {
++	volatile unsigned int AUTO_OVERRIDE		: 10;
++	volatile unsigned int __reserved_1		: 21;
++	volatile unsigned int NEST_HINT			: 1;
++};
++#define PRU_INTC_HINLR ((struct __PRU_INTC_HINLR_S *)(__INTC_BASE + PRU_INTC_HINLR0_OFFS))
++#define PRU_INTC_HINLR0 (PRU_INTC_HINLR[0])
++#define PRU_INTC_HINLR1 (PRU_INTC_HINLR[1])
++#define PRU_INTC_HINLR2 (PRU_INTC_HINLR[2])
++#define PRU_INTC_HINLR3 (PRU_INTC_HINLR[3])
++#define PRU_INTC_HINLR4 (PRU_INTC_HINLR[4])
++#define PRU_INTC_HINLR5 (PRU_INTC_HINLR[5])
++#define PRU_INTC_HINLR6 (PRU_INTC_HINLR[6])
++#define PRU_INTC_HINLR7 (PRU_INTC_HINLR[7])
++#define PRU_INTC_HINLR8 (PRU_INTC_HINLR[8])
++#define PRU_INTC_HINLR9 (PRU_INTC_HINLR[9])
++
++
++struct __PRU_INTC_HIER_S {
++	volatile unsigned int ENABLE_HINT		: 10;
++	volatile unsigned int __reserved_1		: 22;
++};
++#define PRU_INTC_HIER (*(struct __PRU_INTC_HIER_S *)(__INTC_BASE + PRU_INTC_HIER_OFFS))
++
++/* ====================== PRU UART module ====================== */
++/* TODO */
++
++/* ====================== PRU eCAP module ====================== */
++/* TODO */
++
++/* ====================== PRU CFG module ====================== */
++#define PRU_CFG_REVID_OFFS		0x00
++#define PRU_CFG_SYSCFG_OFFS		0x04
++#define PRU_CFG_CPCFG0_OFFS		0x08
++#define PRU_CFG_GPCFG1_OFFS		0x0c
++#define PRU_CFG_CGR_OFFS		0x10
++#define PRU_CFG_ISRP_OFFS		0x14
++#define PRU_CFG_ISP_OFFS		0x18
++#define PRU_CFG_IESP_OFFS		0x1c
++#define PRU_CFG_IECP_OFFS		0x20
++#define PRU_CFG_SCRP_OFFS		0x24
++#define PRU_CFG_PMAO_OFFS		0x28
++#define PRU_CFG_MII_RT_OFFS		0x2c
++#define PRU_CFG_IEPCLK_OFFS		0x30
++#define PRU_CFG_SPP_OFFS		0x34
++#define PRU_CFG_PIN_MIX_OFFS		0x40
++
++#define PRU_CFG_REVID (*(const volatile unsigned int *)((__CFG_BASE + PRU_CFG_REVID_OFFS)))
++
++struct __PRU_CFG_SYSCFG_S {
++	volatile unsigned int IDLE_MODE			: 2;
++	volatile unsigned int STANDBY_MODE		: 2;
++	volatile unsigned int STANDBY_INIT		: 1;
++	const volatile unsigned int SUB_MWAIT		: 1;
++	volatile unsigned int __reserved_1		: 24;
++};
++#define PRU_CFG_SYSCFG (*(struct __PRU_CFG_SYSCFG_S *)(__CFG_BASE + PRU_CFG_SYSCFG_OFFS))
++
++
++struct __PRU_CFG_GPCFG_S {
++	volatile unsigned int GPI_MODE			: 2;
++	volatile unsigned int GPI_CLK_MODE		: 1;
++	volatile unsigned int GPI_DIV0			: 5;
++	volatile unsigned int GPI_DIV1			: 5;
++	volatile unsigned int GPI_SB			: 1;
++	volatile unsigned int GPO_MODE			: 1;
++	volatile unsigned int GPO_DIV0			: 5;
++	volatile unsigned int GPO_DIV1			: 5;
++	volatile unsigned int GPO_SH_SEL		: 1;
++	volatile unsigned int __reserved_1		: 6;
++};
++#define PRU_CFG_GPCFG0 (*(struct __PRU_CFG_GPCFG_S *)(__CFG_BASE + PRU_CFG_GPCFG0))
++#define PRU_CFG_GPCFG1 (*(struct __PRU_CFG_GPCFG_S *)(__CFG_BASE + PRU_CFG_GPCFG1))
++
++
++struct __PRU_CFG_CGR_S {
++	volatile unsigned int PRU0_CLK_STOP_REQ		: 1;
++	const volatile unsigned int PRU0_CLK_STOP_ACK	: 1;
++	volatile unsigned int PRU0_CLK_EN		: 1;
++	volatile unsigned int PRU1_CLK_STOP_REQ		: 1;
++	const volatile unsigned int PRU1_CLK_STOP_ACK	: 1;
++	volatile unsigned int PRU1_CLK_EN		: 1;
++	volatile unsigned int INTC_CLK_STOP_REQ		: 1;
++	const volatile unsigned int INTC_CLK_STOP_ACK	: 1;
++	volatile unsigned int INTC_CLK_EN		: 1;
++	volatile unsigned int UART_CLK_STOP_REQ		: 1;
++	const volatile unsigned int UART_CLK_STOP_ACK	: 1;
++	volatile unsigned int UART_CLK_EN		: 1;
++	volatile unsigned int ECAP_CLK_STOP_REQ		: 1;
++	const volatile unsigned int ECAP_CLK_STOP_ACK	: 1;
++	volatile unsigned int ECAP_CLK_EN		: 1;
++	volatile unsigned int IEP_CLK_STOP_REQ		: 1;
++	const volatile unsigned int IEP_CLK_STOP_ACK	: 1;
++	volatile unsigned int IEP_CLK_EN		: 1;
++	volatile unsigned int __reserved_1		: 14;
++};
++#define PRU_CFG_CGR (*(struct __PRU_CFG_CGR_S *)(__CFG_BASE + PRU_CFG_CGR))
++
++
++struct __PRU_CFG_ISP_S {
++	volatile unsigned int PRU0_IMEM_PE		: 4;
++	volatile unsigned int PRU0_DMEM_PE		: 4;
++	volatile unsigned int PRU1_IMEM_PE		: 4;
++	volatile unsigned int PRU1_DMEM_PE		: 4;
++	volatile unsigned int RAM_PE			: 4;
++	volatile unsigned int __reserved_1		: 12;
++};
++#define PRU_CFG_ISRP (*(struct __PRU_CFG_ISP_S *)(__CFG_BASE + PRU_CFG_ISRP))
++#define PRU_CFG_ISP (*(struct __PRU_CFG_ISP_S *)(__CFG_BASE + PRU_CFG_ISP))
++#define PRU_CFG_IESP (*(struct __PRU_CFG_ISP_S *)(__CFG_BASE + PRU_CFG_IESP))
++#define PRU_CFG_IECP (*(struct __PRU_CFG_ISP_S *)(__CFG_BASE + PRU_CFG_IECP))
++
++
++struct __PRU_CFG_SCRP_S {
++	volatile unsigned int SCRP_1			: 2;
++	volatile unsigned int SCRP_2			: 2;
++	volatile unsigned int SCRP_3			: 2;
++	volatile unsigned int SCRP_4			: 2;
++	volatile unsigned int SCRP_5			: 1;
++	volatile unsigned int SCRP_6			: 1;
++	volatile unsigned int SCRP_7			: 1;
++	volatile unsigned int SCRP_8			: 1;
++	volatile unsigned int SCRP_9			: 1;
++	volatile unsigned int SCRP_10			: 1;
++	volatile unsigned int SCRP_11			: 1;
++	volatile unsigned int SCRP_12			: 1;
++	volatile unsigned int SCRP_13			: 1;
++	volatile unsigned int SCRP_14			: 1;
++	volatile unsigned int SCRP_15			: 1;
++	volatile unsigned int SCRP_16			: 1;
++	volatile unsigned int SCRP_17			: 1;
++	volatile unsigned int SCRP_18			: 1;
++	volatile unsigned int __reserved_1		: 10;
++};
++#define PRU_CFG_SCRP (*(struct __PRU_CFG_SCRP_S *)(__CFG_BASE + PRU_CFG_SCRP))
++
++
++struct __PRU_CFG_PMAO_S {
++	volatile unsigned int PMAO_PRU0			: 1;
++	volatile unsigned int PMAO_PRU1			: 1;
++	volatile unsigned int __reserved_1		: 30;
++};
++#define PRU_CFG_PMAO (*(struct __PRU_CFG_PMAO_S *)(__CFG_BASE + PRU_CFG_PMAO))
++
++
++struct __PRU_CFG_MII_RT_S {
++	volatile unsigned int MII_RT_EVENT_EN		: 1;
++	volatile unsigned int __reserved_1		: 31;
++};
++#define PRU_CFG_MII_RT (*(struct __PRU_CFG_MII_RT_S *)(__CFG_BASE + PRU_CFG_MII_RT))
++
++
++struct __PRU_CFG_IEPCLK_S {
++	volatile unsigned int OCP_EN			: 1;
++	volatile unsigned int __reserved_1		: 31;
++};
++#define PRU_CFG_IEPCLK (*(struct __PRU_CFG_IEPCLK_S *)(__CFG_BASE + PRU_CFG_IEPCLK))
++
++
++struct __PRU_CFG_SPP_S {
++	volatile unsigned int PRU1_PAD_HP_EN		: 1;
++	volatile unsigned int XFR_SHIFT_EN		: 1;
++	volatile unsigned int __reserved_1		: 30;
++};
++#define PRU_CFG_SPP (*(struct __PRU_CFG_SPP_S *)(__CFG_BASE + PRU_CFG_SPP))
++
++
++struct __PRU_CFG_PIN_MX_S {
++	volatile unsigned int PIN_MUX_SEL		: 8;
++	volatile unsigned int __reserved_1		: 24;
++};
++#define PRU_CFG_PIN_MX (*(struct __PRU_CFG_PIN_MX_S *)(__CFG_BASE + PRU_CFG_PIN_MX))
++
++
++#endif
+diff --git a/libgloss/pru/include/pru/io.h b/libgloss/pru/include/pru/io.h
+new file mode 100644
+index 0000000..71f59ed
+--- /dev/null
++++ b/libgloss/pru/include/pru/io.h
+@@ -0,0 +1,119 @@
++/* pru/io.h -- PRU I/O registers definitions
++
++   Copyright (c) 2015 Dimitar Dimitrov <dinuxbg@gmail.com>
++   All rights reserved.
++
++   Redistribution and use in source and binary forms, with or without
++   modification, are permitted provided that the following condition
++   is met:
++
++   1. Redistributions of source code must retain the above copyright
++      notice, this list of conditions and the following disclaimer.
++
++   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++   FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++   COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
++   INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
++   (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
++   SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
++   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
++   OF THE POSSIBILITY OF SUCH DAMAGE.
++   */
++
++#ifndef __PRU_IO_H__
++#define __PRU_IO_H__
++
++
++static inline void write_r30(unsigned int val)
++{
++	register unsigned int r30 asm ("r30");
++	r30 = val;
++	asm volatile (";":"+r"(r30) :);
++}
++
++static inline unsigned int read_r30(void)
++{
++	register unsigned int r30 asm ("r30");
++	asm volatile (";":"+r"(r30));
++	return r30;
++}
++
++static inline void write_r31(unsigned int val)
++{
++	register unsigned int r31 asm ("r31");
++	r31 = val;
++	asm volatile (";":"+r"(r31) :); 
++}
++
++static inline unsigned int read_r31(void)
++{
++	register unsigned int r31 asm ("r31");
++	asm volatile (";":"+r"(r31)); 
++	return r31;
++}
++
++#ifdef __cplusplus
++
++/*
++ * Elegant accessors for C++ users. Use __R30 and __R31 as normal
++ * LHS and RHS variables to respectively read and write to R30/R31.
++ */
++class __R30_type {
++public:
++	void operator= (unsigned int rhs) const {
++		write_r30(rhs);
++	}
++	operator unsigned int() const {
++		return read_r30();
++	}
++};
++
++class __R31_type {
++public:
++	void operator= (unsigned int rhs) const {
++		write_r31(rhs);
++	}
++	operator unsigned int() const {
++		return read_r31();
++	}
++};
++
++__R30_type __R30 __attribute__((weak));
++__R31_type __R31 __attribute__((weak));
++
++#endif	/* __cplusplus */
++
++#define PRU_R31_INTR_IN1_BIT		31
++#define PRU_R31_INTR_IN1_MASK		(1u << 31)
++#define PRU_R31_INTR_IN0_BIT		30
++#define PRU_R31_INTR_IN0_MASK		(1u << 30)
++
++#define PRU_R31_STATUS_BIT		0
++#define PRU_R31_STATUS_MASK		(0x3fffffffu << 0)
++
++#define PRU_R31_VEC_VALID_BIT		5
++#define PRU_R31_VEC_VALID_MASK		(1u << 5)
++#define PRU_R31_VEC_BIT			0
++#define PRU_R31_VEC_MASK		(0xfu << 0)
++
++#define PRU_R25_ACC_CARRY_BIT		1
++#define PRU_R25_ACC_CARRY_MASK		(1u << 1)
++#define PRU_R25_MAC_EN_BIT		0
++#define PRU_R25_MAC_EN_MASK		(1u << 0)
++
++/* XFR Device ID numbers */
++#define XFR_ID_MAC			0
++#define XFR_ID_BANK0			10
++#define XFR_ID_BANK1			11
++#define XFR_ID_BANK2			12
++#define XFR_ID_PEER_CORE		14
++
++#if defined(__PRU_AM335X_PRU0__) || defined(__PRU_AM335X_PRU1__)
++#  include <pru/am335x.h>
++#endif
++
++#endif
 diff --git a/libgloss/pru/isatty.c b/libgloss/pru/isatty.c
 new file mode 100644
 index 0000000..e3c3205
@@ -7066,7 +7716,7 @@ index 0000000..5bc5596
 +  return (nbytes);
 +}
 diff --git a/newlib/configure.host b/newlib/configure.host
-index c4773d9..10a9f79 100644
+index dac461b..b5caf0b 100644
 --- a/newlib/configure.host
 +++ b/newlib/configure.host
 @@ -80,7 +80,7 @@ case "${target_optspace}:${host}" in
@@ -7093,7 +7743,7 @@ index c4773d9..10a9f79 100644
    rl78)
  	machine_dir=rl78
  	newlib_cflags="${newlib_cflags} -DPREFER_SIZE_OVER_SPEED -DSMALL_MEMORY"
-@@ -769,6 +777,9 @@ case "${host}" in
+@@ -780,6 +788,9 @@ case "${host}" in
  	newlib_cflags="${newlib_cflags} -DHAVE_OPENDIR -DHAVE_RENAME -DHAVE_FCNTL -D_NO_POSIX_SPAWN"
  	syscall_dir=syscalls
  	;;
@@ -7104,7 +7754,7 @@ index c4773d9..10a9f79 100644
  	default_newlib_io_long_long="yes"
  	syscall_dir=syscalls
 diff --git a/newlib/libc/include/machine/ieeefp.h b/newlib/libc/include/machine/ieeefp.h
-index 8304a1b..64451a9 100644
+index 04eea11..20b6093 100644
 --- a/newlib/libc/include/machine/ieeefp.h
 +++ b/newlib/libc/include/machine/ieeefp.h
 @@ -376,6 +376,10 @@
@@ -7119,7 +7769,7 @@ index 8304a1b..64451a9 100644
  #define __IEEE_LITTLE_ENDIAN
  #define __SMALL_BITFIELDS	/* 16 Bit INT */
 diff --git a/newlib/libc/include/machine/setjmp.h b/newlib/libc/include/machine/setjmp.h
-index f7e5865..fb1bb3d 100644
+index ec6644a..2936e2a 100644
 --- a/newlib/libc/include/machine/setjmp.h
 +++ b/newlib/libc/include/machine/setjmp.h
 @@ -334,6 +334,11 @@ _BEGIN_STD_C
@@ -7135,7 +7785,7 @@ index f7e5865..fb1bb3d 100644
  #define _JBLEN 0x44
  #endif
 diff --git a/newlib/libc/machine/configure b/newlib/libc/machine/configure
-index 11970f0..e1fb9fe 100755
+index 91126ae..620f063 100755
 --- a/newlib/libc/machine/configure
 +++ b/newlib/libc/machine/configure
 @@ -821,6 +821,7 @@ necv70
@@ -7146,7 +7796,7 @@ index 11970f0..e1fb9fe 100755
  rl78
  rx
  sh
-@@ -11902,6 +11903,8 @@ subdirs="$subdirs a29k"
+@@ -11903,6 +11904,8 @@ subdirs="$subdirs a29k"
   ;;
  	powerpc) subdirs="$subdirs powerpc"
   ;;
@@ -7156,7 +7806,7 @@ index 11970f0..e1fb9fe 100755
   ;;
  	rx) subdirs="$subdirs rx"
 diff --git a/newlib/libc/machine/configure.in b/newlib/libc/machine/configure.in
-index 7cc248b..43704bf 100644
+index 99b739b..0b1962a 100644
 --- a/newlib/libc/machine/configure.in
 +++ b/newlib/libc/machine/configure.in
 @@ -60,6 +60,7 @@ if test -n "${machine_dir}"; then

@@ -4,9 +4,9 @@
 
 # On which upstream commits to apply patches. I frequently rebase so
 # expect these to be somewhat random.
-GCC_BASECOMMIT=4c7093c28bed4aeab4a6f0457f8631830465fdec
-BINUTILS_BASECOMMIT=6bf6fd090ac8b4551a4f7906310fb77d0405545a
-NEWLIB_BASECOMMIT=0daa4d6f9b06af8530e50d0dce793ef9a5292aec
+GCC_BASECOMMIT=34bfe2dc730848460f89aabfcc056cfb0ed54df7
+BINUTILS_BASECOMMIT=bb97bdd70c9a4614416767e5fc7ea8d75b24b0b8
+NEWLIB_BASECOMMIT=f20f3384cbb66bd12ea257ba5ae92fc612fa5b0e
 
 GCC_GIT=https://github.com/mirrors/gcc.git
 BINUTILS_GIT=https://github.com/bminor/binutils-gdb.git
@@ -36,7 +36,7 @@ prepare_source()
   local URL=$2
   local COMMIT=$3
   local REF="$4"
-  git clone $URL $SRC/$PRJ $REF|| die Could not clone $URL
+  git clone --single-branch $URL $SRC/$PRJ $REF|| die Could not clone $URL
   cd $SRC/$PRJ
   git checkout -b tmp-pru $COMMIT || die Could not checkout $PRJ commit $COMMIT
   ls $PATCHDIR/$PRJ | sort | while read PATCH
