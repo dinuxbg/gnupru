@@ -1,4 +1,4 @@
-From 943021da7f928129a4d888be0444036caf6c2fe7 Mon Sep 17 00:00:00 2001
+From e95abe4a9038115b89d4b285546eaed6d437f1d2 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Thu, 1 May 2014 16:43:07 +0300
 Subject: [PATCH] Initial PRU port
@@ -4848,7 +4848,7 @@ index 0000000..7bc01dc
 +}
 diff --git a/libgloss/pru/include/pru/am335x.h b/libgloss/pru/include/pru/am335x.h
 new file mode 100644
-index 0000000..537d70b
+index 0000000..90a7f82
 --- /dev/null
 +++ b/libgloss/pru/include/pru/am335x.h
 @@ -0,0 +1,510 @@
@@ -5220,7 +5220,7 @@ index 0000000..537d70b
 +/* ====================== PRU CFG module ====================== */
 +#define PRU_CFG_REVID_OFFS		0x00
 +#define PRU_CFG_SYSCFG_OFFS		0x04
-+#define PRU_CFG_CPCFG0_OFFS		0x08
++#define PRU_CFG_GPCFG0_OFFS		0x08
 +#define PRU_CFG_GPCFG1_OFFS		0x0c
 +#define PRU_CFG_CGR_OFFS		0x10
 +#define PRU_CFG_ISRP_OFFS		0x14
@@ -5258,8 +5258,8 @@ index 0000000..537d70b
 +	volatile unsigned int GPO_SH_SEL		: 1;
 +	volatile unsigned int __reserved_1		: 6;
 +};
-+#define PRU_CFG_GPCFG0 (*(struct __PRU_CFG_GPCFG_S *)(__CFG_BASE + PRU_CFG_GPCFG0))
-+#define PRU_CFG_GPCFG1 (*(struct __PRU_CFG_GPCFG_S *)(__CFG_BASE + PRU_CFG_GPCFG1))
++#define PRU_CFG_GPCFG0 (*(struct __PRU_CFG_GPCFG_S *)(__CFG_BASE + PRU_CFG_GPCFG0_OFFS))
++#define PRU_CFG_GPCFG1 (*(struct __PRU_CFG_GPCFG_S *)(__CFG_BASE + PRU_CFG_GPCFG1_OFFS))
 +
 +
 +struct __PRU_CFG_CGR_S {
