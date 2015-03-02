@@ -26,7 +26,7 @@
   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE. */
 
-#include "pru.h"
+#include <pru/io.h>
 
 /* A very rought estimate. TODO - do it properly! */
 static void delay_cycles(unsigned int n)
@@ -50,7 +50,7 @@ int main(void)
 	unsigned int c;
 
 	for (c = 0; ; c++) {
-		set_r30(c & 1 ? 0xffff : 0x0000);
+		write_r30(c & 1 ? 0xffff : 0x0000);
 		delay_us (period_us);
 	}
 

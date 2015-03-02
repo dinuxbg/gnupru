@@ -34,9 +34,9 @@ CROSS_COMPILE ?= pru-
 CFLAGS += -g -Os
 CFLAGS += -Wall -Wextra
 
-# Set device-specific linker script, if needed. Default is am335x.pru0
-# CFLAGS += -Xlinker -Tpruelf-am335x.pru0.x
-# CFLAGS += -Xlinker -Tpruelf-am437x.icss0.pru1.x
+# Select PRU - used for picking the correct linker script and proper
+# definitions for <pru/io.h>
+CFLAGS += -mmcu=am335x.pru0
 
 # Define this to squeeze code size by removing atexit, exit, constructors
 # and destructors from CRT.
