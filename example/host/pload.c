@@ -17,17 +17,17 @@
 /*
  * PRU elf executable file for a core.
  *
- * NOTE: We rely on LD to put all Program Memory into the text ELF section,
- * and all Data Memory variables into the data ELF section. Bss and ro.data
- * should be merged into data!
+ * NOTE: We rely on LD to put all Program Memory into the PF_X ELF segment,
+ * and all data, bss and ro.data memory variables into the PF_R|PF_W ELF
+ * segment.
  */
 struct pruelf {
 	int fd;
 	Elf *e;
-	Elf_Scn *text;
-	Elf32_Shdr *text_shdr;
-	Elf_Scn *data;
-	Elf32_Shdr *data_shdr;
+	Elf32_Phdr *imem_phdr;
+	Elf_Data *imem_data;
+	Elf32_Phdr *dmem_phdr;
+	Elf_Data *dmem_data;
 };
 
 struct prufw {
@@ -38,10 +38,8 @@ struct prufw {
 
 static int pru_open_elf(struct pruelf *elf, const char *filename)
 {
-	const unsigned int text_flags = SHF_ALLOC | SHF_EXECINSTR;
-	const unsigned int data_flags = SHF_ALLOC | SHF_WRITE;
-	size_t shstrndx;
-	Elf_Scn *scn;
+	size_t phdrnum;
+	Elf32_Phdr *phdr;
 
 	if (elf_version(EV_CURRENT) == EV_NONE)
 		errx(EXIT_FAILURE, "ELF library initialization failed: %s",
@@ -56,55 +54,37 @@ static int pru_open_elf(struct pruelf *elf, const char *filename)
 	if (elf_kind(elf->e) != ELF_K_ELF)
 		errx(EXIT_FAILURE, "%s is not an ELF object.", filename);
 
-	if (elf_getshdrstrndx(elf->e, &shstrndx) != 0)
-		errx(EXIT_FAILURE, "elf_getshdrstrndx() failed: %s.",
-			elf_errmsg(-1));
+	if (elf_getphdrnum(elf->e, &phdrnum))
+		errx(EXIT_FAILURE, "%s: elf_getphdrnum() failed: %s",
+				filename, elf_errmsg(-1));
 
-	for (scn = NULL; (scn = elf_nextscn(elf->e, scn)) != NULL; ) {
-		Elf32_Shdr *shdr;
-		char *name;
+	if ((phdr = elf32_getphdr(elf->e)) == 0)
+		errx(EXIT_FAILURE, "%s: elf_getphdr() failed: %s",
+				filename, elf_errmsg(-1));
 
-		if ((shdr = elf32_getshdr(scn)) == NULL)
-			errx(EXIT_FAILURE, "getshdr() failed: %s.",
-					elf_errmsg(-1));
-		if ((name = elf_strptr(elf->e, shstrndx, shdr->sh_name)) == NULL)
-			errx(EXIT_FAILURE, "elf_strptr() failed: %s.",
-					elf_errmsg(-1));
-
-		if (!strcmp(name, ".text") && shdr->sh_flags == text_flags) {
-			elf->text = scn;
-			elf->text_shdr = shdr;
+	while (phdrnum-- > 0) {
+		if (phdr->p_flags & PF_X) {
+			elf->imem_phdr = phdr;
+			elf->imem_data = elf_getdata_rawchunk(elf->e,
+					phdr->p_offset, phdr->p_filesz,
+					SHF_ALLOC | SHF_EXECINSTR);
+		} else if ((phdr->p_flags & (PF_W | PF_R)) == (PF_W | PF_R)) {
+			elf->dmem_phdr = phdr;
+			elf->dmem_data = elf_getdata_rawchunk(elf->e,
+					phdr->p_offset, phdr->p_filesz,
+					SHF_ALLOC | SHF_WRITE);
 		}
-		if (!strcmp(name, ".data") && shdr->sh_flags == data_flags) {
-			elf->data = scn;
-			elf->data_shdr = shdr;
-		}
-		printf ("Parsing section %s\n", name);
+		phdr++;
 	}
 
-	if (!elf->data)
-		warnx("%s: could not find a .data section\n", filename);
-	if (!elf->text)
-		warnx("%s: could not find a .text section\n", filename);
+	if (!elf->dmem_phdr || !elf->dmem_data)
+		warnx("%s: could not find a .data segment\n", filename);
+	if (!elf->imem_phdr || !elf->imem_data)
+		warnx("%s: could not find a .text segment\n", filename);
 
-	return elf->data && elf->text ? 0 : -1;
+	return elf->dmem_data && elf->imem_data ? 0 : -1;
 }
 
-static int pru_load_elf_section(unsigned int memid,
-		size_t memsize, Elf_Scn *scn)
-{
-	Elf_Data *data;
-	size_t n;
-
-	data = NULL;
-	n = 0;
-	while (n < memsize && (data = elf_getdata(scn, data)) != NULL) {
-		prussdrv_pru_write_memory(memid, n, data->d_buf, data->d_size);
-		n += data->d_size;
-	}
-
-	return 0;
-}
 
 static int pru_load_elf(int coreid, struct prufw *fw, const char *filename)
 {
@@ -130,17 +110,38 @@ static int pru_load_elf(int coreid, struct prufw *fw, const char *filename)
 	if (ret)
 		return ret;
 
-	if (fw->elf.text_shdr->sh_size > AM33XX_PRUSS_IRAM_SIZE)
+	if (fw->elf.imem_phdr->p_memsz > AM33XX_PRUSS_IRAM_SIZE)
 		errx(EXIT_FAILURE, "TEXT file section cannot fit in IRAM.\n");
-	if (fw->elf.data_shdr->sh_size > AM33XX_PRUSS_DRAM_SIZE)
+	if (fw->elf.dmem_phdr->p_memsz > AM33XX_PRUSS_DRAM_SIZE)
 		errx(EXIT_FAILURE, "DATA file section cannot fit in DRAM.\n");
 
 	prussdrv_pru_disable(coreid);
 	prussdrv_map_prumem (dram_id, &fw->dmem);
 
 	/* TODO: take care of non-zero DATA or TEXT load address. */
-	pru_load_elf_section(iram_id, fw->elf.text_shdr->sh_size, fw->elf.text);
-	pru_load_elf_section(dram_id, fw->elf.data_shdr->sh_size, fw->elf.data);
+	if (fw->elf.imem_phdr->p_memsz > fw->elf.imem_phdr->p_filesz) {
+		/* must zero-fill the portion of memory not present in file
+		 * (this is usually BSS segment)
+		 */
+		void *p = calloc(1, fw->elf.imem_phdr->p_memsz);
+		prussdrv_pru_write_memory(iram_id, 0, p,
+				fw->elf.imem_phdr->p_memsz);
+		free(p);
+	}
+	prussdrv_pru_write_memory(iram_id, 0, fw->elf.imem_data->d_buf,
+				fw->elf.imem_data->d_size);
+
+	if (fw->elf.dmem_phdr->p_memsz > fw->elf.dmem_phdr->p_filesz) {
+		/* must zero-fill the portion of memory not present in file
+		 * (this is usually BSS segment)
+		 */
+		void *p = calloc(1, fw->elf.dmem_phdr->p_memsz);
+		prussdrv_pru_write_memory(dram_id, 0, p,
+				fw->elf.dmem_phdr->p_memsz);
+		free(p);
+	}
+	prussdrv_pru_write_memory(dram_id, 0, fw->elf.dmem_data->d_buf,
+				fw->elf.dmem_data->d_size);
 
 	return ret;
 }
