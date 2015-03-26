@@ -2,3 +2,6 @@ out
 cscope
 cscope.out
 .*.sw?
+
+src/
+build/
