@@ -10,7 +10,7 @@ NEWLIB_BASECOMMIT=f20f3384cbb66bd12ea257ba5ae92fc612fa5b0e
 
 GCC_GIT=https://github.com/mirrors/gcc
 BINUTILS_GIT=https://github.com/bminor/binutils-gdb
-NEWLIB_GIT=git://sourceware.org/git/newlib.git
+NEWLIB_GIT=https://github.com/bminor/newlib
 
 # If you have already checked out GCC or binutils, then references
 # could save you some bandwidth
