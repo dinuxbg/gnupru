@@ -1,65 +1,72 @@
-From c99d1458292ab40e9cb4ae185594b18dd6c15132 Mon Sep 17 00:00:00 2001
+From 0f9c0ea7303ed2c7baa9cde1641f1dc08e4a848e Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Mon, 30 Dec 2013 23:47:32 +0200
 Subject: [PATCH 1/2] Initial TI PRU GCC port
 
 Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---
- .gitignore                                       |    3 +
- config.sub                                       |    2 +
- configure                                        |    4 +
- configure.ac                                     |    4 +
- gcc/common/config/pru/pru-common.c               |   44 +
- gcc/config.gcc                                   |    8 +
- gcc/config/pru/constraints.md                    |   68 +
- gcc/config/pru/predicates.md                     |  203 +
- gcc/config/pru/pru-ldst-multiple.md              | 5998 ++++++++++++++++++++++
- gcc/config/pru/pru-ldst-multiple.ml              |  145 +
- gcc/config/pru/pru-protos.h                      |   46 +
- gcc/config/pru/pru.c                             | 1622 ++++++
- gcc/config/pru/pru.h                             |  414 ++
- gcc/config/pru/pru.md                            |  543 ++
- gcc/config/pru/pru.opt                           |   23 +
- gcc/config/pru/t-pru                             |   22 +
- gcc/doc/md.texi                                  |   19 +
- gcc/testsuite/gcc.c-torture/execute/20101011-1.c |    3 +
- gcc/testsuite/gcc.dg/20020312-2.c                |    2 +
- gcc/testsuite/gcc.dg/graphite/isl-ast-gen-if-1.c |    2 +-
- gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c       |    2 +-
- gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c       |    2 +-
- gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c       |    2 +-
- gcc/testsuite/gcc.dg/tree-ssa/reassoc-36.c       |    2 +-
- gcc/testsuite/lib/gcc-dg.exp                     |    5 +
- gcc/testsuite/lib/target-supports.exp            |    7 +-
- gcc/testsuite/lib/target-utils.exp               |    3 +
- libgcc/config.host                               |    6 +
- libgcc/config/pru/lib2bitcountHI.c               |   43 +
- libgcc/config/pru/lib2divHI.c                    |   42 +
- libgcc/config/pru/lib2divQI.c                    |   43 +
- libgcc/config/pru/lib2divSI.c                    |   42 +
- libgcc/config/pru/lib2mul.c                      |   41 +
- libgcc/config/pru/lib2shift.c                    |   48 +
- libgcc/config/pru/muldi3.S                       |   60 +
- libgcc/config/pru/pru-asm.h                      |   36 +
- libgcc/config/pru/pru-divmod.h                   |  117 +
- libgcc/config/pru/t-pru                          |   41 +
- 38 files changed, 9710 insertions(+), 7 deletions(-)
+ .gitignore                                         |    3 +
+ config.sub                                         |    2 +
+ configure                                          |    4 +
+ configure.ac                                       |    4 +
+ gcc/common/config/pru/pru-common.c                 |   44 +
+ gcc/config.gcc                                     |   10 +
+ gcc/config/pru/constraints.md                      |   68 +
+ gcc/config/pru/predicates.md                       |  211 +
+ gcc/config/pru/pru-ldst-multiple.md                | 5998 ++++++++++++++++++++
+ gcc/config/pru/pru-ldst-multiple.ml                |  145 +
+ gcc/config/pru/pru-modes.def                       |   29 +
+ gcc/config/pru/pru-pragma.c                        |   96 +
+ gcc/config/pru/pru-protos.h                        |   60 +
+ gcc/config/pru/pru.c                               | 1766 ++++++
+ gcc/config/pru/pru.h                               |  418 ++
+ gcc/config/pru/pru.md                              |  579 ++
+ gcc/config/pru/pru.opt                             |   27 +
+ gcc/config/pru/t-pru                               |   25 +
+ gcc/doc/extend.texi                                |   20 +
+ gcc/doc/md.texi                                    |   19 +
+ gcc/testsuite/gcc.c-torture/execute/20101011-1.c   |    3 +
+ gcc/testsuite/gcc.dg/20020312-2.c                  |    2 +
+ gcc/testsuite/gcc.dg/graphite/isl-ast-gen-if-1.c   |    2 +-
+ gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c         |    2 +-
+ gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c         |    2 +-
+ gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c         |    2 +-
+ gcc/testsuite/gcc.dg/tree-ssa/reassoc-36.c         |    2 +-
+ .../gcc.target/pru/pru-pragma-ctable_entry.c       |   22 +
+ gcc/testsuite/gcc.target/pru/pru.exp               |   41 +
+ gcc/testsuite/lib/gcc-dg.exp                       |    5 +
+ gcc/testsuite/lib/target-supports.exp              |    7 +-
+ gcc/testsuite/lib/target-utils.exp                 |    3 +
+ libgcc/config.host                                 |    6 +
+ libgcc/config/pru/lib2bitcountHI.c                 |   43 +
+ libgcc/config/pru/lib2divHI.c                      |   42 +
+ libgcc/config/pru/lib2divQI.c                      |   43 +
+ libgcc/config/pru/lib2divSI.c                      |   42 +
+ libgcc/config/pru/lib2shift.c                      |   48 +
+ libgcc/config/pru/muldi3.S                         |   60 +
+ libgcc/config/pru/pru-asm.h                        |   36 +
+ libgcc/config/pru/pru-divmod.h                     |  117 +
+ libgcc/config/pru/t-pru                            |   40 +
+ 42 files changed, 10091 insertions(+), 7 deletions(-)
  create mode 100644 gcc/common/config/pru/pru-common.c
  create mode 100644 gcc/config/pru/constraints.md
  create mode 100644 gcc/config/pru/predicates.md
  create mode 100644 gcc/config/pru/pru-ldst-multiple.md
  create mode 100644 gcc/config/pru/pru-ldst-multiple.ml
+ create mode 100644 gcc/config/pru/pru-modes.def
+ create mode 100644 gcc/config/pru/pru-pragma.c
  create mode 100644 gcc/config/pru/pru-protos.h
  create mode 100644 gcc/config/pru/pru.c
  create mode 100644 gcc/config/pru/pru.h
  create mode 100644 gcc/config/pru/pru.md
  create mode 100644 gcc/config/pru/pru.opt
  create mode 100644 gcc/config/pru/t-pru
+ create mode 100644 gcc/testsuite/gcc.target/pru/pru-pragma-ctable_entry.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/pru.exp
  create mode 100644 libgcc/config/pru/lib2bitcountHI.c
  create mode 100644 libgcc/config/pru/lib2divHI.c
  create mode 100644 libgcc/config/pru/lib2divQI.c
  create mode 100644 libgcc/config/pru/lib2divSI.c
- create mode 100644 libgcc/config/pru/lib2mul.c
  create mode 100644 libgcc/config/pru/lib2shift.c
  create mode 100644 libgcc/config/pru/muldi3.S
  create mode 100644 libgcc/config/pru/pru-asm.h
@@ -98,10 +105,10 @@ index 6d2e94c..d725862 100755
  	| rl78-* | romp-* | rs6000-* | rx-* \
  	| sh-* | sh[1234]-* | sh[24]a-* | sh[24]aeb-* | sh[23]e-* | sh[34]eb-* | sheb-* | shbe-* \
 diff --git a/configure b/configure
-index 5860241..269034a 100755
+index 098ed9f..bc27735 100755
 --- a/configure
 +++ b/configure
-@@ -3311,6 +3311,10 @@ case "${target}" in
+@@ -3336,6 +3336,10 @@ case "${target}" in
    powerpc-*-aix* | rs6000-*-aix*)
      noconfigdirs="$noconfigdirs target-libssp"
      ;;
@@ -113,10 +120,10 @@ index 5860241..269034a 100755
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
 diff --git a/configure.ac b/configure.ac
-index 267c8e6..a0b149f 100644
+index 7104631..1d2c71c 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -661,6 +661,10 @@ case "${target}" in
+@@ -683,6 +683,10 @@ case "${target}" in
    powerpc-*-aix* | rs6000-*-aix*)
      noconfigdirs="$noconfigdirs target-libssp"
      ;;
@@ -178,10 +185,10 @@ index 0000000..46e73bd
 +
 +struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index bf67beb..3180a55 100644
+index cb08a5c..3512a51 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -440,6 +440,9 @@ powerpc*-*-*)
+@@ -439,6 +439,9 @@ powerpc*-*-*)
  	esac
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
@@ -191,13 +198,15 @@ index bf67beb..3180a55 100644
  rs6000*-*-*)
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
-@@ -2443,6 +2446,11 @@ powerpcle-*-eabi*)
+@@ -2455,6 +2458,13 @@ powerpcle-*-eabi*)
  	extra_options="${extra_options} rs6000/sysv4.opt"
  	use_gcc_stdint=wrap
  	;;
 +pru*-*-*)
 +	tm_file="dbxelf.h elfos.h newlib-stdint.h ${tm_file}"
 +	tmake_file="${tmake_file} pru/t-pru"
++	c_target_objs="pru-pragma.o"
++	cxx_target_objs="pru-pragma.o"
 +	use_gcc_stdint=wrap
 +	;;
  rs6000-ibm-aix4.[3456789]* | powerpc-ibm-aix4.[3456789]*)
@@ -279,10 +288,10 @@ index 0000000..b90152f
 +
 diff --git a/gcc/config/pru/predicates.md b/gcc/config/pru/predicates.md
 new file mode 100644
-index 0000000..58cdafe
+index 0000000..2fe7d46
 --- /dev/null
 +++ b/gcc/config/pru/predicates.md
-@@ -0,0 +1,203 @@
+@@ -0,0 +1,211 @@
 +;; Predicate definitions for TI PRU.
 +;; Copyright (C) 2014 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -345,6 +354,14 @@ index 0000000..58cdafe
 +(define_predicate "shift_operand"
 +  (ior (match_operand 0 "const_shift_operand")
 +       (match_operand 0 "register_operand")))
++
++(define_predicate "ctable_addr_operand"
++  (and (match_code "const_int")
++       (match_test ("(pru_get_ctable_base_index (INTVAL (op)) >= 0)"))))
++
++(define_predicate "ctable_base_operand"
++  (and (match_code "const_int")
++       (match_test ("(pru_get_ctable_exact_base_index (INTVAL (op)) >= 0)"))))
 +
 +;; Ideally we should enforce a restriction to all text labels to fit in
 +;; 16bits, as required by the PRU ISA. But for the time being we'll rely on
@@ -6641,12 +6658,149 @@ index 0000000..bcf22f8
 +"   <http://www.gnu.org/licenses/>.  */";
 +""];
 +  patterns ();
+diff --git a/gcc/config/pru/pru-modes.def b/gcc/config/pru/pru-modes.def
+new file mode 100644
+index 0000000..d37259a
+--- /dev/null
++++ b/gcc/config/pru/pru-modes.def
+@@ -0,0 +1,29 @@
++/* Definitions of target machine for GCC for PRU
++   Copyright (C) 2002-2015 Free Software Foundation, Inc.
++
++This file is part of GCC.
++
++GCC is free software; you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation; either version 3, or (at your option)
++any later version.
++
++GCC is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License
++along with GCC; see the file COPYING3.  If not see
++<http://www.gnu.org/licenses/>.  */
++
++INT_MODE (OI, 32);
++INT_MODE (XI, 64);
++
++/* Keep the OI and XI modes from confusing the compiler into thinking
++   that these modes could actually be used for computation.  They are
++   only holders for vectors during data movement.  */
++#define MAX_BITSIZE_MODE_ANY_INT (128)
++
++/* The symbol Pmode stands for one of the above machine modes (usually SImode).
++   The tm.h file specifies which one.  It is not a distinct mode.  */
+diff --git a/gcc/config/pru/pru-pragma.c b/gcc/config/pru/pru-pragma.c
+new file mode 100644
+index 0000000..f3d6c49
+--- /dev/null
++++ b/gcc/config/pru/pru-pragma.c
+@@ -0,0 +1,96 @@
++/* PRU target specific pragmas
++   Copyright (C) 2015 Free Software Foundation, Inc.
++   Dimitar Dimitrov <dinuxbg@gmail.com>
++
++   This file is part of GCC.
++
++   GCC is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published
++   by the Free Software Foundation; either version 3, or (at your
++   option) any later version.
++
++   GCC is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
++   License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with GCC; see the file COPYING3.  If not see
++   <http://www.gnu.org/licenses/>.  */
++
++#include "config.h"
++#include "system.h"
++#include "coretypes.h"
++#include "tm.h"
++#include "hash-set.h"
++#include "machmode.h"
++#include "vec.h"
++#include "double-int.h"
++#include "input.h"
++#include "alias.h"
++#include "symtab.h"
++#include "wide-int.h"
++#include "inchash.h"
++#include "tree.h"
++#include "c-family/c-pragma.h"
++#include "c-family/c-common.h"
++#include "diagnostic-core.h"
++#include "cpplib.h"
++#include "pru-protos.h"
++
++
++/* Implements the "pragma CTABLE_ENTRY" pragma.  This pragma takes a
++   CTABLE index and an address, and instructs the compiler that
++   LBCO/SBCO can be used on that base address.
++
++   WARNING: Only immediate constant addresses are currently supported. */
++static void
++pru_pragma_ctable_entry (cpp_reader * reader ATTRIBUTE_UNUSED)
++{
++  /* on off */
++  tree ctable_index, base_addr;
++  enum cpp_ttype type;
++
++  type = pragma_lex (&ctable_index);
++  if (type == CPP_NUMBER)
++    {
++      type = pragma_lex (&base_addr);
++      if (type == CPP_NUMBER)
++	{
++	  unsigned int i = tree_to_uhwi (ctable_index);
++	  unsigned HOST_WIDE_INT base = tree_to_uhwi (base_addr);
++
++	  type = pragma_lex (&base_addr);
++	  if (type != CPP_EOF)
++	    {
++	      error ("junk at end of #pragma CTABLE_ENTRY");
++	    }
++	  else if (i >= ARRAY_SIZE (pru_ctable))
++	    {
++	      error ("CTABLE_ENTRY index %d is not valid", i);
++	    }
++	  else if (pru_ctable[i].valid && pru_ctable[i].base != base)
++	    {
++	      error ("redefinition of CTABLE_ENTRY %d", i);
++	    }
++	  else
++	    {
++	      if (base & 0xff)
++		warning (0, "CTABLE_ENTRY base address is not a multiple of 256");
++	      pru_ctable[i].base = base;
++	      pru_ctable[i].valid = true;
++	    }
++	  return;
++	}
++    }
++  error ("malformed #pragma CTABLE_ENTRY variable address");
++}
++
++/* Implements REGISTER_TARGET_PRAGMAS.  */
++void
++pru_register_pragmas (void)
++{
++  c_register_pragma (NULL, "ctable_entry", pru_pragma_ctable_entry);
++  c_register_pragma (NULL, "CTABLE_ENTRY", pru_pragma_ctable_entry);
++}
++
 diff --git a/gcc/config/pru/pru-protos.h b/gcc/config/pru/pru-protos.h
 new file mode 100644
-index 0000000..2db4b42
+index 0000000..4c03b4a
 --- /dev/null
 +++ b/gcc/config/pru/pru-protos.h
-@@ -0,0 +1,46 @@
+@@ -0,0 +1,60 @@
 +/* Subroutine declarations for TI PRU target support.
 +   Copyright (C) 2012-2014 Free Software Foundation, Inc.
 +   Contributed by Jonah Graham (jgraham@altera.com).
@@ -6671,16 +6825,25 @@ index 0000000..2db4b42
 +#ifndef GCC_PRU_PROTOS_H
 +#define GCC_PRU_PROTOS_H
 +
++struct pru_ctable_entry {
++    bool valid;
++    unsigned HOST_WIDE_INT base;
++};
++
++extern struct pru_ctable_entry pru_ctable[32];
++
 +extern int pru_initial_elimination_offset (int, int);
 +extern int pru_can_use_return_insn (void);
 +extern void pru_expand_prologue (void);
 +extern void pru_expand_epilogue (bool);
 +extern void pru_function_profiler (FILE *, int);
 +
++void pru_register_pragmas (void);
++
 +#ifdef RTX_CODE
 +extern rtx pru_get_return_address (int);
 +
-+extern const char * pru_output_sign_extend (rtx *, bool);
++extern const char * pru_output_sign_extend (rtx *);
 +extern const char * pru_output_signed_cbranch (rtx *, bool);
 +extern const char * pru_output_signed_cbranch_ubyteop2 (rtx *, bool);
 +
@@ -6690,15 +6853,20 @@ index 0000000..2db4b42
 +  /* selection logic is the same - PRU instructions are quite orthogonal */
 +  return pru_regno_ok_for_base_p (regno, strict_p);
 +}
++
++extern int pru_get_ctable_exact_base_index (unsigned HOST_WIDE_INT caddr);
++extern int pru_get_ctable_base_index (unsigned HOST_WIDE_INT caddr);
++extern int pru_get_ctable_base_offset (unsigned HOST_WIDE_INT caddr);
++
 +#endif /* RTX_CODE */
 +
 +#endif /* GCC_PRU_PROTOS_H */
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
 new file mode 100644
-index 0000000..51d1e67
+index 0000000..b476760
 --- /dev/null
 +++ b/gcc/config/pru/pru.c
-@@ -0,0 +1,1622 @@
+@@ -0,0 +1,1766 @@
 +/* Target machine subroutines for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -6779,6 +6947,11 @@ index 0000000..51d1e67
 +#include "reload.h"
 +#include "stor-layout.h"
 +#include "builtins.h"
++#include "pru-protos.h"
++
++/* Global PRU CTABLE entries, filled in by pragmaes, and used for fast
++   addressing via LBCO/SBCO instructions. */
++struct pru_ctable_entry pru_ctable[32];
 +
 +/* Forward function declarations.  */
 +static bool prologue_saved_reg_p (unsigned);
@@ -7262,6 +7435,11 @@ index 0000000..51d1e67
 +            *total = COSTS_N_INSNS (0);
 +            return true;
 +          }
++        else if (outer_code == MEM && ctable_addr_operand (x, VOIDmode))
++          {
++            *total = COSTS_N_INSNS (0);
++            return true;
++          }
 +        else
 +          {
 +            *total = COSTS_N_INSNS (1);
@@ -7282,6 +7460,28 @@ index 0000000..51d1e67
 +          *total = COSTS_N_INSNS (8);
 +          return false;
 +        }
++      case PLUS:
++	{
++	  rtx op0 = XEXP (x, 0);
++	  rtx op1 = XEXP (x, 1);
++	  if (outer_code == MEM
++	      && ((REG_P (op0) && reg_or_ubyte_operand (op1, VOIDmode))
++		  || (REG_P (op1) && reg_or_ubyte_operand (op0, VOIDmode))
++		  || (ctable_addr_operand (op0, VOIDmode) && op1 == NULL_RTX)
++		  || (ctable_addr_operand (op1, VOIDmode) && op0 == NULL_RTX)
++		  || (ctable_base_operand (op0, VOIDmode) && REG_P (op1))
++		  || (ctable_base_operand (op1, VOIDmode) && REG_P (op0))))
++	    {
++	      /* CTABLE or REG base addressing - PLUS comes for free */
++	      *total = COSTS_N_INSNS (0);
++	      return true;
++	    }
++	  else
++	    {
++	      *total = COSTS_N_INSNS (1);
++	      return false;
++	    }
++	}
 +      case SIGN_EXTEND:
 +        {
 +          *total = COSTS_N_INSNS (3);
@@ -7317,7 +7517,7 @@ index 0000000..51d1e67
 +}
 +
 +const char *
-+pru_output_sign_extend (rtx *operands, bool memload)
++pru_output_sign_extend (rtx *operands)
 +{
 +  static char buf[512];
 +  int bufi;
@@ -7327,29 +7527,13 @@ index 0000000..51d1e67
 +
 +  gcc_assert (dst_sz > src_sz);
 +
-+  if (memload)
-+    {
-+      bufi = snprintf (buf, sizeof(buf),
-+	  "lbbo\t%%0, %%1, %%S1\n\t"	      /* load */
-+	  "zero\t%%0.b%d, %d\n\t"	      /* make positive */
-+	  "qbbc\t.+8, %%x0, %d\n\t"	      /* check sign bit */
-+	  "fill\t%%0.b%d, %d",		      /* make negative  */
-+	  ext_start,
-+	  dst_sz - src_sz,
-+	  sign_bit_position(operands[1]),
-+	  ext_start,
-+	  dst_sz - src_sz);
-+    }
-+  else
-+    {
-+      bufi = snprintf (buf, sizeof(buf),
++  bufi = snprintf (buf, sizeof(buf),
 +	  "mov\t%%0, %%x1\n\t"		      /* copy AND make positive */
 +	  "qbbc\t.+8, %%x0, %d\n\t"	      /* check sign bit */
 +	  "fill\t%%0.b%d, %d",		      /* make negative  */
 +	  sign_bit_position(operands[1]),
 +	  ext_start,
 +	  dst_sz - src_sz);
-+    }
 +
 +  gcc_assert (bufi > 0);
 +  gcc_assert ((unsigned int)bufi < sizeof (buf));
@@ -7643,23 +7827,90 @@ index 0000000..51d1e67
 +  return valid;
 +}
 +
++/* Recognize a CTABLE base address. Return CTABLE entry index, or -1 if
++ * base was not found in the pragma-filled pru_ctable. */
++int pru_get_ctable_exact_base_index (unsigned HOST_WIDE_INT caddr)
++{
++  unsigned int i;
++
++  for (i = 0; i < ARRAY_SIZE (pru_ctable); i++)
++    {
++      if (pru_ctable[i].valid && pru_ctable[i].base == caddr)
++	return i;
++    }
++  return -1;
++}
++
++
++/* Check if the given address can be addressed via CTABLE_BASE + UBYTE_OFFS,
++   and return the base CTABLE index if possible. */
++int pru_get_ctable_base_index (unsigned HOST_WIDE_INT caddr)
++{
++  unsigned int i;
++
++  for (i = 0; i < ARRAY_SIZE (pru_ctable); i++)
++    {
++      if (pru_ctable[i].valid && IN_RANGE (caddr,
++					   pru_ctable[i].base,
++					   pru_ctable[i].base + 0xff))
++	return i;
++    }
++  return -1;
++}
++
++
++/* Return the offset from some CTABLE base for this address. */
++int pru_get_ctable_base_offset (unsigned HOST_WIDE_INT caddr)
++{
++  int i;
++
++  i = pru_get_ctable_base_index (caddr);
++  gcc_assert (i >= 0);
++
++  return caddr - pru_ctable[i].base;
++}
++
 +/* Return true if the address expression formed by BASE + OFFSET is
 +   valid.  */
 +static bool
 +pru_valid_addr_expr_p (machine_mode mode, rtx base, rtx offset, bool strict_p)
 +{
-+  if (!strict_p && GET_CODE (base) == SUBREG)
++  if (!strict_p && base != NULL_RTX && GET_CODE (base) == SUBREG)
 +    base = SUBREG_REG (base);
-+  if (!strict_p && GET_CODE (offset) == SUBREG)
++  if (!strict_p && offset != NULL_RTX && GET_CODE (offset) == SUBREG)
 +    offset = SUBREG_REG (offset);
 +
-+  return (REG_P (base)
-+	  && pru_regno_ok_for_base_p (REGNO (base), strict_p)
-+	  && (offset == NULL_RTX
-+	      || (CONST_INT_P (offset)
-+		  && pru_valid_const_ubyte_offset (mode, INTVAL (offset)))
-+	      || (REG_P (offset)
-+		  && pru_regno_ok_for_index_p (REGNO (offset), strict_p))));
++  if (REG_P (base)
++      && pru_regno_ok_for_base_p (REGNO (base), strict_p)
++      && (offset == NULL_RTX
++	  || (CONST_INT_P (offset)
++	      && pru_valid_const_ubyte_offset (mode, INTVAL (offset)))
++	  || (REG_P (offset)
++	      && pru_regno_ok_for_index_p (REGNO (offset), strict_p))))
++    {
++      /*     base register + register offset
++       * OR  base register + UBYTE constant offset */
++      return true;
++    }
++  else if (REG_P (base)
++	   && pru_regno_ok_for_index_p (REGNO (base), strict_p)
++	   && (offset != NULL_RTX && ctable_base_operand (offset, VOIDmode)))
++    {
++      /*     base CTABLE constant base + register offset
++       * Note: GCC always puts the register as a first operand of PLUS. */
++      return true;
++    }
++  else if (CONST_INT_P (base)
++	   && offset == NULL_RTX
++	   && (ctable_addr_operand (base, VOIDmode)))
++    {
++      /*     base CTABLE constant base + UBYTE constant offset */
++      return true;
++    }
++  else
++    {
++      return false;
++    }
 +}
 +
 +/* Implement TARGET_LEGITIMATE_ADDRESS_P.  */
@@ -7672,10 +7923,12 @@ index 0000000..51d1e67
 +      /* Direct.  */
 +    case SYMBOL_REF:
 +    case LABEL_REF:
-+    case CONST_INT:
 +    case CONST:
 +    case CONST_DOUBLE:
 +      return false;
++
++    case CONST_INT:
++      return ctable_addr_operand (operand, VOIDmode);
 +
 +      /* Register indirect.  */
 +    case REG:
@@ -7718,6 +7971,7 @@ index 0000000..51d1e67
 +   LETTER can be one of:
 +
 +     x: for registers with size (e.g. R0.b0, R3.w0)
++     B: prints 'c' or 'b' for CTABLE or REG base in a memory address
 +     H: for %hi
 +     L: for %lo
 +     N: prints next register (upper 32bits of a 64bit REG couple)
@@ -7835,6 +8089,40 @@ index 0000000..51d1e67
 +          output_address (op);
 +          return;
 +        }
++      else if (letter == 'B')
++	{
++	  rtx base = XEXP (op, 0);
++	  if (GET_CODE (base) == PLUS)
++	    {
++	      rtx op0 = XEXP (base, 0);
++	      rtx op1 = XEXP (base, 1);
++
++	      /* PLUS cannot have two constant operands, so one
++		 of them must be a REG, hence we must check for an
++		 exact base address. */
++	      if (ctable_base_operand (op0, VOIDmode)
++		  || ctable_base_operand (op1, VOIDmode))
++		{
++		  fprintf (file, "c");
++		  return;
++		}
++	      else if (REG_P (op0) || REG_P (op1))
++		{
++		  fprintf (file, "b");
++		  return;
++		}
++	    }
++	  else if (REG_P (base))
++	    {
++	      fprintf (file, "b");
++	      return;
++	    }
++	  else if (ctable_addr_operand (base, VOIDmode))
++	    {
++	      fprintf (file, "c");
++	      return;
++	    }
++	}
 +      break;
 +
 +    case CODE_LABEL:
@@ -7849,7 +8137,8 @@ index 0000000..51d1e67
 +      break;
 +    }
 +
-+  output_operand_lossage ("Unsupported operand for code '%c'", letter);
++  output_operand_lossage ("Unsupported operand %s for code '%c'",
++			  GET_RTX_NAME (GET_CODE (op)), letter);
 +  gcc_unreachable ();
 +}
 +
@@ -7868,18 +8157,41 @@ index 0000000..51d1e67
 +  switch (GET_CODE (op))
 +    {
 +    case CONST:
-+    case CONST_INT:
 +    case LABEL_REF:
 +    case CONST_DOUBLE:
 +    case SYMBOL_REF:
 +      break;
 +
++    case CONST_INT:
++      {
++	unsigned HOST_WIDE_INT caddr = INTVAL (op);
++	int base = pru_get_ctable_base_index (caddr);
++	int offs = pru_get_ctable_base_offset (caddr);
++	gcc_assert (base >= 0);
++        fprintf (file, "%d, %d", base, offs);
++	return;
++      }
++      break;
++
 +    case PLUS:
 +      {
++	int base;
 +        rtx op0 = XEXP (op, 0);
 +        rtx op1 = XEXP (op, 1);
 +
-+        if (REG_P (op0) && CONSTANT_P (op1))
++        if (REG_P (op0) && CONST_INT_P (op1)
++	    && (base = pru_get_ctable_exact_base_index (INTVAL (op1))) >= 0)
++	  {
++            fprintf (file, "%d, %s", base, reg_names[REGNO (op0)]);
++	    return;
++	  }
++	else if (REG_P (op1) && CONST_INT_P (op0)
++	    && (base = pru_get_ctable_exact_base_index (INTVAL (op0))) >= 0)
++	  {
++            fprintf (file, "%d, %s", base, reg_names[REGNO (op1)]);
++	    return;
++	  }
++	else if (REG_P (op0) && CONSTANT_P (op1))
 +          {
 +            fprintf (file, "%s, ", reg_names[REGNO (op0)]);
 +            output_addr_const (file, op1);
@@ -8323,10 +8635,10 @@ index 0000000..51d1e67
 +#include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
 new file mode 100644
-index 0000000..11b392e
+index 0000000..04046ec
 --- /dev/null
 +++ b/gcc/config/pru/pru.h
-@@ -0,0 +1,414 @@
+@@ -0,0 +1,418 @@
 +/* Definitions of target machine for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -8362,6 +8674,8 @@ index 0000000..11b392e
 +      builtin_define_std ("NO_TRAMPOLINES");	    \
 +    }						    \
 +  while (0)
++
++#define DRIVER_SELF_SPECS " %{mmcu=*:-specs=device-specs/%*%s %<mmcu=*} "
 +
 +#undef  STARTFILE_SPEC
 +#define STARTFILE_SPEC "%{!pg:%{minrt:crt0-minrt.o%s}%{!minrt:crt0.o%s}} -lgcc"
@@ -8740,13 +9054,15 @@ index 0000000..11b392e
 +#define HAS_LONG_UNCOND_BRANCH			1
 +#define HAS_LONG_COND_BRANCH			1
 +
++#define REGISTER_TARGET_PRAGMAS() pru_register_pragmas()
++
 +#endif /* GCC_PRU_H */
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
 new file mode 100644
-index 0000000..f60ec2c
+index 0000000..1b7d28b
 --- /dev/null
 +++ b/gcc/config/pru/pru.md
-@@ -0,0 +1,543 @@
+@@ -0,0 +1,579 @@
 +;; Machine Description for TI PRU.
 +;; Copyright (C) 2014 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -8820,20 +9136,21 @@ index 0000000..f60ec2c
 +(include "predicates.md")
 +(include "constraints.md")
 +
-+(define_mode_iterator XI [QI HI SI])
++(define_mode_iterator ALL [QI HI SI])
++(define_mode_iterator BIGI [DI TI OI XI])
 +
 +
 +;; Move instructions
 +
 +;; Assume that Program Mem (T constraint) can fit in 16 bits!
 +(define_insn "mov<mode>"
-+  [(set (match_operand:XI 0 "nonimmediate_operand" "=m,r,r,r,r,r")
-+        (match_operand:XI 1 "general_operand"       "r,m,r,T,J,i"))]
++  [(set (match_operand:ALL 0 "nonimmediate_operand" "=m,r,r,r,r,r")
++        (match_operand:ALL 1 "general_operand"       "r,m,r,T,J,i"))]
 +;  "(which_alternative == 5) ? (<MODE>mode == SImode) : true"
 +  ""
 +  "@
-+    sbbo\\t%1, %0, %S0
-+    lbbo\\t%0, %1, %S1
++    sb%B0o\\t%1, %0, %S0
++    lb%B1o\\t%0, %1, %S1
 +    mov\\t%x0, %x1
 +    ldi\\t%x0, %%pmem(%1)
 +    ldi\\t%x0, %1
@@ -8939,14 +9256,14 @@ index 0000000..f60ec2c
 +;; signed operations in PRU's ALU.
 +
 +(define_insn "extend<EQS:mode><EQD:mode>2"
-+  [(set (match_operand:EQD 0 "register_operand"                      "=r,r")
-+        (sign_extend:EQD (match_operand:EQS 1 "nonimmediate_operand"  "r,m")))]
++  [(set (match_operand:EQD 0 "register_operand"                   "=r")
++        (sign_extend:EQD (match_operand:EQS 1 "register_operand"  "r")))]
 +  ""
 +  {
-+    return pru_output_sign_extend(operands, which_alternative == 1);
++    return pru_output_sign_extend(operands);
 +  }
-+  [(set_attr "type" "complex,complex")
-+   (set_attr "length" "12,16")])
++  [(set_attr "type" "complex")
++   (set_attr "length" "12")])
 +
 +
 +;; Arithmetic Operations
@@ -9089,6 +9406,41 @@ index 0000000..f60ec2c
 +  "<shift_asm>\\t%0, %1, %2"
 +  [(set_attr "type" "shift")])
 +;; TODO - add clrbit, setbit,
++
++
++;; Multiply instruction. Idea for fixing registers comes from the AVR backend.
++
++(define_expand "mulsi3"
++  [(set (match_operand:SI 0 "register_operand" "")
++        (mult:SI (match_operand:SI 1 "register_operand" "")
++                 (match_operand:SI 2 "register_operand" "")))]
++  ""
++  {
++     emit_insn (gen_mulsi3_fixinp (operands[0], operands[1], operands[2]));
++     DONE;
++  })
++
++
++(define_expand "mulsi3_fixinp"
++  [(set (reg:SI 28) (match_operand:SI 1 "register_operand" ""))
++   (set (reg:SI 29) (match_operand:SI 2 "register_operand" ""))
++   (parallel [(set (reg:SI 26) (mult:SI (reg:SI 28) (reg:SI 29)))
++              (clobber (reg:SI 25))
++              (clobber (reg:SI 27))])
++   (set (match_operand:QI 0 "register_operand" "") (reg:SI 26))]
++  ""
++  {
++  })
++
++(define_insn "*mulsi3_prumac"
++  [(set (reg:SI 26) (mult:SI (reg:SI 28) (reg:SI 29)))
++   (clobber (reg:SI 25))
++   (clobber (reg:SI 27))]
++  ""
++  "ldi\\tr25, 0\;xout\\t0, r25, 1\;xin\\t0, r26, 8"
++  [(set_attr "type" "alu")
++   (set_attr "length" "12")])
++
 +
 +
 +;; Prologue, Epilogue and Return
@@ -9242,8 +9594,8 @@ index 0000000..f60ec2c
 +  [(set (pc)
 +     (if_then_else
 +       (match_operator 0 "ordered_comparison_operator"
-+         [(match_operand:XI 1 "register_operand" "r,r")
-+          (match_operand:XI 2 "reg_or_ubyte_operand" "r,I")])
++         [(match_operand:ALL 1 "register_operand" "r,r")
++          (match_operand:ALL 2 "reg_or_ubyte_operand" "r,I")])
 +       (label_ref (match_operand 3 "" ""))
 +       (pc)))]
 +  ""
@@ -9292,10 +9644,10 @@ index 0000000..f60ec2c
 +
 diff --git a/gcc/config/pru/pru.opt b/gcc/config/pru/pru.opt
 new file mode 100644
-index 0000000..f3f38b7
+index 0000000..d81289a
 --- /dev/null
 +++ b/gcc/config/pru/pru.opt
-@@ -0,0 +1,23 @@
+@@ -0,0 +1,27 @@
 +; Options for the TI PRU port of the compiler.
 +; Copyright (C) 2012-2014 Free Software Foundation, Inc.
 +; Contributed by Altera and Mentor Graphics, Inc.
@@ -9319,12 +9671,16 @@ index 0000000..f3f38b7
 +minrt
 +Target Report Mask(MINRT) RejectNegative
 +Use a minimum runtime (no static initializers or ctors) for memory-constrained devices.
++
++mmcu=
++Target RejectNegative Joined
++-mmcu=MCU	Select the target System-On-Chip variant that embeds this PRU
 diff --git a/gcc/config/pru/t-pru b/gcc/config/pru/t-pru
 new file mode 100644
-index 0000000..e33f2de
+index 0000000..2bbdeb9
 --- /dev/null
 +++ b/gcc/config/pru/t-pru
-@@ -0,0 +1,22 @@
+@@ -0,0 +1,25 @@
 +# Makefile fragment for building GCC for the TI PRU target.
 +# Copyright (C) 2012-2013 Free Software Foundation, Inc.
 +# Contributed by DDD
@@ -9347,11 +9703,52 @@ index 0000000..e33f2de
 +
 +#MULTILIB_OPTIONS    = mmcu=pru
 +
++pru-pragma.o: $(srcdir)/config/pru/pru-pragma.c $(RTL_H) $(TREE_H) $(CONFIG_H) $(TM_H)
++	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $<
++
+diff --git a/gcc/doc/extend.texi b/gcc/doc/extend.texi
+index 50815d1..eea763d 100644
+--- a/gcc/doc/extend.texi
++++ b/gcc/doc/extend.texi
+@@ -17424,6 +17424,7 @@ for further explanation.
+ * ARM Pragmas::
+ * M32C Pragmas::
+ * MeP Pragmas::
++* PRU Pragmas::
+ * RS/6000 and PowerPC Pragmas::
+ * Darwin Pragmas::
+ * Solaris Pragmas::
+@@ -17561,6 +17562,25 @@ extern int foo ();
+ 
+ @end table
+ 
++@node PRU Pragmas
++@subsection PRU Pragmas
++
++@table @code
++
++@item ctable_entry @var{index} @var{constant_address}
++@cindex pragma, ctable_entry
++Specifies that the given PRU CTABLE entry at @var{index} has a value
++@var{constant_address}. This enables GCC to emit LBCO/SBCO instructions
++when the load/store address is known and can be addressed with some CTABLE
++entry. Example:
++
++@smallexample
++#pragma ctable_entry 2 0x4802a000
++*(unsigned int *)0x4802a010 = val; /* will compile to "lbco Rx, 2, 0x10, 4" */
++@end smallexample
++
++@end table
++
+ @node RS/6000 and PowerPC Pragmas
+ @subsection RS/6000 and PowerPC Pragmas
+ 
 diff --git a/gcc/doc/md.texi b/gcc/doc/md.texi
-index 0050ba7..416dabd 100644
+index bc1ec9d..bba8567 100644
 --- a/gcc/doc/md.texi
 +++ b/gcc/doc/md.texi
-@@ -3346,6 +3346,25 @@ A memory reference that is encoded within the opcode.
+@@ -3209,6 +3209,25 @@ Vector constant that is all zeros.
  
  @end table
  
@@ -9457,8 +9854,83 @@ index 650bef9..806fc68 100644
  
  /* { dg-options "-O2 -fno-inline -fdump-tree-reassoc1-details" } */
  /* { dg-additional-options "-mbranch-cost=2" { target mips*-*-* avr-*-* s390*-*-* i?86-*-* x86_64-*-* } } */
+diff --git a/gcc/testsuite/gcc.target/pru/pru-pragma-ctable_entry.c b/gcc/testsuite/gcc.target/pru/pru-pragma-ctable_entry.c
+new file mode 100644
+index 0000000..5a7cef6
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/pru-pragma-ctable_entry.c
+@@ -0,0 +1,22 @@
++/* Test specification of custom instructions via command-line options.  */
++
++/* { dg-do compile } */
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it LBCO/SBCO operations may
++   not be optimized to the respective instructions.  */
++
++
++#pragma ctable_entry 12 0x48040000
++
++unsigned int
++test_ctable (unsigned int val1, unsigned int val2)
++{
++  ((volatile unsigned short int *)0x48040000)[0] = val2;
++  ((volatile unsigned int *)0x48040000)[val1] = val2;
++  return ((volatile unsigned int *)0x48040000)[4];
++}
++
++/* { dg-final { scan-assembler "sbco\\tr15, 12, 0, 2" } } */
++/* { dg-final { scan-assembler "sbco\\tr15, 12, r14, 4" } } */
++/* { dg-final { scan-assembler "lbco\\tr14, 12, 16, 4" } } */
+diff --git a/gcc/testsuite/gcc.target/pru/pru.exp b/gcc/testsuite/gcc.target/pru/pru.exp
+new file mode 100644
+index 0000000..122a2b3
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/pru.exp
+@@ -0,0 +1,41 @@
++# Copyright (C) 2015 Free Software Foundation, Inc.
++
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3 of the License, or
++# (at your option) any later version.
++# 
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++# 
++# You should have received a copy of the GNU General Public License
++# along with GCC; see the file COPYING3.  If not see
++# <http://www.gnu.org/licenses/>.
++
++# GCC testsuite that uses the `dg.exp' driver.
++
++# Exit immediately if this isn't a PRU target.
++if ![istarget pru*-*-*] then {
++  return
++}
++
++# Load support procs.
++load_lib gcc-dg.exp
++
++# If a testcase doesn't have special options, use these.
++global DEFAULT_CFLAGS
++if ![info exists DEFAULT_CFLAGS] then {
++    set DEFAULT_CFLAGS " -ansi -pedantic-errors"
++}
++
++# Initialize `dg'.
++dg-init
++
++# Main loop.
++dg-runtest [lsort [glob -nocomplain $srcdir/$subdir/*.\[cCS\]]] \
++	"" $DEFAULT_CFLAGS
++
++# All done.
++dg-finish
 diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
-index 443e8ed..83d8989 100644
+index 4fa433d..967f6b9 100644
 --- a/gcc/testsuite/lib/gcc-dg.exp
 +++ b/gcc/testsuite/lib/gcc-dg.exp
 @@ -232,6 +232,11 @@ proc gcc-dg-prune { system text } {
@@ -9474,10 +9946,10 @@ index 443e8ed..83d8989 100644
            && [check_effective_target_tiny] } {
          return "::unsupported::memory full"
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index e51d07d..8503cbd 100644
+index f632d00..4d46013 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
-@@ -438,7 +438,8 @@ proc check_effective_target_trampolines { } {
+@@ -451,7 +451,8 @@ proc check_effective_target_trampolines { } {
  	 || [istarget msp430-*-*]
  	 || [istarget nvptx-*-*]
  	 || [istarget hppa2.0w-hp-hpux11.23]
@@ -9487,7 +9959,7 @@ index e51d07d..8503cbd 100644
  	return 0;
      }
      return 1
-@@ -536,6 +537,7 @@ proc check_profiling_available { test_what } {
+@@ -549,6 +550,7 @@ proc check_profiling_available { test_what } {
  	     || [istarget nvptx-*-*]
  	     || [istarget powerpc-*-eabi*]
  	     || [istarget powerpc-*-elf]
@@ -9495,7 +9967,7 @@ index e51d07d..8503cbd 100644
  	     || [istarget rx-*-*]	
  	     || [istarget tic6x-*-elf]
  	     || [istarget visium-*-*]
-@@ -719,7 +721,7 @@ proc check_effective_target_tls_emulated {} {
+@@ -732,7 +734,7 @@ proc check_effective_target_tls_emulated {} {
  proc check_effective_target_tls_runtime {} {
      # The runtime does not have TLS support, but just
      # running the test below is insufficient to show this.
@@ -9504,7 +9976,7 @@ index e51d07d..8503cbd 100644
  	return 0
      }
      return [check_runtime tls_runtime {
-@@ -6128,6 +6130,7 @@ proc check_effective_target_logical_op_short_circuit {} {
+@@ -6172,6 +6174,7 @@ proc check_effective_target_logical_op_short_circuit {} {
  	 || [istarget powerpc*-*-*]
  	 || [istarget nios2*-*-*]
  	 || [istarget visium-*-*]
@@ -9527,7 +9999,7 @@ index dbfb818..ba2b57b 100644
  	return "memory full"
      }
 diff --git a/libgcc/config.host b/libgcc/config.host
-index 3065c8a..c330d55 100644
+index 4b15895..638d531 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
 @@ -165,6 +165,9 @@ nios2*-*-*)
@@ -9540,7 +10012,7 @@ index 3065c8a..c330d55 100644
  rs6000*-*-*)
  	;;
  sparc64*-*-*)
-@@ -1041,6 +1044,9 @@ powerpcle-*-eabi*)
+@@ -1057,6 +1060,9 @@ powerpcle-*-eabi*)
  	tmake_file="${tmake_file} rs6000/t-ppccomm rs6000/t-crtstuff t-crtstuff-pic t-fdpbit"
  	extra_parts="$extra_parts crtbegin.o crtend.o crtbeginS.o crtendS.o crtbeginT.o ecrti.o ecrtn.o ncrti.o ncrtn.o"
  	;;
@@ -9744,53 +10216,6 @@ index 0000000..1daa91a
 +#define NAME_MODE	si
 +
 +#include "pru-divmod.h"
-diff --git a/libgcc/config/pru/lib2mul.c b/libgcc/config/pru/lib2mul.c
-new file mode 100644
-index 0000000..b73326e
---- /dev/null
-+++ b/libgcc/config/pru/lib2mul.c
-@@ -0,0 +1,41 @@
-+/* libgcc routines for PRU
-+   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Red Hat.
-+
-+   This file is part of GCC.
-+
-+   GCC is free software; you can redistribute it and/or modify it
-+   under the terms of the GNU General Public License as published
-+   by the Free Software Foundation; either version 3, or (at your
-+   option) any later version.
-+
-+   GCC is distributed in the hope that it will be useful, but WITHOUT
-+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-+   License for more details.
-+
-+   Under Section 7 of GPL version 3, you are granted additional
-+   permissions described in the GCC Runtime Library Exception, version
-+   3.1, as published by the Free Software Foundation.
-+
-+   You should have received a copy of the GNU General Public License and
-+   a copy of the GCC Runtime Library Exception along with this program;
-+   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+unsigned int __mulsi3 (unsigned int a, unsigned int b)
-+{
-+  register unsigned int prod asm ("r26");
-+  register unsigned int op0 asm ("r28") = a;
-+  register unsigned int op1 asm ("r29") = b;
-+
-+  /* TODO - reimplement via insn patterns! */
-+  __asm__ ("ldi\tr25, 0        \n\t"
-+	   "xout\t0, r25, 1    \n\t"
-+	   "xin\t0, r26, 8        "
-+	   : "=r" (prod)             /* output */
-+	   : "r" (op0), "r" (op1)    /* input */
-+	   : "r25", "r27");          /* clobber CFG (r25), RESHI (r27) */
-+
-+  return prod;
-+}
 diff --git a/libgcc/config/pru/lib2shift.c b/libgcc/config/pru/lib2shift.c
 new file mode 100644
 index 0000000..6b01564
@@ -10078,10 +10503,10 @@ index 0000000..5458c3a
 +}
 diff --git a/libgcc/config/pru/t-pru b/libgcc/config/pru/t-pru
 new file mode 100644
-index 0000000..cee615c
+index 0000000..470f0d4
 --- /dev/null
 +++ b/libgcc/config/pru/t-pru
-@@ -0,0 +1,41 @@
+@@ -0,0 +1,40 @@
 +# Makefile fragment for building LIBGCC for the TI PRU processor.
 +# Copyright (C) 2011 Free Software Foundation, Inc.
 +# Contributed by Red Hat.
@@ -10111,14 +10536,13 @@ index 0000000..cee615c
 +        $(srcdir)/config/pru/lib2divHI.c \
 +        $(srcdir)/config/pru/lib2divSI.c \
 +        $(srcdir)/config/pru/lib2bitcountHI.c \
-+        $(srcdir)/config/pru/lib2mul.c \
 +        $(srcdir)/config/pru/lib2shift.c \
 +        $(srcdir)/config/pru/muldi3.S
 +
 +
 +HOST_LIBGCC2_CFLAGS += -Os -ffunction-sections -fdata-sections
 +
-+LIB2FUNCS_EXCLUDE = _muldi3 _mulsi3
++LIB2FUNCS_EXCLUDE = _muldi3
 +
 +# Local Variables:
 +# mode: Makefile

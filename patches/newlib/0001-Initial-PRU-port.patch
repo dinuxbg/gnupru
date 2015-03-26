@@ -1,4 +1,4 @@
-From e95abe4a9038115b89d4b285546eaed6d437f1d2 Mon Sep 17 00:00:00 2001
+From 00ed8c35b8dfd62836401ab2b0662140622f7b8e Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Thu, 1 May 2014 16:43:07 +0300
 Subject: [PATCH] Initial PRU port
@@ -10,19 +10,26 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  configure.ac                                      |    4 +
  libgloss/configure                                |    5 +
  libgloss/configure.in                             |    2 +
- libgloss/pru/Makefile.in                          |  142 +
+ libgloss/pru/Makefile.in                          |  147 +
  libgloss/pru/aclocal.m4                           |  344 ++
  libgloss/pru/close.c                              |   25 +
  libgloss/pru/configure                            | 3791 ++++++++++++++++
  libgloss/pru/configure.in                         |   66 +
  libgloss/pru/crt0.S                               |   71 +
+ libgloss/pru/device-specs/am335x.pru0             |    5 +
+ libgloss/pru/device-specs/am335x.pru1             |    5 +
+ libgloss/pru/device-specs/am437x.icss0.pru0       |    5 +
+ libgloss/pru/device-specs/am437x.icss0.pru1       |    5 +
+ libgloss/pru/device-specs/am437x.icss1.pru0       |    5 +
+ libgloss/pru/device-specs/am437x.icss1.pru1       |    5 +
+ libgloss/pru/device-specs/sim                     |    5 +
  libgloss/pru/do_global_dtors.c                    |   35 +
  libgloss/pru/exit.c                               |   31 +
  libgloss/pru/fstat.c                              |   30 +
  libgloss/pru/getpid.c                             |   25 +
  libgloss/pru/gettimeofday.c                       |   31 +
- libgloss/pru/include/pru/am335x.h                 |  510 +++
- libgloss/pru/include/pru/io.h                     |  119 +
+ libgloss/pru/include/pru/am335x.h                 |  537 +++
+ libgloss/pru/include/pru/io.h                     |  123 +
  libgloss/pru/isatty.c                             |   27 +
  libgloss/pru/kill.c                               |   28 +
  libgloss/pru/ldscripts/gen-ld-scripts.sh          |   61 +
@@ -58,13 +65,20 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  newlib/libc/machine/pru/configure                 | 4748 +++++++++++++++++++++
  newlib/libc/machine/pru/configure.in              |   14 +
  newlib/libc/machine/pru/setjmp.s                  |   46 +
- 53 files changed, 13621 insertions(+), 1 deletion(-)
+ 60 files changed, 13692 insertions(+), 1 deletion(-)
  create mode 100644 libgloss/pru/Makefile.in
  create mode 100644 libgloss/pru/aclocal.m4
  create mode 100644 libgloss/pru/close.c
  create mode 100755 libgloss/pru/configure
  create mode 100644 libgloss/pru/configure.in
  create mode 100644 libgloss/pru/crt0.S
+ create mode 100644 libgloss/pru/device-specs/am335x.pru0
+ create mode 100644 libgloss/pru/device-specs/am335x.pru1
+ create mode 100644 libgloss/pru/device-specs/am437x.icss0.pru0
+ create mode 100644 libgloss/pru/device-specs/am437x.icss0.pru1
+ create mode 100644 libgloss/pru/device-specs/am437x.icss1.pru0
+ create mode 100644 libgloss/pru/device-specs/am437x.icss1.pru1
+ create mode 100644 libgloss/pru/device-specs/sim
  create mode 100644 libgloss/pru/do_global_dtors.c
  create mode 100644 libgloss/pru/exit.c
  create mode 100644 libgloss/pru/fstat.c
@@ -191,10 +205,10 @@ index ab3224a..0c89d12 100644
  
 diff --git a/libgloss/pru/Makefile.in b/libgloss/pru/Makefile.in
 new file mode 100644
-index 0000000..6a7f585
+index 0000000..d78573e
 --- /dev/null
 +++ b/libgloss/pru/Makefile.in
-@@ -0,0 +1,142 @@
+@@ -0,0 +1,147 @@
 +# Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
 +#
 +# The authors hereby grant permission to use, copy, modify, distribute,
@@ -326,6 +340,11 @@ index 0000000..6a7f585
 +	for i in ${srcdir}/include/pru/*.h; do \
 +	  b=`basename $$i`; \
 +	  $(INSTALL_DATA) $$i $(DESTDIR)$(tooldir)/include/pru/$$b ;\
++	done
++	${mkinstalldirs} ${DESTDIR}${tooldir}/lib${MULTISUBDIR}/device-specs; \
++	for s in ${srcdir}/device-specs/*; do \
++	  b=`basename $$s`; \
++	  $(INSTALL_DATA) $$s $(DESTDIR)$(tooldir)/lib${MULTISUBDIR}/device-specs/$$b ;\
 +	done
 +
 +info:
@@ -4664,6 +4683,83 @@ index 0000000..faacc3a
 +__crt_exit:
 +	halt
 +	jmp	__crt_exit
+diff --git a/libgloss/pru/device-specs/am335x.pru0 b/libgloss/pru/device-specs/am335x.pru0
+new file mode 100644
+index 0000000..076fd82
+--- /dev/null
++++ b/libgloss/pru/device-specs/am335x.pru0
+@@ -0,0 +1,5 @@
++*cpp:
++-D__AM335X_PRU0__ -D__AM335X_
++
++*link:
++-Tpruelf-am335x.pru0.x
+diff --git a/libgloss/pru/device-specs/am335x.pru1 b/libgloss/pru/device-specs/am335x.pru1
+new file mode 100644
+index 0000000..b82a984
+--- /dev/null
++++ b/libgloss/pru/device-specs/am335x.pru1
+@@ -0,0 +1,5 @@
++*cpp:
++-D__AM335X_PRU1__ -D__AM335X_
++
++*link:
++-Tpruelf-am335x.pru1.x
+diff --git a/libgloss/pru/device-specs/am437x.icss0.pru0 b/libgloss/pru/device-specs/am437x.icss0.pru0
+new file mode 100644
+index 0000000..65da861
+--- /dev/null
++++ b/libgloss/pru/device-specs/am437x.icss0.pru0
+@@ -0,0 +1,5 @@
++*cpp:
++-D__AM437X_ICSS0_PRU0__ -D__AM437X_ICSS0__ -D__AM437X__
++
++*link:
++-Tpruelf-am437x.icss0.pru0.x
+diff --git a/libgloss/pru/device-specs/am437x.icss0.pru1 b/libgloss/pru/device-specs/am437x.icss0.pru1
+new file mode 100644
+index 0000000..5d865e3
+--- /dev/null
++++ b/libgloss/pru/device-specs/am437x.icss0.pru1
+@@ -0,0 +1,5 @@
++*cpp:
++-D__AM437X_ICSS0_PRU1__ -D__AM437X_ICSS0__ -D__AM437X__
++
++*link:
++-Tpruelf-am437x.icss0.pru1.x
+diff --git a/libgloss/pru/device-specs/am437x.icss1.pru0 b/libgloss/pru/device-specs/am437x.icss1.pru0
+new file mode 100644
+index 0000000..1155ac7
+--- /dev/null
++++ b/libgloss/pru/device-specs/am437x.icss1.pru0
+@@ -0,0 +1,5 @@
++*cpp:
++-D__AM437X_ICSS1_PRU0__ -D__AM437X_ICSS1__ -D__AM437X__
++
++*link:
++-Tpruelf-am437x.icss1.pru0.x
+diff --git a/libgloss/pru/device-specs/am437x.icss1.pru1 b/libgloss/pru/device-specs/am437x.icss1.pru1
+new file mode 100644
+index 0000000..b8e2add
+--- /dev/null
++++ b/libgloss/pru/device-specs/am437x.icss1.pru1
+@@ -0,0 +1,5 @@
++*cpp:
++-D__AM437X_ICSS1_PRU1__ -D__AM437X_ICSS1__ -D__AM437X__
++
++*link:
++-Tpruelf-am437x.icss1.pru1.x
+diff --git a/libgloss/pru/device-specs/sim b/libgloss/pru/device-specs/sim
+new file mode 100644
+index 0000000..1dddcbe
+--- /dev/null
++++ b/libgloss/pru/device-specs/sim
+@@ -0,0 +1,5 @@
++*cpp:
++-D__SIM__
++
++*link:
++-Tpruelf-sim.x
 diff --git a/libgloss/pru/do_global_dtors.c b/libgloss/pru/do_global_dtors.c
 new file mode 100644
 index 0000000..07b996b
@@ -4848,10 +4944,10 @@ index 0000000..7bc01dc
 +}
 diff --git a/libgloss/pru/include/pru/am335x.h b/libgloss/pru/include/pru/am335x.h
 new file mode 100644
-index 0000000..90a7f82
+index 0000000..a55c912
 --- /dev/null
 +++ b/libgloss/pru/include/pru/am335x.h
-@@ -0,0 +1,510 @@
+@@ -0,0 +1,537 @@
 +/* pru/am335x.h -- PRU I/O registers definitions for PRU inside AM335x SoCs
 +
 +   Copyright (c) 2015 Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -4896,6 +4992,33 @@ index 0000000..90a7f82
 +#define __MII_RT_CFG_BASE		0x00032000
 +#define __MII_MDIO_BASE			0x00034000
 +#define __SYS_OCP_HP0_BASE		0x00080000
++
++/* ====================== CTABLE base addresses ====================== */
++#pragma ctable_entry 0 0x00020000
++#pragma ctable_entry 1 0x48040000
++#pragma ctable_entry 2 0x4802a000
++#pragma ctable_entry 3 0x00030000
++#pragma ctable_entry 4 0x00026000
++#pragma ctable_entry 5 0x48060000
++#pragma ctable_entry 6 0x48030000
++#pragma ctable_entry 7 0x00028000
++#pragma ctable_entry 8 0x46000000
++#pragma ctable_entry 9 0x4a100000
++#pragma ctable_entry 10 0x48318000
++#pragma ctable_entry 11 0x48022000
++#pragma ctable_entry 12 0x48024000
++#pragma ctable_entry 13 0x48318000
++#pragma ctable_entry 14 0x481cc000
++#pragma ctable_entry 15 0x481d0000
++#pragma ctable_entry 16 0x481a0000
++#pragma ctable_entry 17 0x4819c000
++#pragma ctable_entry 18 0x48300000
++#pragma ctable_entry 19 0x48302000
++#pragma ctable_entry 20 0x48304000
++#pragma ctable_entry 21 0x00032400
++#pragma ctable_entry 22 0x480c8000
++#pragma ctable_entry 23 0x480ca000
++/* 24-31 are user-defined base addresses. */
 +
 +/* ====================== PRU CTRL module ====================== */
 +#define PRU_CTRL_CONTROL_OFFS		0x00
@@ -5364,10 +5487,10 @@ index 0000000..90a7f82
 +#endif
 diff --git a/libgloss/pru/include/pru/io.h b/libgloss/pru/include/pru/io.h
 new file mode 100644
-index 0000000..71f59ed
+index 0000000..76e9ada
 --- /dev/null
 +++ b/libgloss/pru/include/pru/io.h
-@@ -0,0 +1,119 @@
+@@ -0,0 +1,123 @@
 +/* pru/io.h -- PRU I/O registers definitions
 +
 +   Copyright (c) 2015 Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -5482,8 +5605,12 @@ index 0000000..71f59ed
 +#define XFR_ID_BANK2			12
 +#define XFR_ID_PEER_CORE		14
 +
-+#if defined(__PRU_AM335X_PRU0__) || defined(__PRU_AM335X_PRU1__)
++#if defined(__AM335X_PRU0__) || defined(__AM335X_PRU1__)
 +#  include <pru/am335x.h>
++#elif defined(__SIM__)
++   /* perhaps warn? */
++#else
++#  warning "No matching PRU instance variant found for <pru/io.h>"
 +#endif
 +
 +#endif

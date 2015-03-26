@@ -4,9 +4,9 @@
 
 # On which upstream commits to apply patches. I frequently rebase so
 # expect these to be somewhat random.
-GCC_BASECOMMIT=34bfe2dc730848460f89aabfcc056cfb0ed54df7
-BINUTILS_BASECOMMIT=bb97bdd70c9a4614416767e5fc7ea8d75b24b0b8
-NEWLIB_BASECOMMIT=f20f3384cbb66bd12ea257ba5ae92fc612fa5b0e
+GCC_BASECOMMIT=c4d336f9d7a205c57820c17a993ecff6fa1db924
+BINUTILS_BASECOMMIT=f30d5c78faa5979fb933038923e5270b7728f96f
+NEWLIB_BASECOMMIT=e0f24404b3fcfa2c332ae14c3934546c91be3f42
 
 GCC_GIT=https://github.com/mirrors/gcc
 BINUTILS_GIT=https://github.com/bminor/binutils-gdb

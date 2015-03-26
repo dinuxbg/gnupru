@@ -1,4 +1,4 @@
-From 42b30e593911096d15521f69008a979a1320a7b4 Mon Sep 17 00:00:00 2001
+From 0acbebe127fbb7dc9ba63dbe5d7159f5e0cba756 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Mon, 28 Jul 2014 23:10:08 +0300
 Subject: [PATCH 2/2] HACK: Limit LBBO/SBBO bursts to 19 regs
@@ -3235,7 +3235,7 @@ index bcf22f8..8d286ca 100644
      write_pattern_1 "lbbo" "load" nregs false write_ldm_set;
      write_pattern_1 "sbbo" "store" nregs true write_stm_set;
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
-index f60ec2c..805bd97 100644
+index 1b7d28b..b52ca7e 100644
 --- a/gcc/config/pru/pru.md
 +++ b/gcc/config/pru/pru.md
 @@ -42,6 +42,11 @@
@@ -3250,7 +3250,7 @@ index f60ec2c..805bd97 100644
    ]
  )
  
-@@ -109,6 +114,7 @@
+@@ -110,6 +115,7 @@
       only if at least one register. */
    if (GET_CODE (operands[2]) != CONST_INT
        || INTVAL (operands[2]) < 1
@@ -3258,7 +3258,7 @@ index f60ec2c..805bd97 100644
        || GET_CODE (operands[1]) != MEM
        || GET_CODE (operands[0]) != REG
        || (REGNO (operands[0]) + INTVAL (operands[2]) - 1) > LAST_NONIO_GP_REG)
-@@ -145,6 +151,7 @@
+@@ -146,6 +152,7 @@
       only if at least one register. */
    if (GET_CODE (operands[2]) != CONST_INT
        || INTVAL (operands[2]) < 1
