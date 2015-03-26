@@ -8,8 +8,8 @@ GCC_BASECOMMIT=34bfe2dc730848460f89aabfcc056cfb0ed54df7
 BINUTILS_BASECOMMIT=bb97bdd70c9a4614416767e5fc7ea8d75b24b0b8
 NEWLIB_BASECOMMIT=f20f3384cbb66bd12ea257ba5ae92fc612fa5b0e
 
-GCC_GIT=https://github.com/mirrors/gcc.git
-BINUTILS_GIT=https://github.com/bminor/binutils-gdb.git
+GCC_GIT=https://github.com/mirrors/gcc
+BINUTILS_GIT=https://github.com/bminor/binutils-gdb
 NEWLIB_GIT=git://sourceware.org/git/newlib.git
 
 # If you have already checked out GCC or binutils, then references
@@ -36,9 +36,18 @@ prepare_source()
   local URL=$2
   local COMMIT=$3
   local REF="$4"
-  git clone --single-branch $URL $SRC/$PRJ $REF|| die Could not clone $URL
-  cd $SRC/$PRJ
-  git checkout -b tmp-pru $COMMIT || die Could not checkout $PRJ commit $COMMIT
+  wget $URL/archive/$COMMIT.tar.gz -O $SRC/"$PRJ"-"$COMMIT".tar.gz
+  if [ $? -eq 0 ]; then
+    cd $SRC
+    tar -xvf "$PRJ"-"$COMMIT".tar.gz
+    mv "$PRJ"-"$COMMIT" $PRJ
+    cd $PRJ
+    git init . && git add . && git commit -m "Import."
+  else
+    git clone --single-branch $URL $SRC/$PRJ $REF|| die Could not clone $URL
+    cd $SRC/$PRJ
+    git checkout -b tmp-pru $COMMIT || die Could not checkout $PRJ commit $COMMIT
+  fi
   ls $PATCHDIR/$PRJ | sort | while read PATCH
   do
     git am -3 < $PATCHDIR/$PRJ/$PATCH || die "Could not apply patch $PATCH for $PRJ"
