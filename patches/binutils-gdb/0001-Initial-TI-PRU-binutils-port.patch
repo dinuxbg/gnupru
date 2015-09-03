@@ -1,4 +1,4 @@
-From b4c06c3601ca55636ffba0f9c9571287d6c4afd5 Mon Sep 17 00:00:00 2001
+From 676cf9ff2b5ed13d7136443bbdc09b7eec8491fa Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sun, 23 Feb 2014 22:25:35 +0200
 Subject: [PATCH 1/4] Initial TI PRU binutils port
@@ -81,16 +81,16 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  readline/support/config.sub           |     2 +
  sim/configure                         |     8 +
  sim/configure.tgt                     |     3 +
- sim/pru/Makefile.in                   |    32 +
+ sim/pru/Makefile.in                   |    26 +
  sim/pru/aclocal.m4                    |   130 +
- sim/pru/config.in                     |   148 +
- sim/pru/configure                     | 15340 ++++++++++++++++++++++++++++++++
- sim/pru/configure.ac                  |    12 +
- sim/pru/interp.c                      |   992 +++
+ sim/pru/config.in                     |   160 +
+ sim/pru/configure                     | 15674 ++++++++++++++++++++++++++++++++
+ sim/pru/configure.ac                  |    15 +
+ sim/pru/interp.c                      |   952 ++
  sim/pru/pru.h                         |    95 +
  sim/pru/pru.isa                       |   250 +
- sim/pru/sim-main.h                    |    81 +
- 82 files changed, 22534 insertions(+), 3 deletions(-)
+ sim/pru/sim-main.h                    |    80 +
+ 82 files changed, 22836 insertions(+), 3 deletions(-)
  create mode 100644 bfd/cpu-pru.c
  create mode 100644 bfd/elf32-pru.c
  create mode 100644 gas/config/tc-pru.c
@@ -148,10 +148,10 @@ index bda55a3..1104322 100644
 +*.swp
 +cscope.*
 diff --git a/bfd/Makefile.am b/bfd/Makefile.am
-index 5d7f899..e563653 100644
+index bf73057..e8afa6d 100644
 --- a/bfd/Makefile.am
 +++ b/bfd/Makefile.am
-@@ -140,6 +140,7 @@ ALL_MACHINES = \
+@@ -147,6 +147,7 @@ ALL_MACHINES = \
  	cpu-pj.lo \
  	cpu-plugin.lo \
  	cpu-powerpc.lo \
@@ -159,7 +159,7 @@ index 5d7f899..e563653 100644
  	cpu-rs6000.lo \
  	cpu-rl78.lo \
  	cpu-rx.lo \
-@@ -226,6 +227,7 @@ ALL_MACHINES_CFILES = \
+@@ -234,6 +235,7 @@ ALL_MACHINES_CFILES = \
  	cpu-pj.c \
  	cpu-plugin.c \
  	cpu-powerpc.c \
@@ -167,7 +167,7 @@ index 5d7f899..e563653 100644
  	cpu-rs6000.c \
  	cpu-rl78.c \
  	cpu-rx.c \
-@@ -355,6 +357,7 @@ BFD32_BACKENDS = \
+@@ -363,6 +365,7 @@ BFD32_BACKENDS = \
  	elf32-or1k.lo \
  	elf32-pj.lo \
  	elf32-ppc.lo \
@@ -175,7 +175,7 @@ index 5d7f899..e563653 100644
  	elf32-rl78.lo \
  	elf32-rx.lo \
  	elf32-s390.lo \
-@@ -546,6 +549,7 @@ BFD32_BACKENDS_CFILES = \
+@@ -554,6 +557,7 @@ BFD32_BACKENDS_CFILES = \
  	elf32-or1k.c \
  	elf32-pj.c \
  	elf32-ppc.c \
@@ -184,10 +184,10 @@ index 5d7f899..e563653 100644
  	elf32-rx.c \
  	elf32-s390.c \
 diff --git a/bfd/Makefile.in b/bfd/Makefile.in
-index 60d994f..08fe3a1 100644
+index 9fd0d68..3a2819a 100644
 --- a/bfd/Makefile.in
 +++ b/bfd/Makefile.in
-@@ -440,6 +440,7 @@ ALL_MACHINES = \
+@@ -450,6 +450,7 @@ ALL_MACHINES = \
  	cpu-pj.lo \
  	cpu-plugin.lo \
  	cpu-powerpc.lo \
@@ -195,7 +195,7 @@ index 60d994f..08fe3a1 100644
  	cpu-rs6000.lo \
  	cpu-rl78.lo \
  	cpu-rx.lo \
-@@ -526,6 +527,7 @@ ALL_MACHINES_CFILES = \
+@@ -537,6 +538,7 @@ ALL_MACHINES_CFILES = \
  	cpu-pj.c \
  	cpu-plugin.c \
  	cpu-powerpc.c \
@@ -203,7 +203,7 @@ index 60d994f..08fe3a1 100644
  	cpu-rs6000.c \
  	cpu-rl78.c \
  	cpu-rx.c \
-@@ -656,6 +658,7 @@ BFD32_BACKENDS = \
+@@ -667,6 +669,7 @@ BFD32_BACKENDS = \
  	elf32-or1k.lo \
  	elf32-pj.lo \
  	elf32-ppc.lo \
@@ -211,7 +211,7 @@ index 60d994f..08fe3a1 100644
  	elf32-rl78.lo \
  	elf32-rx.lo \
  	elf32-s390.lo \
-@@ -847,6 +850,7 @@ BFD32_BACKENDS_CFILES = \
+@@ -858,6 +861,7 @@ BFD32_BACKENDS_CFILES = \
  	elf32-or1k.c \
  	elf32-pj.c \
  	elf32-ppc.c \
@@ -219,7 +219,7 @@ index 60d994f..08fe3a1 100644
  	elf32-rl78.c \
  	elf32-rx.c \
  	elf32-s390.c \
-@@ -1364,6 +1368,7 @@ distclean-compile:
+@@ -1376,6 +1380,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-pj.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-plugin.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-powerpc.Plo@am__quote@
@@ -227,7 +227,7 @@ index 60d994f..08fe3a1 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-rl78.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-rs6000.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-rx.Plo@am__quote@
-@@ -1453,6 +1458,7 @@ distclean-compile:
+@@ -1465,6 +1470,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-or1k.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-pj.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-ppc.Plo@am__quote@
@@ -236,11 +236,11 @@ index 60d994f..08fe3a1 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-rx.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-s390.Plo@am__quote@
 diff --git a/bfd/archures.c b/bfd/archures.c
-index 7a12985..fa0e507 100644
+index 95433f8..6bbe4a8 100644
 --- a/bfd/archures.c
 +++ b/bfd/archures.c
-@@ -501,6 +501,8 @@ DESCRIPTION
- .#define bfd_mach_nios2	0
+@@ -507,6 +507,8 @@ DESCRIPTION
+ .#define bfd_mach_nios2r2	2
  .  bfd_arch_visium,	{* Visium *}
  .#define bfd_mach_visium	1
 +.  bfd_arch_pru,	{* PRU *}
@@ -248,7 +248,7 @@ index 7a12985..fa0e507 100644
  .  bfd_arch_last
  .  };
  */
-@@ -603,6 +605,7 @@ extern const bfd_arch_info_type bfd_pj_arch;
+@@ -610,6 +612,7 @@ extern const bfd_arch_info_type bfd_pj_arch;
  extern const bfd_arch_info_type bfd_plugin_arch;
  extern const bfd_arch_info_type bfd_powerpc_archs[];
  #define bfd_powerpc_arch bfd_powerpc_archs[0]
@@ -256,7 +256,7 @@ index 7a12985..fa0e507 100644
  extern const bfd_arch_info_type bfd_rs6000_arch;
  extern const bfd_arch_info_type bfd_rl78_arch;
  extern const bfd_arch_info_type bfd_rx_arch;
-@@ -691,6 +694,7 @@ static const bfd_arch_info_type * const bfd_archures_list[] =
+@@ -699,6 +702,7 @@ static const bfd_arch_info_type * const bfd_archures_list[] =
      &bfd_or1k_arch,
      &bfd_pdp11_arch,
      &bfd_powerpc_arch,
@@ -265,21 +265,21 @@ index 7a12985..fa0e507 100644
      &bfd_rl78_arch,
      &bfd_rx_arch,
 diff --git a/bfd/bfd-in2.h b/bfd/bfd-in2.h
-index e170dd9..70f37a3 100644
+index 51fa54f..d7f4516 100644
 --- a/bfd/bfd-in2.h
 +++ b/bfd/bfd-in2.h
-@@ -2272,6 +2272,8 @@ enum bfd_architecture
- #define bfd_mach_nios2 0
+@@ -2302,6 +2302,8 @@ enum bfd_architecture
+ #define bfd_mach_nios2r2       2
    bfd_arch_visium,     /* Visium */
  #define bfd_mach_visium        1
-+  bfd_arch_pru,
++  bfd_arch_pru,        /* PRU */
 +#define bfd_mach_pru   0
    bfd_arch_last
    };
  
-@@ -5325,6 +5327,17 @@ a matching LO8XG part.  */
-   BFD_RELOC_NIOS2_CALL_LO,
-   BFD_RELOC_NIOS2_CALL_HA,
+@@ -5369,6 +5371,17 @@ a matching LO8XG part.  */
+   BFD_RELOC_NIOS2_R2_T1X1I6,
+   BFD_RELOC_NIOS2_R2_T1X1I6_2,
  
 +/* Relocations used by the TI PRU processor.  */
 +  BFD_RELOC_PRU_U8,
@@ -296,7 +296,7 @@ index e170dd9..70f37a3 100644
    BFD_RELOC_IQ2000_OFFSET_16,
    BFD_RELOC_IQ2000_OFFSET_21,
 diff --git a/bfd/config.bfd b/bfd/config.bfd
-index b79c711..16c1f45 100644
+index 20a0351..92b7f9b 100644
 --- a/bfd/config.bfd
 +++ b/bfd/config.bfd
 @@ -119,6 +119,7 @@ or1k*|or1knd*)	 targ_archs=bfd_or1k_arch ;;
@@ -307,7 +307,7 @@ index b79c711..16c1f45 100644
  rs6000)		 targ_archs="bfd_rs6000_arch bfd_powerpc_arch" ;;
  s390*)		 targ_archs=bfd_s390_arch ;;
  sh*)		 targ_archs=bfd_sh_arch ;;
-@@ -1320,6 +1321,10 @@ case "${targ}" in
+@@ -1334,6 +1335,10 @@ case "${targ}" in
      targ_selvecs="powerpc_pei_le_vec powerpc_pei_vec powerpc_pe_le_vec powerpc_pe_vec"
      ;;
  
@@ -319,10 +319,10 @@ index b79c711..16c1f45 100644
      targ_defvec=rl78_elf32_vec
      ;;
 diff --git a/bfd/configure b/bfd/configure
-index a328813..dd04282 100755
+index a17e936..8c936a9 100755
 --- a/bfd/configure
 +++ b/bfd/configure
-@@ -15511,6 +15511,7 @@ do
+@@ -15469,6 +15469,7 @@ do
      powerpc_pei_vec)		 tb="$tb pei-ppc.lo peigen.lo $coff" ;;
      powerpc_pei_le_vec)		 tb="$tb pei-ppc.lo peigen.lo $coff" ;;
      powerpc_xcoff_vec)		 tb="$tb coff-rs6000.lo $xcoff" ;;
@@ -331,10 +331,10 @@ index a328813..dd04282 100755
      rs6000_xcoff64_vec)		 tb="$tb coff64-rs6000.lo aix5ppc-core.lo $xcoff"; target_size=64 ;;
      rs6000_xcoff64_aix_vec)	 tb="$tb coff64-rs6000.lo aix5ppc-core.lo $xcoff"; target_size=64 ;;
 diff --git a/bfd/configure.ac b/bfd/configure.ac
-index a1b2035..6ef7e68 100644
+index 2497131..a0b7401 100644
 --- a/bfd/configure.ac
 +++ b/bfd/configure.ac
-@@ -912,6 +912,7 @@ do
+@@ -915,6 +915,7 @@ do
      powerpc_pei_vec)		 tb="$tb pei-ppc.lo peigen.lo $coff" ;;
      powerpc_pei_le_vec)		 tb="$tb pei-ppc.lo peigen.lo $coff" ;;
      powerpc_xcoff_vec)		 tb="$tb coff-rs6000.lo $xcoff" ;;
@@ -392,10 +392,10 @@ index 0000000..9a558c3
 +
 +const bfd_arch_info_type bfd_pru_arch = N (32, 32, 0, "pru", TRUE, NULL);
 diff --git a/bfd/elf-bfd.h b/bfd/elf-bfd.h
-index 13c32e0..7eec877 100644
+index e0e372f..50130b2 100644
 --- a/bfd/elf-bfd.h
 +++ b/bfd/elf-bfd.h
-@@ -430,6 +430,7 @@ enum elf_target_id
+@@ -465,6 +465,7 @@ enum elf_target_id
    OR1K_ELF_DATA,
    PPC32_ELF_DATA,
    PPC64_ELF_DATA,
@@ -405,7 +405,7 @@ index 13c32e0..7eec877 100644
    SPARC_ELF_DATA,
 diff --git a/bfd/elf32-pru.c b/bfd/elf32-pru.c
 new file mode 100644
-index 0000000..98089c3
+index 0000000..e2f7af6
 --- /dev/null
 +++ b/bfd/elf32-pru.c
 @@ -0,0 +1,905 @@
@@ -1073,7 +1073,7 @@ index 0000000..98089c3
 +					 rel, 1, relend, howto, 0, contents);
 +
 +      /* Nothing more to do unless this is a final link.  */
-+      if (info->relocatable)
++      if (bfd_link_relocatable (info))
 +	continue;
 +
 +      if (howto)
@@ -1191,7 +1191,7 @@ index 0000000..98089c3
 +  const Elf_Internal_Rela *rel;
 +  const Elf_Internal_Rela *rel_end;
 +
-+  if (info->relocatable)
++  if (bfd_link_relocatable (info))
 +    return TRUE;
 +
 +  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
@@ -1315,13 +1315,13 @@ index 0000000..98089c3
 +
 +#include "elf32-target.h"
 diff --git a/bfd/libbfd.h b/bfd/libbfd.h
-index 14600aa..ccaeaa5 100644
+index fc70e29..4a5bcf7 100644
 --- a/bfd/libbfd.h
 +++ b/bfd/libbfd.h
-@@ -2599,6 +2599,15 @@ static const char *const bfd_reloc_code_real_names[] = { "@@uninitialized@@",
-   "BFD_RELOC_NIOS2_GOT_HA",
-   "BFD_RELOC_NIOS2_CALL_LO",
-   "BFD_RELOC_NIOS2_CALL_HA",
+@@ -2613,6 +2613,15 @@ static const char *const bfd_reloc_code_real_names[] = { "@@uninitialized@@",
+   "BFD_RELOC_NIOS2_R2_L5I4X1",
+   "BFD_RELOC_NIOS2_R2_T1X1I6",
+   "BFD_RELOC_NIOS2_R2_T1X1I6_2",
 +  "BFD_RELOC_PRU_U8",
 +  "BFD_RELOC_PRU_U16",
 +  "BFD_RELOC_PRU_HI16",
@@ -1335,10 +1335,10 @@ index 14600aa..ccaeaa5 100644
    "BFD_RELOC_IQ2000_OFFSET_21",
    "BFD_RELOC_IQ2000_UHI16",
 diff --git a/bfd/po/SRC-POTFILES.in b/bfd/po/SRC-POTFILES.in
-index 2e5776a..bd66268 100644
+index 32f8851..1855e9a 100644
 --- a/bfd/po/SRC-POTFILES.in
 +++ b/bfd/po/SRC-POTFILES.in
-@@ -118,6 +118,7 @@ cpu-pdp11.c
+@@ -119,6 +119,7 @@ cpu-pdp11.c
  cpu-pj.c
  cpu-plugin.c
  cpu-powerpc.c
@@ -1346,7 +1346,7 @@ index 2e5776a..bd66268 100644
  cpu-rl78.c
  cpu-rs6000.c
  cpu-rx.c
-@@ -210,6 +211,7 @@ elf32-nios2.c
+@@ -211,6 +212,7 @@ elf32-nios2.c
  elf32-or1k.c
  elf32-pj.c
  elf32-ppc.c
@@ -1355,10 +1355,10 @@ index 2e5776a..bd66268 100644
  elf32-rx.c
  elf32-s390.c
 diff --git a/bfd/reloc.c b/bfd/reloc.c
-index 8c4a88a..9b437e3 100644
+index caa6fb4..1955c3d 100644
 --- a/bfd/reloc.c
 +++ b/bfd/reloc.c
-@@ -6234,6 +6234,27 @@ ENUMDOC
+@@ -6262,6 +6262,27 @@ ENUMDOC
    Relocations used by the Altera Nios II core.
  
  ENUM
@@ -1387,10 +1387,10 @@ index 8c4a88a..9b437e3 100644
  ENUMX
    BFD_RELOC_IQ2000_OFFSET_21
 diff --git a/bfd/targets.c b/bfd/targets.c
-index 9b5458e..0c48d3e 100644
+index 1ada260..8ad89bd 100644
 --- a/bfd/targets.c
 +++ b/bfd/targets.c
-@@ -789,6 +789,7 @@ extern const bfd_target powerpc_pe_le_vec;
+@@ -790,6 +790,7 @@ extern const bfd_target powerpc_pe_le_vec;
  extern const bfd_target powerpc_pei_vec;
  extern const bfd_target powerpc_pei_le_vec;
  extern const bfd_target powerpc_xcoff_vec;
@@ -1398,7 +1398,7 @@ index 9b5458e..0c48d3e 100644
  extern const bfd_target rl78_elf32_vec;
  extern const bfd_target rs6000_xcoff64_vec;
  extern const bfd_target rs6000_xcoff64_aix_vec;
-@@ -1286,6 +1287,8 @@ static const bfd_target * const _bfd_target_vector[] =
+@@ -1290,6 +1291,8 @@ static const bfd_target * const _bfd_target_vector[] =
  	&powerpc_xcoff_vec,
  #endif
  
@@ -1408,10 +1408,10 @@ index 9b5458e..0c48d3e 100644
  
  #ifdef BFD64
 diff --git a/binutils/readelf.c b/binutils/readelf.c
-index adf2a91..b1862a5 100644
+index 6298f1e..f8f73f8 100644
 --- a/binutils/readelf.c
 +++ b/binutils/readelf.c
-@@ -138,6 +138,7 @@
+@@ -136,6 +136,7 @@
  #include "elf/pj.h"
  #include "elf/ppc.h"
  #include "elf/ppc64.h"
@@ -1419,7 +1419,7 @@ index adf2a91..b1862a5 100644
  #include "elf/rl78.h"
  #include "elf/rx.h"
  #include "elf/s390.h"
-@@ -763,6 +764,7 @@ guess_is_rela (unsigned int e_machine)
+@@ -762,6 +763,7 @@ guess_is_rela (unsigned int e_machine)
      case EM_OR1K:
      case EM_PPC64:
      case EM_PPC:
@@ -1427,7 +1427,7 @@ index adf2a91..b1862a5 100644
      case EM_RL78:
      case EM_RX:
      case EM_S390:
-@@ -1462,6 +1464,10 @@ dump_relocations (FILE * file,
+@@ -1461,6 +1463,10 @@ dump_relocations (FILE * file,
  	case EM_ALTERA_NIOS2:
  	  rtype = elf_nios2_reloc_type (type);
  	  break;
@@ -1438,7 +1438,7 @@ index adf2a91..b1862a5 100644
  	}
  
        if (rtype == NULL)
-@@ -2258,6 +2264,7 @@ get_machine_name (unsigned e_machine)
+@@ -2252,6 +2258,7 @@ get_machine_name (unsigned e_machine)
      case EM_TILEGX:		return "Tilera TILE-Gx multicore architecture family";
      case EM_CUDA:		return "NVIDIA CUDA architecture";
      case EM_XGATE:		return "Motorola XGATE embedded processor";
@@ -1446,7 +1446,7 @@ index adf2a91..b1862a5 100644
      default:
        snprintf (buff, sizeof (buff), _("<unknown>: 0x%x"), e_machine);
        return buff;
-@@ -11241,6 +11248,8 @@ is_32bit_abs_reloc (unsigned int reloc_type)
+@@ -11360,6 +11367,8 @@ is_32bit_abs_reloc (unsigned int reloc_type)
        return reloc_type == 1; /* R_PPC64_ADDR32.  */
      case EM_PPC:
        return reloc_type == 1; /* R_PPC_ADDR32.  */
@@ -1455,7 +1455,7 @@ index adf2a91..b1862a5 100644
      case EM_RL78:
        return reloc_type == 1; /* R_RL78_DIR32.  */
      case EM_RX:
-@@ -11575,6 +11584,8 @@ is_none_reloc (unsigned int reloc_type)
+@@ -11694,6 +11703,8 @@ is_none_reloc (unsigned int reloc_type)
  	      || reloc_type == 19  /* R_XTENSA_DIFF32.  */);
      case EM_METAG:
        return reloc_type == 3; /* R_METAG_NONE.  */
@@ -1465,10 +1465,10 @@ index adf2a91..b1862a5 100644
    return FALSE;
  }
 diff --git a/config.sub b/config.sub
-index 6d2e94c..2c8b52a 100755
+index f018151..f6585d9 100755
 --- a/config.sub
 +++ b/config.sub
-@@ -301,6 +301,7 @@ case $basic_machine in
+@@ -302,6 +302,7 @@ case $basic_machine in
  	| open8 | or1k | or1knd | or32 \
  	| pdp10 | pdp11 | pj | pjl \
  	| powerpc | powerpc64 | powerpc64le | powerpcle \
@@ -1476,16 +1476,16 @@ index 6d2e94c..2c8b52a 100755
  	| pyramid \
  	| riscv32 | riscv64 \
  	| rl78 | rx \
-@@ -427,6 +428,7 @@ case $basic_machine in
+@@ -429,6 +430,7 @@ case $basic_machine in
  	| orion-* \
  	| pdp10-* | pdp11-* | pj-* | pjl-* | pn-* | power-* \
  	| powerpc-* | powerpc64-* | powerpc64le-* | powerpcle-* \
 +	| pru-* \
  	| pyramid-* \
+ 	| riscv32-* | riscv64-* \
  	| rl78-* | romp-* | rs6000-* | rx-* \
- 	| sh-* | sh[1234]-* | sh[24]a-* | sh[24]aeb-* | sh[23]e-* | sh[34]eb-* | sheb-* | shbe-* \
 diff --git a/elfcpp/elfcpp.h b/elfcpp/elfcpp.h
-index 327aeb2..5ad773c 100644
+index 722984e..171e7a1 100644
 --- a/elfcpp/elfcpp.h
 +++ b/elfcpp/elfcpp.h
 @@ -268,6 +268,7 @@ enum EM
@@ -1497,10 +1497,10 @@ index 327aeb2..5ad773c 100644
    EM_TILEGX = 191,
    // The Morph MT.
 diff --git a/gas/Makefile.am b/gas/Makefile.am
-index a822be7..b95469f 100644
+index 5161b5e..a51a111 100644
 --- a/gas/Makefile.am
 +++ b/gas/Makefile.am
-@@ -172,6 +172,7 @@ TARGET_CPU_CFILES = \
+@@ -177,6 +177,7 @@ TARGET_CPU_CFILES = \
  	config/tc-pdp11.c \
  	config/tc-pj.c \
  	config/tc-ppc.c \
@@ -1508,7 +1508,7 @@ index a822be7..b95469f 100644
  	config/tc-rl78.c \
  	config/tc-rx.c \
  	config/tc-s390.c \
-@@ -245,6 +246,7 @@ TARGET_CPU_HFILES = \
+@@ -250,6 +251,7 @@ TARGET_CPU_HFILES = \
  	config/tc-pdp11.h \
  	config/tc-pj.h \
  	config/tc-ppc.h \
@@ -1517,10 +1517,10 @@ index a822be7..b95469f 100644
  	config/tc-rx.h \
  	config/tc-s390.h \
 diff --git a/gas/Makefile.in b/gas/Makefile.in
-index edd3638..792028e 100644
+index 1efdb5c..9198c42 100644
 --- a/gas/Makefile.in
 +++ b/gas/Makefile.in
-@@ -441,6 +441,7 @@ TARGET_CPU_CFILES = \
+@@ -448,6 +448,7 @@ TARGET_CPU_CFILES = \
  	config/tc-pdp11.c \
  	config/tc-pj.c \
  	config/tc-ppc.c \
@@ -1528,7 +1528,7 @@ index edd3638..792028e 100644
  	config/tc-rl78.c \
  	config/tc-rx.c \
  	config/tc-s390.c \
-@@ -514,6 +515,7 @@ TARGET_CPU_HFILES = \
+@@ -521,6 +522,7 @@ TARGET_CPU_HFILES = \
  	config/tc-pdp11.h \
  	config/tc-pj.h \
  	config/tc-ppc.h \
@@ -1536,7 +1536,7 @@ index edd3638..792028e 100644
  	config/tc-rl78.h \
  	config/tc-rx.h \
  	config/tc-s390.h \
-@@ -871,6 +873,7 @@ distclean-compile:
+@@ -878,6 +880,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-pdp11.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-pj.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-ppc.Po@am__quote@
@@ -1544,7 +1544,7 @@ index edd3638..792028e 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-rl78.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-rx.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-s390.Po@am__quote@
-@@ -1591,6 +1594,20 @@ tc-ppc.obj: config/tc-ppc.c
+@@ -1598,6 +1601,20 @@ tc-ppc.obj: config/tc-ppc.c
  @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
  @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tc-ppc.obj `if test -f 'config/tc-ppc.c'; then $(CYGPATH_W) 'config/tc-ppc.c'; else $(CYGPATH_W) '$(srcdir)/config/tc-ppc.c'; fi`
  
@@ -1566,7 +1566,7 @@ index edd3638..792028e 100644
  @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tc-rl78.o -MD -MP -MF $(DEPDIR)/tc-rl78.Tpo -c -o tc-rl78.o `test -f 'config/tc-rl78.c' || echo '$(srcdir)/'`config/tc-rl78.c
  @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tc-rl78.Tpo $(DEPDIR)/tc-rl78.Po
 diff --git a/gas/config/obj-elf.c b/gas/config/obj-elf.c
-index 4d7a8a7..f83a66d 100644
+index 031fafb..6a4ac56 100644
 --- a/gas/config/obj-elf.c
 +++ b/gas/config/obj-elf.c
 @@ -64,6 +64,10 @@
@@ -3305,10 +3305,10 @@ index 0000000..f4c4121
 +
 +#endif /* TC_PRU */
 diff --git a/gas/configure.tgt b/gas/configure.tgt
-index bfff2d7..75e8a03 100644
+index 00fa104..bdbed06 100644
 --- a/gas/configure.tgt
 +++ b/gas/configure.tgt
-@@ -388,6 +388,8 @@ case ${generic_target} in
+@@ -389,6 +389,8 @@ case ${generic_target} in
    ppc-*-kaos*)				fmt=elf ;;
    ppc-*-lynxos*)			fmt=elf em=lynx ;;
  
@@ -3884,10 +3884,10 @@ index 0000000..875e1ca
 +	sxchg	253, r10.b2, 124
 +	sxchg	85, r12.b0, 85
 diff --git a/gdb/Makefile.in b/gdb/Makefile.in
-index ae50041..283da6d 100644
+index 0d7cf97..ba8fb46 100644
 --- a/gdb/Makefile.in
 +++ b/gdb/Makefile.in
-@@ -677,7 +677,7 @@ ALL_TARGET_OBS = \
+@@ -693,7 +693,7 @@ ALL_TARGET_OBS = \
  	nios2-tdep.o nios2-linux-tdep.o \
  	nto-tdep.o \
  	ppc-linux-tdep.o ppcfbsd-tdep.o ppcnbsd-tdep.o ppcobsd-tdep.o  \
@@ -3896,16 +3896,16 @@ index ae50041..283da6d 100644
  	rs6000-aix-tdep.o rs6000-tdep.o solib-aix.o ppc-ravenscar-thread.o \
  	rs6000-lynx178-tdep.o \
  	rx-tdep.o \
-@@ -951,7 +951,7 @@ config/djgpp/langinfo.h config/djgpp/nl_types.h darwin-nat.h \
- dicos-tdep.h filesystem.h gcore.h gdb_wchar.h hppabsd-tdep.h \
- i386-darwin-tdep.h x86-nat.h linux-record.h moxie-tdep.h nios2-tdep.h \
+@@ -968,7 +968,7 @@ dicos-tdep.h filesystem.h gcore.h gdb_wchar.h hppabsd-tdep.h \
+ i386-darwin-tdep.h i386-nat.h linux-record.h moxie-tdep.h nios2-tdep.h \
+ ft32-tdep.h \
  osdata.h procfs.h python/py-event.h python/py-events.h python/py-stopevent.h \
 -python/python-internal.h python/python.h ravenscar-thread.h record.h \
 +python/python-internal.h python/python.h pru-tdep.h ravenscar-thread.h record.h \
  record-full.h solib-aix.h \
  solib-darwin.h solib-spu.h windows-nat.h xcoffread.h \
  gnulib/import/extra/snippet/arg-nonnull.h gnulib/import/extra/snippet/c++defs.h \
-@@ -1702,6 +1702,7 @@ ALLDEPFILES = \
+@@ -1719,6 +1719,7 @@ ALLDEPFILES = \
  	ppcnbsd-nat.c ppcnbsd-tdep.c \
  	ppcobsd-nat.c ppcobsd-tdep.c \
  	procfs.c \
@@ -3914,10 +3914,10 @@ index ae50041..283da6d 100644
  	remote-m32r-sdi.c remote-mips.c \
  	remote-sim.c \
 diff --git a/gdb/configure.tgt b/gdb/configure.tgt
-index c97ebdd..c2abce8 100644
+index c42b4df..244586e 100644
 --- a/gdb/configure.tgt
 +++ b/gdb/configure.tgt
-@@ -454,6 +454,12 @@ powerpc*-*-*)
+@@ -453,6 +453,12 @@ powerpc*-*-*)
  	fi
  	;;
  
@@ -4070,7 +4070,7 @@ index 0000000..f865b67
 +</target>
 diff --git a/gdb/pru-tdep.c b/gdb/pru-tdep.c
 new file mode 100644
-index 0000000..43be6de
+index 0000000..b194a8c
 --- /dev/null
 +++ b/gdb/pru-tdep.c
 @@ -0,0 +1,871 @@
@@ -4378,10 +4378,10 @@ index 0000000..43be6de
 +  return 0;
 +}
 +
-+/* Implement the in_function_epilogue_p gdbarch method.  */
++/* Implement the stack_frame_destroyed_p gdbarch method.  */
 +
 +static int
-+pru_in_function_epilogue_p (struct gdbarch *gdbarch, CORE_ADDR pc)
++pru_stack_frame_destroyed_p (struct gdbarch *gdbarch, CORE_ADDR pc)
 +{
 +  CORE_ADDR func_addr;
 +
@@ -4860,7 +4860,7 @@ index 0000000..43be6de
 +
 +  /* None found, create a new architecture from the information
 +     provided.  */
-+  tdep = xcalloc (1, sizeof (struct gdbarch_tdep));
++  tdep = XNEW (struct gdbarch_tdep);
 +  gdbarch = gdbarch_alloc (&info, tdep);
 +
 +  /* Data type sizes.  */
@@ -4896,7 +4896,7 @@ index 0000000..43be6de
 +  set_gdbarch_return_value (gdbarch, pru_return_value);
 +
 +  set_gdbarch_skip_prologue (gdbarch, pru_skip_prologue);
-+  set_gdbarch_in_function_epilogue_p (gdbarch, pru_in_function_epilogue_p);
++  set_gdbarch_stack_frame_destroyed_p (gdbarch, pru_stack_frame_destroyed_p);
 +  set_gdbarch_breakpoint_from_pc (gdbarch, pru_breakpoint_from_pc);
 +
 +  set_gdbarch_dummy_id (gdbarch, pru_dummy_id);
@@ -5003,10 +5003,10 @@ index 0000000..ca7ba62
 +
 +#endif /* PRU_TDEP_H */
 diff --git a/include/dis-asm.h b/include/dis-asm.h
-index 198a6f8..1324d3d 100644
+index ebc2604..08f1051 100644
 --- a/include/dis-asm.h
 +++ b/include/dis-asm.h
-@@ -280,6 +280,7 @@ extern int print_insn_ns32k		(bfd_vma, disassemble_info *);
+@@ -288,6 +288,7 @@ extern int print_insn_ns32k		(bfd_vma, disassemble_info *);
  extern int print_insn_or1k		(bfd_vma, disassemble_info *);
  extern int print_insn_pdp11		(bfd_vma, disassemble_info *);
  extern int print_insn_pj		(bfd_vma, disassemble_info *);
@@ -5015,7 +5015,7 @@ index 198a6f8..1324d3d 100644
  extern int print_insn_s390		(bfd_vma, disassemble_info *);
  extern int print_insn_sh		(bfd_vma, disassemble_info *);
 diff --git a/include/elf/common.h b/include/elf/common.h
-index 25cfef2..171fbcc 100644
+index e6d8c14..cbd7d36 100644
 --- a/include/elf/common.h
 +++ b/include/elf/common.h
 @@ -246,7 +246,7 @@
@@ -5499,10 +5499,10 @@ index 0000000..f601d14
 +
 +#endif /* _PRU_H */
 diff --git a/ld/Makefile.am b/ld/Makefile.am
-index 22b0419..ed9e7d0 100644
+index df88d6a..aa1bf29 100644
 --- a/ld/Makefile.am
 +++ b/ld/Makefile.am
-@@ -1627,6 +1627,11 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
+@@ -1643,6 +1643,11 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
  eppcpe.c: $(srcdir)/emulparams/ppcpe.sh \
    $(srcdir)/emultempl/pe.em $(srcdir)/scripttempl/ppcpe.sc ${GEN_DEPENDS}
  
@@ -5515,10 +5515,10 @@ index 22b0419..ed9e7d0 100644
    $(srcdir)/emultempl/generic.em $(srcdir)/scripttempl/aout.sc ${GEN_DEPENDS}
  
 diff --git a/ld/Makefile.in b/ld/Makefile.in
-index 3236d7e..9875ba4 100644
+index a29690b..0533799 100644
 --- a/ld/Makefile.in
 +++ b/ld/Makefile.in
-@@ -3119,6 +3119,11 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
+@@ -3142,6 +3142,11 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
  eppcpe.c: $(srcdir)/emulparams/ppcpe.sh \
    $(srcdir)/emultempl/pe.em $(srcdir)/scripttempl/ppcpe.sc ${GEN_DEPENDS}
  
@@ -5531,10 +5531,10 @@ index 3236d7e..9875ba4 100644
    $(srcdir)/emultempl/generic.em $(srcdir)/scripttempl/aout.sc ${GEN_DEPENDS}
  
 diff --git a/ld/configure.tgt b/ld/configure.tgt
-index a46fbca..e975859 100644
+index e4eacd4..82a97a7 100644
 --- a/ld/configure.tgt
 +++ b/ld/configure.tgt
-@@ -607,6 +607,7 @@ powerpc-*-aix*)		targ_emul=aixppc ;;
+@@ -632,6 +632,7 @@ powerpc-*-aix*)		targ_emul=aixppc ;;
  powerpc-*-beos*)	targ_emul=aixppc ;;
  powerpc-*-windiss*)	targ_emul=elf32ppcwindiss ;;
  powerpc-*-lynxos*)	targ_emul=ppclynx ;;
@@ -5780,7 +5780,7 @@ index 0000000..19cb34b
 +}
 +EOF
 diff --git a/opcodes/Makefile.am b/opcodes/Makefile.am
-index 4adc6ff..f217d84 100644
+index 6a4f6c1..cea3cad 100644
 --- a/opcodes/Makefile.am
 +++ b/opcodes/Makefile.am
 @@ -223,6 +223,8 @@ TARGET_LIBOPCODES_CFILES = \
@@ -5793,10 +5793,10 @@ index 4adc6ff..f217d84 100644
  	rl78-dis.c \
  	rx-decode.c \
 diff --git a/opcodes/Makefile.in b/opcodes/Makefile.in
-index d9ddefa..c17abea 100644
+index 3517739..4e9baba 100644
 --- a/opcodes/Makefile.in
 +++ b/opcodes/Makefile.in
-@@ -496,6 +496,8 @@ TARGET_LIBOPCODES_CFILES = \
+@@ -495,6 +495,8 @@ TARGET_LIBOPCODES_CFILES = \
  	pj-opc.c \
  	ppc-dis.c \
  	ppc-opc.c \
@@ -5805,7 +5805,7 @@ index d9ddefa..c17abea 100644
  	rl78-decode.c \
  	rl78-dis.c \
  	rx-decode.c \
-@@ -900,6 +902,8 @@ distclean-compile:
+@@ -899,6 +901,8 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pj-opc.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ppc-dis.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ppc-opc.Plo@am__quote@
@@ -5815,10 +5815,10 @@ index d9ddefa..c17abea 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rl78-dis.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rx-decode.Plo@am__quote@
 diff --git a/opcodes/configure b/opcodes/configure
-index cd3aa83..11f0965 100755
+index 86412c5..d269019 100755
 --- a/opcodes/configure
 +++ b/opcodes/configure
-@@ -12590,6 +12590,7 @@ if test x${all_targets} = xfalse ; then
+@@ -12602,6 +12602,7 @@ if test x${all_targets} = xfalse ; then
  	bfd_pj_arch)		ta="$ta pj-dis.lo pj-opc.lo" ;;
  	bfd_powerpc_arch)	ta="$ta ppc-dis.lo ppc-opc.lo" ;;
  	bfd_powerpc_64_arch)	ta="$ta ppc-dis.lo ppc-opc.lo" ;;
@@ -5827,7 +5827,7 @@ index cd3aa83..11f0965 100755
  	bfd_romp_arch)		;;
  	bfd_rs6000_arch)	ta="$ta ppc-dis.lo ppc-opc.lo" ;;
 diff --git a/opcodes/configure.ac b/opcodes/configure.ac
-index eab16d6..bcbabda 100644
+index 07e3162..c0fb26f 100644
 --- a/opcodes/configure.ac
 +++ b/opcodes/configure.ac
 @@ -307,6 +307,7 @@ if test x${all_targets} = xfalse ; then
@@ -5839,7 +5839,7 @@ index eab16d6..bcbabda 100644
  	bfd_romp_arch)		;;
  	bfd_rs6000_arch)	ta="$ta ppc-dis.lo ppc-opc.lo" ;;
 diff --git a/opcodes/disassemble.c b/opcodes/disassemble.c
-index f47a190..63c875e 100644
+index 1f353c6..059bdf8 100644
 --- a/opcodes/disassemble.c
 +++ b/opcodes/disassemble.c
 @@ -73,6 +73,7 @@
@@ -5850,7 +5850,7 @@ index f47a190..63c875e 100644
  #define ARCH_rs6000
  #define ARCH_rl78
  #define ARCH_rx
-@@ -375,6 +376,11 @@ disassembler (abfd)
+@@ -376,6 +377,11 @@ disassembler (abfd)
  	disassemble = print_insn_little_powerpc;
        break;
  #endif
@@ -6385,7 +6385,7 @@ index d07267e..9b6f5dd 100755
  	| romp-* | rs6000-* \
  	| sh-* | sh[1234]-* | sh[24]a-* | sh[23]e-* | sh[34]eb-* | sheb-* | shbe-* \
 diff --git a/sim/configure b/sim/configure
-index 36d356e..4a04696 100755
+index a90d352..254821e 100755
 --- a/sim/configure
 +++ b/sim/configure
 @@ -653,6 +653,7 @@ mips
@@ -6396,27 +6396,27 @@ index 36d356e..4a04696 100755
  rl78
  rx
  sh64
-@@ -3775,6 +3776,13 @@ subdirs="$subdirs arm"
-   subdirs="$subdirs msp430"
+@@ -3762,6 +3763,13 @@ subdirs="$subdirs arm"
  
  
-+       ;;
+        ;;
 +   pru*-*-*)
 +
 +  sim_arch=pru
 +  subdirs="$subdirs pru"
++  sim_testsuite=yes
 +
-+
-        sim_testsuite=yes
-        ;;
++       ;;
     rl78-*-*)
+ 
+   sim_arch=rl78
 diff --git a/sim/configure.tgt b/sim/configure.tgt
-index d112e72..d66af6f 100644
+index 5f3bb03..20e078b 100644
 --- a/sim/configure.tgt
 +++ b/sim/configure.tgt
-@@ -90,6 +90,9 @@ case "${target}" in
+@@ -74,6 +74,9 @@ case "${target}" in
+    msp430*-*-*)
         SIM_ARCH(msp430)
-        sim_testsuite=yes
         ;;
 +   pru*-*-*)
 +       SIM_ARCH(pru)
@@ -6426,12 +6426,12 @@ index d112e72..d66af6f 100644
         ;;
 diff --git a/sim/pru/Makefile.in b/sim/pru/Makefile.in
 new file mode 100644
-index 0000000..3ccddc0
+index 0000000..407b600
 --- /dev/null
 +++ b/sim/pru/Makefile.in
-@@ -0,0 +1,32 @@
+@@ -0,0 +1,26 @@
 +#    Makefile template for Configure for the MCore sim library.
-+#    Copyright (C) 1990-2014 Free Software Foundation, Inc.
++#    Copyright (C) 1990-2015 Free Software Foundation, Inc.
 +#    Written by Cygnus Solutions.
 +#
 +# This program is free software; you can redistribute it and/or modify
@@ -6449,19 +6449,13 @@ index 0000000..3ccddc0
 +
 +## COMMON_PRE_CONFIG_FRAG
 +
-+# Use the deprecated run frontend until we migrate to nrun.o
-+SIM_RUN_OBJS = run.o
-+SIM_EXTRA_CFLAGS = -DSIM_USE_DEPRECATED_RUN_FRONTEND
-+
-+SIM_OBJS = interp.o sim-load.o
-+SIM_EXTRA_LIBS = -lm
-+SIM_EXTRA_CLEAN = pru-clean
++SIM_OBJS = \
++	interp.o \
++	$(SIM_NEW_COMMON_OBJS) \
++	sim-hload.o \
++	sim-stop.o
 +
 +## COMMON_POST_CONFIG_FRAG
-+
-+interp.o: interp.c
-+
-+pru-clean:
 diff --git a/sim/pru/aclocal.m4 b/sim/pru/aclocal.m4
 new file mode 100644
 index 0000000..a24bbeb
@@ -6600,11 +6594,14 @@ index 0000000..a24bbeb
 +
 diff --git a/sim/pru/config.in b/sim/pru/config.in
 new file mode 100644
-index 0000000..5ded703
+index 0000000..3152bea
 --- /dev/null
 +++ b/sim/pru/config.in
-@@ -0,0 +1,148 @@
+@@ -0,0 +1,160 @@
 +/* config.in.  Generated from configure.ac by autoheader.  */
++
++/* Define if building universal (internal helper macro) */
++#undef AC_APPLE_UNIVERSAL_BUILD
 +
 +/* Define to 1 if translation of program messages to the user's native
 +   language is requested. */
@@ -6676,9 +6673,6 @@ index 0000000..5ded703
 +/* Define to 1 if you have the <windows.h> header file. */
 +#undef HAVE_WINDOWS_H
 +
-+/* Define to 1 if you have the <zlib.h> header file. */
-+#undef HAVE_ZLIB_H
-+
 +/* Define to 1 if you have the `__setfpucw' function. */
 +#undef HAVE___SETFPUCW
 +
@@ -6741,6 +6735,18 @@ index 0000000..5ded703
 +#endif
 +
 +
++/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
++   significant byte first (like Motorola and SPARC, unlike Intel). */
++#if defined AC_APPLE_UNIVERSAL_BUILD
++# if defined __BIG_ENDIAN__
++#  define WORDS_BIGENDIAN 1
++# endif
++#else
++# ifndef WORDS_BIGENDIAN
++#  undef WORDS_BIGENDIAN
++# endif
++#endif
++
 +/* Define to 1 if on MINIX. */
 +#undef _MINIX
 +
@@ -6754,10 +6760,10 @@ index 0000000..5ded703
 +#include "tconfig.h"
 diff --git a/sim/pru/configure b/sim/pru/configure
 new file mode 100755
-index 0000000..67daa13
+index 0000000..39f93ad
 --- /dev/null
 +++ b/sim/pru/configure
-@@ -0,0 +1,15340 @@
+@@ -0,0 +1,15674 @@
 +#! /bin/sh
 +# Guess values for system-dependent variables and create Makefiles.
 +# Generated by GNU Autoconf 2.64.
@@ -7392,6 +7398,8 @@ index 0000000..67daa13
 +LIBTOOL
 +PLUGINS_FALSE
 +PLUGINS_TRUE
++zlibinc
++zlibdir
 +CATOBJEXT
 +GENCAT
 +INSTOBJEXT
@@ -7502,7 +7510,7 @@ index 0000000..67daa13
 +ac_subst_files=''
 +ac_user_opts='
 +enable_option_checking
-+with_zlib
++with_system_zlib
 +enable_plugins
 +enable_shared
 +enable_static
@@ -7519,6 +7527,11 @@ index 0000000..67daa13
 +enable_sim_profile
 +with_pkgversion
 +with_bugurl
++enable_sim_endian
++enable_sim_alignment
++enable_sim_hostendian
++enable_sim_environment
++enable_sim_inline
 +enable_werror
 +enable_build_warnings
 +enable_sim_build_warnings
@@ -8164,6 +8177,11 @@ index 0000000..67daa13
 +  --enable-sim-stdio			Specify whether to use stdio for console input/output.
 +  --enable-sim-trace=opts		Enable tracing flags
 +  --enable-sim-profile=opts		Enable profiling flags
++  --enable-sim-endian=endian		Specify target byte endian orientation.
++  --enable-sim-alignment=align		Specify strict,  nonstrict or forced alignment of memory accesses.
++  --enable-sim-hostendian=end		Specify host byte endian orientation.
++  --enable-sim-environment=environment	Specify mixed, user, virtual or operating environment.
++  --enable-sim-inline=inlines		Specify which functions should be inlined.
 +  --enable-werror         treat compile warnings as errors
 +  --enable-build-warnings enable build-time compiler warnings if gcc is used
 +  --enable-sim-build-warnings
@@ -8173,11 +8191,11 @@ index 0000000..67daa13
 +Optional Packages:
 +  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
 +  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-+  --with-zlib             include zlib support (auto/yes/no) default=auto
++  --with-system-zlib      use installed libz
 +  --with-pic              try to use only PIC/non-PIC objects [default=use
 +                          both]
 +  --with-gnu-ld           assume the C compiler uses GNU ld [default=no]
-+  --with-pkgversion=PKG   Use PKG in the version string in place of "GDB"
++  --with-pkgversion=PKG   Use PKG in the version string in place of "SIM"
 +  --with-bugurl=URL       Direct users to URL to report a bug
 +
 +Some influential environment variables:
@@ -9026,7 +9044,6 @@ index 0000000..67daa13
 +# Helper to AC_CHECK_DECLS, which generates the check for a single
 +# SYMBOL with INCLUDES, performs the AC_DEFINE, then expands
 +# ACTION-IF-FOUND or ACTION-IF-NOT-FOUND.
-+
 +
 +
 +
@@ -15450,88 +15467,21 @@ index 0000000..67daa13
 +# BFD conditionally uses zlib, so we must link it in if libbfd does, by
 +# using the same condition.
 +
-+  # See if the user specified whether he wants zlib support or not.
++  # Use the system's zlib library.
++  zlibdir="-L\$(top_builddir)/../zlib"
++  zlibinc="-I\$(top_srcdir)/../zlib"
 +
-+# Check whether --with-zlib was given.
-+if test "${with_zlib+set}" = set; then :
-+  withval=$with_zlib;
-+else
-+  with_zlib=auto
-+fi
-+
-+
-+  if test "$with_zlib" != "no"; then
-+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing zlibVersion" >&5
-+$as_echo_n "checking for library containing zlibVersion... " >&6; }
-+if test "${ac_cv_search_zlibVersion+set}" = set; then :
-+  $as_echo_n "(cached) " >&6
-+else
-+  ac_func_search_save_LIBS=$LIBS
-+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-+/* end confdefs.h.  */
-+
-+/* Override any GCC internal prototype to avoid an error.
-+   Use char because int might match the return type of a GCC
-+   builtin and then its argument prototype would still apply.  */
-+#ifdef __cplusplus
-+extern "C"
-+#endif
-+char zlibVersion ();
-+int
-+main ()
-+{
-+return zlibVersion ();
-+  ;
-+  return 0;
-+}
-+_ACEOF
-+for ac_lib in '' z; do
-+  if test -z "$ac_lib"; then
-+    ac_res="none required"
-+  else
-+    ac_res=-l$ac_lib
-+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
++# Check whether --with-system-zlib was given.
++if test "${with_system_zlib+set}" = set; then :
++  withval=$with_system_zlib; if test x$with_system_zlib = xyes ; then
++    zlibdir=
++    zlibinc=
 +  fi
-+  if ac_fn_c_try_link "$LINENO"; then :
-+  ac_cv_search_zlibVersion=$ac_res
-+fi
-+rm -f core conftest.err conftest.$ac_objext \
-+    conftest$ac_exeext
-+  if test "${ac_cv_search_zlibVersion+set}" = set; then :
-+  break
-+fi
-+done
-+if test "${ac_cv_search_zlibVersion+set}" = set; then :
-+
-+else
-+  ac_cv_search_zlibVersion=no
-+fi
-+rm conftest.$ac_ext
-+LIBS=$ac_func_search_save_LIBS
-+fi
-+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_zlibVersion" >&5
-+$as_echo "$ac_cv_search_zlibVersion" >&6; }
-+ac_res=$ac_cv_search_zlibVersion
-+if test "$ac_res" != no; then :
-+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-+  for ac_header in zlib.h
-+do :
-+  ac_fn_c_check_header_mongrel "$LINENO" "zlib.h" "ac_cv_header_zlib_h" "$ac_includes_default"
-+if test "x$ac_cv_header_zlib_h" = x""yes; then :
-+  cat >>confdefs.h <<_ACEOF
-+#define HAVE_ZLIB_H 1
-+_ACEOF
 +
 +fi
 +
-+done
 +
-+fi
 +
-+    if test "$with_zlib" = "yes" -a "$ac_cv_header_zlib_h" != "yes"; then
-+      as_fn_error "zlib (libz) library was explicitly requested but not found" "$LINENO" 5
-+    fi
-+  fi
 +
 +
 +# BFD uses libdl when when plugins enabled.
@@ -19122,7 +19072,7 @@ index 0000000..67daa13
 +  lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
 +  lt_status=$lt_dlunknown
 +  cat > conftest.$ac_ext <<_LT_EOF
-+#line 12365 "configure"
++#line 12309 "configure"
 +#include "confdefs.h"
 +
 +#if HAVE_DLFCN_H
@@ -19228,7 +19178,7 @@ index 0000000..67daa13
 +  lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
 +  lt_status=$lt_dlunknown
 +  cat > conftest.$ac_ext <<_LT_EOF
-+#line 12471 "configure"
++#line 12415 "configure"
 +#include "confdefs.h"
 +
 +#if HAVE_DLFCN_H
@@ -19624,7 +19574,7 @@ index 0000000..67daa13
 +      *)   PKGVERSION="($withval) " ;;
 +     esac
 +else
-+  PKGVERSION="(GDB) "
++  PKGVERSION="(SIM) "
 +
 +fi
 +
@@ -19717,6 +19667,408 @@ index 0000000..67daa13
 +sim_link_links="${sim_link_links} targ-vals.def"
 +
 +
++
++
++wire_endian=""
++default_endian=""
++# Check whether --enable-sim-endian was given.
++if test "${enable_sim_endian+set}" = set; then :
++  enableval=$enable_sim_endian; case "${enableval}" in
++  b*|B*) sim_endian="-DWITH_TARGET_BYTE_ORDER=BIG_ENDIAN";;
++  l*|L*) sim_endian="-DWITH_TARGET_BYTE_ORDER=LITTLE_ENDIAN";;
++  yes)	 if test x"$wire_endian" != x; then
++	   sim_endian="-DWITH_TARGET_BYTE_ORDER=${wire_endian}"
++	 else
++           if test x"$default_endian" != x; then
++	     sim_endian="-DWITH_TARGET_BYTE_ORDER=${default_endian}"
++	   else
++	     echo "No hard-wired endian for target $target" 1>&6
++	     sim_endian="-DWITH_TARGET_BYTE_ORDER=0"
++	   fi
++	 fi;;
++  no)	 if test x"$default_endian" != x; then
++	   sim_endian="-DWITH_DEFAULT_TARGET_BYTE_ORDER=${default_endian}"
++	 else
++	   if test x"$wire_endian" != x; then
++	     sim_endian="-DWITH_DEFAULT_TARGET_BYTE_ORDER=${wire_endian}"
++	   else
++	     echo "No default endian for target $target" 1>&6
++	     sim_endian="-DWITH_DEFAULT_TARGET_BYTE_ORDER=0"
++	   fi
++	 fi;;
++  *)	 as_fn_error "\"Unknown value $enableval for --enable-sim-endian\"" "$LINENO" 5; sim_endian="";;
++esac
++if test x"$silent" != x"yes" && test x"$sim_endian" != x""; then
++  echo "Setting endian flags = $sim_endian" 6>&1
++fi
++else
++  if test x"$default_endian" != x; then
++  sim_endian="-DWITH_DEFAULT_TARGET_BYTE_ORDER=${default_endian}"
++else
++  if test x"$wire_endian" != x; then
++    sim_endian="-DWITH_TARGET_BYTE_ORDER=${wire_endian}"
++  else
++    sim_endian=
++  fi
++fi
++fi
++
++wire_alignment="STRICT_ALIGNMENT"
++default_alignment="STRICT_ALIGNMENT"
++
++# Check whether --enable-sim-alignment was given.
++if test "${enable_sim_alignment+set}" = set; then :
++  enableval=$enable_sim_alignment; case "${enableval}" in
++  strict | STRICT)       sim_alignment="-DWITH_ALIGNMENT=STRICT_ALIGNMENT";;
++  nonstrict | NONSTRICT) sim_alignment="-DWITH_ALIGNMENT=NONSTRICT_ALIGNMENT";;
++  forced | FORCED)       sim_alignment="-DWITH_ALIGNMENT=FORCED_ALIGNMENT";;
++  yes) if test x"$wire_alignment" != x; then
++	 sim_alignment="-DWITH_ALIGNMENT=${wire_alignment}"
++       else
++         if test x"$default_alignment" != x; then
++           sim_alignment="-DWITH_ALIGNMENT=${default_alignment}"
++         else
++	   echo "No hard-wired alignment for target $target" 1>&6
++	   sim_alignment="-DWITH_ALIGNMENT=0"
++         fi
++       fi;;
++  no)  if test x"$default_alignment" != x; then
++	 sim_alignment="-DWITH_DEFAULT_ALIGNMENT=${default_alignment}"
++       else
++         if test x"$wire_alignment" != x; then
++	   sim_alignment="-DWITH_DEFAULT_ALIGNMENT=${wire_alignment}"
++         else
++           echo "No default alignment for target $target" 1>&6
++           sim_alignment="-DWITH_DEFAULT_ALIGNMENT=0"
++         fi
++       fi;;
++  *)   as_fn_error "\"Unknown value $enableval passed to --enable-sim-alignment\"" "$LINENO" 5; sim_alignment="";;
++esac
++if test x"$silent" != x"yes" && test x"$sim_alignment" != x""; then
++  echo "Setting alignment flags = $sim_alignment" 6>&1
++fi
++else
++  if test x"$default_alignment" != x; then
++  sim_alignment="-DWITH_DEFAULT_ALIGNMENT=${default_alignment}"
++else
++  if test x"$wire_alignment" != x; then
++    sim_alignment="-DWITH_ALIGNMENT=${wire_alignment}"
++  else
++    sim_alignment=
++  fi
++fi
++fi
++
++
++# Check whether --enable-sim-hostendian was given.
++if test "${enable_sim_hostendian+set}" = set; then :
++  enableval=$enable_sim_hostendian; case "${enableval}" in
++  no)	 sim_hostendian="-DWITH_HOST_BYTE_ORDER=0";;
++  b*|B*) sim_hostendian="-DWITH_HOST_BYTE_ORDER=BIG_ENDIAN";;
++  l*|L*) sim_hostendian="-DWITH_HOST_BYTE_ORDER=LITTLE_ENDIAN";;
++  *)	 as_fn_error "\"Unknown value $enableval for --enable-sim-hostendian\"" "$LINENO" 5; sim_hostendian="";;
++esac
++if test x"$silent" != x"yes" && test x"$sim_hostendian" != x""; then
++  echo "Setting hostendian flags = $sim_hostendian" 6>&1
++fi
++else
++
++if test "x$cross_compiling" = "xno"; then
++   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether byte ordering is bigendian" >&5
++$as_echo_n "checking whether byte ordering is bigendian... " >&6; }
++if test "${ac_cv_c_bigendian+set}" = set; then :
++  $as_echo_n "(cached) " >&6
++else
++  ac_cv_c_bigendian=unknown
++    # See if we're dealing with a universal compiler.
++    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++#ifndef __APPLE_CC__
++	       not a universal capable compiler
++	     #endif
++	     typedef int dummy;
++
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++
++	# Check for potential -arch flags.  It is not universal unless
++	# there are at least two -arch flags with different values.
++	ac_arch=
++	ac_prev=
++	for ac_word in $CC $CFLAGS $CPPFLAGS $LDFLAGS; do
++	 if test -n "$ac_prev"; then
++	   case $ac_word in
++	     i?86 | x86_64 | ppc | ppc64)
++	       if test -z "$ac_arch" || test "$ac_arch" = "$ac_word"; then
++		 ac_arch=$ac_word
++	       else
++		 ac_cv_c_bigendian=universal
++		 break
++	       fi
++	       ;;
++	   esac
++	   ac_prev=
++	 elif test "x$ac_word" = "x-arch"; then
++	   ac_prev=arch
++	 fi
++       done
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++    if test $ac_cv_c_bigendian = unknown; then
++      # See if sys/param.h defines the BYTE_ORDER macro.
++      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++#include <sys/types.h>
++	     #include <sys/param.h>
++
++int
++main ()
++{
++#if ! (defined BYTE_ORDER && defined BIG_ENDIAN \
++		     && defined LITTLE_ENDIAN && BYTE_ORDER && BIG_ENDIAN \
++		     && LITTLE_ENDIAN)
++	      bogus endian macros
++	     #endif
++
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++  # It does; now see whether it defined to BIG_ENDIAN or not.
++	 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++#include <sys/types.h>
++		#include <sys/param.h>
++
++int
++main ()
++{
++#if BYTE_ORDER != BIG_ENDIAN
++		 not big endian
++		#endif
++
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++  ac_cv_c_bigendian=yes
++else
++  ac_cv_c_bigendian=no
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++    fi
++    if test $ac_cv_c_bigendian = unknown; then
++      # See if <limits.h> defines _LITTLE_ENDIAN or _BIG_ENDIAN (e.g., Solaris).
++      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++#include <limits.h>
++
++int
++main ()
++{
++#if ! (defined _LITTLE_ENDIAN || defined _BIG_ENDIAN)
++	      bogus endian macros
++	     #endif
++
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++  # It does; now see whether it defined to _BIG_ENDIAN or not.
++	 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++#include <limits.h>
++
++int
++main ()
++{
++#ifndef _BIG_ENDIAN
++		 not big endian
++		#endif
++
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++  ac_cv_c_bigendian=yes
++else
++  ac_cv_c_bigendian=no
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++    fi
++    if test $ac_cv_c_bigendian = unknown; then
++      # Compile a test program.
++      if test "$cross_compiling" = yes; then :
++  # Try to guess by grepping values from an object file.
++	 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++short int ascii_mm[] =
++		  { 0x4249, 0x4765, 0x6E44, 0x6961, 0x6E53, 0x7953, 0 };
++		short int ascii_ii[] =
++		  { 0x694C, 0x5454, 0x656C, 0x6E45, 0x6944, 0x6E61, 0 };
++		int use_ascii (int i) {
++		  return ascii_mm[i] + ascii_ii[i];
++		}
++		short int ebcdic_ii[] =
++		  { 0x89D3, 0xE3E3, 0x8593, 0x95C5, 0x89C4, 0x9581, 0 };
++		short int ebcdic_mm[] =
++		  { 0xC2C9, 0xC785, 0x95C4, 0x8981, 0x95E2, 0xA8E2, 0 };
++		int use_ebcdic (int i) {
++		  return ebcdic_mm[i] + ebcdic_ii[i];
++		}
++		extern int foo;
++
++int
++main ()
++{
++return use_ascii (foo) == use_ebcdic (foo);
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++  if grep BIGenDianSyS conftest.$ac_objext >/dev/null; then
++	      ac_cv_c_bigendian=yes
++	    fi
++	    if grep LiTTleEnDian conftest.$ac_objext >/dev/null ; then
++	      if test "$ac_cv_c_bigendian" = unknown; then
++		ac_cv_c_bigendian=no
++	      else
++		# finding both strings is unlikely to happen, but who knows?
++		ac_cv_c_bigendian=unknown
++	      fi
++	    fi
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++else
++  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++$ac_includes_default
++int
++main ()
++{
++
++	     /* Are we little or big endian?  From Harbison&Steele.  */
++	     union
++	     {
++	       long int l;
++	       char c[sizeof (long int)];
++	     } u;
++	     u.l = 1;
++	     return u.c[sizeof (long int) - 1] == 1;
++
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_run "$LINENO"; then :
++  ac_cv_c_bigendian=no
++else
++  ac_cv_c_bigendian=yes
++fi
++rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
++  conftest.$ac_objext conftest.beam conftest.$ac_ext
++fi
++
++    fi
++fi
++{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_c_bigendian" >&5
++$as_echo "$ac_cv_c_bigendian" >&6; }
++ case $ac_cv_c_bigendian in #(
++   yes)
++     $as_echo "#define WORDS_BIGENDIAN 1" >>confdefs.h
++;; #(
++   no)
++      ;; #(
++   universal)
++
++$as_echo "#define AC_APPLE_UNIVERSAL_BUILD 1" >>confdefs.h
++
++     ;; #(
++   *)
++     as_fn_error "unknown endianness
++ presetting ac_cv_c_bigendian=no (or yes) will help" "$LINENO" 5 ;;
++ esac
++
++  if test $ac_cv_c_bigendian = yes; then
++    sim_hostendian="-DWITH_HOST_BYTE_ORDER=BIG_ENDIAN"
++  else
++    sim_hostendian="-DWITH_HOST_BYTE_ORDER=LITTLE_ENDIAN"
++  fi
++else
++  sim_hostendian="-DWITH_HOST_BYTE_ORDER=0"
++fi
++fi
++
++
++# Check whether --enable-sim-environment was given.
++if test "${enable_sim_environment+set}" = set; then :
++  enableval=$enable_sim_environment; case "${enableval}" in
++  all | ALL)             sim_environment="-DWITH_ENVIRONMENT=ALL_ENVIRONMENT";;
++  user | USER)           sim_environment="-DWITH_ENVIRONMENT=USER_ENVIRONMENT";;
++  virtual | VIRTUAL)     sim_environment="-DWITH_ENVIRONMENT=VIRTUAL_ENVIRONMENT";;
++  operating | OPERATING) sim_environment="-DWITH_ENVIRONMENT=OPERATING_ENVIRONMENT";;
++  *)   as_fn_error "\"Unknown value $enableval passed to --enable-sim-environment\"" "$LINENO" 5;
++       sim_environment="";;
++esac
++if test x"$silent" != x"yes" && test x"$sim_environment" != x""; then
++  echo "Setting sim environment = $sim_environment" 6>&1
++fi
++else
++  sim_environment="-DWITH_ENVIRONMENT=ALL_ENVIRONMENT"
++fi
++
++
++default_sim_inline=""
++# Check whether --enable-sim-inline was given.
++if test "${enable_sim_inline+set}" = set; then :
++  enableval=$enable_sim_inline; sim_inline=""
++case "$enableval" in
++  no)		sim_inline="-DDEFAULT_INLINE=0";;
++  0)		sim_inline="-DDEFAULT_INLINE=0";;
++  yes | 2)	sim_inline="-DDEFAULT_INLINE=ALL_C_INLINE";;
++  1)		sim_inline="-DDEFAULT_INLINE=INLINE_LOCALS";;
++  *) for x in `echo "$enableval" | sed -e "s/,/ /g"`; do
++       new_flag=""
++       case "$x" in
++	 *_INLINE=*)	new_flag="-D$x";;
++	 *=*)		new_flag=`echo "$x" | sed -e "s/=/_INLINE=/" -e "s/^/-D/"`;;
++	 *_INLINE)	new_flag="-D$x=ALL_C_INLINE";;
++	 *)		new_flag="-D$x""_INLINE=ALL_C_INLINE";;
++       esac
++       if test x"$sim_inline" = x""; then
++	 sim_inline="$new_flag"
++       else
++	 sim_inline="$sim_inline $new_flag"
++       fi
++     done;;
++esac
++if test x"$silent" != x"yes" && test x"$sim_inline" != x""; then
++  echo "Setting inline flags = $sim_inline" 6>&1
++fi
++else
++
++if test "x$cross_compiling" = "xno"; then
++  if test x"$GCC" != "x" -a x"${default_sim_inline}" != "x" ; then
++    sim_inline="${default_sim_inline}"
++    if test x"$silent" != x"yes"; then
++      echo "Setting inline flags = $sim_inline" 6>&1
++    fi
++  else
++    sim_inline=""
++  fi
++else
++  sim_inline="-DDEFAULT_INLINE=0"
++fi
++fi
 +
 +
 +# Check whether --enable-werror was given.
@@ -19819,19 +20171,6 @@ index 0000000..67daa13
 +    { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${WARN_CFLAGS} ${WERROR_CFLAGS}" >&5
 +$as_echo "${WARN_CFLAGS} ${WERROR_CFLAGS}" >&6; }
 +fi
-+
-+
-+for ac_header in stdint.h
-+do :
-+  ac_fn_c_check_header_mongrel "$LINENO" "stdint.h" "ac_cv_header_stdint_h" "$ac_includes_default"
-+if test "x$ac_cv_header_stdint_h" = x""yes; then :
-+  cat >>confdefs.h <<_ACEOF
-+#define HAVE_STDINT_H 1
-+_ACEOF
-+
-+fi
-+
-+done
 +
 +
 +
@@ -19968,6 +20307,7 @@ index 0000000..67daa13
 +  as_fn_error "conditional \"MAINTAINER_MODE\" was never defined.
 +Usually this means the macro was only invoked conditionally." "$LINENO" 5
 +fi
++
 +
 +: ${CONFIG_STATUS=./config.status}
 +ac_write_fail=0
@@ -22100,10 +22440,10 @@ index 0000000..67daa13
 +
 diff --git a/sim/pru/configure.ac b/sim/pru/configure.ac
 new file mode 100644
-index 0000000..6a052f4
+index 0000000..96d0ffd
 --- /dev/null
 +++ b/sim/pru/configure.ac
-@@ -0,0 +1,12 @@
+@@ -0,0 +1,15 @@
 +dnl Process this file with autoconf to produce a configure script.
 +AC_PREREQ(2.64)dnl
 +AC_INIT(Makefile.in)
@@ -22111,17 +22451,20 @@ index 0000000..6a052f4
 +
 +SIM_AC_COMMON
 +
++SIM_AC_OPTION_ENDIAN
++SIM_AC_OPTION_ALIGNMENT(STRICT_ALIGNMENT,STRICT_ALIGNMENT)
++SIM_AC_OPTION_HOSTENDIAN
++SIM_AC_OPTION_ENVIRONMENT
++SIM_AC_OPTION_INLINE
 +SIM_AC_OPTION_WARNINGS
-+
-+AC_CHECK_HEADERS(stdint.h)
 +
 +SIM_AC_OUTPUT
 diff --git a/sim/pru/interp.c b/sim/pru/interp.c
 new file mode 100644
-index 0000000..e88a14b
+index 0000000..2ccbc2c
 --- /dev/null
 +++ b/sim/pru/interp.c
-@@ -0,0 +1,992 @@
+@@ -0,0 +1,952 @@
 +/* Simulator for PRU processor
 +   Copyright 2014 Free Software Foundation, Inc.
 +   Inspired by the Microblase simulator
@@ -22154,15 +22497,16 @@ index 0000000..e88a14b
 +#include "sim-utils.h"
 +#include "pru.h"
 +
++#include "sim-main.h"
++#include "sim-base.h"
++#include "sim-options.h"
++
 +#ifndef NUM_ELEM
 +#define NUM_ELEM(A) (sizeof (A) / sizeof (A)[0])
 +#endif
 +
 +#define max(a,b) ((a) > (b) ? (a) : (b))
 +
-+host_callback *callback;
-+struct sim_state pru_state;
-+static char *myname;
 +static int issue_messages = 0;
 +static int tracing = 0;
 +static int sim_dmem_size = DMEM_DEFAULT_SIZE;
@@ -22256,11 +22600,24 @@ index 0000000..e88a14b
 +  *reg = (*reg & ~mask) | ((val << sh) & mask);
 +}
 +
++static uint32_t
++imem_wordaddr_to_byteaddr (SIM_CPU *cpu, uint16_t wa)
++{
++  return (((uint32_t)wa << 2) & IMEM_ADDR_MASK) | PC_ADDR_SPACE_MARKER;
++}
++
++static uint16_t
++imem_byteaddr_to_wordaddr (SIM_CPU *cpu, uint32_t ba)
++{
++  return (ba >> 2) & 0xffff;
++}
++
 +
 +/* Store "nbytes" into DMEM "addr" from CPU register file, starting with
 +   register "regn", and byte "regb" within it. */
 +static inline void
-+pru_reg2dmem (uint32_t addr, unsigned int nbytes, int regn, int regb)
++pru_reg2dmem (SIM_CPU *cpu, uint32_t addr, unsigned int nbytes,
++	      int regn, int regb)
 +{
 +  if (abort_on_dmem_zero_access && addr < 4)
 +    {
@@ -22301,7 +22658,8 @@ index 0000000..e88a14b
 +}
 +
 +static inline void
-+pru_dmem2reg (uint32_t addr, unsigned int nbytes, int regn, int regb)
++pru_dmem2reg (SIM_CPU *cpu, uint32_t addr, unsigned int nbytes,
++	      int regn, int regb)
 +{
 +  if (abort_on_dmem_zero_access && addr < 4)
 +    {
@@ -22344,7 +22702,7 @@ index 0000000..e88a14b
 +}
 +
 +static inline uint32_t
-+pru_read_u8_dmem (uint32_t addr)
++pru_read_u8_dmem (SIM_CPU *cpu, uint32_t addr)
 +{
 +  if (addr >= CPU.dsize)
 +    {
@@ -22363,7 +22721,7 @@ index 0000000..e88a14b
 +}
 +
 +static inline uint32_t
-+pru_read_u32_imem (uint32_t iwaddr)
++pru_read_u32_imem (SIM_CPU *cpu, uint32_t iwaddr)
 +{
 +  iwaddr &= IMEM_ADDR_MASK >> 2;
 +  if (iwaddr >= CPU.isize / 4)
@@ -22385,8 +22743,8 @@ index 0000000..e88a14b
 +/* Set DMEM size. The binutils sim HAL has no notion for separate address
 +   spaces, so we take the easy route and always use the maximum possible
 +   IMEM size (256KB). */
-+void
-+sim_size (int dsize)
++static void
++sim_size (SIM_CPU *cpu, int dsize)
 +{
 +  sim_dmem_size = dsize;
 +  CPU.dsize = sim_dmem_size;
@@ -22426,22 +22784,22 @@ index 0000000..e88a14b
 +}
 +
 +static void
-+init_pointers ()
++init_pointers (SIM_CPU *cpu)
 +{
 +  if (CPU.dsize != sim_dmem_size)
-+    sim_size (sim_dmem_size);
++    sim_size (cpu, sim_dmem_size);
 +}
 +
 +static void
-+set_initial_gprs ()
++set_initial_gprs (SIM_CPU *cpu)
 +{
 +  int i;
 +  long space;
 +
-+  init_pointers ();
++  init_pointers (cpu);
 +
 +  /* Set up machine just out of reset.  */
-+  PC = 0;
++  CPU_PC_SET (cpu, 0);
 +  PC_ADDR_SPACE_MARKER = 0x20000000; /* from default linker script? */
 +
 +  if (issue_messages > 1) {
@@ -22518,7 +22876,8 @@ index 0000000..e88a14b
 +}
 +
 +static void
-+pru_sim_xin_mac(unsigned int rd_regn, unsigned int rdb, unsigned int length)
++pru_sim_xin_mac(SIM_CPU *cpu, unsigned int rd_regn, unsigned int rdb,
++		unsigned int length)
 +{
 +  if (rd_regn < 25 || (rd_regn * 4 + rdb + length) > (27 + 1) * 4)
 +    {
@@ -22553,12 +22912,12 @@ index 0000000..e88a14b
 +}
 +
 +static void
-+pru_sim_xin(unsigned int wba, unsigned int rd_regn, unsigned int rdb,
-+	    unsigned int length)
++pru_sim_xin(SIM_CPU *cpu, unsigned int wba, unsigned int rd_regn,
++	    unsigned int rdb, unsigned int length)
 +{
 +  if (wba == 0)
 +    {
-+      pru_sim_xin_mac (rd_regn, rdb, length);
++      pru_sim_xin_mac (cpu, rd_regn, rdb, length);
 +    }
 +  else if (wba == 254 || wba == 255)
 +    {
@@ -22582,8 +22941,8 @@ index 0000000..e88a14b
 +}
 +
 +static void
-+pru_sim_xout(unsigned int wba, unsigned int rd_regn, unsigned int rdb,
-+	    unsigned int length)
++pru_sim_xout(SIM_CPU *cpu, unsigned int wba, unsigned int rd_regn,
++	     unsigned int rdb, unsigned int length)
 +{
 +  const int modereg_accessed = (rd_regn == 25);	/* revise! */
 +
@@ -22642,7 +23001,7 @@ index 0000000..e88a14b
 +}
 +
 +static void
-+pru_sim_syscall (void)
++pru_sim_syscall (SIM_CPU *cpu)
 +{
 +  const uint32_t sysn = CPU.regs[14];
 +  uint32_t c, p;
@@ -22662,7 +23021,7 @@ index 0000000..e88a14b
 +    case 3: /* PUTS */
 +      p = CPU.regs[15];
 +      do {
-+	  c = pru_read_u8_dmem (p++);
++	  c = pru_read_u8_dmem (cpu, p++);
 +	  if (c)
 +	    {
 +	      fputc (c, stdout);
@@ -22677,6 +23036,8 @@ index 0000000..e88a14b
 +void
 +sim_resume (SIM_DESC sd, int step, int siggnal)
 +{
++  SIM_CPU *cpu = STATE_CPU (sd, 0);
++  uint16_t PC = imem_byteaddr_to_wordaddr (cpu, CPU_PC_GET (cpu));
 +  int memops;
 +  int insts;
 +
@@ -22693,7 +23054,7 @@ index 0000000..e88a14b
 +      int rd_is_modified = 0;	/* RD modified and must be stored back */
 +
 +      /* Fetch the initial instructions that we'll decode. */
-+      inst = pru_read_u32_imem (PC);
++      inst = pru_read_u32_imem (cpu, PC);
 +
 +      op = pru_find_opcode (inst);
 +
@@ -22706,7 +23067,7 @@ index 0000000..e88a14b
 +
 +      if (tracing)
 +	fprintf (stderr, "%08x: %08x ; %s %s",
-+		 PC * 4 | PC_ADDR_SPACE_MARKER,
++		 (int)PC * 4 | PC_ADDR_SPACE_MARKER,
 +		 inst, op->name, op->args);
 +
 +      switch(op->type)
@@ -22746,6 +23107,8 @@ index 0000000..e88a14b
 +    }
 +  while (!CPU.exception);
 +
++  CPU_PC_SET (cpu, imem_wordaddr_to_byteaddr (cpu, PC));
++
 +  CPU.insts += insts;				/* instructions done ... */
 +  CPU.cycles += insts;				/* and each takes a cycle */
 +  CPU.cycles += memops * MEM_ACCESS_CYCLES; 	/* and memop cycle delays */
@@ -22755,8 +23118,10 @@ index 0000000..e88a14b
 +int
 +sim_write (SIM_DESC sd, SIM_ADDR addr, const unsigned char *buffer, int size)
 +{
++  SIM_CPU *cpu = STATE_CPU (sd, 0);
 +  int i;
-+  init_pointers ();
++
++  init_pointers (cpu);
 +
 +  if (addr > MAX_DMEM_ADDR)
 +    {
@@ -22776,8 +23141,10 @@ index 0000000..e88a14b
 +int
 +sim_read (SIM_DESC sd, SIM_ADDR addr, unsigned char *buffer, int size)
 +{
++  SIM_CPU *cpu = STATE_CPU (sd, 0);
 +  int i;
-+  init_pointers ();
++
++  init_pointers (cpu);
 +
 +  if (addr > MAX_DMEM_ADDR)
 +    {
@@ -22794,11 +23161,27 @@ index 0000000..e88a14b
 +  return size;
 +}
 +
++static sim_cia
++pru_pc_get (sim_cpu *cpu)
++{
++  /* present PC as byte address */
++  return imem_wordaddr_to_byteaddr (cpu, cpu->pru_cpu.pc);
++}
++
++static void
++pru_pc_set (sim_cpu *cpu, sim_cia pc)
++{
++  /* PC given as byte address */
++  cpu->pru_cpu.pc = imem_byteaddr_to_wordaddr (cpu, pc);
++}
++
 +
 +int
 +sim_store_register (SIM_DESC sd, int rn, unsigned char *memory, int length)
 +{
-+  init_pointers ();
++  SIM_CPU *cpu = STATE_CPU (sd, 0);
++
++  init_pointers (cpu);
 +
 +  if (rn < NUM_REGS && rn >= 0)
 +    {
@@ -22809,8 +23192,7 @@ index 0000000..e88a14b
 +	  if (rn < 32)
 +	    CPU.regs[rn] = ival;
 +	  else
-+	    /* PC given as byte address */
-+	    PC = ival >> 2;
++	    pru_pc_set (cpu, ival);
 +	  return 4;
 +	}
 +      else
@@ -22823,8 +23205,10 @@ index 0000000..e88a14b
 +int
 +sim_fetch_register (SIM_DESC sd, int rn, unsigned char *memory, int length)
 +{
++  SIM_CPU *cpu = STATE_CPU (sd, 0);
 +  long ival;
-+  init_pointers ();
++
++  init_pointers (cpu);
 +
 +  if (rn < NUM_REGS && rn >= 0)
 +    {
@@ -22833,8 +23217,7 @@ index 0000000..e88a14b
 +	  if (rn < 32)
 +	    ival = CPU.regs[rn];
 +	  else
-+	    /* present PC as byte address */
-+	    ival = ((PC << 2) & IMEM_ADDR_MASK) | PC_ADDR_SPACE_MARKER;
++	    ival = pru_pc_get (cpu);
 +
 +	  /* misalignment-safe */
 +	  pru_store_unsigned_integer (memory, 4, ival);
@@ -22848,21 +23231,11 @@ index 0000000..e88a14b
 +}
 +
 +
-+int
-+sim_trace (SIM_DESC sd)
-+{
-+  tracing = 1;
-+
-+  sim_resume (sd, 0, 0);
-+
-+  tracing = 0;
-+
-+  return 1;
-+}
-+
 +void
 +sim_stop_reason (SIM_DESC sd, enum sim_stop *reason, int *sigrc)
 +{
++  SIM_CPU *cpu = STATE_CPU (sd, 0);
++
 +  if (CPU.exception == SIGQUIT)
 +    {
 +      *reason = sim_exited;
@@ -22878,17 +23251,12 @@ index 0000000..e88a14b
 +}
 +
 +
-+int
-+sim_stop (SIM_DESC sd)
-+{
-+  CPU.exception = SIGINT;
-+  return 1;
-+}
-+
-+
 +void
 +sim_info (SIM_DESC sd, int verbose)
 +{
++  SIM_CPU *cpu = STATE_CPU (sd, 0);
++  host_callback *callback = STATE_CALLBACK (sd);
++
 +  callback->printf_filtered (callback, "\n\n# instructions executed  %10d\n",
 +			     CPU.insts);
 +  callback->printf_filtered (callback, "# cycles                 %10d\n",
@@ -22896,168 +23264,114 @@ index 0000000..e88a14b
 +
 +}
 +
++static void
++free_state (SIM_DESC sd)
++{
++  if (STATE_MODULES (sd) != NULL)
++    sim_module_uninstall (sd);
++  sim_cpu_free_all (sd);
++  sim_state_free (sd);
++}
++
 +SIM_DESC
 +sim_open (SIM_OPEN_KIND kind, host_callback *cb, struct bfd *abfd, char **argv)
 +{
-+  /*  SIM_DESC sd = sim_state_alloc(kind, alloc);*/
++  int i;
++  SIM_DESC sd = sim_state_alloc (kind, cb);
++  SIM_ASSERT (STATE_MAGIC (sd) == SIM_MAGIC_NUMBER);
 +
-+  int odsize = sim_dmem_size;
-+  myname = argv[0];
-+  callback = cb;
++  /* The cpu data is kept in a separately allocated chunk of memory.  */
++  if (sim_cpu_alloc_all (sd, 1, /*cgen_cpu_max_extra_bytes ()*/0) != SIM_RC_OK)
++    {
++      free_state (sd);
++      return 0;
++    }
++
++  if (sim_pre_argv_init (sd, argv[0]) != SIM_RC_OK)
++    {
++      free_state (sd);
++      return 0;
++    }
++
++  /* getopt will print the error message so we just have to exit if this fails.
++     FIXME: Hmmm...  in the case of gdb we need getopt to call
++     print_filtered.  */
++  if (sim_parse_args (sd, argv) != SIM_RC_OK)
++    {
++      free_state (sd);
++      return 0;
++    }
++
++  /* Check for/establish the a reference program image.  */
++  if (sim_analyze_program (sd,
++			   (STATE_PROG_ARGV (sd) != NULL
++			    ? *STATE_PROG_ARGV (sd)
++			    : NULL), abfd) != SIM_RC_OK)
++    {
++      free_state (sd);
++      return 0;
++    }
++
++  /* Configure/verify the target byte order and other runtime
++     configuration options.  */
++  if (sim_config (sd) != SIM_RC_OK)
++    {
++      sim_module_uninstall (sd);
++      return 0;
++    }
++
++  if (sim_post_argv_init (sd) != SIM_RC_OK)
++    {
++      /* Uninstall the modules to avoid memory leaks,
++	 file descriptor leaks, etc.  */
++      sim_module_uninstall (sd);
++      return 0;
++    }
 +
 +  if (kind == SIM_OPEN_STANDALONE)
 +    issue_messages = 1;
 +
-+  /* Discard and reacquire memory -- start with a clean slate.  */
-+  sim_size (1);		/* small */
-+  sim_size (odsize);	/* and back again */
++  /* CPU specific initialization.  */
++  for (i = 0; i < MAX_NR_PROCESSORS; ++i)
++    {
++      SIM_CPU *cpu = STATE_CPU (sd, i);
++      int odsize = sim_dmem_size;
 +
-+  set_initial_gprs ();	/* Reset the GPR registers.  */
++      CPU_PC_FETCH (cpu) = pru_pc_get;
++      CPU_PC_STORE (cpu) = pru_pc_set;
 +
-+  return ((SIM_DESC) 1);
++      set_initial_gprs (cpu);
++
++      /* Discard and reacquire memory -- start with a clean slate.  */
++      sim_size (cpu, 1);		/* small */
++      sim_size (cpu, odsize);	/* and back again */
++    }
++
++  return sd;
 +}
 +
 +void
 +sim_close (SIM_DESC sd, int quitting)
 +{
-+  if (CPU.dmem || CPU.imem)
-+    {
-+      free(CPU.dmem);
-+      free(CPU.imem);
-+      CPU.dmem = CPU.imem = NULL;
-+      CPU.dsize = CPU.isize = 0;
-+    }
-+}
-+
-+SIM_RC
-+sim_load (SIM_DESC sd, const char *prog, bfd *abfd, int from_tty)
-+{
-+  unsigned long text_size;
-+
-+  /* Do the right thing for ELF executables; this turns out to be
-+     just about the right thing for any object format that:
-+       - we crack using BFD routines
-+       - follows the traditional UNIX text/data/bss layout
-+       - calls the bss section ".bss".   */
-+
-+  extern bfd *sim_load_file (); /* ??? Don't know where this should live.  */
-+  bfd *prog_bfd;
-+
-+  {
-+    bfd *handle;
-+    asection *s;
-+    int found_loadable_section = 0;
-+    bfd_vma max_imem_addr = 0;
-+    bfd_vma max_dmem_addr = 0;
-+    handle = bfd_openr (prog, 0);
-+
-+    if (!handle)
-+      {
-+	printf("``%s'' could not be opened.\n", prog);
-+	return SIM_RC_FAIL;
-+      }
-+
-+    /* Makes sure that we have an object file, also cleans gets the
-+       section headers in place.  */
-+    if (!bfd_check_format (handle, bfd_object))
-+      {
-+	/* wasn't an object file */
-+	bfd_close (handle);
-+	printf ("``%s'' is not appropriate object file.\n", prog);
-+	return SIM_RC_FAIL;
-+      }
-+
-+    for (s = handle->sections; s; s = s->next)
-+      {
-+	if (s->flags & SEC_ALLOC)
-+	  {
-+	    const unsigned int flags = bfd_get_section_flags (handle, s);
-+	    size_t size = bfd_get_section_size (s);
-+	    if (size > 0)
-+	      {
-+		bfd_vma vma = bfd_section_vma (handle, s);
-+		if ((flags & SEC_CODE) && (vma + size) >= max_imem_addr)
-+		  {
-+		    max_imem_addr = vma + size;
-+		  }
-+		if ((~flags & SEC_CODE) && (vma + size) >= max_dmem_addr)
-+		  {
-+		    max_dmem_addr = vma + size;
-+		  }
-+	      }
-+	    if (s->flags & SEC_LOAD)
-+	      found_loadable_section = 1;
-+	  }
-+      }
-+
-+    if (!found_loadable_section)
-+      {
-+	/* No loadable sections */
-+	bfd_close(handle);
-+	printf("No loadable sections in file %s\n", prog);
-+	return SIM_RC_FAIL;
-+      }
-+
-+    sim_dmem_size = max (DMEM_DEFAULT_SIZE, (unsigned long) max_dmem_addr);
-+
-+    text_size = (unsigned long) max_imem_addr & IMEM_ADDR_MASK;
-+
-+    if (text_size >= IMEM_DEFAULT_SIZE)
-+      {
-+	bfd_close (handle);
-+	printf ("Text segment (%lu bytes) cannot fit in IMEM (%lu bytes)\n",
-+		text_size, IMEM_DEFAULT_SIZE);
-+	return SIM_RC_FAIL;
-+      }
-+
-+    /* Clean up after ourselves.  */
-+    bfd_close (handle);
-+  }
-+
-+  /* from sh -- dac */
-+  prog_bfd = sim_load_file (sd, myname, callback, prog, abfd,
-+			    1,
-+			    0, sim_write);
-+  if (prog_bfd == NULL)
-+    return SIM_RC_FAIL;
-+
-+  PC = bfd_get_start_address (prog_bfd) >> 2;
-+  PC_ADDR_SPACE_MARKER = bfd_get_start_address (prog_bfd) & ~IMEM_ADDR_MASK;
-+
-+  if (abfd == NULL)
-+    bfd_close (prog_bfd);
-+
-+  return SIM_RC_OK;
++  /* Do nothing. */
 +}
 +
 +SIM_RC
 +sim_create_inferior (SIM_DESC sd, struct bfd *prog_bfd, char **argv, char **env)
 +{
-+  int l;
++  SIM_CPU *cpu = STATE_CPU (sd, 0);
 +
-+  /* Set the initial register set.  */
-+  l = issue_messages;
-+  issue_messages = 0;
-+  set_initial_gprs ();
-+  issue_messages = l;
-+
-+  PC = bfd_get_start_address (prog_bfd) >> 2;
++  CPU_PC_SET (cpu, bfd_get_start_address (prog_bfd));
 +  PC_ADDR_SPACE_MARKER = bfd_get_start_address (prog_bfd) & ~IMEM_ADDR_MASK;
-+
-+  /* For now ignore all parameters to the program */
 +
 +  return SIM_RC_OK;
 +}
 +
 +void
-+sim_kill (SIM_DESC sd)
-+{
-+  /* nothing to do */
-+}
-+
-+void
 +sim_do_command (SIM_DESC sd, const char *cmd)
 +{
++  SIM_CPU *cpu = STATE_CPU (sd, 0);
++
 +  /* Nothing there yet; it's all an error.  */
 +
 +  if (cmd != NULL)
@@ -23103,20 +23417,9 @@ index 0000000..e88a14b
 +    }
 +}
 +
-+void
-+sim_set_callbacks (host_callback *ptr)
-+{
-+  callback = ptr;
-+}
-+
-+char **
-+sim_complete_command (SIM_DESC sd, const char *text, const char *uint32_t)
-+{
-+  return NULL;
-+}
 diff --git a/sim/pru/pru.h b/sim/pru/pru.h
 new file mode 100644
-index 0000000..485005b
+index 0000000..221ea73
 --- /dev/null
 +++ b/sim/pru/pru.h
 @@ -0,0 +1,95 @@
@@ -23140,6 +23443,7 @@ index 0000000..485005b
 +   You should have received a copy of the GNU General Public License
 +   along with this program; if not, see <http://www.gnu.org/licenses/>.  */
 +
++#include "config.h"
 +#include "opcode/pru.h"
 +
 +#define IMEM_ADDR_MASK	((1u << 23) - 1)
@@ -23152,7 +23456,7 @@ index 0000000..485005b
 +#define DMEM_DEFAULT_SIZE (64 * 1024 * 1024)	  /* 64MB should be enough */
 +#define IMEM_DEFAULT_SIZE (64 * 4 * 1024) /* 16-bit word addressable space */
 +
-+#define CPU     pru_state.cpu[0].pru_cpu
++#define CPU     (cpu->pru_cpu)
 +
 +/* (void)0 is a guard against using RD as a left-hand side value. */
 +#define RD      (void)0; rd_is_modified = 1; _RDVAL
@@ -23186,15 +23490,14 @@ index 0000000..485005b
 +#define BURSTLEN _BURSTLEN_CALCULATE (GET_BURSTLEN (inst))
 +#define XFR_LENGTH _BURSTLEN_CALCULATE (GET_INSN_FIELD (XFR_LENGTH, inst))
 +
-+#define DO_XIN(wba,regn,rdb,l) pru_sim_xin ((wba), (regn), (rdb), (l))
-+#define DO_XOUT(wba,regn,rdb,l) pru_sim_xout ((wba), (regn), (rdb), (l))
++#define DO_XIN(wba,regn,rdb,l) pru_sim_xin (cpu, (wba), (regn), (rdb), (l))
++#define DO_XOUT(wba,regn,rdb,l) pru_sim_xout (cpu, (wba), (regn), (rdb), (l))
 +
-+#define DO_SYSCALL()	pru_sim_syscall()
++#define DO_SYSCALL()	pru_sim_syscall(cpu)
 +
 +#define MAC_R25_MAC_MODE_MASK	  (1u << 0)
 +#define MAC_R25_ACC_CARRY_MASK	  (1u << 1)
 +
-+#define PC	CPU.pc
 +#define CARRY	CPU.carry
 +#define CTABLE	CPU.ctable
 +
@@ -23217,7 +23520,7 @@ index 0000000..485005b
 +
 diff --git a/sim/pru/pru.isa b/sim/pru/pru.isa
 new file mode 100644
-index 0000000..0da0dfe
+index 0000000..4653015
 --- /dev/null
 +++ b/sim/pru/pru.isa
 @@ -0,0 +1,250 @@
@@ -23388,22 +23691,22 @@ index 0000000..0da0dfe
 +	    PC = !(RS1 & (1u << (OP2 & 0x1f))) ? (PC + BROFF) : (PC + 1))
 +
 +INSTRUCTION(lbbo,
-+	    pru_dmem2reg (XBBO_BASEREG + (IO ? IMM8 : RS2),
++	    pru_dmem2reg (cpu, XBBO_BASEREG + (IO ? IMM8 : RS2),
 +			  BURSTLEN, RD_REGN, RDB);
 +	    PC++)
 +
 +INSTRUCTION(sbbo,
-+	    pru_reg2dmem (XBBO_BASEREG + (IO ? IMM8 : RS2),
++	    pru_reg2dmem (cpu, XBBO_BASEREG + (IO ? IMM8 : RS2),
 +			  BURSTLEN, RD_REGN, RDB);
 +	    PC++)
 +
 +INSTRUCTION(lbco,
-+	    pru_dmem2reg (CTABLE[CB] + (IO ? IMM8 : RS2),
++	    pru_dmem2reg (cpu, CTABLE[CB] + (IO ? IMM8 : RS2),
 +			  BURSTLEN, RD_REGN, RDB);
 +	    PC++)
 +
 +INSTRUCTION(sbco,
-+	    pru_reg2dmem (CTABLE[CB] + (IO ? IMM8 : RS2),
++	    pru_reg2dmem (cpu, CTABLE[CB] + (IO ? IMM8 : RS2),
 +			  BURSTLEN, RD_REGN, RDB);
 +	    PC++)
 +
@@ -23473,10 +23776,10 @@ index 0000000..0da0dfe
 +
 diff --git a/sim/pru/sim-main.h b/sim/pru/sim-main.h
 new file mode 100644
-index 0000000..c19c803
+index 0000000..01f683c
 --- /dev/null
 +++ b/sim/pru/sim-main.h
-@@ -0,0 +1,81 @@
+@@ -0,0 +1,80 @@
 +#ifndef PRU_SIM_MAIN
 +#define PRU_SIM_MAIN
 +
@@ -23500,7 +23803,7 @@ index 0000000..c19c803
 +#include <stdint.h>
 +#include "pru.h"
 +#include "sim-basics.h"
-+typedef address_word sim_cia;
++
 +#include "sim-base.h"
 +
 +/* The machine state.
@@ -23522,7 +23825,7 @@ index 0000000..c19c803
 +struct pru_regset
 +{
 +  uint32_t        regs[32];		/* primary registers */
-+  uint32_t	  pc;			/* IMEM _word_ address */
++  uint16_t	  pc;			/* IMEM _word_ address */
 +  uint32_t	  pc_addr_space_marker; /* IMEM virtual linker offset. This
 +					   is the artificial offset that
 +					   we invent in order to "separate"
@@ -23531,9 +23834,9 @@ index 0000000..c19c803
 +  uint32_t        ctable[32];		/* constant offsets table for xBCO */
 +  uint32_t	  macregs[PRU_MAC_NREGS];
 +  struct {
-+    uint32_t looptop;			/* LOOP top (PC of loop instr) */
-+    uint32_t loopend;			/* LOOP end (PC of loop end label) */
-+    uint32_t loop_in_progress;		/* whether to check for PC==loopend */
++    uint16_t looptop;			/* LOOP top (PC of loop instr) */
++    uint16_t loopend;			/* LOOP end (PC of loop end label) */
++    int loop_in_progress;		/* whether to check for PC==loopend */
 +    uint32_t loop_counter;		/* LOOP counter */
 +  } loop;
 +  int		  cycles;
@@ -23550,14 +23853,13 @@ index 0000000..c19c803
 +  sim_cpu_base base;
 +};
 +
-+#define MAX_NR_PROCESSORS 1
 +struct sim_state {
-+  sim_cpu cpu[MAX_NR_PROCESSORS];
-+#define STATE_CPU(sd, n) (&(sd)->cpu[0])
++  sim_cpu *cpu[MAX_NR_PROCESSORS];
++
 +  sim_state_base base;
 +};
 +#endif /* PRU_SIM_MAIN */
 +
 -- 
-2.1.4
+2.5.1
 

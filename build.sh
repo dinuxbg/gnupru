@@ -4,8 +4,8 @@
 
 # On which upstream commits to apply patches. I frequently rebase so
 # expect these to be somewhat random.
-GCC_BASECOMMIT=c4d336f9d7a205c57820c17a993ecff6fa1db924
-BINUTILS_BASECOMMIT=f30d5c78faa5979fb933038923e5270b7728f96f
+GCC_BASECOMMIT=d7739c9adec2dd861eb89a9a246547f95dd54f5b
+BINUTILS_BASECOMMIT=3bd7e5b7ee5ea0b3bbb4030ca841f66faad74f0f
 NEWLIB_BASECOMMIT=e0f24404b3fcfa2c332ae14c3934546c91be3f42
 
 GCC_GIT=https://github.com/mirrors/gcc

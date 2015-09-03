@@ -1,4 +1,4 @@
-From 0f9c0ea7303ed2c7baa9cde1641f1dc08e4a848e Mon Sep 17 00:00:00 2001
+From 57065960456ca961a0b0fb8ee9a5782a3b8f59f8 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Mon, 30 Dec 2013 23:47:32 +0200
 Subject: [PATCH 1/2] Initial TI PRU GCC port
@@ -11,29 +11,39 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  configure.ac                                       |    4 +
  gcc/common/config/pru/pru-common.c                 |   44 +
  gcc/config.gcc                                     |   10 +
+ gcc/config/pru/alu-zext.md                         |  451 ++
+ gcc/config/pru/alu-zext.sh                         |   36 +
+ gcc/config/pru/alu-zext.template.md                |  112 +
  gcc/config/pru/constraints.md                      |   68 +
  gcc/config/pru/predicates.md                       |  211 +
  gcc/config/pru/pru-ldst-multiple.md                | 5998 ++++++++++++++++++++
  gcc/config/pru/pru-ldst-multiple.ml                |  145 +
  gcc/config/pru/pru-modes.def                       |   29 +
- gcc/config/pru/pru-pragma.c                        |   96 +
+ gcc/config/pru/pru-pragma.c                        |   89 +
  gcc/config/pru/pru-protos.h                        |   60 +
- gcc/config/pru/pru.c                               | 1766 ++++++
+ gcc/config/pru/pru.c                               | 1788 ++++++
  gcc/config/pru/pru.h                               |  418 ++
- gcc/config/pru/pru.md                              |  579 ++
+ gcc/config/pru/pru.md                              |  598 ++
  gcc/config/pru/pru.opt                             |   27 +
  gcc/config/pru/t-pru                               |   25 +
  gcc/doc/extend.texi                                |   20 +
  gcc/doc/md.texi                                    |   19 +
  gcc/testsuite/gcc.c-torture/execute/20101011-1.c   |    3 +
  gcc/testsuite/gcc.dg/20020312-2.c                  |    2 +
- gcc/testsuite/gcc.dg/graphite/isl-ast-gen-if-1.c   |    2 +-
  gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c         |    2 +-
  gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c         |    2 +-
  gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c         |    2 +-
  gcc/testsuite/gcc.dg/tree-ssa/reassoc-36.c         |    2 +-
- .../gcc.target/pru/pru-pragma-ctable_entry.c       |   22 +
+ gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c |   22 +
  gcc/testsuite/gcc.target/pru/pru.exp               |   41 +
+ gcc/testsuite/gcc.target/pru/qbbc.c                |   29 +
+ gcc/testsuite/gcc.target/pru/qbbs.c                |   29 +
+ .../gcc.target/pru/zero_extend-and-hisi.c          |   16 +
+ .../gcc.target/pru/zero_extend-and-qihi.c          |   16 +
+ .../gcc.target/pru/zero_extend-and-qisi.c          |   16 +
+ gcc/testsuite/gcc.target/pru/zero_extend-hisi.c    |   43 +
+ gcc/testsuite/gcc.target/pru/zero_extend-qihi.c    |   43 +
+ gcc/testsuite/gcc.target/pru/zero_extend-qisi.c    |   43 +
  gcc/testsuite/lib/gcc-dg.exp                       |    5 +
  gcc/testsuite/lib/target-supports.exp              |    7 +-
  gcc/testsuite/lib/target-utils.exp                 |    3 +
@@ -47,8 +57,11 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgcc/config/pru/pru-asm.h                        |   36 +
  libgcc/config/pru/pru-divmod.h                     |  117 +
  libgcc/config/pru/t-pru                            |   40 +
- 42 files changed, 10091 insertions(+), 7 deletions(-)
+ 52 files changed, 10958 insertions(+), 6 deletions(-)
  create mode 100644 gcc/common/config/pru/pru-common.c
+ create mode 100644 gcc/config/pru/alu-zext.md
+ create mode 100755 gcc/config/pru/alu-zext.sh
+ create mode 100644 gcc/config/pru/alu-zext.template.md
  create mode 100644 gcc/config/pru/constraints.md
  create mode 100644 gcc/config/pru/predicates.md
  create mode 100644 gcc/config/pru/pru-ldst-multiple.md
@@ -61,8 +74,16 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 gcc/config/pru/pru.md
  create mode 100644 gcc/config/pru/pru.opt
  create mode 100644 gcc/config/pru/t-pru
- create mode 100644 gcc/testsuite/gcc.target/pru/pru-pragma-ctable_entry.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c
  create mode 100644 gcc/testsuite/gcc.target/pru/pru.exp
+ create mode 100644 gcc/testsuite/gcc.target/pru/qbbc.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/qbbs.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/zero_extend-and-hisi.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/zero_extend-and-qihi.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/zero_extend-and-qisi.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/zero_extend-hisi.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/zero_extend-qihi.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/zero_extend-qisi.c
  create mode 100644 libgcc/config/pru/lib2bitcountHI.c
  create mode 100644 libgcc/config/pru/lib2divHI.c
  create mode 100644 libgcc/config/pru/lib2divQI.c
@@ -85,10 +106,10 @@ index ab97ac6..5807e90 100644
 +cscope.*
 +.*.swp
 diff --git a/config.sub b/config.sub
-index 6d2e94c..d725862 100755
+index f018151..f420cfd 100755
 --- a/config.sub
 +++ b/config.sub
-@@ -301,6 +301,7 @@ case $basic_machine in
+@@ -302,6 +302,7 @@ case $basic_machine in
  	| open8 | or1k | or1knd | or32 \
  	| pdp10 | pdp11 | pj | pjl \
  	| powerpc | powerpc64 | powerpc64le | powerpcle \
@@ -96,19 +117,19 @@ index 6d2e94c..d725862 100755
  	| pyramid \
  	| riscv32 | riscv64 \
  	| rl78 | rx \
-@@ -427,6 +428,7 @@ case $basic_machine in
+@@ -429,6 +430,7 @@ case $basic_machine in
  	| orion-* \
  	| pdp10-* | pdp11-* | pj-* | pjl-* | pn-* | power-* \
  	| powerpc-* | powerpc64-* | powerpc64le-* | powerpcle-* \
 +	| pru \
  	| pyramid-* \
+ 	| riscv32-* | riscv64-* \
  	| rl78-* | romp-* | rs6000-* | rx-* \
- 	| sh-* | sh[1234]-* | sh[24]a-* | sh[24]aeb-* | sh[23]e-* | sh[34]eb-* | sheb-* | shbe-* \
 diff --git a/configure b/configure
-index 098ed9f..bc27735 100755
+index eca5e6f..99bd8e4 100755
 --- a/configure
 +++ b/configure
-@@ -3336,6 +3336,10 @@ case "${target}" in
+@@ -3343,6 +3343,10 @@ case "${target}" in
    powerpc-*-aix* | rs6000-*-aix*)
      noconfigdirs="$noconfigdirs target-libssp"
      ;;
@@ -120,10 +141,10 @@ index 098ed9f..bc27735 100755
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
 diff --git a/configure.ac b/configure.ac
-index 7104631..1d2c71c 100644
+index 9241261..af8321b 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -683,6 +683,10 @@ case "${target}" in
+@@ -686,6 +686,10 @@ case "${target}" in
    powerpc-*-aix* | rs6000-*-aix*)
      noconfigdirs="$noconfigdirs target-libssp"
      ;;
@@ -185,10 +206,10 @@ index 0000000..46e73bd
 +
 +struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index cb08a5c..3512a51 100644
+index 5712547..f20a785 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -439,6 +439,9 @@ powerpc*-*-*)
+@@ -444,6 +444,9 @@ powerpc*-*-*)
  	esac
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
@@ -198,7 +219,7 @@ index cb08a5c..3512a51 100644
  rs6000*-*-*)
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
-@@ -2455,6 +2458,13 @@ powerpcle-*-eabi*)
+@@ -2491,6 +2494,13 @@ powerpcle-*-eabi*)
  	extra_options="${extra_options} rs6000/sysv4.opt"
  	use_gcc_stdint=wrap
  	;;
@@ -212,6 +233,623 @@ index cb08a5c..3512a51 100644
  rs6000-ibm-aix4.[3456789]* | powerpc-ibm-aix4.[3456789]*)
  	tm_file="rs6000/biarch64.h ${tm_file} rs6000/aix.h rs6000/aix43.h rs6000/xcoff.h rs6000/aix-stdint.h"
  	tmake_file="rs6000/t-aix43 t-slibgcc"
+diff --git a/gcc/config/pru/alu-zext.md b/gcc/config/pru/alu-zext.md
+new file mode 100644
+index 0000000..8ea4645
+--- /dev/null
++++ b/gcc/config/pru/alu-zext.md
+@@ -0,0 +1,451 @@
++;; WARNING: This is machine generated! DO NOT EDIT!
++;;
++;;
++;; ALU operations with zero extensions
++;;
++;; <ZOP0@Operand0:SI@Operand0:Zero-extended>
++;; <ZOP1@Operand1:SI@Operand1:Zero-extended>
++;;
++;; Copyright (C) 2015 Free Software Foundation, Inc.
++;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
++;;
++;; This file is part of GCC.
++;;
++;; GCC is free software; you can redistribute it and/or modify
++;; it under the terms of the GNU General Public License as published by
++;; the Free Software Foundation; either version 3, or (at your option)
++;; any later version.
++;;
++;; GCC is distributed in the hope that it will be useful,
++;; but WITHOUT ANY WARRANTY; without even the implied warranty of
++;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++;; GNU General Public License for more details.
++;;
++;; You should have received a copy of the GNU General Public License
++;; along with GCC; see the file COPYING3.  If not see
++;; <http://www.gnu.org/licenses/>.
++
++;; Arithmetic Operations
++
++(define_insn "add_impl<EQD:mode>_<EQS0:mode><EQS1:mode>"
++  [(set (match_operand:EQD 0 "register_operand"            "=r,r,r")
++        (plus:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand"   "%r,r,r")
++	 )
++	 (zero_extend:EQD
++          (match_operand:EQS1 2 "nonmemory_operand" "r,I,M"))
++	 )
++	)]
++  ""
++  "@
++   add\\t%x0, %x1, %x2
++   add\\t%x0, %x1, %x2
++   sub\\t%x0, %x1, -(%2)"
++  [(set_attr "type" "alu")])
++
++(define_insn "sub_impl<EQD:mode>_<EQS0:mode><EQS1:mode>"
++  [(set (match_operand:EQD 0 "register_operand"           "=r,r,r")
++        (minus:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "reg_or_ubyte_operand" "r,r,I")
++	 )
++	 (zero_extend:EQD
++          (match_operand:EQS1 2 "reg_or_ubyte_operand" "r,I,r"))
++	 )
++  )]
++  ""
++  "@
++   sub\\t%x0, %x1, %x2
++   sub\\t%x0, %x1, %x2
++   rsb\\t%x0, %x2, %x1"
++  [(set_attr "type" "alu")])
++
++
++(define_insn "neg_impl<EQD:mode>_<EQS0:mode>_dummy"
++  [(set (match_operand:EQD 0 "register_operand"        "=r")
++        (neg:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand" "r")
++	 )
++	))]
++  ""
++  "rsb\\t%x0, %x1, 0"
++  [(set_attr "type" "alu")])
++
++
++(define_insn "one_cmpl_impl<EQD:mode>_<EQS0:mode>_dummy"
++  [(set (match_operand:EQD 0 "register_operand"        "=r")
++        (not:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand" "r")
++	 )
++	))]
++  ""
++  "not\\t%x0, %x1"
++  [(set_attr "type" "alu")])
++
++(define_insn "<code>_impl<EQD:mode>_<EQS0:mode><EQS1:mode>"
++  [(set (match_operand:EQD 0 "register_operand"                 "=r")
++        (LOGICAL:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand"     "%r")
++	 )
++	 (zero_extend:EQD
++          (match_operand:EQS1 2 "reg_or_ubyte_operand"  "rI"))
++	 )
++  )]
++  ""
++  "<logical_asm>\\t%x0, %x1, %x2"
++  [(set_attr "type" "alu")])
++
++
++(define_insn "<shift_op>_impl<EQD:mode>_<EQS0:mode><EQS1:mode>"
++  [(set (match_operand:EQD 0 "register_operand"          "=r")
++        (SHIFT:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand" "r")
++	 )
++	 (zero_extend:EQD
++	  (match_operand:EQS1 2 "shift_operand"    "rL"))
++	 )
++  )]
++  ""
++  "<shift_asm>\\t%x0, %x1, %x2"
++  [(set_attr "type" "shift")])
++;; ALU operations with zero extensions
++;;
++;; <ZOP0@Operand0:SI@Operand0:Zero-extended>
++;; <ZOP1@Operand1:SI@Operand1:Zero-extended>
++;;
++;; Copyright (C) 2015 Free Software Foundation, Inc.
++;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
++;;
++;; This file is part of GCC.
++;;
++;; GCC is free software; you can redistribute it and/or modify
++;; it under the terms of the GNU General Public License as published by
++;; the Free Software Foundation; either version 3, or (at your option)
++;; any later version.
++;;
++;; GCC is distributed in the hope that it will be useful,
++;; but WITHOUT ANY WARRANTY; without even the implied warranty of
++;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++;; GNU General Public License for more details.
++;;
++;; You should have received a copy of the GNU General Public License
++;; along with GCC; see the file COPYING3.  If not see
++;; <http://www.gnu.org/licenses/>.
++
++;; Arithmetic Operations
++
++(define_insn "add_impl<EQD:mode>_<EQS0:mode>eqd"
++  [(set (match_operand:EQD 0 "register_operand"            "=r,r,r")
++        (plus:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand"   "%r,r,r")
++	 )
++	 
++          (match_operand:EQD 2 "nonmemory_operand" "r,I,M"))
++	 
++	)]
++  ""
++  "@
++   add\\t%x0, %x1, %x2
++   add\\t%x0, %x1, %x2
++   sub\\t%x0, %x1, -(%2)"
++  [(set_attr "type" "alu")])
++
++(define_insn "sub_impl<EQD:mode>_<EQS0:mode>eqd"
++  [(set (match_operand:EQD 0 "register_operand"           "=r,r,r")
++        (minus:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "reg_or_ubyte_operand" "r,r,I")
++	 )
++	 
++          (match_operand:EQD 2 "reg_or_ubyte_operand" "r,I,r"))
++	 
++  )]
++  ""
++  "@
++   sub\\t%x0, %x1, %x2
++   sub\\t%x0, %x1, %x2
++   rsb\\t%x0, %x2, %x1"
++  [(set_attr "type" "alu")])
++
++
++(define_insn "neg_impl<EQD:mode>_<EQS0:mode>eqd"
++  [(set (match_operand:EQD 0 "register_operand"        "=r")
++        (neg:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand" "r")
++	 )
++	))]
++  ""
++  "rsb\\t%x0, %x1, 0"
++  [(set_attr "type" "alu")])
++
++
++(define_insn "one_cmpl_impl<EQD:mode>_<EQS0:mode>eqd"
++  [(set (match_operand:EQD 0 "register_operand"        "=r")
++        (not:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand" "r")
++	 )
++	))]
++  ""
++  "not\\t%x0, %x1"
++  [(set_attr "type" "alu")])
++
++(define_insn "<code>_impl<EQD:mode>_<EQS0:mode>eqd"
++  [(set (match_operand:EQD 0 "register_operand"                 "=r")
++        (LOGICAL:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand"     "%r")
++	 )
++	 
++          (match_operand:EQD 2 "reg_or_ubyte_operand"  "rI"))
++	 
++  )]
++  ""
++  "<logical_asm>\\t%x0, %x1, %x2"
++  [(set_attr "type" "alu")])
++
++
++(define_insn "<shift_op>_impl<EQD:mode>_<EQS0:mode>eqd"
++  [(set (match_operand:EQD 0 "register_operand"          "=r")
++        (SHIFT:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand" "r")
++	 )
++	 
++	  (match_operand:EQD 2 "shift_operand"    "rL"))
++	 
++  )]
++  ""
++  "<shift_asm>\\t%x0, %x1, %x2"
++  [(set_attr "type" "shift")])
++;; ALU operations with zero extensions
++;;
++;; <ZOP0@Operand0:SI@Operand0:Zero-extended>
++;; <ZOP1@Operand1:SI@Operand1:Zero-extended>
++;;
++;; Copyright (C) 2015 Free Software Foundation, Inc.
++;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
++;;
++;; This file is part of GCC.
++;;
++;; GCC is free software; you can redistribute it and/or modify
++;; it under the terms of the GNU General Public License as published by
++;; the Free Software Foundation; either version 3, or (at your option)
++;; any later version.
++;;
++;; GCC is distributed in the hope that it will be useful,
++;; but WITHOUT ANY WARRANTY; without even the implied warranty of
++;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++;; GNU General Public License for more details.
++;;
++;; You should have received a copy of the GNU General Public License
++;; along with GCC; see the file COPYING3.  If not see
++;; <http://www.gnu.org/licenses/>.
++
++;; Arithmetic Operations
++
++(define_insn "add_impl<EQD:mode>_eqd<EQS1:mode>"
++  [(set (match_operand:EQD 0 "register_operand"            "=r,r,r")
++        (plus:EQD
++	 
++	  (match_operand:EQD 1 "register_operand"   "%r,r,r")
++	 
++	 (zero_extend:EQD
++          (match_operand:EQS1 2 "nonmemory_operand" "r,I,M"))
++	 )
++	)]
++  ""
++  "@
++   add\\t%x0, %x1, %x2
++   add\\t%x0, %x1, %x2
++   sub\\t%x0, %x1, -(%2)"
++  [(set_attr "type" "alu")])
++
++(define_insn "sub_impl<EQD:mode>_eqd<EQS1:mode>"
++  [(set (match_operand:EQD 0 "register_operand"           "=r,r,r")
++        (minus:EQD
++	 
++	  (match_operand:EQD 1 "reg_or_ubyte_operand" "r,r,I")
++	 
++	 (zero_extend:EQD
++          (match_operand:EQS1 2 "reg_or_ubyte_operand" "r,I,r"))
++	 )
++  )]
++  ""
++  "@
++   sub\\t%x0, %x1, %x2
++   sub\\t%x0, %x1, %x2
++   rsb\\t%x0, %x2, %x1"
++  [(set_attr "type" "alu")])
++
++
++(define_insn "neg_impl<EQD:mode>_eqd_dummy"
++  [(set (match_operand:EQD 0 "register_operand"        "=r")
++        (neg:EQD
++	 
++	  (match_operand:EQD 1 "register_operand" "r")
++	 
++	))]
++  ""
++  "rsb\\t%x0, %x1, 0"
++  [(set_attr "type" "alu")])
++
++
++(define_insn "one_cmpl_impl<EQD:mode>_eqd_dummy"
++  [(set (match_operand:EQD 0 "register_operand"        "=r")
++        (not:EQD
++	 
++	  (match_operand:EQD 1 "register_operand" "r")
++	 
++	))]
++  ""
++  "not\\t%x0, %x1"
++  [(set_attr "type" "alu")])
++
++(define_insn "<code>_impl<EQD:mode>_eqd<EQS1:mode>"
++  [(set (match_operand:EQD 0 "register_operand"                 "=r")
++        (LOGICAL:EQD
++	 
++	  (match_operand:EQD 1 "register_operand"     "%r")
++	 
++	 (zero_extend:EQD
++          (match_operand:EQS1 2 "reg_or_ubyte_operand"  "rI"))
++	 )
++  )]
++  ""
++  "<logical_asm>\\t%x0, %x1, %x2"
++  [(set_attr "type" "alu")])
++
++
++(define_insn "<shift_op>_impl<EQD:mode>_eqd<EQS1:mode>"
++  [(set (match_operand:EQD 0 "register_operand"          "=r")
++        (SHIFT:EQD
++	 
++	  (match_operand:EQD 1 "register_operand" "r")
++	 
++	 (zero_extend:EQD
++	  (match_operand:EQS1 2 "shift_operand"    "rL"))
++	 )
++  )]
++  ""
++  "<shift_asm>\\t%x0, %x1, %x2"
++  [(set_attr "type" "shift")])
++;; ALU operations with zero extensions
++;;
++;; <ZOP0@Operand0:SI@Operand0:Zero-extended>
++;; <ZOP1@Operand1:SI@Operand1:Zero-extended>
++;;
++;; Copyright (C) 2015 Free Software Foundation, Inc.
++;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
++;;
++;; This file is part of GCC.
++;;
++;; GCC is free software; you can redistribute it and/or modify
++;; it under the terms of the GNU General Public License as published by
++;; the Free Software Foundation; either version 3, or (at your option)
++;; any later version.
++;;
++;; GCC is distributed in the hope that it will be useful,
++;; but WITHOUT ANY WARRANTY; without even the implied warranty of
++;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++;; GNU General Public License for more details.
++;;
++;; You should have received a copy of the GNU General Public License
++;; along with GCC; see the file COPYING3.  If not see
++;; <http://www.gnu.org/licenses/>.
++
++;; Arithmetic Operations
++
++(define_insn "add_impl<EQD:mode>_eqdeqd"
++  [(set (match_operand:EQD 0 "register_operand"            "=r,r,r")
++        (plus:EQD
++	 
++	  (match_operand:EQD 1 "register_operand"   "%r,r,r")
++	 
++	 
++          (match_operand:EQD 2 "nonmemory_operand" "r,I,M"))
++	 
++	)]
++  ""
++  "@
++   add\\t%x0, %x1, %x2
++   add\\t%x0, %x1, %x2
++   sub\\t%x0, %x1, -(%2)"
++  [(set_attr "type" "alu")])
++
++(define_insn "sub_impl<EQD:mode>_eqdeqd"
++  [(set (match_operand:EQD 0 "register_operand"           "=r,r,r")
++        (minus:EQD
++	 
++	  (match_operand:EQD 1 "reg_or_ubyte_operand" "r,r,I")
++	 
++	 
++          (match_operand:EQD 2 "reg_or_ubyte_operand" "r,I,r"))
++	 
++  )]
++  ""
++  "@
++   sub\\t%x0, %x1, %x2
++   sub\\t%x0, %x1, %x2
++   rsb\\t%x0, %x2, %x1"
++  [(set_attr "type" "alu")])
++
++
++(define_insn "neg_impl<EQD:mode>_eqdeqd"
++  [(set (match_operand:EQD 0 "register_operand"        "=r")
++        (neg:EQD
++	 
++	  (match_operand:EQD 1 "register_operand" "r")
++	 
++	))]
++  ""
++  "rsb\\t%x0, %x1, 0"
++  [(set_attr "type" "alu")])
++
++
++(define_insn "one_cmpl_impl<EQD:mode>_eqdeqd"
++  [(set (match_operand:EQD 0 "register_operand"        "=r")
++        (not:EQD
++	 
++	  (match_operand:EQD 1 "register_operand" "r")
++	 
++	))]
++  ""
++  "not\\t%x0, %x1"
++  [(set_attr "type" "alu")])
++
++(define_insn "<code>_impl<EQD:mode>_eqdeqd"
++  [(set (match_operand:EQD 0 "register_operand"                 "=r")
++        (LOGICAL:EQD
++	 
++	  (match_operand:EQD 1 "register_operand"     "%r")
++	 
++	 
++          (match_operand:EQD 2 "reg_or_ubyte_operand"  "rI"))
++	 
++  )]
++  ""
++  "<logical_asm>\\t%x0, %x1, %x2"
++  [(set_attr "type" "alu")])
++
++
++(define_insn "<shift_op>_impl<EQD:mode>_eqdeqd"
++  [(set (match_operand:EQD 0 "register_operand"          "=r")
++        (SHIFT:EQD
++	 
++	  (match_operand:EQD 1 "register_operand" "r")
++	 
++	 
++	  (match_operand:EQD 2 "shift_operand"    "rL"))
++	 
++  )]
++  ""
++  "<shift_asm>\\t%x0, %x1, %x2"
++  [(set_attr "type" "shift")])
+diff --git a/gcc/config/pru/alu-zext.sh b/gcc/config/pru/alu-zext.sh
+new file mode 100755
+index 0000000..0f4b9d5
+--- /dev/null
++++ b/gcc/config/pru/alu-zext.sh
+@@ -0,0 +1,36 @@
++#!/bin/bash
++
++# Generate alu-zext.md with insns for matching ALU operations with
++# various combinations of zero extensions of operands.
++#
++# This script takes a template definition of insns, and instantiates
++# it multiple times. Once with a regular SI argument, and once with
++# a zero-extended argument. Implemented through a straightforward
++# text substition using the following pattern:
++#   {ZOP0@TextWhenSI@TextWhenZeroExt}
++#       | |          |
++#       | |          `- Text when zero-extension is enabled for this op
++#       | `- Text without zero-extension, i.e. regular SI
++#       `- Operand number. This allows per-operand mode selection.
++#
++# The GCC's define_subst is not suitable because there is no way to tell it
++# to both copy the operand and its constraints, and change its size.
++#
++# TODO - check if define_susbt can be augmented to work for our case.
++
++# For ZOP$1 paste option $2
++op()
++{
++  sed -e 's/{ZOP'$1'@\([^@]*\)@\([^}]*\)}/\'$2'/g'
++}
++
++(
++  echo ';; WARNING: This is machine generated! DO NOT EDIT!'
++  echo ';;'
++  echo ';;'
++  # zero_extend ops should take precedence
++  cat alu-zext.template.md | op 0 2 | op 1 2
++  cat alu-zext.template.md | op 0 2 | op 1 1
++  cat alu-zext.template.md | op 0 1 | op 1 2
++  cat alu-zext.template.md | op 0 1 | op 1 1
++) > alu-zext.md
+diff --git a/gcc/config/pru/alu-zext.template.md b/gcc/config/pru/alu-zext.template.md
+new file mode 100644
+index 0000000..a16e7f9
+--- /dev/null
++++ b/gcc/config/pru/alu-zext.template.md
+@@ -0,0 +1,112 @@
++;; ALU operations with zero extensions
++;;
++;; <ZOP0@Operand0:SI@Operand0:Zero-extended>
++;; <ZOP1@Operand1:SI@Operand1:Zero-extended>
++;;
++;; Copyright (C) 2015 Free Software Foundation, Inc.
++;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
++;;
++;; This file is part of GCC.
++;;
++;; GCC is free software; you can redistribute it and/or modify
++;; it under the terms of the GNU General Public License as published by
++;; the Free Software Foundation; either version 3, or (at your option)
++;; any later version.
++;;
++;; GCC is distributed in the hope that it will be useful,
++;; but WITHOUT ANY WARRANTY; without even the implied warranty of
++;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++;; GNU General Public License for more details.
++;;
++;; You should have received a copy of the GNU General Public License
++;; along with GCC; see the file COPYING3.  If not see
++;; <http://www.gnu.org/licenses/>.
++
++;; Arithmetic Operations
++
++(define_insn "add_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@<EQS1:mode>}"
++  [(set (match_operand:EQD 0 "register_operand"            "=r,r,r")
++        (plus:EQD
++	 {ZOP0@@(zero_extend:EQD}
++	  (match_operand:{ZOP0@EQD@EQS0} 1 "register_operand"   "%r,r,r")
++	 {ZOP0@@)}
++	 {ZOP1@@(zero_extend:EQD}
++          (match_operand:{ZOP1@EQD@EQS1} 2 "nonmemory_operand" "r,I,M"))
++	 {ZOP1@@)}
++	)]
++  ""
++  "@
++   add\\t%x0, %x1, %x2
++   add\\t%x0, %x1, %x2
++   sub\\t%x0, %x1, -(%2)"
++  [(set_attr "type" "alu")])
++
++(define_insn "sub_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@<EQS1:mode>}"
++  [(set (match_operand:EQD 0 "register_operand"           "=r,r,r")
++        (minus:EQD
++	 {ZOP0@@(zero_extend:EQD}
++	  (match_operand:{ZOP0@EQD@EQS0} 1 "reg_or_ubyte_operand" "r,r,I")
++	 {ZOP0@@)}
++	 {ZOP1@@(zero_extend:EQD}
++          (match_operand:{ZOP1@EQD@EQS1} 2 "reg_or_ubyte_operand" "r,I,r"))
++	 {ZOP1@@)}
++  )]
++  ""
++  "@
++   sub\\t%x0, %x1, %x2
++   sub\\t%x0, %x1, %x2
++   rsb\\t%x0, %x2, %x1"
++  [(set_attr "type" "alu")])
++
++
++(define_insn "neg_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@_dummy}"
++  [(set (match_operand:EQD 0 "register_operand"        "=r")
++        (neg:EQD
++	 {ZOP0@@(zero_extend:EQD}
++	  (match_operand:{ZOP0@EQD@EQS0} 1 "register_operand" "r")
++	 {ZOP0@@)}
++	))]
++  ""
++  "rsb\\t%x0, %x1, 0"
++  [(set_attr "type" "alu")])
++
++
++(define_insn "one_cmpl_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@_dummy}"
++  [(set (match_operand:EQD 0 "register_operand"        "=r")
++        (not:EQD
++	 {ZOP0@@(zero_extend:EQD}
++	  (match_operand:{ZOP0@EQD@EQS0} 1 "register_operand" "r")
++	 {ZOP0@@)}
++	))]
++  ""
++  "not\\t%x0, %x1"
++  [(set_attr "type" "alu")])
++
++(define_insn "<code>_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@<EQS1:mode>}"
++  [(set (match_operand:EQD 0 "register_operand"                 "=r")
++        (LOGICAL:EQD
++	 {ZOP0@@(zero_extend:EQD}
++	  (match_operand:{ZOP0@EQD@EQS0} 1 "register_operand"     "%r")
++	 {ZOP0@@)}
++	 {ZOP1@@(zero_extend:EQD}
++          (match_operand:{ZOP1@EQD@EQS1} 2 "reg_or_ubyte_operand"  "rI"))
++	 {ZOP1@@)}
++  )]
++  ""
++  "<logical_asm>\\t%x0, %x1, %x2"
++  [(set_attr "type" "alu")])
++
++
++(define_insn "<shift_op>_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@<EQS1:mode>}"
++  [(set (match_operand:EQD 0 "register_operand"          "=r")
++        (SHIFT:EQD
++	 {ZOP0@@(zero_extend:EQD}
++	  (match_operand:{ZOP0@EQD@EQS0} 1 "register_operand" "r")
++	 {ZOP0@@)}
++	 {ZOP1@@(zero_extend:EQD}
++	  (match_operand:{ZOP1@EQD@EQS1} 2 "shift_operand"    "rL"))
++	 {ZOP1@@)}
++  )]
++  ""
++  "<shift_asm>\\t%x0, %x1, %x2"
++  [(set_attr "type" "shift")])
 diff --git a/gcc/config/pru/constraints.md b/gcc/config/pru/constraints.md
 new file mode 100644
 index 0000000..b90152f
@@ -6695,10 +7333,10 @@ index 0000000..d37259a
 +   The tm.h file specifies which one.  It is not a distinct mode.  */
 diff --git a/gcc/config/pru/pru-pragma.c b/gcc/config/pru/pru-pragma.c
 new file mode 100644
-index 0000000..f3d6c49
+index 0000000..b69d59d
 --- /dev/null
 +++ b/gcc/config/pru/pru-pragma.c
-@@ -0,0 +1,96 @@
+@@ -0,0 +1,89 @@
 +/* PRU target specific pragmas
 +   Copyright (C) 2015 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -6723,15 +7361,8 @@ index 0000000..f3d6c49
 +#include "system.h"
 +#include "coretypes.h"
 +#include "tm.h"
-+#include "hash-set.h"
-+#include "machmode.h"
-+#include "vec.h"
-+#include "double-int.h"
-+#include "input.h"
 +#include "alias.h"
 +#include "symtab.h"
-+#include "wide-int.h"
-+#include "inchash.h"
 +#include "tree.h"
 +#include "c-family/c-pragma.h"
 +#include "c-family/c-common.h"
@@ -6863,10 +7494,10 @@ index 0000000..4c03b4a
 +#endif /* GCC_PRU_PROTOS_H */
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
 new file mode 100644
-index 0000000..b476760
+index 0000000..c330a60
 --- /dev/null
 +++ b/gcc/config/pru/pru.c
-@@ -0,0 +1,1766 @@
+@@ -0,0 +1,1788 @@
 +/* Target machine subroutines for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -6890,32 +7521,20 @@ index 0000000..b476760
 +#include "config.h"
 +#include "system.h"
 +#include "coretypes.h"
-+#include "tm.h"
-+#include "rtl.h"
-+#include "hash-set.h"
-+#include "machmode.h"
-+#include "vec.h"
-+#include "double-int.h"
-+#include "input.h"
-+#include "alias.h"
-+#include "symtab.h"
-+#include "wide-int.h"
-+#include "inchash.h"
++#include "backend.h"
++#include "cfghooks.h"
 +#include "tree.h"
++#include "rtl.h"
++#include "df.h"
++#include "alias.h"
 +#include "fold-const.h"
 +#include "regs.h"
-+#include "hard-reg-set.h"
 +#include "insn-config.h"
 +#include "conditions.h"
 +#include "output.h"
 +#include "insn-attr.h"
 +#include "flags.h"
 +#include "recog.h"
-+#include "hashtab.h"
-+#include "function.h"
-+#include "statistics.h"
-+#include "real.h"
-+#include "fixed-value.h"
 +#include "expmed.h"
 +#include "dojump.h"
 +#include "explow.h"
@@ -6926,28 +7545,24 @@ index 0000000..b476760
 +#include "expr.h"
 +#include "insn-codes.h"
 +#include "optabs.h"
-+#include "ggc.h"
-+#include "predict.h"
-+#include "dominance.h"
-+#include "cfg.h"
 +#include "cfgrtl.h"
 +#include "cfganal.h"
 +#include "lcm.h"
 +#include "cfgbuild.h"
 +#include "cfgcleanup.h"
-+#include "basic-block.h"
 +#include "diagnostic-core.h"
 +#include "toplev.h"
 +#include "target.h"
-+#include "target-def.h"
 +#include "tm_p.h"
 +#include "langhooks.h"
-+#include "df.h"
 +#include "debug.h"
 +#include "reload.h"
 +#include "stor-layout.h"
 +#include "builtins.h"
 +#include "pru-protos.h"
++
++/* This file should be included last.  */
++#include "target-def.h"
 +
 +/* Global PRU CTABLE entries, filled in by pragmaes, and used for fast
 +   addressing via LBCO/SBCO instructions. */
@@ -7042,43 +7657,60 @@ index 0000000..b476760
 +  return total_size;
 +}
 +
-+/* Add a const_int to the stack pointer register. */
++/* Emit efficient RTL equivalent of ADD3 with the given const_int for
++   frame-related registers.
++     op0          - Destination register
++     op1          - First addendum operand (a register)
++     addendum     - Second addendum operand (a constant)
++     kind         - Note kind. REG_NOTE_MAX if no note must be added.
++     reg_note_rtx - Reg note RTX. NULL if it should be computed automatically.
++ */
 +static rtx
-+pru_add_to_sp (int addendum, const enum reg_note kind)
++pru_add3_frame_adjust (rtx op0, rtx op1, int addendum,
++		       const enum reg_note kind, rtx reg_note_rtx)
 +{
 +  rtx insn;
 +
-+  rtx sp_adjust
-+    = gen_rtx_SET (VOIDmode, stack_pointer_rtx,
-+		   plus_constant (Pmode, stack_pointer_rtx, addendum));
++  rtx op0_adjust = gen_rtx_SET (op0, plus_constant (Pmode, op1, addendum));
++
 +  if (UBYTE_INT (addendum) || UBYTE_INT (-addendum))
-+    insn = emit_insn (sp_adjust);
++    insn = emit_insn (op0_adjust);
 +  else
 +    {
 +      /* Help the compiler to cope with an arbitrary integer constant.
 +	 Reload has finished so we can't expect the compiler to
 +	 auto-allocate a temporary register. But we know that call-saved
 +	 registers are not live yet, so we utilize them. */
-+      rtx tmp = gen_rtx_REG (Pmode, PROLOGUE_TEMP_REGNO);
++      rtx tmpreg = gen_rtx_REG (Pmode, PROLOGUE_TEMP_REGNO);
 +      if (addendum < 0)
 +	{
-+	  emit_move_insn (tmp, gen_int_mode (-addendum, Pmode));
-+	  insn = emit_insn (gen_sub2_insn (stack_pointer_rtx, tmp));
++	  emit_insn (gen_rtx_SET (tmpreg, gen_int_mode (-addendum, Pmode)));
++	  insn = emit_insn (gen_sub3_insn (op0, op1, tmpreg));
 +	}
 +      else
 +	{
-+	  emit_move_insn (tmp, gen_int_mode (addendum, Pmode));
-+	  insn = emit_insn (gen_add2_insn (stack_pointer_rtx, tmp));
++	  emit_insn (gen_rtx_SET (tmpreg, gen_int_mode (addendum, Pmode)));
++	  insn = emit_insn (gen_add3_insn (op0, op1, tmpreg));
 +	}
 +    }
 +
-+  /* Attach the sp_adjust as a note indicating what happened.  */
++  /* Attach a note indicating what happened.  */
++  if (reg_note_rtx == NULL_RTX)
++    reg_note_rtx = op0_adjust;
 +  if (kind != REG_NOTE_MAX)
-+    add_reg_note (insn, kind, sp_adjust);
++    add_reg_note (insn, kind, reg_note_rtx);
 +
 +  RTX_FRAME_RELATED_P (insn) = 1;
 +
 +  return insn;
++}
++
++/* Add a const_int to the stack pointer register. */
++static rtx
++pru_add_to_sp (int addendum, const enum reg_note kind)
++{
++  return pru_add3_frame_adjust (stack_pointer_rtx, stack_pointer_rtx,
++				addendum, kind, NULL_RTX);
 +}
 +
 +/* Helper function used during prologue/epilogue. Emits a single LBBO/SBBO
@@ -7195,14 +7827,15 @@ index 0000000..b476760
 +  if (frame_pointer_needed)
 +    {
 +      int fp_save_offset = save_regs_base + cfun->machine->fp_save_offset;
-+      insn = emit_insn (gen_add3_insn (hard_frame_pointer_rtx,
-+				       stack_pointer_rtx,
-+				       gen_int_mode (fp_save_offset, Pmode)));
-+      RTX_FRAME_RELATED_P (insn) = 1;
++      pru_add3_frame_adjust (hard_frame_pointer_rtx,
++				    stack_pointer_rtx,
++				    fp_save_offset,
++				    REG_NOTE_MAX,
++				    NULL_RTX);
 +    }
 +
 +  if (sp_offset)
-+      insn = pru_add_to_sp (sp_offset, REG_FRAME_RELATED_EXPR);
++      pru_add_to_sp (sp_offset, REG_FRAME_RELATED_EXPR);
 +
 +  /* If we are profiling, make sure no instructions are scheduled before
 +     the call to mcount.  */
@@ -7213,7 +7846,7 @@ index 0000000..b476760
 +void
 +pru_expand_epilogue (bool sibcall_p)
 +{
-+  rtx insn, cfa_adj;
++  rtx cfa_adj;
 +  int total_frame_size;
 +  int sp_adjust, save_offset;
 +  int regno_start;
@@ -7230,21 +7863,21 @@ index 0000000..b476760
 +  if (frame_pointer_needed)
 +    {
 +      /* Recover the stack pointer.  */
-+      insn = emit_insn (gen_sub3_insn
-+			(stack_pointer_rtx, hard_frame_pointer_rtx,
-+			 gen_int_mode (cfun->machine->fp_save_offset, Pmode)));
 +      cfa_adj = plus_constant (Pmode, stack_pointer_rtx,
-+			       (total_frame_size
-+				- cfun->machine->save_regs_offset));
-+      add_reg_note (insn, REG_CFA_DEF_CFA, cfa_adj);
-+      RTX_FRAME_RELATED_P (insn) = 1;
++                              (total_frame_size
++                               - cfun->machine->save_regs_offset));
++      pru_add3_frame_adjust (stack_pointer_rtx,
++			     hard_frame_pointer_rtx,
++			     -cfun->machine->fp_save_offset,
++			     REG_CFA_DEF_CFA,
++			     cfa_adj);
 +
 +      save_offset = 0;
 +      sp_adjust = total_frame_size - cfun->machine->save_regs_offset;
 +    }
 +  else if (!UBYTE_INT (total_frame_size))
 +    {
-+      insn = pru_add_to_sp (cfun->machine->save_regs_offset,
++      pru_add_to_sp (cfun->machine->save_regs_offset,
 +			    REG_CFA_ADJUST_CFA);
 +      save_offset = 0;
 +      sp_adjust = total_frame_size - cfun->machine->save_regs_offset;
@@ -7261,7 +7894,7 @@ index 0000000..b476760
 +  } while (regno_start >= 0);
 +
 +  if (sp_adjust)
-+      insn = pru_add_to_sp (sp_adjust, REG_CFA_ADJUST_CFA);
++      pru_add_to_sp (sp_adjust, REG_CFA_ADJUST_CFA);
 +
 +  if (!sibcall_p)
 +    emit_jump_insn (gen_simple_return ());
@@ -7419,13 +8052,11 @@ index 0000000..b476760
 +   cost has been computed, and false if subexpressions should be
 +   scanned.  In either case, *TOTAL contains the cost result.  */
 +static bool
-+pru_rtx_costs (rtx x, int code, int outer_code ATTRIBUTE_UNUSED,
-+		 int opno ATTRIBUTE_UNUSED,
-+		 int *total, bool speed ATTRIBUTE_UNUSED)
++pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
++	       int outer_code, int opno ATTRIBUTE_UNUSED,
++	       int *total, bool speed ATTRIBUTE_UNUSED)
 +{
-+  /* jumps and calls are very cheap on the PRU */
-+  if (text_segment_operand (x, VOIDmode))
-+    return COSTS_N_INSNS (0);
++  const int code = GET_CODE (x);
 +
 +  switch (code)
 +    {
@@ -7454,6 +8085,28 @@ index 0000000..b476760
 +          *total = COSTS_N_INSNS (1);
 +          return true;
 +        }
++    case SET:
++	{
++	  /* A SET doesn't have a mode, so let's look at the SET_DEST to get
++	     the mode for the factor.  */
++	  mode = GET_MODE (SET_DEST (x));
++
++	  if (GET_MODE_SIZE (mode) <= UNITS_PER_WORD
++	      && (GET_CODE (SET_SRC (x)) == ZERO_EXTEND
++		  || outer_code == ZERO_EXTEND))
++	    {
++	      *total = 0;
++	    }
++	  else
++	    {
++	      int factor = GET_MODE_SIZE (mode) / UNITS_PER_WORD;
++	      if (factor == 0)
++		factor = 1;
++	      *total = factor * COSTS_N_INSNS (1);
++	    }
++
++	  return false;
++	}
 +
 +      case MULT:
 +        {
@@ -8635,7 +9288,7 @@ index 0000000..b476760
 +#include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
 new file mode 100644
-index 0000000..04046ec
+index 0000000..da3028d
 --- /dev/null
 +++ b/gcc/config/pru/pru.h
 @@ -0,0 +1,418 @@
@@ -8845,7 +9498,7 @@ index 0000000..04046ec
 +#define TRAMPOLINE_SIZE 4
 +
 +/* Stack layout.  */
-+#define STACK_GROWS_DOWNWARD
++#define STACK_GROWS_DOWNWARD  1
 +#undef FRAME_GROWS_DOWNWARD
 +#define STARTING_FRAME_OFFSET 0
 +#define FIRST_PARM_OFFSET(FUNDECL) 0
@@ -9049,7 +9702,7 @@ index 0000000..04046ec
 +
 +#undef LOAD_EXTEND_OP
 +
-+#define WORD_REGISTER_OPERATIONS		1
++/* #define WORD_REGISTER_OPERATIONS		1 */
 +
 +#define HAS_LONG_UNCOND_BRANCH			1
 +#define HAS_LONG_COND_BRANCH			1
@@ -9059,10 +9712,10 @@ index 0000000..04046ec
 +#endif /* GCC_PRU_H */
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
 new file mode 100644
-index 0000000..1b7d28b
+index 0000000..85ff519
 --- /dev/null
 +++ b/gcc/config/pru/pru.md
-@@ -0,0 +1,579 @@
+@@ -0,0 +1,598 @@
 +;; Machine Description for TI PRU.
 +;; Copyright (C) 2014 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -9139,6 +9792,14 @@ index 0000000..1b7d28b
 +(define_mode_iterator ALL [QI HI SI])
 +(define_mode_iterator BIGI [DI TI OI XI])
 +
++;; EQS0/0 for extension source 0/1 and EQD for extension destination patterns.
++(define_mode_iterator EQS0 [QI HI SI])
++(define_mode_iterator EQS1 [QI HI SI])
++(define_mode_iterator EQD [QI HI SI])
++
++; Not recommended. Please use %x instead!
++(define_mode_attr regwidth [(QI ".b0") (HI ".w0") (SI "")])
++
 +
 +;; Move instructions
 +
@@ -9187,11 +9848,11 @@ index 0000000..1b7d28b
 +
 +  for (i = 0; i < count; i++)
 +    XVECEXP (operands[3], 0, i)
-+      = gen_rtx_SET (VOIDmode,
-+		 gen_rtx_REG (SImode, first_regno + i),
-+		 gen_rtx_MEM (SImode, plus_constant (Pmode,
-+						     XEXP (operands[1], 0),
-+						     i * UNITS_PER_WORD)));
++      = gen_rtx_SET (gen_rtx_REG (SImode, first_regno + i),
++		     gen_rtx_MEM (SImode,
++				  plus_constant (Pmode,
++						 XEXP (operands[1], 0),
++						 i * UNITS_PER_WORD)));
 +}")
 +
 +;; Store multiple
@@ -9223,11 +9884,11 @@ index 0000000..1b7d28b
 +
 +  for (i = 0; i < count; i++)
 +    XVECEXP (operands[3], 0, i)
-+      = gen_rtx_SET (VOIDmode,
-+		 gen_rtx_MEM (SImode, plus_constant (Pmode,
-+						     XEXP (operands[0], 0),
-+						     i * UNITS_PER_WORD)),
-+		 gen_rtx_REG (SImode, first_regno + i));
++      = gen_rtx_SET (gen_rtx_MEM (SImode,
++				  plus_constant (Pmode,
++						 XEXP (operands[0], 0),
++						 i * UNITS_PER_WORD)),
++		     gen_rtx_REG (SImode, first_regno + i));
 +}")
 +
 +;; Include the machine-generated patterns for all LBBO/SBBO multuple-reg
@@ -9236,18 +9897,21 @@ index 0000000..1b7d28b
 +(include "pru-ldst-multiple.md")
 +
 +
-+;; EQS for extension source and EQD for extension destination patterns.
-+(define_mode_iterator EQS [QI HI])
-+(define_mode_iterator EQD [HI SI])
-+
 +;; Zero extension patterns
 +;;
 +;; Unfortunately we cannot use lbbo to load AND zero-extent a value.
 +;; The burst length parameter designates not only the number of memory
 +;; data bytes fetched, but also the number of register byte fields written.
-+(define_insn "zero_extend<EQS:mode><EQD:mode>2"
++(define_expand "zero_extend<EQS0:mode><EQD:mode>2"
 +  [(set (match_operand:EQD 0 "register_operand" "=r")
-+        (zero_extend:EQD (match_operand:EQS 1 "register_operand" "r")))]
++        (zero_extend:EQD (match_operand:EQS0 1 "register_operand" "r")))]
++  ""
++  ""
++  [(set_attr "type"     "alu")])
++
++(define_insn "*zero_extend<EQS0:mode><EQD:mode>2"
++  [(set (match_operand:EQD 0 "register_operand" "=r")
++        (zero_extend:EQD (match_operand:EQS0 1 "register_operand" "r")))]
 +  ""
 +  "mov\\t%x0, %x1"
 +  [(set_attr "type"     "alu")])
@@ -9255,9 +9919,9 @@ index 0000000..1b7d28b
 +;; Sign extension patterns. We have to emulate them due to lack of
 +;; signed operations in PRU's ALU.
 +
-+(define_insn "extend<EQS:mode><EQD:mode>2"
++(define_insn "extend<EQS0:mode><EQD:mode>2"
 +  [(set (match_operand:EQD 0 "register_operand"                   "=r")
-+        (sign_extend:EQD (match_operand:EQS 1 "register_operand"  "r")))]
++        (sign_extend:EQD (match_operand:EQS0 1 "register_operand"  "r")))]
 +  ""
 +  {
 +    return pru_output_sign_extend(operands);
@@ -9269,57 +9933,11 @@ index 0000000..1b7d28b
 +;; Arithmetic Operations
 +
 +(define_expand "addsi3"
-+  [(set (match_operand:SI 0 "register_operand"            "")
-+        (plus:SI (match_operand:SI 1 "register_operand"   "")
-+                 (match_operand:SI 2 "nonmemory_operand" "")))]
-+  "!reload_in_progress && !reload_completed"
-+  {
-+    if (GET_CODE (operands[2]) == REG || GET_CODE (operands[2]) == SUBREG)
-+      {
-+      emit_insn (gen_pru_addsi3 (operands[0], operands[1], operands[2]));
-+      }
-+    else if (GET_CODE (operands[2]) != CONST_INT)
-+      {
-+      emit_insn (gen_pru_addsi3_bigint (operands[0], operands[1], operands[2]));
-+      }
-+    else if (UBYTE_INT (INTVAL (operands[2])))
-+      {
-+      emit_insn (gen_pru_addsi3 (operands[0], operands[1], operands[2]));
-+      }
-+    else if (UBYTE_INT (-INTVAL (operands[2])))
-+      {
-+      HOST_WIDE_INT imm = -INTVAL (operands[2]);
-+      emit_insn (gen_subsi3 (operands[0], operands[1], gen_int_mode(imm, SImode)));
-+      }
-+    else
-+      {
-+      emit_insn (gen_pru_addsi3_bigint (operands[0], operands[1], operands[2]));
-+      }
-+    DONE;
-+  })
-+
-+(define_expand "pru_addsi3_bigint"
-+  [(set (match_operand:SI 0 "register_operand"           "")
-+        (plus:SI (match_operand:SI 1 "register_operand"  "")
-+                 (match_operand:SI 2 "const_int_operand" "")))]
-+  "!reload_in_progress && !reload_completed"
-+  {
-+    rtx tmp = force_reg (SImode, operands[2]);
-+    emit_insn (gen_pru_addsi3 (operands[0], operands[1], tmp));
-+    DONE;
-+  }
-+)
-+
-+
-+(define_insn "pru_addsi3"
 +  [(set (match_operand:SI 0 "register_operand"            "=r,r,r")
 +        (plus:SI (match_operand:SI 1 "register_operand"   "%r,r,r")
 +                 (match_operand:SI 2 "nonmemory_operand" "r,I,M")))]
 +  ""
-+  "@
-+   add\\t%0, %1, %2
-+   add\\t%0, %1, %2
-+   sub\\t%0, %1, -(%2)"
++  ""
 +  [(set_attr "type" "alu")])
 +
 +(define_insn "adddi3"
@@ -9334,15 +9952,12 @@ index 0000000..1b7d28b
 +  [(set_attr "type" "alu,alu,alu")
 +   (set_attr "length" "8,8,8")])
 +
-+(define_insn "subsi3"
++(define_expand "subsi3"
 +  [(set (match_operand:SI 0 "register_operand"           "=r,r,r")
 +        (minus:SI (match_operand:SI 1 "reg_or_ubyte_operand" "r,r,I")
 +                  (match_operand:SI 2 "reg_or_ubyte_operand" "r,I,r")))]
 +  ""
-+  "@
-+   sub\\t%0, %1, %2
-+   sub\\t%0, %1, %2
-+   rsb\\t%0, %2, %1"
++  ""
 +  [(set_attr "type" "alu")])
 +
 +(define_insn "subdi3"
@@ -9360,18 +9975,18 @@ index 0000000..1b7d28b
 +
 +;;  Negate and ones complement
 +
-+(define_insn "negsi2"
++(define_expand "negsi2"
 +  [(set (match_operand:SI 0 "register_operand"        "=r")
 +        (neg:SI (match_operand:SI 1 "register_operand" "r")))]
 +  ""
-+  "rsb\\t%0, %1, 0"
++  ""
 +  [(set_attr "type" "alu")])
 +
-+(define_insn "one_cmplsi2"
++(define_expand "one_cmplsi2"
 +  [(set (match_operand:SI 0 "register_operand"        "=r")
 +        (not:SI (match_operand:SI 1 "register_operand" "r")))]
 +  ""
-+  "not\\t%0, %1"
++  ""
 +  [(set_attr "type" "alu")])
 +
 +
@@ -9383,13 +9998,33 @@ index 0000000..1b7d28b
 +(define_code_iterator LOGICAL [and ior xor umin umax])
 +(define_code_attr logical_asm [(and "and") (ior "or") (xor "xor") (umin "min") (umax "max")])
 +
-+(define_insn "<code>si3"
++(define_expand "<code>si3"
 +  [(set (match_operand:SI 0 "register_operand"                 "=r")
 +        (LOGICAL:SI (match_operand:SI 1 "register_operand"     "%r")
 +                    (match_operand:SI 2 "reg_or_ubyte_operand"  "rI")))]
 +  ""
-+  "<logical_asm>\\t%0, %1, %2"
++  ""
 +  [(set_attr "type" "alu")])
++
++; Combine phase tends to produce this expression when given the following
++; expression: "uint dst = (ushort) op0 & (uint) op1;
++;
++; TODO - fix properly! Understand whether we need to fix combine core, augment
++; our hooks, or PRU is giving incorrect costs for subexpressions.
++(define_insn "*and_combine_zero_extend_workaround<mode>"
++ [(set (match_operand:SI 0 "register_operand"       "=r")
++        (zero_extend:SI
++         (subreg:EQD
++          (and:SI
++           (match_operand:SI 1 "register_operand"  "%r")
++           (match_operand:SI 2 "register_operand"  "rI")
++          )
++          0)
++        )
++  )]
++ ""
++ "and\\t%x0, %x1, %2<EQD:regwidth>"
++ [(set_attr "type" "alu")])
 +
 +
 +;;  Shift instructions
@@ -9398,14 +10033,19 @@ index 0000000..1b7d28b
 +(define_code_attr shift_op   [(ashift "ashl") (lshiftrt "lshr")])
 +(define_code_attr shift_asm  [(ashift "lsl") (lshiftrt "lsr")])
 +
-+(define_insn "<shift_op>si3"
++(define_expand "<shift_op>si3"
 +  [(set (match_operand:SI 0 "register_operand"          "=r")
 +        (SHIFT:SI (match_operand:SI 1 "register_operand" "r")
 +                  (match_operand:SI 2 "shift_operand"    "rL")))]
 +  ""
-+  "<shift_asm>\\t%0, %1, %2"
++  ""
 +  [(set_attr "type" "shift")])
 +;; TODO - add clrbit, setbit,
++
++
++;; Include ALU patterns with zero-extension of operands. That's where
++;; the real insns are defined.
++(include "alu-zext.md")
 +
 +
 +;; Multiply instruction. Idea for fixing registers comes from the AVR backend.
@@ -9586,9 +10226,6 @@ index 0000000..1b7d28b
 +;; NOTE: The short branch check has no typo! We must be conservative and take
 +;; into account the worst case of having a signed comparison with a
 +;; "far taken branch" label, which amounts to 7 instructions.
-+;;
-+;; TODO - define qbbs/qbbc, and possibly then re-define sign_extend and
-+;; sign compares as define_split's.
 +
 +(define_insn "cbranch<mode>4"
 +  [(set (pc)
@@ -9632,6 +10269,41 @@ index 0000000..1b7d28b
 +		(match_test "pru_signed_cmp_operator (operands[0], VOIDmode)")
 +		    (const_int 28)
 +		    (const_int 8))))])
++
++
++;
++; Bit test branch
++
++(define_code_iterator BIT_TEST  [eq ne])
++(define_code_attr qbbx_op   [(eq "qbbc") (ne "qbbs")])
++(define_code_attr qbbx_negop   [(eq "qbbs") (ne "qbbc")])
++
++(define_insn "cbranch_qbbx_<BIT_TEST:code><EQS0:mode><EQS1:mode>4"
++ [(set (pc)
++   (if_then_else
++    (BIT_TEST (zero_extract:SI
++	 (match_operand:EQS0 0 "register_operand" "r")
++	 (const_int 1)
++	 (match_operand:EQS1 1 "reg_or_ubyte_operand" "rI"))
++     (const_int 0))
++    (label_ref (match_operand 2 "" ""))
++    (pc)))]
++  ""
++{
++  const int length = (get_attr_length (insn));
++  const bool is_near = (length == 4);
++  if (is_near)
++    return "<BIT_TEST:qbbx_op>\\t%l2, %x0, %x1";
++  else
++    return "<BIT_TEST:qbbx_negop>\\t.+8, %x0, %x1\;jmp\\t%l2";
++}
++  [(set_attr "type" "control")
++   (set (attr "length") 
++      (if_then_else
++	  (and (ge (minus (match_dup 2) (pc)) (const_int -2048))
++	       (le (minus (match_dup 2) (pc)) (const_int 2044)))
++	  (const_int 4)
++	  (const_int 8)))])
 +
 +
 +;;  Misc. patterns
@@ -9707,10 +10379,10 @@ index 0000000..2bbdeb9
 +	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $<
 +
 diff --git a/gcc/doc/extend.texi b/gcc/doc/extend.texi
-index 50815d1..eea763d 100644
+index dba8b43..3afef25 100644
 --- a/gcc/doc/extend.texi
 +++ b/gcc/doc/extend.texi
-@@ -17424,6 +17424,7 @@ for further explanation.
+@@ -18314,6 +18314,7 @@ for further explanation.
  * ARM Pragmas::
  * M32C Pragmas::
  * MeP Pragmas::
@@ -9718,7 +10390,7 @@ index 50815d1..eea763d 100644
  * RS/6000 and PowerPC Pragmas::
  * Darwin Pragmas::
  * Solaris Pragmas::
-@@ -17561,6 +17562,25 @@ extern int foo ();
+@@ -18464,6 +18465,25 @@ extern int foo ();
  
  @end table
  
@@ -9745,10 +10417,10 @@ index 50815d1..eea763d 100644
  @subsection RS/6000 and PowerPC Pragmas
  
 diff --git a/gcc/doc/md.texi b/gcc/doc/md.texi
-index bc1ec9d..bba8567 100644
+index 619259f..71a3f61 100644
 --- a/gcc/doc/md.texi
 +++ b/gcc/doc/md.texi
-@@ -3209,6 +3209,25 @@ Vector constant that is all zeros.
+@@ -3283,6 +3283,25 @@ Vector constant that is all zeros.
  
  @end table
  
@@ -9775,10 +10447,10 @@ index bc1ec9d..bba8567 100644
  @table @code
  
 diff --git a/gcc/testsuite/gcc.c-torture/execute/20101011-1.c b/gcc/testsuite/gcc.c-torture/execute/20101011-1.c
-index 34d0313..ff90620 100644
+index 639d12d..cb2ddbb 100644
 --- a/gcc/testsuite/gcc.c-torture/execute/20101011-1.c
 +++ b/gcc/testsuite/gcc.c-torture/execute/20101011-1.c
-@@ -74,6 +74,9 @@ __aeabi_idiv0 (int return_value)
+@@ -86,6 +86,9 @@ __aeabi_idiv0 (int return_value)
  #elif defined (__nvptx__)
  /* There isn't even a signal function.  */
  # define DO_TEST 0
@@ -9789,10 +10461,10 @@ index 34d0313..ff90620 100644
  # define DO_TEST 1
  #endif
 diff --git a/gcc/testsuite/gcc.dg/20020312-2.c b/gcc/testsuite/gcc.dg/20020312-2.c
-index 71201fe..80430ac 100644
+index 5fce50d..46eff97 100644
 --- a/gcc/testsuite/gcc.dg/20020312-2.c
 +++ b/gcc/testsuite/gcc.dg/20020312-2.c
-@@ -108,6 +108,8 @@ extern void abort (void);
+@@ -109,6 +109,8 @@ extern void abort (void);
  /* No pic register.  */
  #elif defined (__nvptx__)
  /* No pic register.  */
@@ -9801,21 +10473,8 @@ index 71201fe..80430ac 100644
  #else
  # error "Modify the test for your target."
  #endif
-diff --git a/gcc/testsuite/gcc.dg/graphite/isl-ast-gen-if-1.c b/gcc/testsuite/gcc.dg/graphite/isl-ast-gen-if-1.c
-index 07285a9..30236a8 100644
---- a/gcc/testsuite/gcc.dg/graphite/isl-ast-gen-if-1.c
-+++ b/gcc/testsuite/gcc.dg/graphite/isl-ast-gen-if-1.c
-@@ -29,7 +29,7 @@ int
- main (void)
- {
-   int a[50];
--  foo (a, 50);
-+  foo (a, 49);
-   int res = array_sum (a);
-   if (res != 49)
-     abort ();
 diff --git a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c
-index 5985f60..a6e76e6 100644
+index 9a5517d..b43a502 100644
 --- a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c
 +++ b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c
 @@ -1,4 +1,4 @@
@@ -9825,7 +10484,7 @@ index 5985f60..a6e76e6 100644
  /* { dg-options "-O2 -fno-inline -fdump-tree-reassoc1-details" } */
  /* { dg-additional-options "-mbranch-cost=2" { target mips*-*-* avr-*-* s390*-*-* i?86-*-* x86_64-*-* } } */
 diff --git a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c
-index 81fd568..8ac76b5 100644
+index 3b568cb..285b580 100644
 --- a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c
 +++ b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c
 @@ -1,4 +1,4 @@
@@ -9835,7 +10494,7 @@ index 81fd568..8ac76b5 100644
  /* { dg-options "-O2 -fno-inline -fdump-tree-reassoc1-details" } */
  /* { dg-additional-options "-mbranch-cost=2" { target mips*-*-* avr-*-* s390*-*-* i?86-*-* x86_64-*-* } } */
 diff --git a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c
-index 6d28b10..30cbc86 100644
+index 55902eb..5b5b5f7 100644
 --- a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c
 +++ b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c
 @@ -1,4 +1,4 @@
@@ -9845,7 +10504,7 @@ index 6d28b10..30cbc86 100644
  /* { dg-options "-O2 -fno-inline -fdump-tree-reassoc1-details" } */
  /* { dg-additional-options "-mbranch-cost=2" { target mips*-*-* avr-*-* s390*-*-* i?86-*-* x86_64-*-* } } */
 diff --git a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-36.c b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-36.c
-index 650bef9..806fc68 100644
+index 800aac0..52ae2f4 100644
 --- a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-36.c
 +++ b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-36.c
 @@ -1,4 +1,4 @@
@@ -9854,11 +10513,11 @@ index 650bef9..806fc68 100644
  
  /* { dg-options "-O2 -fno-inline -fdump-tree-reassoc1-details" } */
  /* { dg-additional-options "-mbranch-cost=2" { target mips*-*-* avr-*-* s390*-*-* i?86-*-* x86_64-*-* } } */
-diff --git a/gcc/testsuite/gcc.target/pru/pru-pragma-ctable_entry.c b/gcc/testsuite/gcc.target/pru/pru-pragma-ctable_entry.c
+diff --git a/gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c b/gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c
 new file mode 100644
 index 0000000..5a7cef6
 --- /dev/null
-+++ b/gcc/testsuite/gcc.target/pru/pru-pragma-ctable_entry.c
++++ b/gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c
 @@ -0,0 +1,22 @@
 +/* Test specification of custom instructions via command-line options.  */
 +
@@ -9929,11 +10588,294 @@ index 0000000..122a2b3
 +
 +# All done.
 +dg-finish
+diff --git a/gcc/testsuite/gcc.target/pru/qbbc.c b/gcc/testsuite/gcc.target/pru/qbbc.c
+new file mode 100644
+index 0000000..f24a6d4
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/qbbc.c
+@@ -0,0 +1,29 @@
++/* Test QBBC recognition */
++
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it bit-check-and-branch
++   operation may not be optimized to QBBC.  */
++
++extern void abort (void);
++
++unsigned int
++test_qbbc_reg (unsigned int a, unsigned int b, unsigned int val)
++{
++  /* { dg-final { scan-assembler "qbbc\\t.L\[0-9\]*, r16, 19" } } */
++  if (!(val & (1 << 19)))
++    return a;
++  return b;
++}
++
++int
++main (int argc, char** argv)
++{
++  if (test_qbbc_reg (101, 505, (1u << 19)) != 505)
++    abort();
++  if (test_qbbc_reg (101, 505, (1u << 18)) != 101)
++    abort();
++
++  return 0;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/qbbs.c b/gcc/testsuite/gcc.target/pru/qbbs.c
+new file mode 100644
+index 0000000..a2ac82b
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/qbbs.c
+@@ -0,0 +1,29 @@
++/* Test QBBS recognition */
++
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it bit-check-and-branch
++   operation may not be optimized to QBBS.  */
++
++extern void abort (void);
++
++unsigned int
++test_qbbs_reg (unsigned int a, unsigned int b, unsigned int val)
++{
++  /* { dg-final { scan-assembler "qbbs\\t.L\[0-9\]*, r16, 19" } } */
++  if (val & (1 << 19))
++    return a;
++  return b;
++}
++
++int
++main (int argc, char** argv)
++{
++  if (test_qbbs_reg (101, 505, (1u << 19)) != 101)
++    abort();
++  if (test_qbbs_reg (101, 505, (1u << 18)) != 505)
++    abort();
++
++  return 0;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/zero_extend-and-hisi.c b/gcc/testsuite/gcc.target/pru/zero_extend-and-hisi.c
+new file mode 100644
+index 0000000..cc07d29
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/zero_extend-and-hisi.c
+@@ -0,0 +1,16 @@
++/* AND with zero extension of operands.
++   It is matched slightly different than rest of ALU ops. */
++
++/* { dg-do compile } */
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it the zero extension might not
++   be coalesced into the ALU instruction. */
++
++unsigned int
++test_zext_and_hi (unsigned short val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "and\\tr14, r14, r15.w0" } } */
++  return val1 & val2;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/zero_extend-and-qihi.c b/gcc/testsuite/gcc.target/pru/zero_extend-and-qihi.c
+new file mode 100644
+index 0000000..9728ba0
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/zero_extend-and-qihi.c
+@@ -0,0 +1,16 @@
++/* AND with zero extension of operands.
++   It is matched slightly different than rest of ALU ops. */
++
++/* { dg-do compile } */
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it the zero extension might not
++   be coalesced into the ALU instruction. */
++
++unsigned int
++test_zext_and_hi (unsigned char val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "and\\tr14, r14, r15.b0" } } */
++  return val1 & val2;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/zero_extend-and-qisi.c b/gcc/testsuite/gcc.target/pru/zero_extend-and-qisi.c
+new file mode 100644
+index 0000000..9728ba0
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/zero_extend-and-qisi.c
+@@ -0,0 +1,16 @@
++/* AND with zero extension of operands.
++   It is matched slightly different than rest of ALU ops. */
++
++/* { dg-do compile } */
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it the zero extension might not
++   be coalesced into the ALU instruction. */
++
++unsigned int
++test_zext_and_hi (unsigned char val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "and\\tr14, r14, r15.b0" } } */
++  return val1 & val2;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/zero_extend-hisi.c b/gcc/testsuite/gcc.target/pru/zero_extend-hisi.c
+new file mode 100644
+index 0000000..eddd429
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/zero_extend-hisi.c
+@@ -0,0 +1,43 @@
++/* ALU operations with zero extended operands. */
++
++/* { dg-do compile } */
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it the zero extension might not
++   be coalesced into the ALU instruction. */
++
++unsigned int
++test_zext_plus_hi (unsigned short val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "add\\tr14, r14.w0, r15" } } */
++  return val1 + val2;
++}
++
++unsigned int
++test_zext_minus_hi (unsigned short val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "sub\\tr14, r14.w0, r15" } } */
++  return val1 - val2;
++}
++
++unsigned int
++test_zext_xor_hi (unsigned short val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "xor\\tr14, r14.w0, r15" } } */
++  return val1 ^ val2;
++}
++
++unsigned int
++test_zext_or_hi (unsigned short val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "or\\tr14, r14.w0, r15" } } */
++  return val1 | val2;
++}
++
++unsigned int
++test_zext_ashl_hi (unsigned short val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "lsl\\tr14, r14.w0, r15" } } */
++  return val1 << val2;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/zero_extend-qihi.c b/gcc/testsuite/gcc.target/pru/zero_extend-qihi.c
+new file mode 100644
+index 0000000..10c32a9
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/zero_extend-qihi.c
+@@ -0,0 +1,43 @@
++/* ALU operations with zero extended operands. */
++
++/* { dg-do compile } */
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it the zero extension might not
++   be coalesced into the ALU instruction. */
++
++unsigned int
++test_zext_plus_hi (unsigned char val1, unsigned short val2)
++{
++  /* { dg-final { scan-assembler "add\\tr14, r14.b0, r15.w0" } } */
++  return val1 + val2;
++}
++
++unsigned int
++test_zext_minus_hi (unsigned char val1, unsigned short val2)
++{
++  /* { dg-final { scan-assembler "sub\\tr14, r14.b0, r15.w0" } } */
++  return val1 - val2;
++}
++
++unsigned int
++test_zext_xor_hi (unsigned char val1, unsigned short val2)
++{
++  /* { dg-final { scan-assembler "xor\\tr14, r14.b0, r15.w0" } } */
++  return val1 ^ val2;
++}
++
++unsigned int
++test_zext_or_hi (unsigned char val1, unsigned short val2)
++{
++  /* { dg-final { scan-assembler "or\\tr14, r14.b0, r15.w0" } } */
++  return val1 | val2;
++}
++
++unsigned int
++test_zext_ashl_hi (unsigned char val1, unsigned short val2)
++{
++  /* { dg-final { scan-assembler "lsl\\tr14, r14.b0, r15.w0" } } */
++  return val1 << val2;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/zero_extend-qisi.c b/gcc/testsuite/gcc.target/pru/zero_extend-qisi.c
+new file mode 100644
+index 0000000..0e9ae4c
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/zero_extend-qisi.c
+@@ -0,0 +1,43 @@
++/* ALU operations with zero extended operands. */
++
++/* { dg-do compile } */
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it the zero extension might not
++   be coalesced into the ALU instruction. */
++
++unsigned int
++test_zext_plus_hi (unsigned char val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "add\\tr14, r14.b0, r15" } } */
++  return val1 + val2;
++}
++
++unsigned int
++test_zext_minus_hi (unsigned char val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "sub\\tr14, r14.b0, r15" } } */
++  return val1 - val2;
++}
++
++unsigned int
++test_zext_xor_hi (unsigned char val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "xor\\tr14, r14.b0, r15" } } */
++  return val1 ^ val2;
++}
++
++unsigned int
++test_zext_or_hi (unsigned char val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "or\\tr14, r14.b0, r15" } } */
++  return val1 | val2;
++}
++
++unsigned int
++test_zext_ashl_hi (unsigned char val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "lsl\\tr14, r14.b0, r15" } } */
++  return val1 << val2;
++}
++
 diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
-index 4fa433d..967f6b9 100644
+index 7c1ab85..06515da 100644
 --- a/gcc/testsuite/lib/gcc-dg.exp
 +++ b/gcc/testsuite/lib/gcc-dg.exp
-@@ -232,6 +232,11 @@ proc gcc-dg-prune { system text } {
+@@ -333,6 +333,11 @@ proc gcc-dg-prune { system text } {
  	return "::unsupported::memory full"
      }
  
@@ -9946,7 +10888,7 @@ index 4fa433d..967f6b9 100644
            && [check_effective_target_tiny] } {
          return "::unsupported::memory full"
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index f632d00..4d46013 100644
+index 363f7fe..22bc048 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
 @@ -451,7 +451,8 @@ proc check_effective_target_trampolines { } {
@@ -9959,7 +10901,7 @@ index f632d00..4d46013 100644
  	return 0;
      }
      return 1
-@@ -549,6 +550,7 @@ proc check_profiling_available { test_what } {
+@@ -551,6 +552,7 @@ proc check_profiling_available { test_what } {
  	     || [istarget nvptx-*-*]
  	     || [istarget powerpc-*-eabi*]
  	     || [istarget powerpc-*-elf]
@@ -9967,7 +10909,7 @@ index f632d00..4d46013 100644
  	     || [istarget rx-*-*]	
  	     || [istarget tic6x-*-elf]
  	     || [istarget visium-*-*]
-@@ -732,7 +734,7 @@ proc check_effective_target_tls_emulated {} {
+@@ -746,7 +748,7 @@ proc check_effective_target_tls_emulated {} {
  proc check_effective_target_tls_runtime {} {
      # The runtime does not have TLS support, but just
      # running the test below is insufficient to show this.
@@ -9976,7 +10918,7 @@ index f632d00..4d46013 100644
  	return 0
      }
      return [check_runtime tls_runtime {
-@@ -6172,6 +6174,7 @@ proc check_effective_target_logical_op_short_circuit {} {
+@@ -6324,6 +6326,7 @@ proc check_effective_target_logical_op_short_circuit {} {
  	 || [istarget powerpc*-*-*]
  	 || [istarget nios2*-*-*]
  	 || [istarget visium-*-*]
@@ -9999,10 +10941,10 @@ index dbfb818..ba2b57b 100644
  	return "memory full"
      }
 diff --git a/libgcc/config.host b/libgcc/config.host
-index 4b15895..638d531 100644
+index 3a2c75d..94bc303 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
-@@ -165,6 +165,9 @@ nios2*-*-*)
+@@ -167,6 +167,9 @@ nios2*-*-*)
  powerpc*-*-*)
  	cpu_type=rs6000
  	;;
@@ -10012,7 +10954,7 @@ index 4b15895..638d531 100644
  rs6000*-*-*)
  	;;
  sparc64*-*-*)
-@@ -1057,6 +1060,9 @@ powerpcle-*-eabi*)
+@@ -1074,6 +1077,9 @@ powerpcle-*-eabi*)
  	tmake_file="${tmake_file} rs6000/t-ppccomm rs6000/t-crtstuff t-crtstuff-pic t-fdpbit"
  	extra_parts="$extra_parts crtbegin.o crtend.o crtbeginS.o crtendS.o crtbeginT.o ecrti.o ecrtn.o ncrti.o ncrtn.o"
  	;;
@@ -10548,5 +11490,5 @@ index 0000000..470f0d4
 +# mode: Makefile
 +# End:
 -- 
-2.1.4
+2.5.1
 
