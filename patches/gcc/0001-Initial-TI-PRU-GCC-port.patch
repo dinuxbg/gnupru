@@ -1,4 +1,4 @@
-From 57065960456ca961a0b0fb8ee9a5782a3b8f59f8 Mon Sep 17 00:00:00 2001
+From 31481066f67f142de9aad2297ab56e8ecfd11b2f Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Mon, 30 Dec 2013 23:47:32 +0200
 Subject: [PATCH 1/2] Initial TI PRU GCC port
@@ -21,9 +21,9 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  gcc/config/pru/pru-modes.def                       |   29 +
  gcc/config/pru/pru-pragma.c                        |   89 +
  gcc/config/pru/pru-protos.h                        |   60 +
- gcc/config/pru/pru.c                               | 1788 ++++++
+ gcc/config/pru/pru.c                               | 1867 ++++++
  gcc/config/pru/pru.h                               |  418 ++
- gcc/config/pru/pru.md                              |  598 ++
+ gcc/config/pru/pru.md                              |  643 +++
  gcc/config/pru/pru.opt                             |   27 +
  gcc/config/pru/t-pru                               |   25 +
  gcc/doc/extend.texi                                |   20 +
@@ -34,6 +34,8 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c         |    2 +-
  gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c         |    2 +-
  gcc/testsuite/gcc.dg/tree-ssa/reassoc-36.c         |    2 +-
+ gcc/testsuite/gcc.target/pru/builtins-1.c          |   12 +
+ gcc/testsuite/gcc.target/pru/builtins-error.c      |    6 +
  gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c |   22 +
  gcc/testsuite/gcc.target/pru/pru.exp               |   41 +
  gcc/testsuite/gcc.target/pru/qbbc.c                |   29 +
@@ -57,7 +59,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgcc/config/pru/pru-asm.h                        |   36 +
  libgcc/config/pru/pru-divmod.h                     |  117 +
  libgcc/config/pru/t-pru                            |   40 +
- 52 files changed, 10958 insertions(+), 6 deletions(-)
+ 54 files changed, 11100 insertions(+), 6 deletions(-)
  create mode 100644 gcc/common/config/pru/pru-common.c
  create mode 100644 gcc/config/pru/alu-zext.md
  create mode 100755 gcc/config/pru/alu-zext.sh
@@ -74,6 +76,8 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 gcc/config/pru/pru.md
  create mode 100644 gcc/config/pru/pru.opt
  create mode 100644 gcc/config/pru/t-pru
+ create mode 100644 gcc/testsuite/gcc.target/pru/builtins-1.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/builtins-error.c
  create mode 100644 gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c
  create mode 100644 gcc/testsuite/gcc.target/pru/pru.exp
  create mode 100644 gcc/testsuite/gcc.target/pru/qbbc.c
@@ -7494,10 +7498,10 @@ index 0000000..4c03b4a
 +#endif /* GCC_PRU_PROTOS_H */
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
 new file mode 100644
-index 0000000..c330a60
+index 0000000..e2b90c3
 --- /dev/null
 +++ b/gcc/config/pru/pru.c
-@@ -0,0 +1,1788 @@
+@@ -0,0 +1,1867 @@
 +/* Target machine subroutines for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -9073,21 +9077,97 @@ index 0000000..c330a60
 +
 +
 +
++enum pru_builtin
++{
++  PRU_BUILTIN_DELAY_CYCLES,
++  PRU_BUILTIN_max
++};
++
++static GTY(()) tree pru_builtins [(int) PRU_BUILTIN_max];
++
 +/* Implement TARGET_INIT_BUILTINS.  */
 +static void
 +pru_init_builtins (void)
 +{
++  tree void_ftype_longlong = build_function_type_list (void_type_node, long_long_integer_type_node, NULL);
++
++  pru_builtins[PRU_BUILTIN_DELAY_CYCLES] =
++    add_builtin_function ( "__delay_cycles", void_ftype_longlong,
++			   PRU_BUILTIN_DELAY_CYCLES, BUILT_IN_MD, NULL, NULL_TREE);
 +}
 +
 +/* Implement TARGET_BUILTIN_DECL.  */
 +static tree
 +pru_builtin_decl (unsigned code, bool initialize_p ATTRIBUTE_UNUSED)
 +{
-+  (void)code;
-+  return error_mark_node;
++  switch (code)
++    {
++    case PRU_BUILTIN_DELAY_CYCLES:
++      return pru_builtins[code];
++    default:
++      return error_mark_node;
++    }
 +}
 +
 +
++
++static rtx
++pru_expand_delay_cycles (rtx arg)
++{
++  HOST_WIDE_INT c, n;
++
++  if (GET_CODE (arg) != CONST_INT)
++    {
++      error ("__delay_cycles() only takes constant arguments");
++      return NULL_RTX;
++    }
++
++  c = INTVAL (arg);
++
++  if (HOST_BITS_PER_WIDE_INT > 32)
++    {
++      if (c < 0)
++	{
++	  error ("__delay_cycles only takes non-negative cycle counts.");
++	  return NULL_RTX;
++	}
++    }
++
++  emit_insn (gen_delay_cycles_start (arg));
++
++  /* For 32-bit loops, there's 2 + 2x cycles.  */
++  if (c > 2 * 0xffff + 1)
++    {
++      n = (c - 2) / 2;
++      c -= (n * 2) + 2;
++      if ((unsigned long long) n > 0xffffffffULL)
++	{
++	  error ("__delay_cycles is limited to 32-bit loop counts.");
++	  return NULL_RTX;
++	}
++      emit_insn (gen_delay_cycles_2x_plus2_si (GEN_INT (n)));
++    }
++
++  /* For 16-bit loops, there's 1 + 2x cycles */
++  if (c > 2)
++    {
++      n = (c - 1) / 2;
++      c -= (n * 2) + 1;
++
++      emit_insn (gen_delay_cycles_2x_plus1_hi (GEN_INT (n)));
++    }
++
++  while (c > 0)
++    {
++      emit_insn (gen_delay_cycles_1 ());
++      c -= 1;
++    }
++
++  emit_insn (gen_delay_cycles_end (arg));
++
++  return NULL_RTX;
++}
++
 +
 +/* Implement TARGET_EXPAND_BUILTIN.  Expand an expression EXP that calls
 +   a built-in function, with result going to TARGET if that's convenient
@@ -9104,6 +9184,9 @@ index 0000000..c330a60
 +  tree fndecl = TREE_OPERAND (CALL_EXPR_FN (exp), 0);
 +  unsigned int fcode = DECL_FUNCTION_CODE (fndecl);
 +  rtx arg1 = expand_normal (CALL_EXPR_ARG (exp, 0));
++
++  if (fcode == PRU_BUILTIN_DELAY_CYCLES)
++    return pru_expand_delay_cycles (arg1);
 +
 +  if (! REG_P (arg1) && ! CONSTANT_P (arg1))
 +    arg1 = force_reg (mode, arg1);
@@ -9712,10 +9795,10 @@ index 0000000..da3028d
 +#endif /* GCC_PRU_H */
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
 new file mode 100644
-index 0000000..85ff519
+index 0000000..84e282d
 --- /dev/null
 +++ b/gcc/config/pru/pru.md
-@@ -0,0 +1,598 @@
+@@ -0,0 +1,643 @@
 +;; Machine Description for TI PRU.
 +;; Copyright (C) 2014 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -9766,6 +9849,12 @@ index 0000000..85ff519
 +;; Enumeration of UNSPECs
 +
 +(define_c_enum "unspecv" [
++  UNSPECV_DELAY_CYCLES_START
++  UNSPECV_DELAY_CYCLES_END
++  UNSPECV_DELAY_CYCLES_2X_HI
++  UNSPECV_DELAY_CYCLES_2X_SI
++  UNSPECV_DELAY_CYCLES_1
++
 +  UNSPECV_BLOCKAGE
 +])
 +
@@ -10308,6 +10397,45 @@ index 0000000..85ff519
 +
 +;;  Misc. patterns
 +
++(define_insn "delay_cycles_start"
++  [(unspec_volatile [(match_operand 0 "immediate_operand" "i")]
++		    UNSPECV_DELAY_CYCLES_START)]
++  ""
++  "/* Begin %0 cycle delay */"
++  )
++
++(define_insn "delay_cycles_end"
++  [(unspec_volatile [(match_operand 0 "immediate_operand" "i")]
++		    UNSPECV_DELAY_CYCLES_END)]
++  ""
++  "/* End %0 cycle delay */"
++  )
++
++
++(define_insn "delay_cycles_2x_plus1_hi"
++  [(unspec_volatile [(match_operand 0 "const_uhword_operand" "J")]
++                    UNSPECV_DELAY_CYCLES_2X_HI)
++   (clobber (match_scratch:SI 1 "=&r"))]
++  ""
++  "ldi\\t%1, %0\;sub\\t%1, %1, 1\;qbne\\t.-4, %1, 0"
++  [(set_attr "length" "12")])
++
++
++(define_insn "delay_cycles_2x_plus2_si"
++  [(unspec_volatile [(match_operand:SI 0 "const_int_operand" "n")]
++                    UNSPECV_DELAY_CYCLES_2X_SI)
++   (clobber (match_scratch:SI 1 "=&r"))]
++  ""
++  "ldi\\t%1.w0, %L0\;ldi\\t%1.w2, %H0\;sub\\t%1, %1, 1\;qbne\\t.-4, %1, 0"
++  [(set_attr "length" "16")])
++
++(define_insn "delay_cycles_1"
++  [(unspec_volatile [(const_int 0) ] UNSPECV_DELAY_CYCLES_1)]
++  ""
++  "nop"
++  )
++
++
 +(define_insn "nop"
 +  [(const_int 0)]
 +  ""
@@ -10513,6 +10641,36 @@ index 800aac0..52ae2f4 100644
  
  /* { dg-options "-O2 -fno-inline -fdump-tree-reassoc1-details" } */
  /* { dg-additional-options "-mbranch-cost=2" { target mips*-*-* avr-*-* s390*-*-* i?86-*-* x86_64-*-* } } */
+diff --git a/gcc/testsuite/gcc.target/pru/builtins-1.c b/gcc/testsuite/gcc.target/pru/builtins-1.c
+new file mode 100644
+index 0000000..7b7472b
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/builtins-1.c
+@@ -0,0 +1,12 @@
++/* { dg-do compile } */
++
++void delay0 (void)  { __delay_cycles (0); }
++void delay1 (void)  { __delay_cycles (1); }
++void delay2 (void)  { __delay_cycles (2); }
++void delay3 (void)  { __delay_cycles (3); }
++
++void delay_1 (void)  { __delay_cycles (44); }
++void delay_2 (void)  { __delay_cycles (0x1234); }
++void delay_3 (void)  { __delay_cycles (0x123456); }
++
++/* { dg-final { scan-assembler-not "__delay_cycles" } } */
+diff --git a/gcc/testsuite/gcc.target/pru/builtins-error.c b/gcc/testsuite/gcc.target/pru/builtins-error.c
+new file mode 100644
+index 0000000..af1ca1a
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/builtins-error.c
+@@ -0,0 +1,6 @@
++/* { dg-do assemble } */
++
++void delay (long a)
++{
++    __delay_cycles (a); /* { dg-error "__delay_cycles\\(\\) only takes constant arguments" } */
++}
 diff --git a/gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c b/gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c
 new file mode 100644
 index 0000000..5a7cef6
