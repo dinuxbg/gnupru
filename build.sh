@@ -6,17 +6,17 @@
 # expect these to be somewhat random.
 GCC_BASECOMMIT=d7739c9adec2dd861eb89a9a246547f95dd54f5b
 BINUTILS_BASECOMMIT=3bd7e5b7ee5ea0b3bbb4030ca841f66faad74f0f
-NEWLIB_BASECOMMIT=e0f24404b3fcfa2c332ae14c3934546c91be3f42
+NEWLIB_BASECOMMIT=f296bb3569839b0217ec1a775165d239877e3548
 
 GCC_GIT=https://github.com/mirrors/gcc
 BINUTILS_GIT=https://github.com/bminor/binutils-gdb
-NEWLIB_GIT=https://github.com/bminor/newlib
+NEWLIB_GIT=https://github.com/wallento/newlib-cygwin
 
 # If you have already checked out GCC or binutils, then references
 # could save you some bandwidth
 #GCC_GIT_REFERENCE="--single-branch --reference=$HOME/projects/misc/gcc"
 #BINUTILS_GIT_REFERENCE="--single-branch --reference=$HOME/projects/misc/binutils-gdb"
-#NEWLIB_GIT_REFERENCE="--single-branch --reference=$HOME/projects/misc/newlib"
+#NEWLIB_GIT_REFERENCE="--single-branch --reference=$HOME/projects/misc/newlib-cygwin"
 
 MAINDIR=`pwd`
 PATCHDIR=`pwd`/patches
@@ -76,8 +76,8 @@ build_gcc_pass()
 
 build_newlib()
 {
-  cd $BUILD/newlib
-  $SRC/newlib/configure --target=pru --prefix=$PREFIX --disable-newlib-fvwrite-in-streamio --enable-newlib-nano-formatted-io --disable-newlib-multithread || die Could not configure Newlib
+  cd $BUILD/newlib-cygwin
+  $SRC/newlib-cygwin/configure --target=pru --prefix=$PREFIX --disable-newlib-fvwrite-in-streamio --enable-newlib-nano-formatted-io --disable-newlib-multithread || die Could not configure Newlib
   make -j4 || die Could not build Newlib
   make install || die Could not install Newlib
 }
@@ -90,12 +90,12 @@ export PATH=$PREFIX/bin:$PATH
 mkdir -p $SRC
 mkdir -p $BUILD/gcc
 mkdir -p $BUILD/binutils-gdb
-mkdir -p $BUILD/newlib
+mkdir -p $BUILD/newlib-cygwin
 
 # Checkout baseline and apply patches.
 prepare_source binutils-gdb $BINUTILS_GIT $BINUTILS_BASECOMMIT "$BINUTILS_GIT_REFERENCE"
 prepare_source gcc $GCC_GIT $GCC_BASECOMMIT "$GCC_GIT_REFERENCE"
-prepare_source newlib $NEWLIB_GIT $NEWLIB_BASECOMMIT "$NEWLIB_GIT_REFERENCE"
+prepare_source newlib-cygwin $NEWLIB_GIT $NEWLIB_BASECOMMIT "$NEWLIB_GIT_REFERENCE"
 
 # Configure, build and install.
 build_binutils
