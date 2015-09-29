@@ -16,15 +16,17 @@ Bug reports should be filed in https://github.com/dinuxbg/gnupru/issues . For ge
 This project has no relation to the TI PRU C compiler. ABI differences between GCC PRU and TI PRU C are tracked in https://github.com/dinuxbg/gnupru/wiki
 
 ## Building
-The toolchain is published as a series of patches inside the patches subdirectory.
+The toolchain is published as a series of patches inside the patches subdirectory. The build scripts are tested on a Debian host, but should work on any recent distro.
 
-See build.sh for an example how to build the toolchain. You'll need some prerequisites:
+You'll need some prerequisites. For a Debian host:
 
 	sudo apt-get install build-essential libmpfr-dev libgmp-dev libmpc-dev texinfo libncurses5-dev
 
 Then it should be a simple matter of:
 
-	./build.sh
+	export PREFIX=$HOME/bin/pru-gcc   # Define where to install the toolchain
+	./download-and-patch.sh           # Download and patch the sources
+	./build.sh                        # Build
 
 ## Acknowledgements
  * GCC/Binutils Nios2 port was taken as a base for the PRU port.
