@@ -28,6 +28,23 @@ Then it should be a simple matter of:
 	./download-and-patch.sh           # Download and patch the sources
 	./build.sh                        # Build
 
+## Debian Packaging
+Currently there are scripts only for packaging binutils. See issue #13 for GCC and Newlib packaging status.
+
+Installing the prerequisites:
+
+	sudo apt-get install dh-autoreconf
+
+Building and packaging:
+
+	./download-and-patch.sh           # Download and patch the sources
+	./package.sh                      # Package for Debian.
+
+Testing the output:
+
+	sudo dpkg -i packaging/binutils-pru*.deb
+	pru-as --version
+
 ## Acknowledgements
  * GCC/Binutils Nios2 port was taken as a base for the PRU port.
 
@@ -36,6 +53,4 @@ I intend to scratch my itch on the following items:
  * Need to review the GCC function prologue handling. Current code is a direct copy of the Nios2 code. It should be correct but is not efficient for PRU.
  * Look again at the linker port. There's too much code for such a simple CPU.
  * Write testcases for GCC, GAS and LD.
- * Make a debian package.
- * Port GDB.
 

@@ -1,0 +1,5 @@
+binutils-pru (2.25.51.20150928-1) unstable; urgency=high
+
+  * Initial package for PRU binutils.
+
+ -- Dimitar Dimitrov <dinuxbg@gmail.com>  Mon, 28 Sep 2015 13:21:34 +0200
