@@ -1,4 +1,4 @@
-From 676cf9ff2b5ed13d7136443bbdc09b7eec8491fa Mon Sep 17 00:00:00 2001
+From 5bdf858017bcbbe521130f291aca6bef2846e4f9 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sun, 23 Feb 2014 22:25:35 +0200
 Subject: [PATCH 1/4] Initial TI PRU binutils port
@@ -265,7 +265,7 @@ index 95433f8..6bbe4a8 100644
      &bfd_rl78_arch,
      &bfd_rx_arch,
 diff --git a/bfd/bfd-in2.h b/bfd/bfd-in2.h
-index 51fa54f..d7f4516 100644
+index f4f98af..560bf42 100644
 --- a/bfd/bfd-in2.h
 +++ b/bfd/bfd-in2.h
 @@ -2302,6 +2302,8 @@ enum bfd_architecture
@@ -296,7 +296,7 @@ index 51fa54f..d7f4516 100644
    BFD_RELOC_IQ2000_OFFSET_16,
    BFD_RELOC_IQ2000_OFFSET_21,
 diff --git a/bfd/config.bfd b/bfd/config.bfd
-index 20a0351..92b7f9b 100644
+index a8319ca..2eb6280 100644
 --- a/bfd/config.bfd
 +++ b/bfd/config.bfd
 @@ -119,6 +119,7 @@ or1k*|or1knd*)	 targ_archs=bfd_or1k_arch ;;
@@ -392,7 +392,7 @@ index 0000000..9a558c3
 +
 +const bfd_arch_info_type bfd_pru_arch = N (32, 32, 0, "pru", TRUE, NULL);
 diff --git a/bfd/elf-bfd.h b/bfd/elf-bfd.h
-index e0e372f..50130b2 100644
+index b7ca2d0..06e0912 100644
 --- a/bfd/elf-bfd.h
 +++ b/bfd/elf-bfd.h
 @@ -465,6 +465,7 @@ enum elf_target_id
@@ -1315,7 +1315,7 @@ index 0000000..e2f7af6
 +
 +#include "elf32-target.h"
 diff --git a/bfd/libbfd.h b/bfd/libbfd.h
-index fc70e29..4a5bcf7 100644
+index 03bb057..d72c582 100644
 --- a/bfd/libbfd.h
 +++ b/bfd/libbfd.h
 @@ -2613,6 +2613,15 @@ static const char *const bfd_reloc_code_real_names[] = { "@@uninitialized@@",
@@ -1355,7 +1355,7 @@ index 32f8851..1855e9a 100644
  elf32-rx.c
  elf32-s390.c
 diff --git a/bfd/reloc.c b/bfd/reloc.c
-index caa6fb4..1955c3d 100644
+index 18ca7bb..c385c7d 100644
 --- a/bfd/reloc.c
 +++ b/bfd/reloc.c
 @@ -6262,6 +6262,27 @@ ENUMDOC
@@ -1387,10 +1387,10 @@ index caa6fb4..1955c3d 100644
  ENUMX
    BFD_RELOC_IQ2000_OFFSET_21
 diff --git a/bfd/targets.c b/bfd/targets.c
-index 1ada260..8ad89bd 100644
+index cc9d083..48b2251 100644
 --- a/bfd/targets.c
 +++ b/bfd/targets.c
-@@ -790,6 +790,7 @@ extern const bfd_target powerpc_pe_le_vec;
+@@ -791,6 +791,7 @@ extern const bfd_target powerpc_pe_le_vec;
  extern const bfd_target powerpc_pei_vec;
  extern const bfd_target powerpc_pei_le_vec;
  extern const bfd_target powerpc_xcoff_vec;
@@ -1398,7 +1398,7 @@ index 1ada260..8ad89bd 100644
  extern const bfd_target rl78_elf32_vec;
  extern const bfd_target rs6000_xcoff64_vec;
  extern const bfd_target rs6000_xcoff64_aix_vec;
-@@ -1290,6 +1291,8 @@ static const bfd_target * const _bfd_target_vector[] =
+@@ -1291,6 +1292,8 @@ static const bfd_target * const _bfd_target_vector[] =
  	&powerpc_xcoff_vec,
  #endif
  
@@ -1408,7 +1408,7 @@ index 1ada260..8ad89bd 100644
  
  #ifdef BFD64
 diff --git a/binutils/readelf.c b/binutils/readelf.c
-index 6298f1e..f8f73f8 100644
+index bbf5b02..57e00da 100644
 --- a/binutils/readelf.c
 +++ b/binutils/readelf.c
 @@ -136,6 +136,7 @@
@@ -1419,7 +1419,7 @@ index 6298f1e..f8f73f8 100644
  #include "elf/rl78.h"
  #include "elf/rx.h"
  #include "elf/s390.h"
-@@ -762,6 +763,7 @@ guess_is_rela (unsigned int e_machine)
+@@ -768,6 +769,7 @@ guess_is_rela (unsigned int e_machine)
      case EM_OR1K:
      case EM_PPC64:
      case EM_PPC:
@@ -1427,7 +1427,7 @@ index 6298f1e..f8f73f8 100644
      case EM_RL78:
      case EM_RX:
      case EM_S390:
-@@ -1461,6 +1463,10 @@ dump_relocations (FILE * file,
+@@ -1467,6 +1469,10 @@ dump_relocations (FILE * file,
  	case EM_ALTERA_NIOS2:
  	  rtype = elf_nios2_reloc_type (type);
  	  break;
@@ -1438,7 +1438,7 @@ index 6298f1e..f8f73f8 100644
  	}
  
        if (rtype == NULL)
-@@ -2252,6 +2258,7 @@ get_machine_name (unsigned e_machine)
+@@ -2258,6 +2264,7 @@ get_machine_name (unsigned e_machine)
      case EM_TILEGX:		return "Tilera TILE-Gx multicore architecture family";
      case EM_CUDA:		return "NVIDIA CUDA architecture";
      case EM_XGATE:		return "Motorola XGATE embedded processor";
@@ -1446,7 +1446,7 @@ index 6298f1e..f8f73f8 100644
      default:
        snprintf (buff, sizeof (buff), _("<unknown>: 0x%x"), e_machine);
        return buff;
-@@ -11360,6 +11367,8 @@ is_32bit_abs_reloc (unsigned int reloc_type)
+@@ -11394,6 +11401,8 @@ is_32bit_abs_reloc (unsigned int reloc_type)
        return reloc_type == 1; /* R_PPC64_ADDR32.  */
      case EM_PPC:
        return reloc_type == 1; /* R_PPC_ADDR32.  */
@@ -1455,7 +1455,7 @@ index 6298f1e..f8f73f8 100644
      case EM_RL78:
        return reloc_type == 1; /* R_RL78_DIR32.  */
      case EM_RX:
-@@ -11694,6 +11703,8 @@ is_none_reloc (unsigned int reloc_type)
+@@ -11728,6 +11737,8 @@ is_none_reloc (unsigned int reloc_type)
  	      || reloc_type == 19  /* R_XTENSA_DIFF32.  */);
      case EM_METAG:
        return reloc_type == 3; /* R_METAG_NONE.  */
@@ -3884,7 +3884,7 @@ index 0000000..875e1ca
 +	sxchg	253, r10.b2, 124
 +	sxchg	85, r12.b0, 85
 diff --git a/gdb/Makefile.in b/gdb/Makefile.in
-index 0d7cf97..ba8fb46 100644
+index d5ca2ee..7c5135c 100644
 --- a/gdb/Makefile.in
 +++ b/gdb/Makefile.in
 @@ -693,7 +693,7 @@ ALL_TARGET_OBS = \
@@ -3914,7 +3914,7 @@ index 0d7cf97..ba8fb46 100644
  	remote-m32r-sdi.c remote-mips.c \
  	remote-sim.c \
 diff --git a/gdb/configure.tgt b/gdb/configure.tgt
-index c42b4df..244586e 100644
+index 33d4cfc..6564b0d 100644
 --- a/gdb/configure.tgt
 +++ b/gdb/configure.tgt
 @@ -453,6 +453,12 @@ powerpc*-*-*)
@@ -5015,7 +5015,7 @@ index ebc2604..08f1051 100644
  extern int print_insn_s390		(bfd_vma, disassemble_info *);
  extern int print_insn_sh		(bfd_vma, disassemble_info *);
 diff --git a/include/elf/common.h b/include/elf/common.h
-index e6d8c14..cbd7d36 100644
+index fbf1f3c..eef7fe8 100644
 --- a/include/elf/common.h
 +++ b/include/elf/common.h
 @@ -246,7 +246,7 @@
@@ -5531,7 +5531,7 @@ index a29690b..0533799 100644
    $(srcdir)/emultempl/generic.em $(srcdir)/scripttempl/aout.sc ${GEN_DEPENDS}
  
 diff --git a/ld/configure.tgt b/ld/configure.tgt
-index e4eacd4..82a97a7 100644
+index 90fb887..19bf6d3 100644
 --- a/ld/configure.tgt
 +++ b/ld/configure.tgt
 @@ -632,6 +632,7 @@ powerpc-*-aix*)		targ_emul=aixppc ;;

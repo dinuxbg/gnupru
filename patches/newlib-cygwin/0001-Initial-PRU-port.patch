@@ -1,4 +1,4 @@
-From 00ed8c35b8dfd62836401ab2b0662140622f7b8e Mon Sep 17 00:00:00 2001
+From 10c957855e49ee3be80e937696c927379c0c9dd1 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Thu, 1 May 2014 16:43:07 +0300
 Subject: [PATCH] Initial PRU port
@@ -28,8 +28,8 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgloss/pru/fstat.c                              |   30 +
  libgloss/pru/getpid.c                             |   25 +
  libgloss/pru/gettimeofday.c                       |   31 +
- libgloss/pru/include/pru/am335x.h                 |  537 +++
- libgloss/pru/include/pru/io.h                     |  123 +
+ libgloss/pru/include/pru/am335x.h                 |  772 ++++
+ libgloss/pru/include/pru/io.h                     |  124 +
  libgloss/pru/isatty.c                             |   27 +
  libgloss/pru/kill.c                               |   28 +
  libgloss/pru/ldscripts/gen-ld-scripts.sh          |   61 +
@@ -65,7 +65,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  newlib/libc/machine/pru/configure                 | 4748 +++++++++++++++++++++
  newlib/libc/machine/pru/configure.in              |   14 +
  newlib/libc/machine/pru/setjmp.s                  |   46 +
- 60 files changed, 13692 insertions(+), 1 deletion(-)
+ 60 files changed, 13928 insertions(+), 1 deletion(-)
  create mode 100644 libgloss/pru/Makefile.in
  create mode 100644 libgloss/pru/aclocal.m4
  create mode 100644 libgloss/pru/close.c
@@ -118,10 +118,10 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 newlib/libc/machine/pru/setjmp.s
 
 diff --git a/config.sub b/config.sub
-index 7ffe373..7403230 100755
+index 1acc966..dd37a07 100755
 --- a/config.sub
 +++ b/config.sub
-@@ -301,6 +301,7 @@ case $basic_machine in
+@@ -302,6 +302,7 @@ case $basic_machine in
  	| open8 | or1k | or1knd | or32 \
  	| pdp10 | pdp11 | pj | pjl \
  	| powerpc | powerpc64 | powerpc64le | powerpcle \
@@ -129,14 +129,14 @@ index 7ffe373..7403230 100755
  	| pyramid \
  	| riscv32 | riscv64 \
  	| rl78 | rx \
-@@ -427,6 +428,7 @@ case $basic_machine in
+@@ -429,6 +430,7 @@ case $basic_machine in
  	| orion-* \
  	| pdp10-* | pdp11-* | pj-* | pjl-* | pn-* | power-* \
  	| powerpc-* | powerpc64-* | powerpc64le-* | powerpcle-* \
 +	| pru \
  	| pyramid-* \
+ 	| riscv32-* | riscv64-* \
  	| rl78-* | romp-* | rs6000-* | rx-* \
- 	| sh-* | sh[1234]-* | sh[24]a-* | sh[24]aeb-* | sh[23]e-* | sh[34]eb-* | sheb-* | shbe-* \
 diff --git a/configure b/configure
 index ae23ce4..f60d4ab 100755
 --- a/configure
@@ -191,10 +191,10 @@ index acd3018..ce7a8a2 100755
  
  
 diff --git a/libgloss/configure.in b/libgloss/configure.in
-index ab3224a..0c89d12 100644
+index e11eb7d..5101da1 100644
 --- a/libgloss/configure.in
 +++ b/libgloss/configure.in
-@@ -165,6 +165,8 @@ case "${target}" in
+@@ -168,6 +168,8 @@ case "${target}" in
  	;;
    or1k-*-* | or1knd-*-* )
  	AC_CONFIG_SUBDIRS([or1k])
@@ -4944,10 +4944,10 @@ index 0000000..7bc01dc
 +}
 diff --git a/libgloss/pru/include/pru/am335x.h b/libgloss/pru/include/pru/am335x.h
 new file mode 100644
-index 0000000..a55c912
+index 0000000..b57f8f0
 --- /dev/null
 +++ b/libgloss/pru/include/pru/am335x.h
-@@ -0,0 +1,537 @@
+@@ -0,0 +1,772 @@
 +/* pru/am335x.h -- PRU I/O registers definitions for PRU inside AM335x SoCs
 +
 +   Copyright (c) 2015 Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -5043,29 +5043,11 @@ index 0000000..a55c912
 +	const volatile unsigned int RUNSTATE		: 1;
 +	volatile unsigned int PCOUNTER_RST_VAL		: 16;
 +};
-+#define PRU0_CONTROL (*(struct __PRU_CONTROL_S *)((__PRU0_CTRL_REGS_BASE + PRU_CTRL_CONTROL_OFFS)))
-+#define PRU1_CONTROL (*(struct __PRU_CONTROL_S *)((__PRU1_CTRL_REGS_BASE + PRU_CTRL_CONTROL_OFFS)))
-+
 +
 +struct __PRU_STATUS_S {
 +	volatile unsigned int PCOUNTER			: 16;
 +	volatile unsigned int __reserved_1		: 16;
 +};
-+#define PRU0_STATUS (*(struct __PRU_STATUS_S *)((__PRU0_CTRL_REGS_BASE + PRU_CTRL_STATUS_OFFS)))
-+#define PRU1_STATUS (*(struct __PRU_STATUS_S *)((__PRU1_CTRL_REGS_BASE + PRU_CTRL_STATUS_OFFS)))
-+
-+
-+#define PRU0_WAKEUP_EN (*(volatile unsigned int *)((__PRU0_CTRL_REGS_BASE + PRU_CTRL_WAKEUP_EN_OFFS)))
-+#define PRU1_WAKEUP_EN (*(volatile unsigned int *)((__PRU1_CTRL_REGS_BASE + PRU_CTRL_WAKEUP_EN_OFFS)))
-+
-+
-+#define PRU0_CYCLE (*(volatile unsigned int *)((__PRU0_CTRL_REGS_BASE + PRU_CTRL_CYCLE_OFFS)))
-+#define PRU1_CYCLE (*(volatile unsigned int *)((__PRU1_CTRL_REGS_BASE + PRU_CTRL_CYCLE_OFFS)))
-+
-+
-+#define PRU0_STALL (*(volatile unsigned int *)((__PRU0_CTRL_REGS_BASE + PRU_CTRL_STALL_OFFS)))
-+#define PRU1_STALL (*(volatile unsigned int *)((__PRU1_CTRL_REGS_BASE + PRU_CTRL_STALL_OFFS)))
-+
 +
 +struct __PRU_CTBIR0_S {
 +	volatile unsigned int C24_BLK_INDEX		: 8;
@@ -5073,9 +5055,6 @@ index 0000000..a55c912
 +	volatile unsigned int C25_BLK_INDEX		: 8;
 +	volatile unsigned int __reserved_2		: 8;
 +};
-+#define PRU0_CTBIR0 (*(struct __PRU_CTBIR0_S *)((__PRU0_CTRL_REGS_BASE + PRU_CTRL_CTBIR0_OFFS)))
-+#define PRU1_CTBIR0 (*(struct __PRU_CTBIR0_S *)((__PRU1_CTRL_REGS_BASE + PRU_CTRL_CTBIR0_OFFS)))
-+
 +
 +struct __PRU_CTBIR1_S {
 +	volatile unsigned int C26_BLK_INDEX		: 8;
@@ -5083,24 +5062,59 @@ index 0000000..a55c912
 +	volatile unsigned int C27_BLK_INDEX		: 8;
 +	volatile unsigned int __reserved_2		: 8;
 +};
-+#define PRU0_CTBIR1 (*(struct __PRU_CTBIR1_S *)((__PRU0_CTRL_REGS_BASE + PRU_CTRL_CTBIR1_OFFS)))
-+#define PRU1_CTBIR1 (*(struct __PRU_CTBIR1_S *)((__PRU1_CTRL_REGS_BASE + PRU_CTRL_CTBIR1_OFFS)))
-+
 +
 +struct __PRU_CTPPR0_S {
 +	volatile unsigned int C28_POINTER		: 16;
 +	volatile unsigned int C29_POINTER		: 16;
 +};
-+#define PRU0_CTPPR0 (*(struct __PRU_CTPPR0_S *)((__PRU0_CTRL_REGS_BASE + PRU_CTRL_CTPPR0_OFFS)))
-+#define PRU1_CTPPR0 (*(struct __PRU_CTPPR0_S *)((__PRU1_CTRL_REGS_BASE + PRU_CTRL_CTPPR0_OFFS)))
-+
 +
 +struct __PRU_CTPPR1_S {
 +	volatile unsigned int C30_POINTER		: 16;
 +	volatile unsigned int C31_POINTER		: 16;
 +};
-+#define PRU0_CTPPR1 (*(struct __PRU_CTPPR1_S *)((__PRU0_CTRL_REGS_BASE + PRU_CTRL_CTPPR1_OFFS)))
-+#define PRU1_CTPPR1 (*(struct __PRU_CTPPR1_S *)((__PRU1_CTRL_REGS_BASE + PRU_CTRL_CTPPR1_OFFS)))
++
++struct __PRU_CTRL {
++	union {
++		volatile unsigned int CONTROL;
++		struct __PRU_CONTROL_S CONTROL_bit;
++	};
++	union {
++		volatile unsigned int STATUS;
++		struct __PRU_STATUS_S STATUS_bit;
++	};
++	volatile unsigned int WAKEUP_EN;
++	volatile unsigned int CYCLE;
++	volatile unsigned int STALL;
++	volatile unsigned int __gap1[3];
++	union {
++		volatile unsigned int CTBIR0;
++		struct __PRU_CTBIR0_S CTBIR0_bit;
++	};
++	union {
++		volatile unsigned int CTBIR1;
++		struct __PRU_CTBIR1_S CTBIR1_bit;
++	};
++	union {
++		volatile unsigned int CTPPR0;
++		struct __PRU_CTPPR0_S CTPPR0_bit;
++	};
++	union {
++		volatile unsigned int CTPPR1;
++		struct __PRU_CTPPR1_S CTPPR1_bit;
++	};
++};
++
++#define PRU0_CTRL	(*((struct __PRU_CTRL *)__PRU0_CTRL_REGS_BASE))
++#define PRU1_CTRL	(*((struct __PRU_CTRL *)__PRU1_CTRL_REGS_BASE))
++
++#if defined(__AM335X_PRU0__)
++  #define PRU_CTRL	PRU0_CTRL
++#elif defined(__AM335X_PRU1__)
++  #define PRU_CTRL	PRU1_CTRL
++#else
++  #error "Unrecognized AM335x PRU core - check your -mmcu option"
++#endif
++
 +
 +
 +/* ====================== PRU INTC module ====================== */
@@ -5178,7 +5192,6 @@ index 0000000..a55c912
 +	const volatile unsigned int __reserved_1	: 2;
 +	const volatile unsigned int REV_SCHEME		: 2;
 +};
-+#define PRU_INTC_REVID (*(struct __PRU_INTC_REVID_S *)((__INTC_BASE + PRU_INTC_REVID_OFFS)))
 +
 +
 +struct __PRU_INTC_CR_S {
@@ -5186,14 +5199,12 @@ index 0000000..a55c912
 +	volatile unsigned int NEST_MODE			: 2;
 +	volatile unsigned int __reserved_2		: 28;
 +};
-+#define PRU_INTC_CR (*(struct __PRU_INTC_CR_S *)((__INTC_BASE + PRU_INTC_CR_OFFS)))
 +
 +
 +struct __PRU_INTC_GER_S {
 +	volatile unsigned int ENABLE_HINT_ANY		: 1;
 +	volatile unsigned int __reserved_2		: 30;
 +};
-+#define PRU_INTC_GER (*(struct __PRU_INTC_GER_S *)((__INTC_BASE + PRU_INTC_GER_OFFS)))
 +
 +
 +struct __PRU_INTC_GNLR_S {
@@ -5201,85 +5212,61 @@ index 0000000..a55c912
 +	volatile unsigned int __reserved_1		: 22;
 +	volatile unsigned int AUTO_OVERRIDE		: 1;
 +};
-+#define PRU_INTC_GNLR (*(struct __PRU_INTC_GNLR_S *)((__INTC_BASE + PRU_INTC_GNLR_OFFS)))
 +
 +
 +struct __PRU_INTC_SISR_S {
 +	volatile unsigned int STATUS_SET_INDEX		: 10;
 +	volatile unsigned int __reserved_1		: 22;
 +};
-+#define PRU_INTC_SISR (*(struct __PRU_INTC_SISR_S *)((__INTC_BASE + PRU_INTC_SISR_OFFS)))
 +
 +
 +struct __PRU_INTC_SICR_S {
 +	volatile unsigned int STATUS_CLR_INDEX		: 10;
 +	volatile unsigned int __reserved_1		: 22;
 +};
-+#define PRU_INTC_SICR (*(struct __PRU_INTC_SICR_S *)((__INTC_BASE + PRU_INTC_SICR_OFFS)))
 +
 +
 +struct __PRU_INTC_EISR_S {
 +	volatile unsigned int STATUS_SET_INDEX		: 10;
 +	volatile unsigned int __reserved_1		: 22;
 +};
-+#define PRU_INTC_EISR (*(struct __PRU_INTC_EISR_S *)((__INTC_BASE + PRU_INTC_EISR_OFFS)))
 +
 +
 +struct __PRU_INTC_EICR_S {
 +	volatile unsigned int STATUS_CLR_INDEX		: 10;
 +	volatile unsigned int __reserved_1		: 22;
 +};
-+#define PRU_INTC_EICR (*(struct __PRU_INTC_EICR_S *)((__INTC_BASE + PRU_INTC_EICR_OFFS)))
 +
 +
 +struct __PRU_INTC_HIEISR_S {
 +	volatile unsigned int HINT_ENABLE_SET_INDEX	: 10;
 +	volatile unsigned int __reserved_1		: 22;
 +};
-+#define PRU_INTC_HIEISR (*(struct __PRU_INTC_HIEISR_S *)((__INTC_BASE + PRU_INTC_HIEISR_OFFS)))
 +
 +
 +struct __PRU_INTC_HIDISR_S {
 +	volatile unsigned int HINT_ENABLE_CLR_INDEX	: 10;
 +	volatile unsigned int __reserved_1		: 22;
 +};
-+#define PRU_INTC_HIDISR (*(struct __PRU_INTC_HIDISR_S *)((__INTC_BASE + PRU_INTC_HIDISR_OFFS)))
-+
 +
 +struct __PRU_INTC_GPIR_S {
 +	volatile unsigned int GLB_PRI_INTR		: 10;
 +	volatile unsigned int __reserved_1		: 21;
 +	volatile unsigned int GLB_NONE			: 1;
 +};
-+#define PRU_INTC_GPIR (*(struct __PRU_INTC_GPIR_S *)((__INTC_BASE + PRU_INTC_GPIR_OFFS)))
 +
-+
-+#define PRU_INTC_SRSR ((volatile unsigned int *)((__INTC_BASE + PRU_INTC_SRSR0_OFFS)))
-+#define PRU_INTC_SRSR0 (PRU_INTC_SRSR[0])
-+#define PRU_INTC_SRSR1 (PRU_INTC_SRSR[1])
-+#define PRU_INTC_SECR ((volatile unsigned int *)((__INTC_BASE + PRU_INTC_SECR0_OFFS)))
-+#define PRU_INTC_SECR0 (PRU_INTC_SECR[0])
-+#define PRU_INTC_SECR1 (PRU_INTC_SECR[1])
-+#define PRU_INTC_ESR ((volatile unsigned int *)((__INTC_BASE + PRU_INTC_ESR0_OFFS)))
-+#define PRU_INTC_ESR0 (PRU_INTC_ESR[0])
-+#define PRU_INTC_ESR1 (PRU_INTC_ESR[1])
-+#define PRU_INTC_ECR ((volatile unsigned int *)((__INTC_BASE + PRU_INTC_ECR0_OFFS)))
-+#define PRU_INTC_ECR0 (PRU_INTC_ECR[0])
-+#define PRU_INTC_ECR1 (PRU_INTC_ECR[1])
 +
 +
 +struct __PRU_INTC_CMR_S {
 +	volatile unsigned int CH_MAP			: 4;
 +	volatile unsigned int __reserved_1		: 4;
 +} __attribute__((packed));
-+#define PRU_INTC_CMR ((struct __PRU_INTC_CMR_S *)(__INTC_BASE + PRU_INTC_CMR0_OFFS))
 +
 +
 +struct __PRU_INTC_HMR_S {
 +	volatile unsigned int HINT_MAP			: 4;
 +	volatile unsigned int __reserved_1		: 4;
 +} __attribute__((packed));
-+#define PRU_INTC_HMR ((struct __PRU_INTC_HMR_S *)(__INTC_BASE + PRU_INTC_HMR0_OFFS))
 +
 +
 +struct __PRU_INTC_HIPIR_S {
@@ -5287,27 +5274,6 @@ index 0000000..a55c912
 +	volatile unsigned int __reserved_1		: 21;
 +	volatile unsigned int NONE_HINT			: 1;
 +};
-+#define PRU_INTC_HIPIR ((struct __PRU_INTC_HIPIR_S *)(__INTC_BASE + PRU_INTC_HIPIR0_OFFS))
-+#define PRU_INTC_HIPIR0 (PRU_INTC_HIPIR[0])
-+#define PRU_INTC_HIPIR1 (PRU_INTC_HIPIR[1])
-+#define PRU_INTC_HIPIR2 (PRU_INTC_HIPIR[2])
-+#define PRU_INTC_HIPIR3 (PRU_INTC_HIPIR[3])
-+#define PRU_INTC_HIPIR4 (PRU_INTC_HIPIR[4])
-+#define PRU_INTC_HIPIR5 (PRU_INTC_HIPIR[5])
-+#define PRU_INTC_HIPIR6 (PRU_INTC_HIPIR[6])
-+#define PRU_INTC_HIPIR7 (PRU_INTC_HIPIR[7])
-+#define PRU_INTC_HIPIR8 (PRU_INTC_HIPIR[8])
-+#define PRU_INTC_HIPIR9 (PRU_INTC_HIPIR[9])
-+
-+
-+#define PRU_INTC_SIPR (*(volatile unsigned int *)((__INTC_BASE + PRU_INTC_SIPR0_OFFS)))
-+#define PRU_INTC_SIPR0 (PRU_INTC_SIPR[0])
-+#define PRU_INTC_SIPR1 (PRU_INTC_SIPR[1])
-+
-+
-+#define PRU_INTC_SITR (*(volatile unsigned int *)((__INTC_BASE + PRU_INTC_SITR0_OFFS)))
-+#define PRU_INTC_SITR0 (PRU_INTC_SITR[0])
-+#define PRU_INTC_SITR1 (PRU_INTC_SITR[1])
 +
 +
 +struct __PRU_INTC_HINLR_S {
@@ -5315,24 +5281,246 @@ index 0000000..a55c912
 +	volatile unsigned int __reserved_1		: 21;
 +	volatile unsigned int NEST_HINT			: 1;
 +};
-+#define PRU_INTC_HINLR ((struct __PRU_INTC_HINLR_S *)(__INTC_BASE + PRU_INTC_HINLR0_OFFS))
-+#define PRU_INTC_HINLR0 (PRU_INTC_HINLR[0])
-+#define PRU_INTC_HINLR1 (PRU_INTC_HINLR[1])
-+#define PRU_INTC_HINLR2 (PRU_INTC_HINLR[2])
-+#define PRU_INTC_HINLR3 (PRU_INTC_HINLR[3])
-+#define PRU_INTC_HINLR4 (PRU_INTC_HINLR[4])
-+#define PRU_INTC_HINLR5 (PRU_INTC_HINLR[5])
-+#define PRU_INTC_HINLR6 (PRU_INTC_HINLR[6])
-+#define PRU_INTC_HINLR7 (PRU_INTC_HINLR[7])
-+#define PRU_INTC_HINLR8 (PRU_INTC_HINLR[8])
-+#define PRU_INTC_HINLR9 (PRU_INTC_HINLR[9])
-+
 +
 +struct __PRU_INTC_HIER_S {
 +	volatile unsigned int ENABLE_HINT		: 10;
 +	volatile unsigned int __reserved_1		: 22;
 +};
-+#define PRU_INTC_HIER (*(struct __PRU_INTC_HIER_S *)(__INTC_BASE + PRU_INTC_HIER_OFFS))
++
++struct __PRU_INTC {
++	union {
++		const volatile unsigned int REVID;
++		struct __PRU_INTC_REVID_S REVID_bit;
++	};
++	union {
++		volatile unsigned int CR;
++		struct __PRU_INTC_CR_S CR_bit;
++	};
++	unsigned int __gap1[2];
++	union {
++		volatile unsigned int GER;
++		struct __PRU_INTC_GER_S GER_bit;
++	};
++	unsigned int __gap2[2];
++	union {
++		volatile unsigned int GNLR;
++		struct __PRU_INTC_GNLR_S GNLR_bit;
++	};
++	union {
++		volatile unsigned int SISR;
++		struct __PRU_INTC_SISR_S SISR_bit;
++	};
++	union {
++		volatile unsigned int SICR;
++		struct __PRU_INTC_SICR_S SICR_bit;
++	};
++	union {
++		volatile unsigned int EISR;
++		struct __PRU_INTC_EISR_S EISR_bit;
++	};
++	union {
++		volatile unsigned int EICR;
++		struct __PRU_INTC_EICR_S EICR_bit;
++	};
++	unsigned int __gap3[1];
++	union {
++		volatile unsigned int HIEISR;
++		struct __PRU_INTC_HIEISR_S HIEISR_bit;
++	};
++	union {
++		volatile unsigned int HIDISR;
++		struct __PRU_INTC_HIEISR_S HIDISR_bit;
++	};
++	unsigned int __gap4[17];
++	union {
++		volatile unsigned int GPIR;
++		struct __PRU_INTC_GPIR_S GPIR_bit;
++	};
++	unsigned int __gap5[95];
++	volatile unsigned int SPSR0;
++	volatile unsigned int SPSR1;
++	unsigned int __gap6[30];
++	volatile unsigned int SECR0;
++	volatile unsigned int SECR1;
++	unsigned int __gap7[30];
++	volatile unsigned int ESR0;
++	volatile unsigned int ESR1;
++	unsigned int __gap8[30];
++	volatile unsigned int ECR0;
++	volatile unsigned int ECR1;
++	unsigned int __gap9[30];
++	union {
++		volatile unsigned int CMR0;
++		struct __PRU_INTC_CMR_S CMR0_bit;
++	};
++	union {
++		volatile unsigned int CMR1;
++		struct __PRU_INTC_CMR_S CMR1_bit;
++	};
++	union {
++		volatile unsigned int CMR2;
++		struct __PRU_INTC_CMR_S CMR2_bit;
++	};
++	union {
++		volatile unsigned int CMR3;
++		struct __PRU_INTC_CMR_S CMR3_bit;
++	};
++	union {
++		volatile unsigned int CMR4;
++		struct __PRU_INTC_CMR_S CMR4_bit;
++	};
++	union {
++		volatile unsigned int CMR5;
++		struct __PRU_INTC_CMR_S CMR5_bit;
++	};
++	union {
++		volatile unsigned int CMR6;
++		struct __PRU_INTC_CMR_S CMR6_bit;
++	};
++	union {
++		volatile unsigned int CMR7;
++		struct __PRU_INTC_CMR_S CMR7_bit;
++	};
++	union {
++		volatile unsigned int CMR8;
++		struct __PRU_INTC_CMR_S CMR8_bit;
++	};
++	union {
++		volatile unsigned int CMR9;
++		struct __PRU_INTC_CMR_S CMR9_bit;
++	};
++	union {
++		volatile unsigned int CMR10;
++		struct __PRU_INTC_CMR_S CMR10_bit;
++	};
++	union {
++		volatile unsigned int CMR11;
++		struct __PRU_INTC_CMR_S CMR11_bit;
++	};
++	union {
++		volatile unsigned int CMR12;
++		struct __PRU_INTC_CMR_S CMR12_bit;
++	};
++	union {
++		volatile unsigned int CMR13;
++		struct __PRU_INTC_CMR_S CMR13_bit;
++	};
++	union {
++		volatile unsigned int CMR14;
++		struct __PRU_INTC_CMR_S CMR14_bit;
++	};
++	union {
++		volatile unsigned int CMR15;
++		struct __PRU_INTC_CMR_S CMR15_bit;
++	};
++	unsigned int __gap10[240];
++	union {
++		volatile unsigned int HMR0;
++		struct __PRU_INTC_HMR_S HMR0_bit;
++	};
++	union {
++		volatile unsigned int HMR1;
++		struct __PRU_INTC_HMR_S HMR1_bit;
++	};
++	union {
++		volatile unsigned int HMR2;
++		struct __PRU_INTC_HMR_S HMR2_bit;
++	};
++	unsigned int __gap11[61];
++	union {
++		volatile unsigned int HIPIR0;
++		struct __PRU_INTC_HIPIR_S HIPIR0_bit;
++	};
++	union {
++		volatile unsigned int HIPIR1;
++		struct __PRU_INTC_HIPIR_S HIPIR1_bit;
++	};
++	union {
++		volatile unsigned int HIPIR2;
++		struct __PRU_INTC_HIPIR_S HIPIR2_bit;
++	};
++	union {
++		volatile unsigned int HIPIR3;
++		struct __PRU_INTC_HIPIR_S HIPIR3_bit;
++	};
++	union {
++		volatile unsigned int HIPIR4;
++		struct __PRU_INTC_HIPIR_S HIPIR4_bit;
++	};
++	union {
++		volatile unsigned int HIPIR5;
++		struct __PRU_INTC_HIPIR_S HIPIR5_bit;
++	};
++	union {
++		volatile unsigned int HIPIR6;
++		struct __PRU_INTC_HIPIR_S HIPIR6_bit;
++	};
++	union {
++		volatile unsigned int HIPIR7;
++		struct __PRU_INTC_HIPIR_S HIPIR7_bit;
++	};
++	union {
++		volatile unsigned int HIPIR8;
++		struct __PRU_INTC_HIPIR_S HIPIR8_bit;
++	};
++	union {
++		volatile unsigned int HIPIR9;
++		struct __PRU_INTC_HIPIR_S HIPIR9_bit;
++	};
++	unsigned int __gap12[246];
++	volatile unsigned int SIPR0;
++	volatile unsigned int SIPR1;
++	unsigned int __gap13[30];
++	volatile unsigned int SITR0;
++	volatile unsigned int SITR1;
++	unsigned int __gap14[222];
++	union {
++		volatile unsigned int HINLR0;
++		struct __PRU_INTC_HINLR_S HINLR0_bit;
++	};
++	union {
++		volatile unsigned int HINLR1;
++		struct __PRU_INTC_HINLR_S HINLR1_bit;
++	};
++	union {
++		volatile unsigned int HINLR2;
++		struct __PRU_INTC_HINLR_S HINLR2_bit;
++	};
++	union {
++		volatile unsigned int HINLR3;
++		struct __PRU_INTC_HINLR_S HINLR3_bit;
++	};
++	union {
++		volatile unsigned int HINLR4;
++		struct __PRU_INTC_HINLR_S HINLR4_bit;
++	};
++	union {
++		volatile unsigned int HINLR5;
++		struct __PRU_INTC_HINLR_S HINLR5_bit;
++	};
++	union {
++		volatile unsigned int HINLR6;
++		struct __PRU_INTC_HINLR_S HINLR6_bit;
++	};
++	union {
++		volatile unsigned int HINLR7;
++		struct __PRU_INTC_HINLR_S HINLR7_bit;
++	};
++	union {
++		volatile unsigned int HINLR8;
++		struct __PRU_INTC_HINLR_S HINLR8_bit;
++	};
++	union {
++		volatile unsigned int HINLR9;
++		struct __PRU_INTC_HINLR_S HINLR9_bit;
++	};
++	unsigned int __gap15[246];
++	union {
++		volatile unsigned int HIER;
++		struct __PRU_INTC_HIER_S HIER_bit;
++	};
++};
++#define PRU_INTC	(*((struct __PRU_INTC *)__INTC_BASE))
 +
 +/* ====================== PRU UART module ====================== */
 +/* TODO */
@@ -5357,8 +5545,6 @@ index 0000000..a55c912
 +#define PRU_CFG_SPP_OFFS		0x34
 +#define PRU_CFG_PIN_MIX_OFFS		0x40
 +
-+#define PRU_CFG_REVID (*(const volatile unsigned int *)((__CFG_BASE + PRU_CFG_REVID_OFFS)))
-+
 +struct __PRU_CFG_SYSCFG_S {
 +	volatile unsigned int IDLE_MODE			: 2;
 +	volatile unsigned int STANDBY_MODE		: 2;
@@ -5366,8 +5552,6 @@ index 0000000..a55c912
 +	const volatile unsigned int SUB_MWAIT		: 1;
 +	volatile unsigned int __reserved_1		: 24;
 +};
-+#define PRU_CFG_SYSCFG (*(struct __PRU_CFG_SYSCFG_S *)(__CFG_BASE + PRU_CFG_SYSCFG_OFFS))
-+
 +
 +struct __PRU_CFG_GPCFG_S {
 +	volatile unsigned int GPI_MODE			: 2;
@@ -5381,9 +5565,6 @@ index 0000000..a55c912
 +	volatile unsigned int GPO_SH_SEL		: 1;
 +	volatile unsigned int __reserved_1		: 6;
 +};
-+#define PRU_CFG_GPCFG0 (*(struct __PRU_CFG_GPCFG_S *)(__CFG_BASE + PRU_CFG_GPCFG0_OFFS))
-+#define PRU_CFG_GPCFG1 (*(struct __PRU_CFG_GPCFG_S *)(__CFG_BASE + PRU_CFG_GPCFG1_OFFS))
-+
 +
 +struct __PRU_CFG_CGR_S {
 +	volatile unsigned int PRU0_CLK_STOP_REQ		: 1;
@@ -5406,10 +5587,8 @@ index 0000000..a55c912
 +	volatile unsigned int IEP_CLK_EN		: 1;
 +	volatile unsigned int __reserved_1		: 14;
 +};
-+#define PRU_CFG_CGR (*(struct __PRU_CFG_CGR_S *)(__CFG_BASE + PRU_CFG_CGR))
 +
-+
-+struct __PRU_CFG_ISP_S {
++struct __PRU_CFG_ISPx_S {
 +	volatile unsigned int PRU0_IMEM_PE		: 4;
 +	volatile unsigned int PRU0_DMEM_PE		: 4;
 +	volatile unsigned int PRU1_IMEM_PE		: 4;
@@ -5417,11 +5596,6 @@ index 0000000..a55c912
 +	volatile unsigned int RAM_PE			: 4;
 +	volatile unsigned int __reserved_1		: 12;
 +};
-+#define PRU_CFG_ISRP (*(struct __PRU_CFG_ISP_S *)(__CFG_BASE + PRU_CFG_ISRP))
-+#define PRU_CFG_ISP (*(struct __PRU_CFG_ISP_S *)(__CFG_BASE + PRU_CFG_ISP))
-+#define PRU_CFG_IESP (*(struct __PRU_CFG_ISP_S *)(__CFG_BASE + PRU_CFG_IESP))
-+#define PRU_CFG_IECP (*(struct __PRU_CFG_ISP_S *)(__CFG_BASE + PRU_CFG_IECP))
-+
 +
 +struct __PRU_CFG_SCRP_S {
 +	volatile unsigned int SCRP_1			: 2;
@@ -5444,53 +5618,114 @@ index 0000000..a55c912
 +	volatile unsigned int SCRP_18			: 1;
 +	volatile unsigned int __reserved_1		: 10;
 +};
-+#define PRU_CFG_SCRP (*(struct __PRU_CFG_SCRP_S *)(__CFG_BASE + PRU_CFG_SCRP))
-+
 +
 +struct __PRU_CFG_PMAO_S {
 +	volatile unsigned int PMAO_PRU0			: 1;
 +	volatile unsigned int PMAO_PRU1			: 1;
 +	volatile unsigned int __reserved_1		: 30;
 +};
-+#define PRU_CFG_PMAO (*(struct __PRU_CFG_PMAO_S *)(__CFG_BASE + PRU_CFG_PMAO))
-+
 +
 +struct __PRU_CFG_MII_RT_S {
 +	volatile unsigned int MII_RT_EVENT_EN		: 1;
 +	volatile unsigned int __reserved_1		: 31;
 +};
-+#define PRU_CFG_MII_RT (*(struct __PRU_CFG_MII_RT_S *)(__CFG_BASE + PRU_CFG_MII_RT))
 +
 +
 +struct __PRU_CFG_IEPCLK_S {
 +	volatile unsigned int OCP_EN			: 1;
 +	volatile unsigned int __reserved_1		: 31;
 +};
-+#define PRU_CFG_IEPCLK (*(struct __PRU_CFG_IEPCLK_S *)(__CFG_BASE + PRU_CFG_IEPCLK))
-+
 +
 +struct __PRU_CFG_SPP_S {
 +	volatile unsigned int PRU1_PAD_HP_EN		: 1;
 +	volatile unsigned int XFR_SHIFT_EN		: 1;
 +	volatile unsigned int __reserved_1		: 30;
 +};
-+#define PRU_CFG_SPP (*(struct __PRU_CFG_SPP_S *)(__CFG_BASE + PRU_CFG_SPP))
 +
 +
 +struct __PRU_CFG_PIN_MX_S {
 +	volatile unsigned int PIN_MUX_SEL		: 8;
 +	volatile unsigned int __reserved_1		: 24;
 +};
-+#define PRU_CFG_PIN_MX (*(struct __PRU_CFG_PIN_MX_S *)(__CFG_BASE + PRU_CFG_PIN_MX))
++
++struct __PRU_CFG {
++	volatile unsigned int REVID;
++	union {
++		volatile unsigned int SYSCFG;
++		struct __PRU_CFG_SYSCFG_S SYSCFG_bit;
++	};
++	union {
++		volatile unsigned int GPCFG0;
++		struct __PRU_CFG_GPCFG_S GPCFG0_bit;
++#if defined(__AM335X_PRU0__)
++		volatile unsigned int GPCFG;
++		struct __PRU_CFG_GPCFG_S GPCFG_bit;
++#endif
++	};
++	union {
++		volatile unsigned int GPCFG1;
++		struct __PRU_CFG_GPCFG_S GPCFG1_bit;
++#if defined(__AM335X_PRU1__)
++		volatile unsigned int GPCFG;
++		struct __PRU_CFG_GPCFG_S GPCFG_bit;
++#endif
++	};
++	union {
++		volatile unsigned int CGR;
++		struct __PRU_CFG_CGR_S CGR_bit;
++	};
++	union {
++		volatile unsigned int ISRP;
++		struct __PRU_CFG_ISPx_S ISRP_bit;
++	};
++	union {
++		volatile unsigned int ISP;
++		struct __PRU_CFG_ISPx_S ISP_bit;
++	};
++	union {
++		volatile unsigned int IESP;
++		struct __PRU_CFG_ISPx_S IESP_bit;
++	};
++	union {
++		volatile unsigned int IECP;
++		struct __PRU_CFG_ISPx_S IECP_bit;
++	};
++	union {
++		volatile unsigned int SCRP;
++		struct __PRU_CFG_SCRP_S SCRP_bit;
++	};
++	union {
++		volatile unsigned int PMAO;
++		struct __PRU_CFG_PMAO_S PMAO_bit;
++	};
++	union {
++		volatile unsigned int MII_RT;
++		struct __PRU_CFG_MII_RT_S MII_RT_bit;
++	};
++	union {
++		volatile unsigned int IEPCLK;
++		struct __PRU_CFG_IEPCLK_S IEPCLK_bit;
++	};
++	union {
++		volatile unsigned int SPP;
++		struct __PRU_CFG_SPP_S SPP_bit;
++	};
++	volatile unsigned int __gap1[2];
++	union {
++		volatile unsigned int PIN_MX;
++		struct __PRU_CFG_PIN_MX_S PIN_MX_bit;
++	};
++};
++#define PRU_CFG	(*((struct __PRU_CFG *)__CFG_BASE))
 +
 +
 +#endif
 diff --git a/libgloss/pru/include/pru/io.h b/libgloss/pru/include/pru/io.h
 new file mode 100644
-index 0000000..76e9ada
+index 0000000..945ff06
 --- /dev/null
 +++ b/libgloss/pru/include/pru/io.h
-@@ -0,0 +1,123 @@
+@@ -0,0 +1,124 @@
 +/* pru/io.h -- PRU I/O registers definitions
 +
 +   Copyright (c) 2015 Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -5523,30 +5758,26 @@ index 0000000..76e9ada
 +
 +static inline void write_r30(unsigned int val)
 +{
-+	register unsigned int r30 asm ("r30");
-+	r30 = val;
-+	asm volatile (";":"+r"(r30) :);
++	asm volatile ("mov\tr30, %0" : : "r"(val));
 +}
 +
 +static inline unsigned int read_r30(void)
 +{
-+	register unsigned int r30 asm ("r30");
-+	asm volatile (";":"+r"(r30));
-+	return r30;
++	unsigned int val;
++	asm volatile ("mov\t%0, r30" : "=r"(val) :);
++	return val;
 +}
 +
 +static inline void write_r31(unsigned int val)
 +{
-+	register unsigned int r31 asm ("r31");
-+	r31 = val;
-+	asm volatile (";":"+r"(r31) :); 
++	asm volatile ("mov\tr31, %0" : : "r"(val));
 +}
 +
 +static inline unsigned int read_r31(void)
 +{
-+	register unsigned int r31 asm ("r31");
-+	asm volatile (";":"+r"(r31)); 
-+	return r31;
++	unsigned int val;
++	asm volatile ("mov\t%0, r31" : "=r"(val) :);
++	return val;
 +}
 +
 +#ifdef __cplusplus
@@ -5579,6 +5810,11 @@ index 0000000..76e9ada
 +__R31_type __R31 __attribute__((weak));
 +
 +#endif	/* __cplusplus */
++
++static inline void __halt(void)
++{
++	asm volatile ("halt" : : : "memory");
++}
 +
 +#define PRU_R31_INTR_IN1_BIT		31
 +#define PRU_R31_INTR_IN1_MASK		(1u << 31)
@@ -7843,7 +8079,7 @@ index 0000000..5bc5596
 +  return (nbytes);
 +}
 diff --git a/newlib/configure.host b/newlib/configure.host
-index dac461b..b5caf0b 100644
+index 6e2f98f..7aeab4c 100644
 --- a/newlib/configure.host
 +++ b/newlib/configure.host
 @@ -80,7 +80,7 @@ case "${target_optspace}:${host}" in
@@ -7855,7 +8091,7 @@ index dac461b..b5caf0b 100644
      newlib_cflags="${newlib_cflags} -Os"
      ;;
    no:* | :*)
-@@ -251,6 +251,14 @@ case "${host_cpu}" in
+@@ -255,6 +255,14 @@ case "${host_cpu}" in
    powerpc*)
  	machine_dir=powerpc
  	;;
@@ -7870,7 +8106,7 @@ index dac461b..b5caf0b 100644
    rl78)
  	machine_dir=rl78
  	newlib_cflags="${newlib_cflags} -DPREFER_SIZE_OVER_SPEED -DSMALL_MEMORY"
-@@ -780,6 +788,9 @@ case "${host}" in
+@@ -790,6 +798,9 @@ case "${host}" in
  	newlib_cflags="${newlib_cflags} -DHAVE_OPENDIR -DHAVE_RENAME -DHAVE_FCNTL -D_NO_POSIX_SPAWN"
  	syscall_dir=syscalls
  	;;
@@ -7881,10 +8117,10 @@ index dac461b..b5caf0b 100644
  	default_newlib_io_long_long="yes"
  	syscall_dir=syscalls
 diff --git a/newlib/libc/include/machine/ieeefp.h b/newlib/libc/include/machine/ieeefp.h
-index 04eea11..20b6093 100644
+index 11ef0dd..b9cd236 100644
 --- a/newlib/libc/include/machine/ieeefp.h
 +++ b/newlib/libc/include/machine/ieeefp.h
-@@ -376,6 +376,10 @@
+@@ -380,6 +380,10 @@
  #define __SMALL_BITFIELDS	/* 16 Bit INT */
  #endif
  
@@ -7896,10 +8132,10 @@ index 04eea11..20b6093 100644
  #define __IEEE_LITTLE_ENDIAN
  #define __SMALL_BITFIELDS	/* 16 Bit INT */
 diff --git a/newlib/libc/include/machine/setjmp.h b/newlib/libc/include/machine/setjmp.h
-index ec6644a..2936e2a 100644
+index e0bc228..bb1cebc 100644
 --- a/newlib/libc/include/machine/setjmp.h
 +++ b/newlib/libc/include/machine/setjmp.h
-@@ -334,6 +334,11 @@ _BEGIN_STD_C
+@@ -338,6 +338,11 @@ _BEGIN_STD_C
  #define _JBTYPE unsigned long
  #endif
  
@@ -7912,10 +8148,10 @@ index ec6644a..2936e2a 100644
  #define _JBLEN 0x44
  #endif
 diff --git a/newlib/libc/machine/configure b/newlib/libc/machine/configure
-index 91126ae..620f063 100755
+index 59c0789..2cb0fd6 100755
 --- a/newlib/libc/machine/configure
 +++ b/newlib/libc/machine/configure
-@@ -821,6 +821,7 @@ necv70
+@@ -867,6 +867,7 @@ necv70
  nios2
  or1k
  powerpc
@@ -7923,7 +8159,7 @@ index 91126ae..620f063 100755
  rl78
  rx
  sh
-@@ -11903,6 +11904,8 @@ subdirs="$subdirs a29k"
+@@ -12842,6 +12843,8 @@ subdirs="$subdirs a29k"
   ;;
  	powerpc) subdirs="$subdirs powerpc"
   ;;
@@ -7933,10 +8169,10 @@ index 91126ae..620f063 100755
   ;;
  	rx) subdirs="$subdirs rx"
 diff --git a/newlib/libc/machine/configure.in b/newlib/libc/machine/configure.in
-index 99b739b..0b1962a 100644
+index 1499eab..f66251c 100644
 --- a/newlib/libc/machine/configure.in
 +++ b/newlib/libc/machine/configure.in
-@@ -60,6 +60,7 @@ if test -n "${machine_dir}"; then
+@@ -61,6 +61,7 @@ if test -n "${machine_dir}"; then
  	nios2) AC_CONFIG_SUBDIRS(nios2) ;;
  	or1k) AC_CONFIG_SUBDIRS(or1k) ;;
  	powerpc) AC_CONFIG_SUBDIRS(powerpc) ;;
