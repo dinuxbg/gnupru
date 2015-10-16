@@ -1,7 +1,7 @@
-From 10c957855e49ee3be80e937696c927379c0c9dd1 Mon Sep 17 00:00:00 2001
+From c2e20386274ba0f4a0354c38a426a2613ee0d763 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Thu, 1 May 2014 16:43:07 +0300
-Subject: [PATCH] Initial PRU port
+Subject: [PATCH 1/2] Initial PRU port
 
 Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---
@@ -10,7 +10,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  configure.ac                                      |    4 +
  libgloss/configure                                |    5 +
  libgloss/configure.in                             |    2 +
- libgloss/pru/Makefile.in                          |  147 +
+ libgloss/pru/Makefile.in                          |  151 +
  libgloss/pru/aclocal.m4                           |  344 ++
  libgloss/pru/close.c                              |   25 +
  libgloss/pru/configure                            | 3791 ++++++++++++++++
@@ -33,13 +33,13 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgloss/pru/isatty.c                             |   27 +
  libgloss/pru/kill.c                               |   28 +
  libgloss/pru/ldscripts/gen-ld-scripts.sh          |   61 +
- libgloss/pru/ldscripts/pruelf-am335x.pru0.x       |  218 +
- libgloss/pru/ldscripts/pruelf-am335x.pru1.x       |  218 +
- libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x |  218 +
- libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x |  218 +
- libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x |  218 +
- libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x |  218 +
- libgloss/pru/ldscripts/pruelf-sim.x               |  218 +
+ libgloss/pru/ldscripts/pruelf-am335x.pru0.x       |  223 +
+ libgloss/pru/ldscripts/pruelf-am335x.pru1.x       |  223 +
+ libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x |  223 +
+ libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x |  223 +
+ libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x |  223 +
+ libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x |  223 +
+ libgloss/pru/ldscripts/pruelf-sim.x               |  223 +
  libgloss/pru/lseek.c                              |   34 +
  libgloss/pru/open.c                               |   33 +
  libgloss/pru/print.c                              |   27 +
@@ -65,7 +65,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  newlib/libc/machine/pru/configure                 | 4748 +++++++++++++++++++++
  newlib/libc/machine/pru/configure.in              |   14 +
  newlib/libc/machine/pru/setjmp.s                  |   46 +
- 60 files changed, 13928 insertions(+), 1 deletion(-)
+ 60 files changed, 13967 insertions(+), 1 deletion(-)
  create mode 100644 libgloss/pru/Makefile.in
  create mode 100644 libgloss/pru/aclocal.m4
  create mode 100644 libgloss/pru/close.c
@@ -205,10 +205,10 @@ index e11eb7d..5101da1 100644
  
 diff --git a/libgloss/pru/Makefile.in b/libgloss/pru/Makefile.in
 new file mode 100644
-index 0000000..d78573e
+index 0000000..283cef3
 --- /dev/null
 +++ b/libgloss/pru/Makefile.in
-@@ -0,0 +1,147 @@
+@@ -0,0 +1,151 @@
 +# Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
 +#
 +# The authors hereby grant permission to use, copy, modify, distribute,
@@ -340,6 +340,10 @@ index 0000000..d78573e
 +	for i in ${srcdir}/include/pru/*.h; do \
 +	  b=`basename $$i`; \
 +	  $(INSTALL_DATA) $$i $(DESTDIR)$(tooldir)/include/pru/$$b ;\
++	done
++	for i in ${srcdir}/include/*.h; do \
++	  b=`basename $$i`; \
++	  $(INSTALL_DATA) $$i $(DESTDIR)$(tooldir)/include/$$b ;\
 +	done
 +	${mkinstalldirs} ${DESTDIR}${tooldir}/lib${MULTISUBDIR}/device-specs; \
 +	for s in ${srcdir}/device-specs/*; do \
@@ -5986,10 +5990,10 @@ index 0000000..575a309
 +dump_modified 8K   8K     "32"         "512"       | tee pruelf-am437x.icss1.pru1.x
 diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru0.x b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
 new file mode 100644
-index 0000000..f2c11ce
+index 0000000..ef122be
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
-@@ -0,0 +1,218 @@
+@@ -0,0 +1,223 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -6144,6 +6148,11 @@ index 0000000..f2c11ce
 +    *(.gnu.linkonce.d*)
 +    . = ALIGN(4);
 +     PROVIDE (__data_end = .) ;
++  }  > dmem
++  .resource_table   :
++  {
++    *(.resource_table)
++    KEEP (*(.resource_table))
 +  }  > dmem
 +  .bss   :
 +  {
@@ -6210,10 +6219,10 @@ index 0000000..f2c11ce
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru1.x b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
 new file mode 100644
-index 0000000..f2c11ce
+index 0000000..ef122be
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
-@@ -0,0 +1,218 @@
+@@ -0,0 +1,223 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -6368,6 +6377,11 @@ index 0000000..f2c11ce
 +    *(.gnu.linkonce.d*)
 +    . = ALIGN(4);
 +     PROVIDE (__data_end = .) ;
++  }  > dmem
++  .resource_table   :
++  {
++    *(.resource_table)
++    KEEP (*(.resource_table))
 +  }  > dmem
 +  .bss   :
 +  {
@@ -6434,10 +6448,10 @@ index 0000000..f2c11ce
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
 new file mode 100644
-index 0000000..8f1dc83
+index 0000000..4450ca5
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
-@@ -0,0 +1,218 @@
+@@ -0,0 +1,223 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -6592,6 +6606,11 @@ index 0000000..8f1dc83
 +    *(.gnu.linkonce.d*)
 +    . = ALIGN(4);
 +     PROVIDE (__data_end = .) ;
++  }  > dmem
++  .resource_table   :
++  {
++    *(.resource_table)
++    KEEP (*(.resource_table))
 +  }  > dmem
 +  .bss   :
 +  {
@@ -6658,10 +6677,10 @@ index 0000000..8f1dc83
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
 new file mode 100644
-index 0000000..8f1dc83
+index 0000000..4450ca5
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
-@@ -0,0 +1,218 @@
+@@ -0,0 +1,223 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -6817,6 +6836,11 @@ index 0000000..8f1dc83
 +    . = ALIGN(4);
 +     PROVIDE (__data_end = .) ;
 +  }  > dmem
++  .resource_table   :
++  {
++    *(.resource_table)
++    KEEP (*(.resource_table))
++  }  > dmem
 +  .bss   :
 +  {
 +     PROVIDE (__bss_start = .) ;
@@ -6882,10 +6906,10 @@ index 0000000..8f1dc83
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
 new file mode 100644
-index 0000000..f2c11ce
+index 0000000..ef122be
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
-@@ -0,0 +1,218 @@
+@@ -0,0 +1,223 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -7040,6 +7064,11 @@ index 0000000..f2c11ce
 +    *(.gnu.linkonce.d*)
 +    . = ALIGN(4);
 +     PROVIDE (__data_end = .) ;
++  }  > dmem
++  .resource_table   :
++  {
++    *(.resource_table)
++    KEEP (*(.resource_table))
 +  }  > dmem
 +  .bss   :
 +  {
@@ -7106,10 +7135,10 @@ index 0000000..f2c11ce
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
 new file mode 100644
-index 0000000..f2c11ce
+index 0000000..ef122be
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
-@@ -0,0 +1,218 @@
+@@ -0,0 +1,223 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -7265,6 +7294,11 @@ index 0000000..f2c11ce
 +    . = ALIGN(4);
 +     PROVIDE (__data_end = .) ;
 +  }  > dmem
++  .resource_table   :
++  {
++    *(.resource_table)
++    KEEP (*(.resource_table))
++  }  > dmem
 +  .bss   :
 +  {
 +     PROVIDE (__bss_start = .) ;
@@ -7330,10 +7364,10 @@ index 0000000..f2c11ce
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-sim.x b/libgloss/pru/ldscripts/pruelf-sim.x
 new file mode 100644
-index 0000000..644f948
+index 0000000..efe9ed9
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-sim.x
-@@ -0,0 +1,218 @@
+@@ -0,0 +1,223 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -7488,6 +7522,11 @@ index 0000000..644f948
 +    *(.gnu.linkonce.d*)
 +    . = ALIGN(4);
 +     PROVIDE (__data_end = .) ;
++  }  > dmem
++  .resource_table   :
++  {
++    *(.resource_table)
++    KEEP (*(.resource_table))
 +  }  > dmem
 +  .bss   :
 +  {
@@ -14492,5 +14531,5 @@ index 0000000..cc22975
 +1:
 +	ret
 -- 
-2.5.1
+2.6.1
 

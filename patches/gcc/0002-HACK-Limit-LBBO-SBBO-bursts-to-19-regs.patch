@@ -3267,5 +3267,5 @@ index 84e282d..57157ec 100644
        || GET_CODE (operands[1]) != REG
        || (REGNO (operands[1]) + INTVAL (operands[2]) - 1) > LAST_NONIO_GP_REG)
 -- 
-2.5.1
+2.6.1
 
