@@ -9,9 +9,11 @@ GCC_BASECOMMIT=689db5ed20ee0ae1ca351fd6066c72c60aa43805
 BINUTILS_BASECOMMIT=3ebe65c0ff9f8f76c9971b1cc078273298f0c693
 NEWLIB_BASECOMMIT=f296bb3569839b0217ec1a775165d239877e3548
 
-GCC_GIT=https://github.com/mirrors/gcc
-BINUTILS_GIT=https://github.com/bminor/binutils-gdb
-NEWLIB_GIT=https://github.com/wallento/newlib-cygwin
+# You can export your (local) repositories to speed up
+# compilation.
+test -z "$GCC_GIT" && GCC_GIT=https://github.com/mirrors/gcc
+test -z "$BINUTILS_GIT" && BINUTILS_GIT=https://github.com/bminor/binutils-gdb
+test -z "$NEWLIB_GIT" && NEWLIB_GIT=https://github.com/wallento/newlib-cygwin
 
 # If you have already checked out GCC or binutils, then references
 # could save you some bandwidth
