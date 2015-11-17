@@ -1,0 +1,5 @@
+gcc-pru (6.0.0-pru-20151121-1) unstable; urgency=medium
+
+  * Initial package for PRU GCC.
+
+ -- Dimitar Dimitrov <dinuxbg@gmail.com>  Sat, 21 Nov 2015 22:24:20 +0200

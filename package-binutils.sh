@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Sample script to produce Debian packages.
+# Sample script to produce Debian package for binutils-pru
 
 MAINDIR=`pwd`
 SRC=`pwd`/src
@@ -15,8 +15,6 @@ die()
 RETDIR=`pwd`
 
 [ -d $SRC ] || die $SRC does not exist. Please run ./download-and-patch.sh
-
-# TODO - add GCC and newlib
 
 VERSION=`head -1 packaging/binutils-pru/debian/changelog | grep -o '(.\+)'| sed -e 's/(\|)//g'`
 cp -Rfp $SRC/binutils-gdb/ packaging/binutils-pru/binutils-pru-$VERSION/ || die Could not copy binutils sources

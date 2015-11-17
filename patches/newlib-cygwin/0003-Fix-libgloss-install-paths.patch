@@ -1,0 +1,33 @@
+From cc90b2ecb5c1531bae1a53216b6c52b429bc4de2 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dinuxbg@gmail.com>
+Date: Sat, 21 Nov 2015 20:28:46 +0200
+Subject: [PATCH] Fix libgloss install paths
+
+Put the correct prefix, in case install directory diffres from final path.
+
+Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+---
+ libgloss/pru/Makefile.in | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/libgloss/pru/Makefile.in b/libgloss/pru/Makefile.in
+index 283cef3..d629258 100644
+--- a/libgloss/pru/Makefile.in
++++ b/libgloss/pru/Makefile.in
+@@ -119,11 +119,11 @@ distclean maintainer-clean realclean: clean
+ .PHONY: install info install-info clean-info
+ install: $(OUTPUTS) $(srcdir)/ldscripts/gen-ld-scripts.sh
+ 	for outputs in ${OUTPUTS}; do\
+-	 ${INSTALL_DATA} $${outputs} ${tooldir}/lib${MULTISUBDIR}/$${outputs}; \
++	 ${INSTALL_DATA} $${outputs} ${DESTDIR}${tooldir}/lib${MULTISUBDIR}/$${outputs}; \
+ 	done
+ 	for s in $(SCRIPTS); do \
+ 	  b=`basename $$s`; \
+-	  ${INSTALL_DATA} $$s ${tooldir}/lib${MULTISUBDIR}/$$b ;\
++	  ${INSTALL_DATA} $$s ${DESTDIR}${tooldir}/lib${MULTISUBDIR}/$$b ;\
+ 	done
+ 	${mkinstalldirs} ${DESTDIR}${tooldir}/include/pru; \
+ 	for i in ${srcdir}/include/pru/*.h; do \
+-- 
+2.6.2
+

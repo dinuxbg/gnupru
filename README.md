@@ -28,22 +28,25 @@ Then it should be a simple matter of:
 	./download-and-patch.sh           # Download and patch the sources
 	./build.sh                        # Build
 
-## Debian Packaging
-Currently there are scripts only for packaging binutils. See issue #13 for GCC and Newlib packaging status.
+## Creating Debian Packages From Scratch
+There are experimental scripts for packaging binutils and gcc+newlib.
 
 Installing the prerequisites:
 
-	sudo apt-get install dh-autoreconf
+	sudo apt-get install dh-autoreconf libgmp-dev libmpfr-dev libmpc-dev libzip-dev
 
 Building and packaging:
 
 	./download-and-patch.sh           # Download and patch the sources
-	./package.sh                      # Package for Debian.
+	./package-binutils.sh
+	sudo dpkg -i packaging/binutils-pru*.deb
+	./package-gcc-newlib.sh
+	sudo dpkg -i packaging/gcc-pru*.deb
 
 Testing the output:
 
-	sudo dpkg -i packaging/binutils-pru*.deb
 	pru-as --version
+	pru-gcc --version
 
 ## Acknowledgements
  * GCC/Binutils Nios2 port was taken as a base for the PRU port.
