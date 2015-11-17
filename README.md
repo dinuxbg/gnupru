@@ -49,8 +49,6 @@ Testing the output:
  * GCC/Binutils Nios2 port was taken as a base for the PRU port.
 
 ## TODO
-I intend to scratch my itch on the following items:
+A few long term tasks:
  * Need to review the GCC function prologue handling. Current code is a direct copy of the Nios2 code. It should be correct but is not efficient for PRU.
- * Look again at the linker port. There's too much code for such a simple CPU.
- * Write testcases for GCC, GAS and LD.
-
+ * Investigate feasibility of "packed" register support in GCC. PRU port may have to be rewritten to use "virtual" 8-bit registers in order to allow more efficient variable packing.
