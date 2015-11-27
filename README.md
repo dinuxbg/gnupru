@@ -3,13 +3,17 @@
 ## Introduction
 This is an unofficial GCC/Binutils port for the PRU I/O CPU core that is present in TI Sitara AM33xx SoCs. Older PRU core versions are not supported.
 
-The release is ready for cautious usage. There are several small examples in https://github.com/dinuxbg/pru-gcc-examples . A simulator is used to execute the GCC C regression test suite. Results for this release are:
+The release is ready for cautious usage. A simulator is used to execute the GCC C regression test suite. Results for this release are:
 
 	# of expected passes           81497
 	# of unexpected failures       31
 	# of unexpected successes      1
 	# of expected failures	       97
 	# of unsupported tests	       1974
+
+There are several examples to get started:
+ * Assorted small examples: https://github.com/dinuxbg/pru-gcc-examples
+ * GCC port of the TI PRU training: https://github.com/dinuxbg/pru-software-support-package . Make sure to read ReadMe-GCC.txt.
 
 Bug reports should be filed in https://github.com/dinuxbg/gnupru/issues . For general questions please use http://beagleboard.org/Community/Forums .
 
