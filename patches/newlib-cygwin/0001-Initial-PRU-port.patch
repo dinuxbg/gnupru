@@ -1,4 +1,4 @@
-From c2e20386274ba0f4a0354c38a426a2613ee0d763 Mon Sep 17 00:00:00 2001
+From c64568e4df6f298f070e90f1440a8a8dfd4fc242 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Thu, 1 May 2014 16:43:07 +0300
 Subject: [PATCH 1/2] Initial PRU port
@@ -15,7 +15,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgloss/pru/close.c                              |   25 +
  libgloss/pru/configure                            | 3791 ++++++++++++++++
  libgloss/pru/configure.in                         |   66 +
- libgloss/pru/crt0.S                               |   71 +
+ libgloss/pru/crt0.S                               |   64 +
  libgloss/pru/device-specs/am335x.pru0             |    5 +
  libgloss/pru/device-specs/am335x.pru1             |    5 +
  libgloss/pru/device-specs/am437x.icss0.pru0       |    5 +
@@ -65,7 +65,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  newlib/libc/machine/pru/configure                 | 4748 +++++++++++++++++++++
  newlib/libc/machine/pru/configure.in              |   14 +
  newlib/libc/machine/pru/setjmp.s                  |   46 +
- 60 files changed, 13967 insertions(+), 1 deletion(-)
+ 60 files changed, 13960 insertions(+), 1 deletion(-)
  create mode 100644 libgloss/pru/Makefile.in
  create mode 100644 libgloss/pru/aclocal.m4
  create mode 100644 libgloss/pru/close.c
@@ -138,7 +138,7 @@ index 1acc966..dd37a07 100755
  	| riscv32-* | riscv64-* \
  	| rl78-* | romp-* | rs6000-* | rx-* \
 diff --git a/configure b/configure
-index ae23ce4..f60d4ab 100755
+index 79b9336..44880f3 100755
 --- a/configure
 +++ b/configure
 @@ -3259,6 +3259,10 @@ case "${target}" in
@@ -153,7 +153,7 @@ index ae23ce4..f60d4ab 100755
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
 diff --git a/configure.ac b/configure.ac
-index 80313d0..4dfea7c 100644
+index 2873bdc..be64b5a 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -592,6 +592,10 @@ case "${target}" in
@@ -168,10 +168,10 @@ index 80313d0..4dfea7c 100644
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
 diff --git a/libgloss/configure b/libgloss/configure
-index acd3018..ce7a8a2 100755
+index 90a0522..fa4c69c 100755
 --- a/libgloss/configure
 +++ b/libgloss/configure
-@@ -707,6 +707,7 @@ spu
+@@ -709,6 +709,7 @@ spu
  tic6x
  iq2000
  or1k
@@ -179,7 +179,7 @@ index acd3018..ce7a8a2 100755
  libnosys'
  
  # Initialize some variables set by options.
-@@ -2570,6 +2571,10 @@ case "${target}" in
+@@ -2581,6 +2582,10 @@ case "${target}" in
  	subdirs="$subdirs or1k"
  
  	;;
@@ -191,10 +191,10 @@ index acd3018..ce7a8a2 100755
  
  
 diff --git a/libgloss/configure.in b/libgloss/configure.in
-index e11eb7d..5101da1 100644
+index d1b3b34..a47c7c2 100644
 --- a/libgloss/configure.in
 +++ b/libgloss/configure.in
-@@ -168,6 +168,8 @@ case "${target}" in
+@@ -172,6 +172,8 @@ case "${target}" in
  	;;
    or1k-*-* | or1knd-*-* )
  	AC_CONFIG_SUBDIRS([or1k])
@@ -205,7 +205,7 @@ index e11eb7d..5101da1 100644
  
 diff --git a/libgloss/pru/Makefile.in b/libgloss/pru/Makefile.in
 new file mode 100644
-index 0000000..283cef3
+index 0000000..d629258
 --- /dev/null
 +++ b/libgloss/pru/Makefile.in
 @@ -0,0 +1,151 @@
@@ -330,11 +330,11 @@ index 0000000..283cef3
 +.PHONY: install info install-info clean-info
 +install: $(OUTPUTS) $(srcdir)/ldscripts/gen-ld-scripts.sh
 +	for outputs in ${OUTPUTS}; do\
-+	 ${INSTALL_DATA} $${outputs} ${tooldir}/lib${MULTISUBDIR}/$${outputs}; \
++	 ${INSTALL_DATA} $${outputs} ${DESTDIR}${tooldir}/lib${MULTISUBDIR}/$${outputs}; \
 +	done
 +	for s in $(SCRIPTS); do \
 +	  b=`basename $$s`; \
-+	  ${INSTALL_DATA} $$s ${tooldir}/lib${MULTISUBDIR}/$$b ;\
++	  ${INSTALL_DATA} $$s ${DESTDIR}${tooldir}/lib${MULTISUBDIR}/$$b ;\
 +	done
 +	${mkinstalldirs} ${DESTDIR}${tooldir}/include/pru; \
 +	for i in ${srcdir}/include/pru/*.h; do \
@@ -4612,10 +4612,10 @@ index 0000000..2a4c946
 +AC_OUTPUT
 diff --git a/libgloss/pru/crt0.S b/libgloss/pru/crt0.S
 new file mode 100644
-index 0000000..faacc3a
+index 0000000..06c4848
 --- /dev/null
 +++ b/libgloss/pru/crt0.S
-@@ -0,0 +1,71 @@
+@@ -0,0 +1,64 @@
 +/* crt0.S -- PRU startup code
 + *
 + * Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -4636,19 +4636,12 @@ index 0000000..faacc3a
 +	.extern	exit
 +
 +	.text
-+	.section .init0
++	.section .init0, "x"
 +	.global	__start
 +__start:
 +	/* Initialize stack pointer. */
-+#if 0
-+	/* TODO - introduce linker relaxation in order to elegantly
-+	   optimize cases like this. We can get by a single "ldi" if
-+	   the MSB 16 bits are zero. */
-+	ldi	sp, __stack_top
-+#else
-+	ldi	sp.w2, %hi(__stack_top)
-+	ldi	sp.w0, %lo(__stack_top)
-+#endif
++	ldi	sp, %lo(__stack_top)
++	ldi	sp.w2, %hi_rlz(__stack_top)
 +
 +	/* DATA and BSS are handled by the loader, so nothing to do here. */
 +
@@ -4659,10 +4652,10 @@ index 0000000..faacc3a
 +	call	_atexit
 +
 +	/* Call constructors. Use non-call-clobbered registers. */
-+	ldi	r5.w2, %hi(__ctors_start)
-+	ldi	r5.w0, %lo(__ctors_start)
-+	ldi	r6.w2, %hi(__ctors_end)
-+	ldi	r6.w0, %lo(__ctors_end)
++	ldi	r5, %lo(__ctors_start)
++	ldi	r5.w2, %hi_rlz(__ctors_start)
++	ldi	r6, %lo(__ctors_end)
++	ldi	r6.w2, %hi_rlz(__ctors_end)
 +ctors_loop:
 +	qbeq	ctors_done, r5, r6
 +	lbbo	r7, r5, 0, 4		/* IMEM pointers are 32bits for now */
@@ -8118,7 +8111,7 @@ index 0000000..5bc5596
 +  return (nbytes);
 +}
 diff --git a/newlib/configure.host b/newlib/configure.host
-index 6e2f98f..7aeab4c 100644
+index 5fa37d4..71eee30 100644
 --- a/newlib/configure.host
 +++ b/newlib/configure.host
 @@ -80,7 +80,7 @@ case "${target_optspace}:${host}" in
@@ -8145,7 +8138,7 @@ index 6e2f98f..7aeab4c 100644
    rl78)
  	machine_dir=rl78
  	newlib_cflags="${newlib_cflags} -DPREFER_SIZE_OVER_SPEED -DSMALL_MEMORY"
-@@ -790,6 +798,9 @@ case "${host}" in
+@@ -785,6 +793,9 @@ case "${host}" in
  	newlib_cflags="${newlib_cflags} -DHAVE_OPENDIR -DHAVE_RENAME -DHAVE_FCNTL -D_NO_POSIX_SPAWN"
  	syscall_dir=syscalls
  	;;
@@ -8171,10 +8164,10 @@ index 11ef0dd..b9cd236 100644
  #define __IEEE_LITTLE_ENDIAN
  #define __SMALL_BITFIELDS	/* 16 Bit INT */
 diff --git a/newlib/libc/include/machine/setjmp.h b/newlib/libc/include/machine/setjmp.h
-index e0bc228..bb1cebc 100644
+index c08e682..6a36f19 100644
 --- a/newlib/libc/include/machine/setjmp.h
 +++ b/newlib/libc/include/machine/setjmp.h
-@@ -338,6 +338,11 @@ _BEGIN_STD_C
+@@ -346,6 +346,11 @@ _BEGIN_STD_C
  #define _JBTYPE unsigned long
  #endif
  
@@ -8187,10 +8180,10 @@ index e0bc228..bb1cebc 100644
  #define _JBLEN 0x44
  #endif
 diff --git a/newlib/libc/machine/configure b/newlib/libc/machine/configure
-index 59c0789..2cb0fd6 100755
+index 166b42d..69a981a 100755
 --- a/newlib/libc/machine/configure
 +++ b/newlib/libc/machine/configure
-@@ -867,6 +867,7 @@ necv70
+@@ -823,6 +823,7 @@ necv70
  nios2
  or1k
  powerpc
@@ -8198,7 +8191,7 @@ index 59c0789..2cb0fd6 100755
  rl78
  rx
  sh
-@@ -12842,6 +12843,8 @@ subdirs="$subdirs a29k"
+@@ -11909,6 +11910,8 @@ subdirs="$subdirs a29k"
   ;;
  	powerpc) subdirs="$subdirs powerpc"
   ;;
@@ -8208,10 +8201,10 @@ index 59c0789..2cb0fd6 100755
   ;;
  	rx) subdirs="$subdirs rx"
 diff --git a/newlib/libc/machine/configure.in b/newlib/libc/machine/configure.in
-index 1499eab..f66251c 100644
+index 25dedba..200eb84 100644
 --- a/newlib/libc/machine/configure.in
 +++ b/newlib/libc/machine/configure.in
-@@ -61,6 +61,7 @@ if test -n "${machine_dir}"; then
+@@ -62,6 +62,7 @@ if test -n "${machine_dir}"; then
  	nios2) AC_CONFIG_SUBDIRS(nios2) ;;
  	or1k) AC_CONFIG_SUBDIRS(or1k) ;;
  	powerpc) AC_CONFIG_SUBDIRS(powerpc) ;;
@@ -9706,13 +9699,13 @@ index 0000000..18dab02
 +m4_include([../../../acinclude.m4])
 diff --git a/newlib/libc/machine/pru/configure b/newlib/libc/machine/pru/configure
 new file mode 100755
-index 0000000..45a9f4e
+index 0000000..80e42f1
 --- /dev/null
 +++ b/newlib/libc/machine/pru/configure
 @@ -0,0 +1,4748 @@
 +#! /bin/sh
 +# Guess values for system-dependent variables and create Makefiles.
-+# Generated by GNU Autoconf 2.68 for newlib 2.2.0.
++# Generated by GNU Autoconf 2.68 for newlib 2.3.0.
 +#
 +#
 +# Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 1999, 2000, 2001,
@@ -10268,8 +10261,8 @@ index 0000000..45a9f4e
 +# Identity of this package.
 +PACKAGE_NAME='newlib'
 +PACKAGE_TARNAME='newlib'
-+PACKAGE_VERSION='2.2.0'
-+PACKAGE_STRING='newlib 2.2.0'
++PACKAGE_VERSION='2.3.0'
++PACKAGE_STRING='newlib 2.3.0'
 +PACKAGE_BUGREPORT=''
 +PACKAGE_URL=''
 +
@@ -10951,7 +10944,7 @@ index 0000000..45a9f4e
 +  # Omit some internal or obsolete options to make the list less imposing.
 +  # This message is too long to be a string in the A/UX 3.1 sh.
 +  cat <<_ACEOF
-+\`configure' configures newlib 2.2.0 to adapt to many kinds of systems.
++\`configure' configures newlib 2.3.0 to adapt to many kinds of systems.
 +
 +Usage: $0 [OPTION]... [VAR=VALUE]...
 +
@@ -11021,7 +11014,7 @@ index 0000000..45a9f4e
 +
 +if test -n "$ac_init_help"; then
 +  case $ac_init_help in
-+     short | recursive ) echo "Configuration of newlib 2.2.0:";;
++     short | recursive ) echo "Configuration of newlib 2.3.0:";;
 +   esac
 +  cat <<\_ACEOF
 +
@@ -11112,7 +11105,7 @@ index 0000000..45a9f4e
 +test -n "$ac_init_help" && exit $ac_status
 +if $ac_init_version; then
 +  cat <<\_ACEOF
-+newlib configure 2.2.0
++newlib configure 2.3.0
 +generated by GNU Autoconf 2.68
 +
 +Copyright (C) 2010 Free Software Foundation, Inc.
@@ -11167,7 +11160,7 @@ index 0000000..45a9f4e
 +This file contains any messages produced by compilers while
 +running configure, to aid debugging if configure makes a mistake.
 +
-+It was created by newlib $as_me 2.2.0, which was
++It was created by newlib $as_me 2.3.0, which was
 +generated by GNU Autoconf 2.68.  Invocation command line was
 +
 +  $ $0 $@
@@ -12239,7 +12232,7 @@ index 0000000..45a9f4e
 +
 +# Define the identity of the package.
 + PACKAGE='newlib'
-+ VERSION='2.2.0'
++ VERSION='2.3.0'
 +
 +
 +# Some tools Automake needs.
@@ -13719,7 +13712,7 @@ index 0000000..45a9f4e
 +# report actual input values of CONFIG_FILES etc. instead of their
 +# values after options handling.
 +ac_log="
-+This file was extended by newlib $as_me 2.2.0, which was
++This file was extended by newlib $as_me 2.3.0, which was
 +generated by GNU Autoconf 2.68.  Invocation command line was
 +
 +  CONFIG_FILES    = $CONFIG_FILES
@@ -13776,7 +13769,7 @@ index 0000000..45a9f4e
 +cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
 +ac_cs_config="`$as_echo "$ac_configure_args" | sed 's/^ //; s/[\\""\`\$]/\\\\&/g'`"
 +ac_cs_version="\\
-+newlib config.status 2.2.0
++newlib config.status 2.3.0
 +configured by $0, generated by GNU Autoconf 2.68,
 +  with options \\"\$ac_cs_config\\"
 +
@@ -14531,5 +14524,5 @@ index 0000000..cc22975
 +1:
 +	ret
 -- 
-2.6.1
+2.6.4
 

@@ -1,4 +1,4 @@
-From 473e7b81346e60cad98883090f605f0c4c340d52 Mon Sep 17 00:00:00 2001
+From 7f82ef575480653601654578e578961c03dd5ec8 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Mon, 30 Dec 2013 23:47:32 +0200
 Subject: [PATCH 1/2] Initial TI PRU GCC port
@@ -7,8 +7,8 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---
  .gitignore                                         |    3 +
  config.sub                                         |    2 +
- configure                                          |    4 +
- configure.ac                                       |    4 +
+ configure                                          |    7 +
+ configure.ac                                       |    7 +
  gcc/common/config/pru/pru-common.c                 |   44 +
  gcc/config.gcc                                     |   10 +
  gcc/config/pru/alu-zext.md                         |  451 ++
@@ -21,15 +21,17 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  gcc/config/pru/pru-modes.def                       |   29 +
  gcc/config/pru/pru-pragma.c                        |   89 +
  gcc/config/pru/pru-protos.h                        |   60 +
- gcc/config/pru/pru.c                               | 1867 ++++++
- gcc/config/pru/pru.h                               |  418 ++
- gcc/config/pru/pru.md                              |  643 +++
- gcc/config/pru/pru.opt                             |   27 +
+ gcc/config/pru/pru.c                               | 1862 ++++++
+ gcc/config/pru/pru.h                               |  427 ++
+ gcc/config/pru/pru.md                              |  685 +++
+ gcc/config/pru/pru.opt                             |   31 +
  gcc/config/pru/t-pru                               |   25 +
  gcc/doc/extend.texi                                |   20 +
  gcc/doc/md.texi                                    |   19 +
  gcc/testsuite/gcc.c-torture/execute/20101011-1.c   |    3 +
  gcc/testsuite/gcc.dg/20020312-2.c                  |    2 +
+ gcc/testsuite/gcc.dg/stack-usage-1.c               |    2 +
+ gcc/testsuite/gcc.dg/tree-ssa/20040204-1.c         |    2 +-
  gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c         |    2 +-
  gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c         |    2 +-
  gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c         |    2 +-
@@ -59,7 +61,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgcc/config/pru/pru-asm.h                        |   36 +
  libgcc/config/pru/pru-divmod.h                     |  117 +
  libgcc/config/pru/t-pru                            |   40 +
- 54 files changed, 11100 insertions(+), 6 deletions(-)
+ 56 files changed, 11159 insertions(+), 7 deletions(-)
  create mode 100644 gcc/common/config/pru/pru-common.c
  create mode 100644 gcc/config/pru/alu-zext.md
  create mode 100755 gcc/config/pru/alu-zext.sh
@@ -99,10 +101,10 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 libgcc/config/pru/t-pru
 
 diff --git a/.gitignore b/.gitignore
-index ab97ac6..5807e90 100644
+index c9a6158..8f48251 100644
 --- a/.gitignore
 +++ b/.gitignore
-@@ -47,3 +47,6 @@ lost+found
+@@ -49,3 +49,6 @@ lost+found
  # ignore ./contrib/gcc_update output
  LAST_UPDATED
  REVISION
@@ -130,10 +132,10 @@ index f018151..f420cfd 100755
  	| riscv32-* | riscv64-* \
  	| rl78-* | romp-* | rs6000-* | rx-* \
 diff --git a/configure b/configure
-index eca5e6f..99bd8e4 100755
+index f5786ed..4daecc3 100755
 --- a/configure
 +++ b/configure
-@@ -3343,6 +3343,10 @@ case "${target}" in
+@@ -3360,6 +3360,10 @@ case "${target}" in
    powerpc-*-aix* | rs6000-*-aix*)
      noconfigdirs="$noconfigdirs target-libssp"
      ;;
@@ -144,11 +146,21 @@ index eca5e6f..99bd8e4 100755
    rl78-*-*)
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
+@@ -3611,6 +3615,9 @@ case "${target}" in
+   powerpc*-*-*)
+     libgloss_dir=rs6000
+     ;;
++  pru-*-*)
++    libgloss_dir=pru
++    ;;
+   sparc*-*-*)
+     libgloss_dir=sparc
+     ;;
 diff --git a/configure.ac b/configure.ac
-index 9241261..af8321b 100644
+index a719e03..62d1c0e 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -686,6 +686,10 @@ case "${target}" in
+@@ -697,6 +697,10 @@ case "${target}" in
    powerpc-*-aix* | rs6000-*-aix*)
      noconfigdirs="$noconfigdirs target-libssp"
      ;;
@@ -159,6 +171,16 @@ index 9241261..af8321b 100644
    rl78-*-*)
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
+@@ -948,6 +952,9 @@ case "${target}" in
+   powerpc*-*-*)
+     libgloss_dir=rs6000
+     ;;
++  pru-*-*)
++    libgloss_dir=pru
++    ;;
+   sparc*-*-*)
+     libgloss_dir=sparc
+     ;;
 diff --git a/gcc/common/config/pru/pru-common.c b/gcc/common/config/pru/pru-common.c
 new file mode 100644
 index 0000000..46e73bd
@@ -210,10 +232,10 @@ index 0000000..46e73bd
 +
 +struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index c52f5a8..df0be7d 100644
+index 2caf9f3..08e1831 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -444,6 +444,9 @@ powerpc*-*-*)
+@@ -449,6 +449,9 @@ powerpc*-*-*)
  	esac
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
@@ -223,7 +245,7 @@ index c52f5a8..df0be7d 100644
  rs6000*-*-*)
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
-@@ -2491,6 +2494,13 @@ powerpcle-*-eabi*)
+@@ -2501,6 +2504,13 @@ powerpcle-*-eabi*)
  	extra_options="${extra_options} rs6000/sysv4.opt"
  	use_gcc_stdint=wrap
  	;;
@@ -7498,10 +7520,10 @@ index 0000000..4c03b4a
 +#endif /* GCC_PRU_PROTOS_H */
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
 new file mode 100644
-index 0000000..e2b90c3
+index 0000000..b242ee2
 --- /dev/null
 +++ b/gcc/config/pru/pru.c
-@@ -0,0 +1,1867 @@
+@@ -0,0 +1,1862 @@
 +/* Target machine subroutines for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -7526,41 +7548,25 @@ index 0000000..e2b90c3
 +#include "system.h"
 +#include "coretypes.h"
 +#include "backend.h"
-+#include "cfghooks.h"
-+#include "tree.h"
++#include "target.h"
 +#include "rtl.h"
++#include "tree.h"
 +#include "df.h"
-+#include "alias.h"
-+#include "fold-const.h"
++#include "tm_p.h"
++#include "optabs.h"
 +#include "regs.h"
-+#include "insn-config.h"
-+#include "conditions.h"
++#include "emit-rtl.h"
++#include "recog.h"
++#include "diagnostic-core.h"
 +#include "output.h"
 +#include "insn-attr.h"
 +#include "flags.h"
-+#include "recog.h"
-+#include "expmed.h"
-+#include "dojump.h"
 +#include "explow.h"
 +#include "calls.h"
-+#include "emit-rtl.h"
 +#include "varasm.h"
-+#include "stmt.h"
 +#include "expr.h"
-+#include "insn-codes.h"
-+#include "optabs.h"
-+#include "cfgrtl.h"
-+#include "cfganal.h"
-+#include "lcm.h"
-+#include "cfgbuild.h"
-+#include "cfgcleanup.h"
-+#include "diagnostic-core.h"
 +#include "toplev.h"
-+#include "target.h"
-+#include "tm_p.h"
 +#include "langhooks.h"
-+#include "debug.h"
-+#include "reload.h"
 +#include "stor-layout.h"
 +#include "builtins.h"
 +#include "pru-protos.h"
@@ -8629,7 +8635,8 @@ index 0000000..e2b90c3
 +
 +     x: for registers with size (e.g. R0.b0, R3.w0)
 +     B: prints 'c' or 'b' for CTABLE or REG base in a memory address
-+     H: for %hi
++     h: for %hi
++     H: for %hi_rlz
 +     L: for %lo
 +     N: prints next register (upper 32bits of a 64bit REG couple)
 +     P: prints swapped condition.
@@ -8723,9 +8730,16 @@ index 0000000..e2b90c3
 +          output_addr_const (file, op);
 +          return;
 +        }
-+      else if (letter == 'H')
++      else if (letter == 'h')
 +        {
 +          fprintf (file, "%%hi(");
++          output_addr_const (file, op);
++          fprintf (file, ")");
++          return;
++        }
++      else if (letter == 'H')
++        {
++          fprintf (file, "%%hi_rlz(");
 +          output_addr_const (file, op);
 +          fprintf (file, ")");
 +          return;
@@ -8743,7 +8757,7 @@ index 0000000..e2b90c3
 +    case MEM:
 +      if (letter == 0)
 +        {
-+          output_address (op);
++          output_address (VOIDmode, op);
 +          return;
 +        }
 +      else if (letter == 'B')
@@ -8801,7 +8815,7 @@ index 0000000..e2b90c3
 +
 +/* Implement TARGET_PRINT_OPERAND_ADDRESS.  */
 +static void
-+pru_print_operand_address (FILE *file, rtx op)
++pru_print_operand_address (FILE *file, machine_mode mode, rtx op)
 +{
 +  if (GET_CODE (op) != REG && CONSTANT_ADDRESS_P (op)
 +          && text_segment_operand (op, VOIDmode))
@@ -8877,7 +8891,7 @@ index 0000000..e2b90c3
 +    case MEM:
 +      {
 +        rtx base = XEXP (op, 0);
-+        pru_print_operand_address (file, base);
++        pru_print_operand_address (file, mode, base);
 +        return;
 +      }
 +    default:
@@ -9357,6 +9371,9 @@ index 0000000..e2b90c3
 +#undef TARGET_PRINT_OPERAND_ADDRESS
 +#define TARGET_PRINT_OPERAND_ADDRESS pru_print_operand_address
 +
++#undef TARGET_LRA_P
++#define TARGET_LRA_P hook_bool_void_true
++
 +#undef TARGET_OPTION_OVERRIDE
 +#define TARGET_OPTION_OVERRIDE pru_option_override
 +
@@ -9371,10 +9388,10 @@ index 0000000..e2b90c3
 +#include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
 new file mode 100644
-index 0000000..da3028d
+index 0000000..f3b64d4
 --- /dev/null
 +++ b/gcc/config/pru/pru.h
-@@ -0,0 +1,418 @@
+@@ -0,0 +1,427 @@
 +/* Definitions of target machine for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -9412,6 +9429,15 @@ index 0000000..da3028d
 +  while (0)
 +
 +#define DRIVER_SELF_SPECS " %{mmcu=*:-specs=device-specs/%*%s %<mmcu=*} "
++
++#undef  ASM_SPEC
++#define ASM_SPEC                                \
++  "%{mno-relax:--mno-link-relax} "
++
++#undef  LINK_SPEC
++#define LINK_SPEC                               \
++  "%{mno-relax:--no-relax} "                    \
++  "%{shared:%eshared is not supported} "
 +
 +#undef  STARTFILE_SPEC
 +#define STARTFILE_SPEC "%{!pg:%{minrt:crt0-minrt.o%s}%{!minrt:crt0.o%s}} -lgcc"
@@ -9795,10 +9821,10 @@ index 0000000..da3028d
 +#endif /* GCC_PRU_H */
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
 new file mode 100644
-index 0000000..84e282d
+index 0000000..c4a1612
 --- /dev/null
 +++ b/gcc/config/pru/pru.md
-@@ -0,0 +1,643 @@
+@@ -0,0 +1,685 @@
 +;; Machine Description for TI PRU.
 +;; Copyright (C) 2014 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -9904,9 +9930,49 @@ index 0000000..84e282d
 +    mov\\t%x0, %x1
 +    ldi\\t%x0, %%pmem(%1)
 +    ldi\\t%x0, %1
-+    ldi\\t%0.w2, %H1\;ldi\\t%0.w0, %L1"
++    ldi\\t%0, %L1\;ldi\\t%0.w2, %H1"
 +  [(set_attr "type" "st,ld,alu,alu,alu,alu")
 +   (set_attr "length" "4,4,4,4,4,8")])
++
++; I cannot think of any reason for the core to pass a 64-bit symbolic
++; constants. Hence simplify the rule and handle only numeric constants.
++;
++; Note: Unlike the arithmetics, here we cannot use "&" output modifier.
++; GCC expects to be able to move registers around "no matter what".
++; Forcing DI reg alignment (akin to microblaze's HARD_REGNO_MODE_OK)
++; does not seem efficient, and might get in the way in future work
++; on register packing.
++(define_insn "movdi"
++  [(set (match_operand:DI 0 "nonimmediate_operand" "=m,r,r,r,r,r")
++        (match_operand:DI 1 "general_operand"       "r,m,r,T,J,n"))]
++  ""
++  {
++    switch (which_alternative)
++    {
++      case 0:
++	return "sb%B0o\\t%1, %0, %S0";
++      case 1:
++	return "lb%B1o\\t%0, %1, %S1";
++      case 2:
++	/* careful with overlapping source and destination regs */
++	gcc_assert (GP_REG_P (REGNO (operands[0])));
++	gcc_assert (GP_REG_P (REGNO (operands[1])));
++	if (REGNO (operands[0]) == (REGNO (operands[1]) + 1))
++	  return "mov\\t%N0, %N1\;mov\\t%0, %1";
++	else
++	  return "mov\\t%0, %1\;mov\\t%N0, %N1";
++      case 3:
++	return "ldi\\t%0, %%pmem(%1)\;ldi\\t%N0, 0";
++      case 4:
++	return "ldi\\t%0, %1\;ldi\\t%N0, 0";
++      case 5:
++	return "ldi\\t%0, %%lo((%1) & 0xffffffff)\;"
++	       "ldi\\t%0.w2, %%hi_rlz((%1) & 0xffffffff)\;"
++	       "ldi\\t%N0, %%lo((%1) >> 32)\;"
++	       "ldi\\t%N0.w2, %%hi_rlz((%1) >> 32)";
++    }
++  }
++  [(set_attr "type" "st,ld,alu,alu,alu,alu")   (set_attr "length" "4,4,8,8,8,16")])
 +
 +;; Load multiple
 +;;   op0: first of the consecutive registers
@@ -10421,12 +10487,14 @@ index 0000000..84e282d
 +  [(set_attr "length" "12")])
 +
 +
++; Do not use hi_rlz here because we do not want
++; to accidentally loose one instruction cycle.
 +(define_insn "delay_cycles_2x_plus2_si"
 +  [(unspec_volatile [(match_operand:SI 0 "const_int_operand" "n")]
 +                    UNSPECV_DELAY_CYCLES_2X_SI)
 +   (clobber (match_scratch:SI 1 "=&r"))]
 +  ""
-+  "ldi\\t%1.w0, %L0\;ldi\\t%1.w2, %H0\;sub\\t%1, %1, 1\;qbne\\t.-4, %1, 0"
++  "ldi\\t%1.w0, %L0\;ldi\\t%1.w2, %h0\;sub\\t%1, %1, 1\;qbne\\t.-4, %1, 0"
 +  [(set_attr "length" "16")])
 +
 +(define_insn "delay_cycles_1"
@@ -10444,10 +10512,10 @@ index 0000000..84e282d
 +
 diff --git a/gcc/config/pru/pru.opt b/gcc/config/pru/pru.opt
 new file mode 100644
-index 0000000..d81289a
+index 0000000..f6debbe
 --- /dev/null
 +++ b/gcc/config/pru/pru.opt
-@@ -0,0 +1,27 @@
+@@ -0,0 +1,31 @@
 +; Options for the TI PRU port of the compiler.
 +; Copyright (C) 2012-2014 Free Software Foundation, Inc.
 +; Contributed by Altera and Mentor Graphics, Inc.
@@ -10474,7 +10542,11 @@ index 0000000..d81289a
 +
 +mmcu=
 +Target RejectNegative Joined
-+-mmcu=MCU	Select the target System-On-Chip variant that embeds this PRU
++-mmcu=MCU	Select the target System-On-Chip variant that embeds this PRU.
++
++mno-relax
++Target Report
++Prevent relaxation of LDI instructions with hi_rlz modifier.
 diff --git a/gcc/config/pru/t-pru b/gcc/config/pru/t-pru
 new file mode 100644
 index 0000000..2bbdeb9
@@ -10507,18 +10579,18 @@ index 0000000..2bbdeb9
 +	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $<
 +
 diff --git a/gcc/doc/extend.texi b/gcc/doc/extend.texi
-index 8406945..8245d67 100644
+index 65b6a96..6ddabac 100644
 --- a/gcc/doc/extend.texi
 +++ b/gcc/doc/extend.texi
-@@ -18325,6 +18325,7 @@ for further explanation.
+@@ -18491,6 +18491,7 @@ for further explanation.
  * ARM Pragmas::
  * M32C Pragmas::
  * MeP Pragmas::
 +* PRU Pragmas::
  * RS/6000 and PowerPC Pragmas::
+ * S/390 Pragmas::
  * Darwin Pragmas::
- * Solaris Pragmas::
-@@ -18475,6 +18476,25 @@ extern int foo ();
+@@ -18642,6 +18643,25 @@ extern int foo ();
  
  @end table
  
@@ -10545,10 +10617,10 @@ index 8406945..8245d67 100644
  @subsection RS/6000 and PowerPC Pragmas
  
 diff --git a/gcc/doc/md.texi b/gcc/doc/md.texi
-index 619259f..71a3f61 100644
+index 4848e64..fa7f8b1 100644
 --- a/gcc/doc/md.texi
 +++ b/gcc/doc/md.texi
-@@ -3283,6 +3283,25 @@ Vector constant that is all zeros.
+@@ -3331,6 +3331,25 @@ Vector constant that is all zeros.
  
  @end table
  
@@ -10601,6 +10673,29 @@ index 5fce50d..46eff97 100644
  #else
  # error "Modify the test for your target."
  #endif
+diff --git a/gcc/testsuite/gcc.dg/stack-usage-1.c b/gcc/testsuite/gcc.dg/stack-usage-1.c
+index 7864c6a..5787140 100644
+--- a/gcc/testsuite/gcc.dg/stack-usage-1.c
++++ b/gcc/testsuite/gcc.dg/stack-usage-1.c
+@@ -83,6 +83,8 @@
+ #  define SIZE 254
+ #elif defined (__nios2__)
+ #  define SIZE 252
++#elif defined (__PRU__)
++#  define SIZE 252
+ #elif defined (__v850__)
+ #define SIZE 260
+ #elif defined (__mn10300__)
+diff --git a/gcc/testsuite/gcc.dg/tree-ssa/20040204-1.c b/gcc/testsuite/gcc.dg/tree-ssa/20040204-1.c
+index de2ae0f..4ad2dad 100644
+--- a/gcc/testsuite/gcc.dg/tree-ssa/20040204-1.c
++++ b/gcc/testsuite/gcc.dg/tree-ssa/20040204-1.c
+@@ -33,4 +33,4 @@ void test55 (int x, int y)
+    that the && should be emitted (based on BRANCH_COST).  Fix this
+    by teaching dom to look through && and register all components
+    as true.  */
+-/* { dg-final { scan-tree-dump-times "link_error" 0 "optimized" { xfail { ! "alpha*-*-* arm*-*-* aarch64*-*-* powerpc*-*-* cris-*-* crisv32-*-* hppa*-*-* i?86-*-* mmix-*-* mips*-*-* m68k*-*-* moxie-*-* nds32*-*-* sh*-*-* sparc*-*-* spu-*-* visium-*-* x86_64-*-*" } } } } */
++/* { dg-final { scan-tree-dump-times "link_error" 0 "optimized" { xfail { ! "alpha*-*-* arm*-*-* aarch64*-*-* powerpc*-*-* cris-*-* crisv32-*-* hppa*-*-* i?86-*-* mmix-*-* mips*-*-* m68k*-*-* moxie-*-* nds32*-*-* sh*-*-* pru*-*-* sparc*-*-* spu-*-* visium-*-* x86_64-*-*" } } } } */
 diff --git a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c
 index 9a5517d..b43a502 100644
 --- a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c
@@ -11030,10 +11125,10 @@ index 0000000..0e9ae4c
 +}
 +
 diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
-index 7c1ab85..06515da 100644
+index 8cc1d87..e81ac59 100644
 --- a/gcc/testsuite/lib/gcc-dg.exp
 +++ b/gcc/testsuite/lib/gcc-dg.exp
-@@ -333,6 +333,11 @@ proc gcc-dg-prune { system text } {
+@@ -334,6 +334,11 @@ proc gcc-dg-prune { system text } {
  	return "::unsupported::memory full"
      }
  
@@ -11046,10 +11141,10 @@ index 7c1ab85..06515da 100644
            && [check_effective_target_tiny] } {
          return "::unsupported::memory full"
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index 9057a27..b1e2fc6 100644
+index 10d6444..f8bb3c6 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
-@@ -480,7 +480,8 @@ proc check_effective_target_trampolines { } {
+@@ -486,7 +486,8 @@ proc check_effective_target_trampolines { } {
  	 || [istarget msp430-*-*]
  	 || [istarget nvptx-*-*]
  	 || [istarget hppa2.0w-hp-hpux11.23]
@@ -11059,7 +11154,7 @@ index 9057a27..b1e2fc6 100644
  	return 0;
      }
      return 1
-@@ -580,6 +581,7 @@ proc check_profiling_available { test_what } {
+@@ -586,6 +587,7 @@ proc check_profiling_available { test_what } {
  	     || [istarget nvptx-*-*]
  	     || [istarget powerpc-*-eabi*]
  	     || [istarget powerpc-*-elf]
@@ -11067,7 +11162,7 @@ index 9057a27..b1e2fc6 100644
  	     || [istarget rx-*-*]	
  	     || [istarget tic6x-*-elf]
  	     || [istarget visium-*-*]
-@@ -775,7 +777,7 @@ proc check_effective_target_tls_emulated {} {
+@@ -781,7 +783,7 @@ proc check_effective_target_tls_emulated {} {
  proc check_effective_target_tls_runtime {} {
      # The runtime does not have TLS support, but just
      # running the test below is insufficient to show this.
@@ -11076,7 +11171,7 @@ index 9057a27..b1e2fc6 100644
  	return 0
      }
      return [check_runtime tls_runtime {
-@@ -6385,6 +6387,7 @@ proc check_effective_target_logical_op_short_circuit {} {
+@@ -6741,6 +6743,7 @@ proc check_effective_target_logical_op_short_circuit {} {
  	 || [istarget powerpc*-*-*]
  	 || [istarget nios2*-*-*]
  	 || [istarget visium-*-*]
@@ -11099,7 +11194,7 @@ index dbfb818..ba2b57b 100644
  	return "memory full"
      }
 diff --git a/libgcc/config.host b/libgcc/config.host
-index 2c64756..8136dd3 100644
+index 0a3b879..035d1bb 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
 @@ -167,6 +167,9 @@ nios2*-*-*)
@@ -11112,7 +11207,7 @@ index 2c64756..8136dd3 100644
  rs6000*-*-*)
  	;;
  sparc64*-*-*)
-@@ -1079,6 +1082,9 @@ powerpcle-*-eabi*)
+@@ -1084,6 +1087,9 @@ powerpcle-*-eabi*)
  	tmake_file="${tmake_file} rs6000/t-ppccomm rs6000/t-crtstuff t-crtstuff-pic t-fdpbit"
  	extra_parts="$extra_parts crtbegin.o crtend.o crtbeginS.o crtendS.o crtbeginT.o ecrti.o ecrtn.o ncrti.o ncrtn.o"
  	;;
@@ -11648,5 +11743,5 @@ index 0000000..470f0d4
 +# mode: Makefile
 +# End:
 -- 
-2.6.1
+2.6.4
 

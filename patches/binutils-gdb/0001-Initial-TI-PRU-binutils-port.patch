@@ -1,108 +1,146 @@
-From a8cc15b8b729f660c4675f089b2b12beb3b6dda7 Mon Sep 17 00:00:00 2001
+From 7d4088fa18d4d9d534dfab74117abd2ec443cd4f Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sun, 23 Feb 2014 22:25:35 +0200
-Subject: [PATCH 1/4] Initial TI PRU binutils port
+Subject: [PATCH 1/2] Initial TI PRU binutils port
 
 PRU ELF format is still not finalized. Intention is to gradually make
 it compatible with the TI one.
 
 Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---
- .gitignore                            |     2 +
- bfd/Makefile.am                       |     4 +
- bfd/Makefile.in                       |     6 +
- bfd/archures.c                        |     4 +
- bfd/bfd-in2.h                         |    13 +
- bfd/config.bfd                        |     5 +
- bfd/configure                         |     1 +
- bfd/configure.ac                      |     1 +
- bfd/cpu-pru.c                         |    43 +
- bfd/elf-bfd.h                         |     1 +
- bfd/elf32-pru.c                       |   905 ++
- bfd/libbfd.h                          |     9 +
- bfd/po/SRC-POTFILES.in                |     2 +
- bfd/reloc.c                           |    21 +
- bfd/targets.c                         |     3 +
- binutils/readelf.c                    |    11 +
- config.sub                            |     2 +
- elfcpp/elfcpp.h                       |     1 +
- gas/Makefile.am                       |     2 +
- gas/Makefile.in                       |    17 +
- gas/config/obj-elf.c                  |     4 +
- gas/config/tc-pru.c                   |  1621 ++++
- gas/config/tc-pru.h                   |    91 +
- gas/configure.tgt                     |     2 +
- gas/po/POTFILES.in                    |     2 +
- gas/testsuite/gas/pru/alu.d           |    32 +
- gas/testsuite/gas/pru/alu.s           |    30 +
- gas/testsuite/gas/pru/branch.d        |    35 +
- gas/testsuite/gas/pru/branch.s        |    42 +
- gas/testsuite/gas/pru/illegal.l       |     5 +
- gas/testsuite/gas/pru/illegal.s       |    11 +
- gas/testsuite/gas/pru/illegal2.l      |     2 +
- gas/testsuite/gas/pru/illegal2.s      |     6 +
- gas/testsuite/gas/pru/ldst.d          |    33 +
- gas/testsuite/gas/pru/ldst.s          |    37 +
- gas/testsuite/gas/pru/loop.d          |    13 +
- gas/testsuite/gas/pru/loop.s          |    10 +
- gas/testsuite/gas/pru/misc.d          |    12 +
- gas/testsuite/gas/pru/misc.s          |     6 +
- gas/testsuite/gas/pru/pru.exp         |    27 +
- gas/testsuite/gas/pru/pseudo.d        |    13 +
- gas/testsuite/gas/pru/pseudo.s        |     8 +
- gas/testsuite/gas/pru/warn_reglabel.l |     3 +
- gas/testsuite/gas/pru/warn_reglabel.s |     6 +
- gas/testsuite/gas/pru/xfr.d           |    44 +
- gas/testsuite/gas/pru/xfr.s           |    52 +
- gdb/Makefile.in                       |     5 +-
- gdb/configure.tgt                     |     6 +
- gdb/features/Makefile                 |     1 +
- gdb/features/pru-cpu.xml              |    43 +
- gdb/features/pru.c                    |    53 +
- gdb/features/pru.xml                  |    12 +
- gdb/pru-tdep.c                        |   871 ++
- gdb/pru-tdep.h                        |    51 +
- include/dis-asm.h                     |     1 +
- include/elf/common.h                  |     2 +-
- include/elf/pru.h                     |    54 +
- include/opcode/pru.h                  |   405 +
- ld/Makefile.am                        |     5 +
- ld/Makefile.in                        |     5 +
- ld/configure.tgt                      |     1 +
- ld/emulparams/pruelf.sh               |    18 +
- ld/scripttempl/pru.sc                 |   213 +
- opcodes/Makefile.am                   |     2 +
- opcodes/Makefile.in                   |     4 +
- opcodes/configure                     |     1 +
- opcodes/configure.ac                  |     1 +
- opcodes/disassemble.c                 |     6 +
- opcodes/pru-dis.c                     |   269 +
- opcodes/pru-opc.c                     |   221 +
- readline/support/config.sub           |     2 +
- sim/configure                         |     8 +
- sim/configure.tgt                     |     3 +
- sim/pru/Makefile.in                   |    26 +
- sim/pru/aclocal.m4                    |   130 +
- sim/pru/config.in                     |   160 +
- sim/pru/configure                     | 15674 ++++++++++++++++++++++++++++++++
- sim/pru/configure.ac                  |    15 +
- sim/pru/interp.c                      |   952 ++
- sim/pru/pru.h                         |    95 +
- sim/pru/pru.isa                       |   250 +
- sim/pru/sim-main.h                    |    80 +
- 82 files changed, 22842 insertions(+), 3 deletions(-)
+ .gitignore                                |     2 +
+ bfd/Makefile.am                           |     4 +
+ bfd/Makefile.in                           |     6 +
+ bfd/archures.c                            |     4 +
+ bfd/bfd-in2.h                             |    33 +
+ bfd/config.bfd                            |     5 +
+ bfd/configure                             |     1 +
+ bfd/configure.ac                          |     1 +
+ bfd/cpu-pru.c                             |    43 +
+ bfd/elf-bfd.h                             |     1 +
+ bfd/elf32-pru.c                           |  1500 +++
+ bfd/libbfd.h                              |    13 +
+ bfd/po/SRC-POTFILES.in                    |     2 +
+ bfd/reloc.c                               |    45 +
+ bfd/targets.c                             |     3 +
+ binutils/readelf.c                        |    11 +
+ config.sub                                |     2 +
+ elfcpp/elfcpp.h                           |     1 +
+ gas/Makefile.am                           |     2 +
+ gas/Makefile.in                           |    17 +
+ gas/config/obj-elf.c                      |     4 +
+ gas/config/tc-pru.c                       |  1794 ++++
+ gas/config/tc-pru.h                       |   157 +
+ gas/configure.tgt                         |     2 +
+ gas/doc/Makefile.am                       |     1 +
+ gas/doc/Makefile.in                       |     1 +
+ gas/doc/all.texi                          |     1 +
+ gas/doc/as.texinfo                        |    30 +
+ gas/doc/c-pru.texi                        |   146 +
+ gas/po/POTFILES.in                        |     2 +
+ gas/testsuite/gas/pru/alu.d               |    32 +
+ gas/testsuite/gas/pru/alu.s               |    30 +
+ gas/testsuite/gas/pru/branch.d            |    56 +
+ gas/testsuite/gas/pru/branch.s            |    42 +
+ gas/testsuite/gas/pru/illegal.l           |     5 +
+ gas/testsuite/gas/pru/illegal.s           |    11 +
+ gas/testsuite/gas/pru/ldi.d               |    19 +
+ gas/testsuite/gas/pru/ldi.s               |    12 +
+ gas/testsuite/gas/pru/ldst.d              |    33 +
+ gas/testsuite/gas/pru/ldst.s              |    37 +
+ gas/testsuite/gas/pru/loop.d              |    15 +
+ gas/testsuite/gas/pru/loop.s              |    10 +
+ gas/testsuite/gas/pru/misc.d              |    12 +
+ gas/testsuite/gas/pru/misc.s              |     6 +
+ gas/testsuite/gas/pru/pru.exp             |    26 +
+ gas/testsuite/gas/pru/pseudo.d            |    13 +
+ gas/testsuite/gas/pru/pseudo.s            |     8 +
+ gas/testsuite/gas/pru/warn_reglabel.l     |     3 +
+ gas/testsuite/gas/pru/warn_reglabel.s     |     6 +
+ gas/testsuite/gas/pru/xfr.d               |    44 +
+ gas/testsuite/gas/pru/xfr.s               |    52 +
+ gdb/Makefile.in                           |     5 +-
+ gdb/configure.tgt                         |     6 +
+ gdb/features/Makefile                     |     1 +
+ gdb/features/pru-cpu.xml                  |    43 +
+ gdb/features/pru.c                        |    53 +
+ gdb/features/pru.xml                      |    12 +
+ gdb/pru-tdep.c                            |   871 ++
+ gdb/pru-tdep.h                            |    51 +
+ include/dis-asm.h                         |     1 +
+ include/elf/common.h                      |     2 +-
+ include/elf/pru.h                         |    58 +
+ include/opcode/pru.h                      |   405 +
+ ld/Makefile.am                            |     6 +
+ ld/Makefile.in                            |     6 +
+ ld/configure.tgt                          |     1 +
+ ld/emulparams/pruelf.sh                   |    19 +
+ ld/emultempl/pruelf.em                    |    50 +
+ ld/scripttempl/pru.sc                     |   213 +
+ ld/testsuite/ld-pru/emit-relocs-1.d       |    37 +
+ ld/testsuite/ld-pru/emit-relocs-1.ld      |    20 +
+ ld/testsuite/ld-pru/emit-relocs-1a.s      |    24 +
+ ld/testsuite/ld-pru/emit-relocs-1b.s      |    18 +
+ ld/testsuite/ld-pru/hilo16.d              |    13 +
+ ld/testsuite/ld-pru/hilo16.s              |     8 +
+ ld/testsuite/ld-pru/hilo16_symbol.s       |     3 +
+ ld/testsuite/ld-pru/norelax_hi_rlz-data.d |    18 +
+ ld/testsuite/ld-pru/norelax_hi_rlz-dis.d  |    22 +
+ ld/testsuite/ld-pru/pcrel_s10.d           |    18 +
+ ld/testsuite/ld-pru/pcrel_s10.s           |     8 +
+ ld/testsuite/ld-pru/pcrel_s10_label.s     |     9 +
+ ld/testsuite/ld-pru/pcrel_u8-illegal.d    |     7 +
+ ld/testsuite/ld-pru/pcrel_u8-illegal.s    |    10 +
+ ld/testsuite/ld-pru/pcrel_u8.d            |    15 +
+ ld/testsuite/ld-pru/pcrel_u8.s            |    10 +
+ ld/testsuite/ld-pru/pcrel_u8_label.s      |     4 +
+ ld/testsuite/ld-pru/pmem.d                |    15 +
+ ld/testsuite/ld-pru/pmem.s                |    15 +
+ ld/testsuite/ld-pru/pmem_symbol.s         |    15 +
+ ld/testsuite/ld-pru/pru.exp               |     9 +
+ ld/testsuite/ld-pru/relax_hi_rlz-data.d   |    18 +
+ ld/testsuite/ld-pru/relax_hi_rlz-dis.d    |    20 +
+ ld/testsuite/ld-pru/relax_hi_rlz.s        |    27 +
+ ld/testsuite/ld-pru/relax_hi_rlz_symbol.s |     6 +
+ ld/testsuite/ld-pru/reloc.d               |    14 +
+ ld/testsuite/ld-pru/reloc.s               |     9 +
+ ld/testsuite/ld-pru/reloc_symbol.s        |    25 +
+ ld/testsuite/ld-pru/u16_u8.d              |    12 +
+ ld/testsuite/ld-pru/u16_u8.s              |     5 +
+ ld/testsuite/ld-pru/u16_u8_symbol.s       |     6 +
+ opcodes/Makefile.am                       |     2 +
+ opcodes/Makefile.in                       |     4 +
+ opcodes/configure                         |     1 +
+ opcodes/configure.ac                      |     1 +
+ opcodes/disassemble.c                     |     6 +
+ opcodes/pru-dis.c                         |   269 +
+ opcodes/pru-opc.c                         |   221 +
+ readline/support/config.sub               |     2 +
+ sim/configure                             |     8 +
+ sim/configure.tgt                         |     3 +
+ sim/pru/Makefile.in                       |    26 +
+ sim/pru/aclocal.m4                        |   130 +
+ sim/pru/config.in                         |   158 +
+ sim/pru/configure                         | 15674 ++++++++++++++++++++++++++++
+ sim/pru/configure.ac                      |    15 +
+ sim/pru/interp.c                          |   952 ++
+ sim/pru/pru.h                             |    95 +
+ sim/pru/pru.isa                           |   250 +
+ sim/pru/sim-main.h                        |    80 +
+ 119 files changed, 24443 insertions(+), 3 deletions(-)
  create mode 100644 bfd/cpu-pru.c
  create mode 100644 bfd/elf32-pru.c
  create mode 100644 gas/config/tc-pru.c
  create mode 100644 gas/config/tc-pru.h
+ create mode 100644 gas/doc/c-pru.texi
  create mode 100644 gas/testsuite/gas/pru/alu.d
  create mode 100644 gas/testsuite/gas/pru/alu.s
  create mode 100644 gas/testsuite/gas/pru/branch.d
  create mode 100644 gas/testsuite/gas/pru/branch.s
  create mode 100644 gas/testsuite/gas/pru/illegal.l
  create mode 100644 gas/testsuite/gas/pru/illegal.s
- create mode 100644 gas/testsuite/gas/pru/illegal2.l
- create mode 100644 gas/testsuite/gas/pru/illegal2.s
+ create mode 100644 gas/testsuite/gas/pru/ldi.d
+ create mode 100644 gas/testsuite/gas/pru/ldi.s
  create mode 100644 gas/testsuite/gas/pru/ldst.d
  create mode 100644 gas/testsuite/gas/pru/ldst.s
  create mode 100644 gas/testsuite/gas/pru/loop.d
@@ -124,7 +162,39 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 include/elf/pru.h
  create mode 100644 include/opcode/pru.h
  create mode 100644 ld/emulparams/pruelf.sh
+ create mode 100644 ld/emultempl/pruelf.em
  create mode 100644 ld/scripttempl/pru.sc
+ create mode 100644 ld/testsuite/ld-pru/emit-relocs-1.d
+ create mode 100644 ld/testsuite/ld-pru/emit-relocs-1.ld
+ create mode 100644 ld/testsuite/ld-pru/emit-relocs-1a.s
+ create mode 100644 ld/testsuite/ld-pru/emit-relocs-1b.s
+ create mode 100644 ld/testsuite/ld-pru/hilo16.d
+ create mode 100644 ld/testsuite/ld-pru/hilo16.s
+ create mode 100644 ld/testsuite/ld-pru/hilo16_symbol.s
+ create mode 100644 ld/testsuite/ld-pru/norelax_hi_rlz-data.d
+ create mode 100644 ld/testsuite/ld-pru/norelax_hi_rlz-dis.d
+ create mode 100644 ld/testsuite/ld-pru/pcrel_s10.d
+ create mode 100644 ld/testsuite/ld-pru/pcrel_s10.s
+ create mode 100644 ld/testsuite/ld-pru/pcrel_s10_label.s
+ create mode 100644 ld/testsuite/ld-pru/pcrel_u8-illegal.d
+ create mode 100644 ld/testsuite/ld-pru/pcrel_u8-illegal.s
+ create mode 100644 ld/testsuite/ld-pru/pcrel_u8.d
+ create mode 100644 ld/testsuite/ld-pru/pcrel_u8.s
+ create mode 100644 ld/testsuite/ld-pru/pcrel_u8_label.s
+ create mode 100644 ld/testsuite/ld-pru/pmem.d
+ create mode 100644 ld/testsuite/ld-pru/pmem.s
+ create mode 100644 ld/testsuite/ld-pru/pmem_symbol.s
+ create mode 100644 ld/testsuite/ld-pru/pru.exp
+ create mode 100644 ld/testsuite/ld-pru/relax_hi_rlz-data.d
+ create mode 100644 ld/testsuite/ld-pru/relax_hi_rlz-dis.d
+ create mode 100644 ld/testsuite/ld-pru/relax_hi_rlz.s
+ create mode 100644 ld/testsuite/ld-pru/relax_hi_rlz_symbol.s
+ create mode 100644 ld/testsuite/ld-pru/reloc.d
+ create mode 100644 ld/testsuite/ld-pru/reloc.s
+ create mode 100644 ld/testsuite/ld-pru/reloc_symbol.s
+ create mode 100644 ld/testsuite/ld-pru/u16_u8.d
+ create mode 100644 ld/testsuite/ld-pru/u16_u8.s
+ create mode 100644 ld/testsuite/ld-pru/u16_u8_symbol.s
  create mode 100644 opcodes/pru-dis.c
  create mode 100644 opcodes/pru-opc.c
  create mode 100644 sim/pru/Makefile.in
@@ -148,7 +218,7 @@ index bda55a3..1104322 100644
 +*.swp
 +cscope.*
 diff --git a/bfd/Makefile.am b/bfd/Makefile.am
-index bf73057..e8afa6d 100644
+index cdfed8f..3549f6f 100644
 --- a/bfd/Makefile.am
 +++ b/bfd/Makefile.am
 @@ -147,6 +147,7 @@ ALL_MACHINES = \
@@ -175,7 +245,7 @@ index bf73057..e8afa6d 100644
  	elf32-rl78.lo \
  	elf32-rx.lo \
  	elf32-s390.lo \
-@@ -554,6 +557,7 @@ BFD32_BACKENDS_CFILES = \
+@@ -555,6 +558,7 @@ BFD32_BACKENDS_CFILES = \
  	elf32-or1k.c \
  	elf32-pj.c \
  	elf32-ppc.c \
@@ -184,7 +254,7 @@ index bf73057..e8afa6d 100644
  	elf32-rx.c \
  	elf32-s390.c \
 diff --git a/bfd/Makefile.in b/bfd/Makefile.in
-index 9fd0d68..3a2819a 100644
+index 6cf4b70..31edaab 100644
 --- a/bfd/Makefile.in
 +++ b/bfd/Makefile.in
 @@ -450,6 +450,7 @@ ALL_MACHINES = \
@@ -211,7 +281,7 @@ index 9fd0d68..3a2819a 100644
  	elf32-rl78.lo \
  	elf32-rx.lo \
  	elf32-s390.lo \
-@@ -858,6 +861,7 @@ BFD32_BACKENDS_CFILES = \
+@@ -859,6 +862,7 @@ BFD32_BACKENDS_CFILES = \
  	elf32-or1k.c \
  	elf32-pj.c \
  	elf32-ppc.c \
@@ -219,7 +289,7 @@ index 9fd0d68..3a2819a 100644
  	elf32-rl78.c \
  	elf32-rx.c \
  	elf32-s390.c \
-@@ -1376,6 +1380,7 @@ distclean-compile:
+@@ -1380,6 +1384,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-pj.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-plugin.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-powerpc.Plo@am__quote@
@@ -227,7 +297,7 @@ index 9fd0d68..3a2819a 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-rl78.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-rs6000.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-rx.Plo@am__quote@
-@@ -1465,6 +1470,7 @@ distclean-compile:
+@@ -1469,6 +1474,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-or1k.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-pj.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-ppc.Plo@am__quote@
@@ -236,10 +306,10 @@ index 9fd0d68..3a2819a 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-rx.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-s390.Plo@am__quote@
 diff --git a/bfd/archures.c b/bfd/archures.c
-index 95433f8..6bbe4a8 100644
+index 51068b9..d014ba1 100644
 --- a/bfd/archures.c
 +++ b/bfd/archures.c
-@@ -507,6 +507,8 @@ DESCRIPTION
+@@ -509,6 +509,8 @@ DESCRIPTION
  .#define bfd_mach_nios2r2	2
  .  bfd_arch_visium,	{* Visium *}
  .#define bfd_mach_visium	1
@@ -248,7 +318,7 @@ index 95433f8..6bbe4a8 100644
  .  bfd_arch_last
  .  };
  */
-@@ -610,6 +612,7 @@ extern const bfd_arch_info_type bfd_pj_arch;
+@@ -612,6 +614,7 @@ extern const bfd_arch_info_type bfd_pj_arch;
  extern const bfd_arch_info_type bfd_plugin_arch;
  extern const bfd_arch_info_type bfd_powerpc_archs[];
  #define bfd_powerpc_arch bfd_powerpc_archs[0]
@@ -256,7 +326,7 @@ index 95433f8..6bbe4a8 100644
  extern const bfd_arch_info_type bfd_rs6000_arch;
  extern const bfd_arch_info_type bfd_rl78_arch;
  extern const bfd_arch_info_type bfd_rx_arch;
-@@ -699,6 +702,7 @@ static const bfd_arch_info_type * const bfd_archures_list[] =
+@@ -701,6 +704,7 @@ static const bfd_arch_info_type * const bfd_archures_list[] =
      &bfd_or1k_arch,
      &bfd_pdp11_arch,
      &bfd_powerpc_arch,
@@ -265,10 +335,10 @@ index 95433f8..6bbe4a8 100644
      &bfd_rl78_arch,
      &bfd_rx_arch,
 diff --git a/bfd/bfd-in2.h b/bfd/bfd-in2.h
-index f4f98af..560bf42 100644
+index ca0cafd..cd841b0 100644
 --- a/bfd/bfd-in2.h
 +++ b/bfd/bfd-in2.h
-@@ -2302,6 +2302,8 @@ enum bfd_architecture
+@@ -2324,6 +2324,8 @@ enum bfd_architecture
  #define bfd_mach_nios2r2       2
    bfd_arch_visium,     /* Visium */
  #define bfd_mach_visium        1
@@ -277,29 +347,49 @@ index f4f98af..560bf42 100644
    bfd_arch_last
    };
  
-@@ -5369,6 +5371,17 @@ a matching LO8XG part.  */
+@@ -5459,6 +5461,37 @@ a matching LO8XG part.  */
    BFD_RELOC_NIOS2_R2_T1X1I6,
    BFD_RELOC_NIOS2_R2_T1X1I6_2,
  
-+/* Relocations used by the TI PRU processor.  */
++/* PRU OP2 8-bit unsigned relocation  */
 +  BFD_RELOC_PRU_U8,
++
++/* PRU LDI 16-bit unsigned relocations.  */
 +  BFD_RELOC_PRU_U16,
 +  BFD_RELOC_PRU_HI16,
++  BFD_RELOC_PRU_HI16_RLZ,
 +  BFD_RELOC_PRU_LO16,
 +  BFD_RELOC_PRU_U16_PMEMIMM,
++
++/* PRU QBBx 10-bit signed PC-relative relocation.  */
 +  BFD_RELOC_PRU_S10_PCREL,
++
++/* PRU 8-bit unsigned relocation used for the LOOP instruction.  */
 +  BFD_RELOC_PRU_U8_PCREL,
++
++/* PRU Program Memory relocations. Used to convert from byte addressing to
++32-bit word addressing.  */
 +  BFD_RELOC_PRU_32_PMEM,
 +  BFD_RELOC_PRU_16_PMEM,
++
++/* PRU relocations to mark the difference of two local symbols.
++These are only needed to support linker relaxation and can be ignored
++when not relaxing.  The field is set to the value of the difference
++assuming no relaxation.  The relocation encodes the position of the
++second symbol so the linker can determine whether to adjust the field
++value.  */
++  BFD_RELOC_PRU_DIFF8,
++  BFD_RELOC_PRU_DIFF16,
++  BFD_RELOC_PRU_DIFF32,
 +
  /* IQ2000 Relocations.  */
    BFD_RELOC_IQ2000_OFFSET_16,
    BFD_RELOC_IQ2000_OFFSET_21,
 diff --git a/bfd/config.bfd b/bfd/config.bfd
-index a8319ca..2eb6280 100644
+index c11204e..8500213 100644
 --- a/bfd/config.bfd
 +++ b/bfd/config.bfd
-@@ -119,6 +119,7 @@ or1k*|or1knd*)	 targ_archs=bfd_or1k_arch ;;
+@@ -121,6 +121,7 @@ or1k*|or1knd*)	 targ_archs=bfd_or1k_arch ;;
  pdp11*)		 targ_archs=bfd_pdp11_arch ;;
  pj*)		 targ_archs="bfd_pj_arch bfd_i386_arch";;
  powerpc*)	 targ_archs="bfd_rs6000_arch bfd_powerpc_arch" ;;
@@ -307,7 +397,7 @@ index a8319ca..2eb6280 100644
  rs6000)		 targ_archs="bfd_rs6000_arch bfd_powerpc_arch" ;;
  s390*)		 targ_archs=bfd_s390_arch ;;
  sh*)		 targ_archs=bfd_sh_arch ;;
-@@ -1334,6 +1335,10 @@ case "${targ}" in
+@@ -1352,6 +1353,10 @@ case "${targ}" in
      targ_selvecs="powerpc_pei_le_vec powerpc_pei_vec powerpc_pe_le_vec powerpc_pe_vec"
      ;;
  
@@ -319,10 +409,10 @@ index a8319ca..2eb6280 100644
      targ_defvec=rl78_elf32_vec
      ;;
 diff --git a/bfd/configure b/bfd/configure
-index a17e936..8c936a9 100755
+index c8cdcc5..004c73a 100755
 --- a/bfd/configure
 +++ b/bfd/configure
-@@ -15469,6 +15469,7 @@ do
+@@ -15474,6 +15474,7 @@ do
      powerpc_pei_vec)		 tb="$tb pei-ppc.lo peigen.lo $coff" ;;
      powerpc_pei_le_vec)		 tb="$tb pei-ppc.lo peigen.lo $coff" ;;
      powerpc_xcoff_vec)		 tb="$tb coff-rs6000.lo $xcoff" ;;
@@ -331,10 +421,10 @@ index a17e936..8c936a9 100755
      rs6000_xcoff64_vec)		 tb="$tb coff64-rs6000.lo aix5ppc-core.lo $xcoff"; target_size=64 ;;
      rs6000_xcoff64_aix_vec)	 tb="$tb coff64-rs6000.lo aix5ppc-core.lo $xcoff"; target_size=64 ;;
 diff --git a/bfd/configure.ac b/bfd/configure.ac
-index 2497131..a0b7401 100644
+index bf76fb1..85d97f8 100644
 --- a/bfd/configure.ac
 +++ b/bfd/configure.ac
-@@ -915,6 +915,7 @@ do
+@@ -920,6 +920,7 @@ do
      powerpc_pei_vec)		 tb="$tb pei-ppc.lo peigen.lo $coff" ;;
      powerpc_pei_le_vec)		 tb="$tb pei-ppc.lo peigen.lo $coff" ;;
      powerpc_xcoff_vec)		 tb="$tb coff-rs6000.lo $xcoff" ;;
@@ -392,7 +482,7 @@ index 0000000..9a558c3
 +
 +const bfd_arch_info_type bfd_pru_arch = N (32, 32, 0, "pru", TRUE, NULL);
 diff --git a/bfd/elf-bfd.h b/bfd/elf-bfd.h
-index b7ca2d0..06e0912 100644
+index 129aa64..311a008 100644
 --- a/bfd/elf-bfd.h
 +++ b/bfd/elf-bfd.h
 @@ -465,6 +465,7 @@ enum elf_target_id
@@ -405,10 +495,10 @@ index b7ca2d0..06e0912 100644
    SPARC_ELF_DATA,
 diff --git a/bfd/elf32-pru.c b/bfd/elf32-pru.c
 new file mode 100644
-index 0000000..e2f7af6
+index 0000000..f6577cd
 --- /dev/null
 +++ b/bfd/elf32-pru.c
-@@ -0,0 +1,905 @@
+@@ -0,0 +1,1500 @@
 +/* 32-bit ELF support for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -451,6 +541,9 @@ index 0000000..e2f7af6
 +#undef USE_REL
 +#endif
 +
++/* Enable debugging printout at stdout with this variable.  */
++static bfd_boolean debug_relax = FALSE;
++
 +/* Forward declarations.  */
 +static bfd_reloc_status_type pru_elf32_hi16_relocate
 +  (bfd *, arelent *, asymbol *, void *, asection *, bfd *, char **);
@@ -460,6 +553,8 @@ index 0000000..e2f7af6
 +  (bfd *, arelent *, asymbol *, void *, asection *, bfd *, char **);
 +static bfd_reloc_status_type pru_elf32_s10_pcrel_relocate
 +  (bfd *, arelent *, asymbol *, void *, asection *, bfd *, char **);
++static bfd_reloc_status_type bfd_elf_pru_diff_relocate
++  (bfd *, arelent *, asymbol *, void *,	asection *, bfd *, char **);
 +
 +/* Target vector.  */
 +extern const bfd_target pru_elf32_vec;
@@ -525,6 +620,24 @@ index 0000000..e2f7af6
 +	 0x00ffff00,
 +	 FALSE),
 +
++  /* Like PRU_HI16, but this relocation allows the
++     insn to be removed during relaxation if upper
++     16 bits of symbol are zeros. Used by GAS
++     for implementing the LDI32 macro. */
++  HOWTO (R_PRU_HI16_RLZ,
++	 0,
++	 2,
++	 32,
++	 FALSE,
++	 8,
++	 complain_overflow_dont,
++	 pru_elf32_hi16_relocate,
++	 "R_PRU_HI16_RLZ",
++	 FALSE,
++	 0x00ffff00,
++	 0x00ffff00,
++	 FALSE),
++
 +  HOWTO (R_PRU_LO16,
 +	 0,
 +	 2,
@@ -574,7 +687,7 @@ index 0000000..e2f7af6
 +	 TRUE,
 +	 0,
 +	 complain_overflow_unsigned,
-+	 pru_elf32_pmem_relocate,
++	 bfd_elf_generic_reloc,
 +	 "R_PRU_U8_PCREL",
 +	 FALSE,
 +	 0x000000ff,
@@ -608,6 +721,48 @@ index 0000000..e2f7af6
 +	 0xffff,
 +	 0xffff,
 +	 FALSE),
++
++  HOWTO (R_PRU_DIFF8,		/* type */
++	 0,             	/* rightshift */
++	 0, 			/* size (0 = byte, 1 = short, 2 = long) */
++	 8, 			/* bitsize */
++	 FALSE,         	/* pc_relative */
++	 0,             	/* bitpos */
++	 complain_overflow_bitfield, /* complain_on_overflow */
++	 bfd_elf_pru_diff_relocate, /* special_function */
++	 "R_PRU_DIFF8",     	/* name */
++	 FALSE,         	/* partial_inplace */
++	 0,             	/* src_mask */
++	 0xff,          	/* dst_mask */
++	 FALSE),        	/* pcrel_offset */
++
++  HOWTO (R_PRU_DIFF16,  	/* type */
++	 0,             	/* rightshift */
++	 1,			/* size (0 = byte, 1 = short, 2 = long) */
++	 16,			/* bitsize */
++	 FALSE,         	/* pc_relative */
++	 0,             	/* bitpos */
++	 complain_overflow_bitfield, /* complain_on_overflow */
++	 bfd_elf_pru_diff_relocate,/* special_function */
++	 "R_PRU_DIFF16",     	/* name */
++	 FALSE,         	/* partial_inplace */
++	 0,             	/* src_mask */
++	 0xffff,        	/* dst_mask */
++	 FALSE),        	/* pcrel_offset */
++
++  HOWTO (R_PRU_DIFF32,  	/* type */
++	 0,             	/* rightshift */
++	 2,         		/* size (0 = byte, 1 = short, 2 = long) */
++	 32,        		/* bitsize */
++	 FALSE,         	/* pc_relative */
++	 0,             	/* bitpos */
++	 complain_overflow_bitfield, /* complain_on_overflow */
++	 bfd_elf_pru_diff_relocate,/* special_function */
++	 "R_PRU_DIFF32",     	/* name */
++	 FALSE,         	/* partial_inplace */
++	 0,             	/* src_mask */
++	 0xffffffff,    	/* dst_mask */
++	 FALSE),        	/* pcrel_offset */
 +
 +  HOWTO (R_PRU_BFD_RELOC_32,
 +	 0,
@@ -693,12 +848,16 @@ index 0000000..e2f7af6
 +  {BFD_RELOC_PRU_U8, R_PRU_U8},
 +  {BFD_RELOC_PRU_U16, R_PRU_U16},
 +  {BFD_RELOC_PRU_HI16, R_PRU_HI16},
++  {BFD_RELOC_PRU_HI16_RLZ, R_PRU_HI16_RLZ},
 +  {BFD_RELOC_PRU_LO16, R_PRU_LO16},
 +  {BFD_RELOC_PRU_U16_PMEMIMM, R_PRU_U16_PMEMIMM},
 +  {BFD_RELOC_PRU_S10_PCREL, R_PRU_S10_PCREL},
 +  {BFD_RELOC_PRU_U8_PCREL, R_PRU_U8_PCREL},
 +  {BFD_RELOC_PRU_32_PMEM, R_PRU_32_PMEM},
 +  {BFD_RELOC_PRU_16_PMEM, R_PRU_16_PMEM},
++  {BFD_RELOC_PRU_DIFF8, R_PRU_DIFF8},
++  {BFD_RELOC_PRU_DIFF16, R_PRU_DIFF16},
++  {BFD_RELOC_PRU_DIFF32, R_PRU_DIFF32},
 +  {BFD_RELOC_32, R_PRU_BFD_RELOC_32},
 +  {BFD_RELOC_16, R_PRU_BFD_RELOC_16},
 +  {BFD_RELOC_8, R_PRU_BFD_RELOC_8},
@@ -1081,6 +1240,7 @@ index 0000000..e2f7af6
 +	  switch (howto->type)
 +	    {
 +	    case R_PRU_HI16:
++	    case R_PRU_HI16_RLZ:
 +	      r = pru_elf32_do_hi16_relocate (input_bfd, howto,
 +						input_section,
 +						contents, rel->r_offset,
@@ -1095,7 +1255,6 @@ index 0000000..e2f7af6
 +	    case R_PRU_U16_PMEMIMM:
 +	    case R_PRU_32_PMEM:
 +	    case R_PRU_16_PMEM:
-+	    case R_PRU_U8_PCREL:
 +	      r = pru_elf32_do_pmem_relocate (input_bfd, howto,
 +						input_section,
 +						contents, rel->r_offset,
@@ -1109,6 +1268,13 @@ index 0000000..e2f7af6
 +						      relocation,
 +						      rel->r_addend);
 +	      break;
++	    case R_PRU_DIFF8:
++	    case R_PRU_DIFF16:
++	    case R_PRU_DIFF32:
++	      /* Nothing to do here, as contents already contains the diff value. */
++	      r = bfd_reloc_ok;
++	      break;
++
 +	    default:
 +	      r = _bfd_final_link_relocate (howto, input_bfd,
 +					    input_section, contents,
@@ -1249,6 +1415,524 @@ index 0000000..e2f7af6
 +  return TRUE;
 +}
 +
++
++/* Perform a diff relocation. Nothing to do, as the difference value is already
++   written into the section's contents. */
++
++static bfd_reloc_status_type
++bfd_elf_pru_diff_relocate (bfd *abfd ATTRIBUTE_UNUSED,
++		      arelent *reloc_entry ATTRIBUTE_UNUSED,
++              asymbol *symbol ATTRIBUTE_UNUSED,
++              void *data ATTRIBUTE_UNUSED,
++              asection *input_section ATTRIBUTE_UNUSED,
++              bfd *output_bfd ATTRIBUTE_UNUSED,
++              char **error_message ATTRIBUTE_UNUSED)
++{
++  return bfd_reloc_ok;
++}
++
++
++/* Returns whether the relocation type passed is a diff reloc. */
++
++static bfd_boolean
++elf32_pru_is_diff_reloc (Elf_Internal_Rela *irel)
++{
++  return (ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF8
++          ||ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF16
++          || ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF32);
++}
++
++/* Reduce the diff value written in the section by count if the shrinked
++   insn address happens to fall between the two symbols for which this
++   diff reloc was emitted.  */
++
++static void
++elf32_pru_adjust_diff_reloc_value (bfd *abfd,
++                                   struct bfd_section *isec,
++                                   Elf_Internal_Rela *irel,
++                                   bfd_vma symval,
++                                   bfd_vma shrinked_insn_address,
++                                   int count)
++{
++  unsigned char *reloc_contents = NULL;
++  unsigned char *isec_contents = elf_section_data (isec)->this_hdr.contents;
++  if (isec_contents == NULL)
++  {
++    if (! bfd_malloc_and_get_section (abfd, isec, &isec_contents))
++      return;
++
++    elf_section_data (isec)->this_hdr.contents = isec_contents;
++  }
++
++  reloc_contents = isec_contents + irel->r_offset;
++
++  /* Read value written in object file. */
++  bfd_vma x = 0;
++  switch (ELF32_R_TYPE (irel->r_info))
++  {
++  case R_PRU_DIFF8:
++    {
++      x = *reloc_contents;
++      break;
++    }
++  case R_PRU_DIFF16:
++    {
++      x = bfd_get_16 (abfd, reloc_contents);
++      break;
++    }
++  case R_PRU_DIFF32:
++    {
++      x = bfd_get_32 (abfd, reloc_contents);
++      break;
++    }
++  default:
++    {
++      BFD_FAIL();
++    }
++  }
++
++  /* For a diff reloc sym1 - sym2 the diff at assembly time (x) is written
++     into the object file at the reloc offset. sym2's logical value is
++     symval (<start_of_section>) + reloc addend. Compute the start and end
++     addresses and check if the shrinked insn falls between sym1 and sym2. */
++
++  bfd_vma end_address = symval + irel->r_addend;
++  bfd_vma start_address = end_address - x;
++
++  /* Reduce the diff value by count bytes and write it back into section
++    contents. */
++
++  if (shrinked_insn_address >= start_address
++      && shrinked_insn_address <= end_address)
++  {
++    switch (ELF32_R_TYPE (irel->r_info))
++    {
++    case R_PRU_DIFF8:
++      {
++        *reloc_contents = (x - count);
++        break;
++      }
++    case R_PRU_DIFF16:
++      {
++        bfd_put_16 (abfd, (x - count) & 0xFFFF, reloc_contents);
++        break;
++      }
++    case R_PRU_DIFF32:
++      {
++        bfd_put_32 (abfd, (x - count) & 0xFFFFFFFF, reloc_contents);
++        break;
++      }
++    default:
++      {
++        BFD_FAIL();
++      }
++    }
++
++  }
++}
++
++/* Delete some bytes from a section while changing the size of an instruction.
++   The parameter "addr" denotes the section-relative offset pointing just
++   behind the shrinked instruction. "addr+count" point at the first
++   byte just behind the original unshrinked instruction.  */
++
++static bfd_boolean
++pru_elf_relax_delete_bytes (bfd *abfd,
++                              asection *sec,
++                              bfd_vma addr,
++                              int count)
++{
++  Elf_Internal_Shdr *symtab_hdr;
++  unsigned int sec_shndx;
++  bfd_byte *contents;
++  Elf_Internal_Rela *irel, *irelend;
++  Elf_Internal_Sym *isym;
++  Elf_Internal_Sym *isymbuf = NULL;
++  bfd_vma toaddr;
++  struct elf_link_hash_entry **sym_hashes;
++  struct elf_link_hash_entry **end_hashes;
++  unsigned int symcount;
++
++  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
++  sec_shndx = _bfd_elf_section_from_bfd_section (abfd, sec);
++  contents = elf_section_data (sec)->this_hdr.contents;
++
++  toaddr = sec->size;
++
++  irel = elf_section_data (sec)->relocs;
++  irelend = irel + sec->reloc_count;
++
++  /* Actually delete the bytes.  */
++  if (toaddr - addr - count > 0)
++    memmove (contents + addr, contents + addr + count,
++             (size_t) (toaddr - addr - count));
++  sec->size -= count;
++
++  /* Adjust all the reloc addresses.  */
++  for (irel = elf_section_data (sec)->relocs; irel < irelend; irel++)
++    {
++      bfd_vma old_reloc_address;
++
++      old_reloc_address = (sec->output_section->vma
++                           + sec->output_offset + irel->r_offset);
++
++      /* Get the new reloc address.  */
++      if ((irel->r_offset > addr
++           && irel->r_offset < toaddr))
++        {
++          if (debug_relax)
++            printf ("Relocation at address 0x%x needs to be moved.\n"
++                    "Old section offset: 0x%x, New section offset: 0x%x \n",
++                    (unsigned int) old_reloc_address,
++                    (unsigned int) irel->r_offset,
++                    (unsigned int) ((irel->r_offset) - count));
++
++          irel->r_offset -= count;
++        }
++
++    }
++
++   /* The reloc's own addresses are now ok. However, we need to readjust
++      the reloc's addend, i.e. the reloc's value if two conditions are met:
++      1.) the reloc is relative to a symbol in this section that
++          is located in front of the shrinked instruction
++      2.) symbol plus addend end up behind the shrinked instruction.
++
++      The most common case where this happens are relocs relative to
++      the section-start symbol.
++
++      This step needs to be done for all of the sections of the bfd.  */
++
++  {
++    struct bfd_section *isec;
++
++    for (isec = abfd->sections; isec; isec = isec->next)
++     {
++       bfd_vma symval;
++       bfd_vma shrinked_insn_address;
++
++       if (isec->reloc_count == 0)
++	 continue;
++
++       shrinked_insn_address = (sec->output_section->vma
++                                + sec->output_offset + addr - count);
++
++       irel = elf_section_data (isec)->relocs;
++       /* PR 12161: Read in the relocs for this section if necessary.  */
++       if (irel == NULL)
++         irel = _bfd_elf_link_read_relocs (abfd, isec, NULL, NULL, TRUE);
++
++       for (irelend = irel + isec->reloc_count;
++            irel < irelend;
++            irel++)
++         {
++           /* Read this BFD's local symbols if we haven't done
++              so already.  */
++           if (isymbuf == NULL && symtab_hdr->sh_info != 0)
++             {
++               isymbuf = (Elf_Internal_Sym *) symtab_hdr->contents;
++               if (isymbuf == NULL)
++                 isymbuf = bfd_elf_get_elf_syms (abfd, symtab_hdr,
++                                                 symtab_hdr->sh_info, 0,
++                                                 NULL, NULL, NULL);
++               if (isymbuf == NULL)
++                 return FALSE;
++             }
++
++           /* Get the value of the symbol referred to by the reloc.  */
++           if (ELF32_R_SYM (irel->r_info) < symtab_hdr->sh_info)
++             {
++               /* A local symbol.  */
++               asection *sym_sec;
++
++               isym = isymbuf + ELF32_R_SYM (irel->r_info);
++               sym_sec = bfd_section_from_elf_index (abfd, isym->st_shndx);
++               symval = isym->st_value;
++               /* If the reloc is absolute, it will not have
++                  a symbol or section associated with it.  */
++               if (sym_sec == sec)
++                 {
++                   symval += sym_sec->output_section->vma
++                             + sym_sec->output_offset;
++
++                   if (debug_relax)
++                     printf ("Checking if the relocation's "
++                             "addend needs corrections.\n"
++                             "Address of anchor symbol: 0x%x \n"
++                             "Address of relocation target: 0x%x \n"
++                             "Address of relaxed insn: 0x%x \n",
++                             (unsigned int) symval,
++                             (unsigned int) (symval + irel->r_addend),
++                             (unsigned int) shrinked_insn_address);
++
++                   if (symval <= shrinked_insn_address
++                       && (symval + irel->r_addend) > shrinked_insn_address)
++                     {
++                       if (elf32_pru_is_diff_reloc (irel))
++                         {
++                           elf32_pru_adjust_diff_reloc_value (abfd, isec, irel,
++                                                         symval,
++                                                         shrinked_insn_address,
++                                                        count);
++                         }
++
++                       irel->r_addend -= count;
++
++                       if (debug_relax)
++                         printf ("Relocation's addend needed to be fixed \n");
++                     }
++                 }
++	       /* else...Reference symbol is absolute.  No adjustment needed.  */
++	     }
++	   /* else...Reference symbol is extern.  No need for adjusting
++	      the addend.  */
++	 }
++     }
++  }
++
++  /* Adjust the local symbols defined in this section.  */
++  isym = (Elf_Internal_Sym *) symtab_hdr->contents;
++  /* Fix PR 9841, there may be no local symbols.  */
++  if (isym != NULL)
++    {
++      Elf_Internal_Sym *isymend;
++
++      isymend = isym + symtab_hdr->sh_info;
++      for (; isym < isymend; isym++)
++	{
++	  if (isym->st_shndx == sec_shndx)
++            {
++	      if (isym->st_value > addr
++                  && isym->st_value <= toaddr)
++                isym->st_value -= count;
++
++              if (isym->st_value <= addr
++                  && isym->st_value + isym->st_size > addr)
++                {
++                  /* If this assert fires then we have a symbol that ends
++                     part way through an instruction.  Does that make
++                     sense?  */
++                  BFD_ASSERT (isym->st_value + isym->st_size >= addr + count);
++                  isym->st_size -= count;
++                }
++            }
++	}
++    }
++
++  /* Now adjust the global symbols defined in this section.  */
++  symcount = (symtab_hdr->sh_size / sizeof (Elf32_External_Sym)
++              - symtab_hdr->sh_info);
++  sym_hashes = elf_sym_hashes (abfd);
++  end_hashes = sym_hashes + symcount;
++  for (; sym_hashes < end_hashes; sym_hashes++)
++    {
++      struct elf_link_hash_entry *sym_hash = *sym_hashes;
++      if ((sym_hash->root.type == bfd_link_hash_defined
++           || sym_hash->root.type == bfd_link_hash_defweak)
++          && sym_hash->root.u.def.section == sec)
++        {
++          if (sym_hash->root.u.def.value > addr
++              && sym_hash->root.u.def.value <= toaddr)
++            sym_hash->root.u.def.value -= count;
++
++          if (sym_hash->root.u.def.value <= addr
++              && (sym_hash->root.u.def.value + sym_hash->size > addr))
++            {
++              /* If this assert fires then we have a symbol that ends
++                 part way through an instruction.  Does that make
++                 sense?  */
++              BFD_ASSERT (sym_hash->root.u.def.value + sym_hash->size
++                          >= addr + count);
++              sym_hash->size -= count;
++            }
++        }
++    }
++
++  return TRUE;
++}
++
++static bfd_boolean
++pru_elf32_relax_section (bfd * abfd, asection * sec,
++			  struct bfd_link_info * link_info,
++			  bfd_boolean * again)
++{
++  Elf_Internal_Shdr * symtab_hdr;
++  Elf_Internal_Rela * internal_relocs;
++  Elf_Internal_Rela * irel;
++  Elf_Internal_Rela * irelend;
++  bfd_byte *          contents = NULL;
++  Elf_Internal_Sym *  isymbuf = NULL;
++
++  /* Assume nothing changes.  */
++  *again = FALSE;
++
++  /* We don't have to do anything for a relocatable link, if
++     this section does not have relocs, or if this is not a
++     code section.  */
++  if (bfd_link_relocatable (link_info)
++    || (sec->flags & SEC_RELOC) == 0
++    || sec->reloc_count == 0 || (sec->flags & SEC_CODE) == 0)
++    return TRUE;
++
++  symtab_hdr = & elf_tdata (abfd)->symtab_hdr;
++
++  /* Get a copy of the native relocations.  */
++  internal_relocs =
++    _bfd_elf_link_read_relocs (abfd, sec, NULL, NULL, link_info->keep_memory);
++  if (internal_relocs == NULL)
++    goto error_return;
++
++  /* Walk through them looking for relaxing opportunities.  */
++  irelend = internal_relocs + sec->reloc_count;
++
++    for (irel = internal_relocs; irel < irelend; irel++)
++      {
++	bfd_vma symval;
++
++	/* Get the section contents if we haven't done so already.  */
++	if (contents == NULL)
++	  {
++	    /* Get cached copy if it exists.  */
++	    if (elf_section_data (sec)->this_hdr.contents != NULL)
++	      contents = elf_section_data (sec)->this_hdr.contents;
++	    else if (! bfd_malloc_and_get_section (abfd, sec, &contents))
++	      goto error_return;
++	  }
++
++	/* Read this BFD's local symbols if we haven't done so already.  */
++	if (isymbuf == NULL && symtab_hdr->sh_info != 0)
++	  {
++	    isymbuf = (Elf_Internal_Sym *) symtab_hdr->contents;
++	    if (isymbuf == NULL)
++	      isymbuf = bfd_elf_get_elf_syms (abfd, symtab_hdr,
++					      symtab_hdr->sh_info, 0,
++					      NULL, NULL, NULL);
++	    if (isymbuf == NULL)
++	      goto error_return;
++	  }
++
++	/* Get the value of the symbol referred to by the reloc.  */
++	if (ELF32_R_SYM (irel->r_info) < symtab_hdr->sh_info)
++	  {
++	    /* A local symbol.  */
++	    Elf_Internal_Sym *isym;
++	    asection *sym_sec;
++
++	    isym = isymbuf + ELF32_R_SYM (irel->r_info);
++	    if (isym->st_shndx == SHN_UNDEF)
++	      sym_sec = bfd_und_section_ptr;
++	    else if (isym->st_shndx == SHN_ABS)
++	      sym_sec = bfd_abs_section_ptr;
++	    else if (isym->st_shndx == SHN_COMMON)
++	      sym_sec = bfd_com_section_ptr;
++	    else
++	      sym_sec = bfd_section_from_elf_index (abfd, isym->st_shndx);
++	    symval = (isym->st_value
++		      + sym_sec->output_section->vma + sym_sec->output_offset);
++	  }
++	else
++	  {
++	    unsigned long indx;
++	    struct elf_link_hash_entry *h;
++
++	    /* An external symbol.  */
++	    indx = ELF32_R_SYM (irel->r_info) - symtab_hdr->sh_info;
++	    h = elf_sym_hashes (abfd)[indx];
++	    BFD_ASSERT (h != NULL);
++
++	    if (h->root.type != bfd_link_hash_defined
++		&& h->root.type != bfd_link_hash_defweak)
++	      /* This appears to be a reference to an undefined
++		 symbol.  Just ignore it--it will be caught by the
++		 regular reloc processing.  */
++	      continue;
++
++	    symval = (h->root.u.def.value
++		      + h->root.u.def.section->output_section->vma
++		      + h->root.u.def.section->output_offset);
++	  }
++
++	/* For simplicity of coding, we are going to modify the section
++	   contents, the section relocs, and the BFD symbol table.  We
++	   must tell the rest of the code not to free up this
++	   information.  It would be possible to instead create a table
++	   of changes which have to be made, as is done in coff-mips.c;
++	   that would be more work, but would require less memory when
++	   the linker is run.  */
++
++	/* Check if we can remove an LDI instruction with HI16_RLZ and
++	   a zero immediate operand.  */
++	if (ELF32_R_TYPE (irel->r_info) == (int) R_PRU_HI16_RLZ)
++	  {
++	    bfd_vma value = symval + irel->r_addend;
++
++	    if (debug_relax)
++	      printf ("R_PRU_HI16_RLZ with value=0x%lx\n", (long) value);
++
++	    if ((long) value >> 16 == 0)
++	      {
++		/* Note that we've changed the relocs, section contents, etc.  */
++		elf_section_data (sec)->relocs = internal_relocs;
++		elf_section_data (sec)->this_hdr.contents = contents;
++		symtab_hdr->contents = (unsigned char *) isymbuf;
++
++		/* Delete bytes. */
++		if (!pru_elf_relax_delete_bytes (abfd, sec, irel->r_offset, 4))
++		  goto error_return;
++
++		/* We're done with deletion. Set a benign relocation
++		 * type in order to prevent further byte removals. */
++		irel->r_info = ELF32_R_INFO (ELF32_R_SYM (irel->r_info),
++					       R_PRU_NONE);
++
++		/* That will change things, so, we should relax again.
++		   Note that this is not required, and it may be slow.  */
++		*again = TRUE;
++	      }
++	  }
++      }
++
++  if (isymbuf != NULL && symtab_hdr->contents != (unsigned char *) isymbuf)
++    {
++      if (!link_info->keep_memory)
++	free (isymbuf);
++      else
++	{
++	  /* Cache the symbols for elf_link_input_bfd.  */
++	  symtab_hdr->contents = (unsigned char *) isymbuf;
++	}
++    }
++
++  if (contents != NULL
++      && elf_section_data (sec)->this_hdr.contents != contents)
++    {
++      if (!link_info->keep_memory)
++	free (contents);
++      else
++	{
++	  /* Cache the section contents for elf_link_input_bfd.  */
++	  elf_section_data (sec)->this_hdr.contents = contents;
++	}
++    }
++
++  if (internal_relocs != NULL
++      && elf_section_data (sec)->relocs != internal_relocs)
++    free (internal_relocs);
++
++  return TRUE;
++
++error_return:
++  if (isymbuf != NULL && symtab_hdr->contents != (unsigned char *) isymbuf)
++    free (isymbuf);
++  if (contents != NULL
++      && elf_section_data (sec)->this_hdr.contents != contents)
++    free (contents);
++  if (internal_relocs != NULL
++      && elf_section_data (sec)->relocs != internal_relocs)
++    free (internal_relocs);
++
++  return FALSE;
++}
 +
 +/* Free the derived linker hash table.  */
 +static void
@@ -1299,7 +1983,7 @@ index 0000000..e2f7af6
 +
 +/* elf_info_to_howto (using RELA relocations).  */
 +
-+#define elf_info_to_howto		  pru_elf32_info_to_howto
++#define elf_info_to_howto		 pru_elf32_info_to_howto
 +
 +/* elf backend functions.  */
 +
@@ -1307,35 +1991,40 @@ index 0000000..e2f7af6
 +#define elf_backend_can_refcount	1
 +#define elf_backend_rela_normal		1
 +
-+#define elf_backend_relocate_section	  pru_elf32_relocate_section
-+#define elf_backend_check_relocs	  pru_elf32_check_relocs
++#define elf_backend_relocate_section	    pru_elf32_relocate_section
++#define elf_backend_check_relocs	    pru_elf32_check_relocs
++#define bfd_elf32_bfd_relax_section	    pru_elf32_relax_section
 +
 +#define TARGET_LITTLE_SYM		pru_elf32_vec
 +#define TARGET_LITTLE_NAME		"elf32-pru"
 +
 +#include "elf32-target.h"
 diff --git a/bfd/libbfd.h b/bfd/libbfd.h
-index 03bb057..d72c582 100644
+index 8765bee..8085725 100644
 --- a/bfd/libbfd.h
 +++ b/bfd/libbfd.h
-@@ -2613,6 +2613,15 @@ static const char *const bfd_reloc_code_real_names[] = { "@@uninitialized@@",
+@@ -2686,6 +2686,19 @@ static const char *const bfd_reloc_code_real_names[] = { "@@uninitialized@@",
    "BFD_RELOC_NIOS2_R2_L5I4X1",
    "BFD_RELOC_NIOS2_R2_T1X1I6",
    "BFD_RELOC_NIOS2_R2_T1X1I6_2",
 +  "BFD_RELOC_PRU_U8",
 +  "BFD_RELOC_PRU_U16",
 +  "BFD_RELOC_PRU_HI16",
++  "BFD_RELOC_PRU_HI16_RLZ",
 +  "BFD_RELOC_PRU_LO16",
 +  "BFD_RELOC_PRU_U16_PMEMIMM",
 +  "BFD_RELOC_PRU_S10_PCREL",
 +  "BFD_RELOC_PRU_U8_PCREL",
 +  "BFD_RELOC_PRU_32_PMEM",
 +  "BFD_RELOC_PRU_16_PMEM",
++  "BFD_RELOC_PRU_DIFF8",
++  "BFD_RELOC_PRU_DIFF16",
++  "BFD_RELOC_PRU_DIFF32",
    "BFD_RELOC_IQ2000_OFFSET_16",
    "BFD_RELOC_IQ2000_OFFSET_21",
    "BFD_RELOC_IQ2000_UHI16",
 diff --git a/bfd/po/SRC-POTFILES.in b/bfd/po/SRC-POTFILES.in
-index 32f8851..1855e9a 100644
+index 25375de..d9fffc2 100644
 --- a/bfd/po/SRC-POTFILES.in
 +++ b/bfd/po/SRC-POTFILES.in
 @@ -119,6 +119,7 @@ cpu-pdp11.c
@@ -1355,42 +2044,66 @@ index 32f8851..1855e9a 100644
  elf32-rx.c
  elf32-s390.c
 diff --git a/bfd/reloc.c b/bfd/reloc.c
-index 18ca7bb..c385c7d 100644
+index 869503c..f11db2c 100644
 --- a/bfd/reloc.c
 +++ b/bfd/reloc.c
-@@ -6262,6 +6262,27 @@ ENUMDOC
+@@ -6404,6 +6404,51 @@ ENUMDOC
    Relocations used by the Altera Nios II core.
  
  ENUM
 +  BFD_RELOC_PRU_U8
-+ENUMX
++ENUMDOC
++  PRU OP2 8-bit unsigned relocation
++ENUM
 +  BFD_RELOC_PRU_U16
 +ENUMX
 +  BFD_RELOC_PRU_HI16
 +ENUMX
++  BFD_RELOC_PRU_HI16_RLZ
++ENUMX
 +  BFD_RELOC_PRU_LO16
 +ENUMX
 +  BFD_RELOC_PRU_U16_PMEMIMM
-+ENUMX
++ENUMDOC
++  PRU LDI 16-bit unsigned relocations.
++ENUM
 +  BFD_RELOC_PRU_S10_PCREL
-+ENUMX
++ENUMDOC
++  PRU QBBx 10-bit signed PC-relative relocation.
++ENUM
 +  BFD_RELOC_PRU_U8_PCREL
-+ENUMX
++ENUMDOC
++  PRU 8-bit unsigned relocation used for the LOOP instruction.
++ENUM
 +  BFD_RELOC_PRU_32_PMEM
 +ENUMX
 +  BFD_RELOC_PRU_16_PMEM
 +ENUMDOC
-+  Relocations used by the TI PRU processor.
++  PRU Program Memory relocations. Used to convert from byte addressing to
++  32-bit word addressing.
++ENUM
++  BFD_RELOC_PRU_DIFF8
++ENUMX
++  BFD_RELOC_PRU_DIFF16
++ENUMX
++  BFD_RELOC_PRU_DIFF32
++ENUMDOC
++  PRU relocations to mark the difference of two local symbols.
++  These are only needed to support linker relaxation and can be ignored
++  when not relaxing.  The field is set to the value of the difference
++  assuming no relaxation.  The relocation encodes the position of the
++  second symbol so the linker can determine whether to adjust the field
++  value.
 +
 +ENUM
    BFD_RELOC_IQ2000_OFFSET_16
  ENUMX
    BFD_RELOC_IQ2000_OFFSET_21
 diff --git a/bfd/targets.c b/bfd/targets.c
-index cc9d083..48b2251 100644
+index bfb34f1..1dec15d 100644
 --- a/bfd/targets.c
 +++ b/bfd/targets.c
-@@ -791,6 +791,7 @@ extern const bfd_target powerpc_pe_le_vec;
+@@ -795,6 +795,7 @@ extern const bfd_target powerpc_pe_le_vec;
  extern const bfd_target powerpc_pei_vec;
  extern const bfd_target powerpc_pei_le_vec;
  extern const bfd_target powerpc_xcoff_vec;
@@ -1398,7 +2111,7 @@ index cc9d083..48b2251 100644
  extern const bfd_target rl78_elf32_vec;
  extern const bfd_target rs6000_xcoff64_vec;
  extern const bfd_target rs6000_xcoff64_aix_vec;
-@@ -1291,6 +1292,8 @@ static const bfd_target * const _bfd_target_vector[] =
+@@ -1299,6 +1300,8 @@ static const bfd_target * const _bfd_target_vector[] =
  	&powerpc_xcoff_vec,
  #endif
  
@@ -1408,7 +2121,7 @@ index cc9d083..48b2251 100644
  
  #ifdef BFD64
 diff --git a/binutils/readelf.c b/binutils/readelf.c
-index bbf5b02..57e00da 100644
+index 5986456..f3988c5 100644
 --- a/binutils/readelf.c
 +++ b/binutils/readelf.c
 @@ -136,6 +136,7 @@
@@ -1419,7 +2132,7 @@ index bbf5b02..57e00da 100644
  #include "elf/rl78.h"
  #include "elf/rx.h"
  #include "elf/s390.h"
-@@ -768,6 +769,7 @@ guess_is_rela (unsigned int e_machine)
+@@ -771,6 +772,7 @@ guess_is_rela (unsigned int e_machine)
      case EM_OR1K:
      case EM_PPC64:
      case EM_PPC:
@@ -1427,7 +2140,7 @@ index bbf5b02..57e00da 100644
      case EM_RL78:
      case EM_RX:
      case EM_S390:
-@@ -1467,6 +1469,10 @@ dump_relocations (FILE * file,
+@@ -1472,6 +1474,10 @@ dump_relocations (FILE * file,
  	case EM_ALTERA_NIOS2:
  	  rtype = elf_nios2_reloc_type (type);
  	  break;
@@ -1438,7 +2151,7 @@ index bbf5b02..57e00da 100644
  	}
  
        if (rtype == NULL)
-@@ -2258,6 +2264,7 @@ get_machine_name (unsigned e_machine)
+@@ -2264,6 +2270,7 @@ get_machine_name (unsigned e_machine)
      case EM_TILEGX:		return "Tilera TILE-Gx multicore architecture family";
      case EM_CUDA:		return "NVIDIA CUDA architecture";
      case EM_XGATE:		return "Motorola XGATE embedded processor";
@@ -1446,7 +2159,7 @@ index bbf5b02..57e00da 100644
      default:
        snprintf (buff, sizeof (buff), _("<unknown>: 0x%x"), e_machine);
        return buff;
-@@ -11394,6 +11401,8 @@ is_32bit_abs_reloc (unsigned int reloc_type)
+@@ -11447,6 +11454,8 @@ is_32bit_abs_reloc (unsigned int reloc_type)
        return reloc_type == 1; /* R_PPC64_ADDR32.  */
      case EM_PPC:
        return reloc_type == 1; /* R_PPC_ADDR32.  */
@@ -1455,7 +2168,7 @@ index bbf5b02..57e00da 100644
      case EM_RL78:
        return reloc_type == 1; /* R_RL78_DIR32.  */
      case EM_RX:
-@@ -11728,6 +11737,8 @@ is_none_reloc (unsigned int reloc_type)
+@@ -11788,6 +11797,8 @@ is_none_reloc (unsigned int reloc_type)
  	      || reloc_type == 19  /* R_XTENSA_DIFF32.  */);
      case EM_METAG:
        return reloc_type == 3; /* R_METAG_NONE.  */
@@ -1485,7 +2198,7 @@ index f018151..f6585d9 100755
  	| riscv32-* | riscv64-* \
  	| rl78-* | romp-* | rs6000-* | rx-* \
 diff --git a/elfcpp/elfcpp.h b/elfcpp/elfcpp.h
-index 722984e..171e7a1 100644
+index 0e6833f..4e5c478 100644
 --- a/elfcpp/elfcpp.h
 +++ b/elfcpp/elfcpp.h
 @@ -268,6 +268,7 @@ enum EM
@@ -1566,7 +2279,7 @@ index 1efdb5c..9198c42 100644
  @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tc-rl78.o -MD -MP -MF $(DEPDIR)/tc-rl78.Tpo -c -o tc-rl78.o `test -f 'config/tc-rl78.c' || echo '$(srcdir)/'`config/tc-rl78.c
  @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tc-rl78.Tpo $(DEPDIR)/tc-rl78.Po
 diff --git a/gas/config/obj-elf.c b/gas/config/obj-elf.c
-index 031fafb..6a4ac56 100644
+index f930dc6..4e0d087 100644
 --- a/gas/config/obj-elf.c
 +++ b/gas/config/obj-elf.c
 @@ -64,6 +64,10 @@
@@ -1582,10 +2295,10 @@ index 031fafb..6a4ac56 100644
  static void obj_elf_type (int);
 diff --git a/gas/config/tc-pru.c b/gas/config/tc-pru.c
 new file mode 100644
-index 0000000..693b30e
+index 0000000..c63151f
 --- /dev/null
 +++ b/gas/config/tc-pru.c
-@@ -0,0 +1,1621 @@
+@@ -0,0 +1,1794 @@
 +/* TI PRU assembler.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -1649,13 +2362,30 @@ index 0000000..693b30e
 +
 +/* Machine-dependent command-line options.  */
 +
++struct pru_opt_s
++{
++  /* -mno-link-relax / -mlink-relax: generate (or not)
++     relocations for linker relaxation.  */
++  bfd_boolean link_relax;
++};
++
++static struct pru_opt_s pru_opt = { TRUE };
++
 +const char *md_shortopts = "r";
 +
++enum options
++{
++  OPTION_LINK_RELAX = OPTION_MD_BASE + 1,
++  OPTION_NO_LINK_RELAX
++};
++
 +struct option md_longopts[] = {
++  { "mlink-relax",  no_argument, NULL, OPTION_LINK_RELAX  },
++  { "mno-link-relax",  no_argument, NULL, OPTION_NO_LINK_RELAX  },
++  { NULL, no_argument, NULL, 0 }
 +};
 +
 +size_t md_longopts_size = sizeof (md_longopts);
-+
 +
 +typedef struct pru_insn_reloc
 +{
@@ -1761,6 +2491,7 @@ index 0000000..693b30e
 +{
 +  return (strprefix (str, "%lo")
 +	  || strprefix (str, "%hi")
++	  || strprefix (str, "%hi_rlz")
 +	  || strprefix (str, "%pmem"));
 +}
 +
@@ -2018,6 +2749,57 @@ index 0000000..693b30e
 +}
 +
 +
++static bfd_boolean
++relaxable_section (asection *sec)
++{
++  return ((sec->flags & SEC_DEBUGGING) == 0
++          && (sec->flags & SEC_CODE) != 0
++          && (sec->flags & SEC_ALLOC) != 0);
++}
++
++/* Does whatever the xtensa port does.  */
++int
++pru_validate_fix_sub (fixS *fix)
++{
++  segT add_symbol_segment, sub_symbol_segment;
++
++  /* The difference of two symbols should be resolved by the assembler when
++     linkrelax is not set.  If the linker may relax the section containing
++     the symbols, then an Xtensa DIFF relocation must be generated so that
++     the linker knows to adjust the difference value.  */
++  if (!linkrelax || fix->fx_addsy == NULL)
++    return 0;
++
++  /* Make sure both symbols are in the same segment, and that segment is
++     "normal" and relaxable.  If the segment is not "normal", then the
++     fix is not valid.  If the segment is not "relaxable", then the fix
++     should have been handled earlier.  */
++  add_symbol_segment = S_GET_SEGMENT (fix->fx_addsy);
++  if (! SEG_NORMAL (add_symbol_segment) ||
++      ! relaxable_section (add_symbol_segment))
++    return 0;
++
++  sub_symbol_segment = S_GET_SEGMENT (fix->fx_subsy);
++  return (sub_symbol_segment == add_symbol_segment);
++}
++
++/* TC_FORCE_RELOCATION hook */
++
++/* If linkrelax is turned on, and the symbol to relocate
++   against is in a relaxable segment, don't compute the value -
++   generate a relocation instead.  */
++int
++pru_force_relocation (fixS *fix)
++{
++  if (linkrelax && fix->fx_addsy
++      && relaxable_section (S_GET_SEGMENT (fix->fx_addsy)))
++    return 1;
++
++  return generic_force_reloc (fix);
++}
++
++
++
 +/** Fixups and overflow checking.  */
 +
 +/* Check a fixup for overflow. */
@@ -2139,6 +2921,9 @@ index 0000000..693b30e
 +void
 +md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
 +{
++  unsigned char *where;
++  valueT value = *valP;
++
 +  /* Assert that the fixup is one we can handle.  */
 +  gas_assert (fixP != NULL && valP != NULL
 +	      && (fixP->fx_r_type == BFD_RELOC_8
@@ -2148,6 +2933,7 @@ index 0000000..693b30e
 +		  || fixP->fx_r_type == BFD_RELOC_PRU_U8
 +		  || fixP->fx_r_type == BFD_RELOC_PRU_U16
 +		  || fixP->fx_r_type == BFD_RELOC_PRU_HI16
++		  || fixP->fx_r_type == BFD_RELOC_PRU_HI16_RLZ
 +		  || fixP->fx_r_type == BFD_RELOC_PRU_LO16
 +		  || fixP->fx_r_type == BFD_RELOC_PRU_U16_PMEMIMM
 +		  || fixP->fx_r_type == BFD_RELOC_PRU_S10_PCREL
@@ -2173,25 +2959,87 @@ index 0000000..693b30e
 +      return;
 +    }
 +
-+  gas_assert (had_errors() || !fixP->fx_subsy);
++  /* gas_assert (had_errors() || !fixP->fx_subsy); */
 +
-+  /* The value passed in valP can be the value of a fully
-+     resolved expression, or it can be the value of a partially
-+     resolved expression.  In the former case, both fixP->fx_addsy
-+     and fixP->fx_subsy are NULL, and fixP->fx_offset == *valP, and
-+     we can fix up the instruction that fixP relates to.
-+     In the latter case, one or both of fixP->fx_addsy and
-+     fixP->fx_subsy are not NULL, and fixP->fx_offset may or may not
-+     equal *valP.  We don't need to check for fixP->fx_subsy being null
-+     because the generic part of the assembler generates an error if
-+     it is not an absolute symbol.  */
-+  if (fixP->fx_addsy != NULL)
-+    /* Partially resolved expression.  */
++  /* In general, fix instructions with immediate
++     constants. But leave hi_rlz for the linker,
++     which is prepared to remove insns. */
++  if (fixP->fx_addsy == (symbolS *) NULL
++      && fixP->fx_r_type != BFD_RELOC_PRU_HI16_RLZ)
++    fixP->fx_done = 1;
++
++  else if (fixP->fx_pcrel)
 +    {
-+      fixP->fx_addnumber = fixP->fx_offset;
-+      fixP->fx_done = 0;
++      segT s = S_GET_SEGMENT (fixP->fx_addsy);
++
++      if (s == seg || s == absolute_section)
++	{
++	  /* Blindly copied from AVR, but I don't understand why
++	     this is needed at all. Fail hard to catch
++	     when this curious code snippet is utilized. */
++          as_bad_where (fixP->fx_file, fixP->fx_line, _("unexpected PC relative expression"));
++	  value += S_GET_VALUE (fixP->fx_addsy);
++	  fixP->fx_done = 1;
++	}
 +    }
-+  else
++  else if (linkrelax && fixP->fx_subsy)
++    {
++      /* For a subtraction relocation expression, generate one
++         of the DIFF relocs, with the value being the difference.
++         Note that a sym1 - sym2 expression is adjusted into a
++         section_start_sym + sym4_offset_from_section_start - sym1
++         expression. fixP->fx_addsy holds the section start symbol,
++         fixP->fx_offset holds sym2's offset, and fixP->fx_subsy
++         holds sym1. Calculate the current difference and write value,
++         but leave fx_offset as is - during relaxation,
++         fx_offset - value gives sym1's value.  */
++
++       switch (fixP->fx_r_type)
++         {
++           case BFD_RELOC_8:
++             fixP->fx_r_type = BFD_RELOC_PRU_DIFF8;
++             break;
++           case BFD_RELOC_16:
++             fixP->fx_r_type = BFD_RELOC_PRU_DIFF16;
++             break;
++           case BFD_RELOC_32:
++             fixP->fx_r_type = BFD_RELOC_PRU_DIFF32;
++             break;
++           default:
++             as_bad_where (fixP->fx_file, fixP->fx_line, _("expression too complex"));
++             break;
++         }
++
++      value = S_GET_VALUE (fixP->fx_addsy) +
++          fixP->fx_offset - S_GET_VALUE (fixP->fx_subsy);
++      *valP = value;
++
++      fixP->fx_subsy = NULL;
++  }
++  /* We don't actually support subtracting a symbol.  */
++  if (fixP->fx_subsy != (symbolS *) NULL)
++    as_bad_where (fixP->fx_file, fixP->fx_line, _("expression too complex"));
++
++  /* For the DIFF relocs, write the value into the object file while still
++     keeping fx_done FALSE, as both the difference (recorded in the object file)
++     and the sym offset (part of fixP) are needed at link relax time.  */
++  where = (unsigned char *) fixP->fx_frag->fr_literal + fixP->fx_where;
++  switch (fixP->fx_r_type)
++    {
++    case BFD_RELOC_PRU_DIFF8:
++      *where = value;
++      break;
++    case BFD_RELOC_PRU_DIFF16:
++      bfd_putl16 ((bfd_vma) value, where);
++      break;
++    case BFD_RELOC_PRU_DIFF32:
++      bfd_putl32 ((bfd_vma) value, where);
++      break;
++    default:
++      break;
++    }
++
++  if (fixP->fx_done)
 +    /* Fully resolved fixup.  */
 +    {
 +      reloc_howto_type *howto
@@ -2202,17 +3050,17 @@ index 0000000..693b30e
 +		      _("relocation is not supported"));
 +      else
 +	{
-+	  valueT fixup = *valP;
-+	  valueT value;
++	  valueT fixup = value;
++	  valueT insn;
 +	  char *buf;
 +
 +	  /* Get the instruction or data to be fixed up.  */
 +	  buf = fixP->fx_frag->fr_literal + fixP->fx_where;
-+	  value = md_chars_to_number (buf, fixP->fx_size);
++	  insn = md_chars_to_number (buf, fixP->fx_size);
 +
 +	  /* Check for overflow, emitting a diagnostic if necessary.  */
 +	  if (pru_check_overflow (fixup, howto))
-+	    pru_diagnose_overflow (fixup, howto, fixP, value);
++	    pru_diagnose_overflow (fixup, howto, fixP, insn);
 +
 +	  /* Apply the right shift.  */
 +	  fixup = ((signed)fixup) >> howto->rightshift;
@@ -2221,6 +3069,7 @@ index 0000000..693b30e
 +	  switch (fixP->fx_r_type)
 +	    {
 +	    case BFD_RELOC_PRU_HI16:
++	    case BFD_RELOC_PRU_HI16_RLZ:
 +	      fixup = (fixup >> 16) & 0xFFFF;
 +	      break;
 +	    case BFD_RELOC_PRU_LO16:
@@ -2237,10 +3086,10 @@ index 0000000..693b30e
 +	  /* Fix up the instruction. Non-contiguous bitfields need
 +	     special handling. */
 +	  if (fixP->fx_r_type == BFD_RELOC_PRU_S10_PCREL)
-+	    SET_BROFF_URAW (value, fixup);
++	    SET_BROFF_URAW (insn, fixup);
 +	  else
-+	    value = (value & ~howto->dst_mask) | (fixup << howto->bitpos);
-+	  md_number_to_chars (buf, value, fixP->fx_size);
++	    insn = (insn & ~howto->dst_mask) | (fixup << howto->bitpos);
++	  md_number_to_chars (buf, insn, fixP->fx_size);
 +	}
 +
 +      fixP->fx_done = 1;
@@ -2267,15 +3116,17 @@ index 0000000..693b30e
 +{
 +  const char *string;
 +  bfd_reloc_code_real_type reloc_type;
++  bfd_reloc_code_real_type reloc_type_norelax;
 +};
 +
 +/* This table is sorted so that prefix strings are listed after the longer
 +   strings that include them. */
 +
 +struct pru_special_relocS pru_special_reloc[] = {
-+  {"%hi", BFD_RELOC_PRU_HI16},
-+  {"%lo", BFD_RELOC_PRU_LO16},
-+  {"%pmem", BFD_RELOC_PRU_U16_PMEMIMM},
++  {"%hi_rlz", BFD_RELOC_PRU_HI16_RLZ,	  BFD_RELOC_PRU_HI16},
++  {"%hi",     BFD_RELOC_PRU_HI16,	  BFD_RELOC_PRU_HI16},
++  {"%lo",     BFD_RELOC_PRU_LO16,	  BFD_RELOC_PRU_LO16},
++  {"%pmem",   BFD_RELOC_PRU_U16_PMEMIMM,  BFD_RELOC_PRU_U16_PMEMIMM},
 +};
 +
 +#define PRU_NUM_SPECIAL_RELOCS \
@@ -2342,7 +3193,9 @@ index 0000000..693b30e
 +  for (i = 0; i < pru_num_special_relocs; i++)
 +    if (strstr (exprstr, pru_special_reloc[i].string) != NULL)
 +      {
-+	reloc_type = pru_special_reloc[i].reloc_type;
++	reloc_type = linkrelax ?
++		        pru_special_reloc[i].reloc_type
++		      : pru_special_reloc[i].reloc_type_norelax;
 +	exprstr += strlen (pru_special_reloc[i].string) + 1;
 +
 +	break;
@@ -2817,6 +3670,12 @@ index 0000000..693b30e
 +      /* Hidden option for self-test mode.  */
 +      pru_mode = PRU_MODE_TEST;
 +      break;
++    case OPTION_NO_LINK_RELAX:
++      pru_opt.link_relax = FALSE;
++      break;
++    case OPTION_LINK_RELAX:
++      pru_opt.link_relax = TRUE;
++      break;
 +    default:
 +      return 0;
 +      break;
@@ -2835,7 +3694,12 @@ index 0000000..693b30e
 +void
 +md_show_usage (FILE *stream)
 +{
-+  fprintf (stream, "	    PRU options: none at the moment\n");
++  fprintf (stream,
++       ("PRU options:\n"
++	"  -mlink-relax     generate relocations for linker relaxation (default)\n"
++	"  -mno-link-relax  don't generate relocations for linker relaxation.\n"
++      ));
++
 +}
 +
 +/* This function is called once, at assembler startup time.
@@ -2881,6 +3745,7 @@ index 0000000..693b30e
 +
 +    }
 +
++  linkrelax = pru_opt.link_relax;
 +  /* Initialize the alignment data.  */
 +  pru_current_align_seg = now_seg;
 +  pru_last_label = NULL;
@@ -3082,8 +3947,6 @@ index 0000000..693b30e
 +  /* FIXME - not yet implemented */
 +}
 +
-+/* Under ELF we need to default _GLOBAL_OFFSET_TABLE.
-+   Otherwise we have no need to default values of symbols.  */
 +symbolS *
 +md_undefined_symbol (char *name ATTRIBUTE_UNUSED)
 +{
@@ -3130,7 +3993,7 @@ index 0000000..693b30e
 +
 +  tmp = input_line_pointer = skip_space (input_line_pointer);
 +
-+  if (nbytes == 4)
++  if (nbytes == 4 || nbytes == 2)
 +    {
 +      const char *pmem_str = "%pmem";
 +      int len = strlen (pmem_str);
@@ -3207,12 +4070,35 @@ index 0000000..693b30e
 +{
 +  cfi_add_CFA_def_cfa (28, 0);
 +}
++
++bfd_boolean
++pru_allow_local_subtract (expressionS * left,
++			     expressionS * right,
++			     segT section)
++{
++  /* If we are not in relaxation mode, subtraction is OK.  */
++  if (!linkrelax)
++    return TRUE;
++
++  /* If the symbols are not in a code section then they are OK.  */
++  if ((section->flags & SEC_CODE) == 0)
++    return TRUE;
++
++  if (left->X_add_symbol == right->X_add_symbol)
++    return TRUE;
++
++  /* We have to assume that there may be instructions between the
++     two symbols and that relaxation may increase the distance between
++     them.  */
++  return FALSE;
++}
++
 diff --git a/gas/config/tc-pru.h b/gas/config/tc-pru.h
 new file mode 100644
-index 0000000..f4c4121
+index 0000000..2f67634
 --- /dev/null
 +++ b/gas/config/tc-pru.h
-@@ -0,0 +1,91 @@
+@@ -0,0 +1,157 @@
 +/* Definitions for TI PRU assembler.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -3294,6 +4180,67 @@ index 0000000..f4c4121
 +				unsigned int nbytes, struct expressionS *exp,
 +				const int is_pmem);
 +
++/* If you define this macro, it means that `tc_gen_reloc' may return
++   multiple relocation entries for a single fixup.  In this case, the
++   return value of `tc_gen_reloc' is a pointer to a null terminated
++   array.  */
++#undef RELOC_EXPANSION_POSSIBLE
++
++/* No shared lib support, so we don't need to ensure externally
++   visible symbols can be overridden.  */
++#define EXTERN_FORCE_RELOC 0
++
++/* If defined, this macro allows control over whether fixups for a
++   given section will be processed when the linkrelax variable is
++   set. Define it to zero and handle things in md_apply_fix instead.*/
++#define TC_LINKRELAX_FIXUP(SEG) 0
++
++/* If this macro returns non-zero, it guarantees that a relocation will be emitted
++   even when the value can be resolved locally. Do that if linkrelax is turned on */
++#define TC_FORCE_RELOCATION(fix)	pru_force_relocation (fix)
++#define TC_FORCE_RELOCATION_SUB_SAME(fix, seg) \
++  (! SEG_NORMAL (seg) || pru_force_relocation (fix))
++extern int pru_force_relocation (struct fix *);
++
++/* Do not use PC relative fixups and relocations for
++   anything but real PCREAL relocations. */
++#define TC_FORCE_RELOCATION_SUB_LOCAL(FIX, SEG) \
++  (((FIX)->fx_r_type != BFD_RELOC_PRU_S10_PCREL) \
++   && ((FIX)->fx_r_type != BFD_RELOC_PRU_U8_PCREL))
++
++/* Values passed to md_apply_fix don't include the symbol value.  */
++#define MD_APPLY_SYM_VALUE(FIX) 0
++
++/* We don't want gas to fixup the following memory related relocations.
++   We will need them in case that we want to do linker relaxation.
++   We could in principle keep these fixups in gas when not relaxing.
++   However, there is no serious performance penalty when making the linker
++   make the fixup work.  Check also that fx_addsy is not NULL, in order to make
++   sure that the fixup refers to some sort of label.  */
++#define TC_VALIDATE_FIX(FIXP,SEG,SKIP)                       \
++  if (   (FIXP->fx_r_type == BFD_RELOC_PRU_U8                \
++       || FIXP->fx_r_type == BFD_RELOC_PRU_U16               \
++       || FIXP->fx_r_type == BFD_RELOC_PRU_HI16              \
++       || FIXP->fx_r_type == BFD_RELOC_PRU_HI16_RLZ          \
++       || FIXP->fx_r_type == BFD_RELOC_PRU_LO16              \
++       || FIXP->fx_r_type == BFD_RELOC_PRU_U16_PMEMIMM       \
++       || FIXP->fx_r_type == BFD_RELOC_PRU_S10_PCREL         \
++       || FIXP->fx_r_type == BFD_RELOC_PRU_U8_PCREL          \
++       || FIXP->fx_r_type == BFD_RELOC_PRU_32_PMEM           \
++       || FIXP->fx_r_type == BFD_RELOC_PRU_16_PMEM)          \
++      && FIXP->fx_addsy != NULL				     \
++      && FIXP->fx_subsy == NULL)			     \
++    {							     \
++      symbol_mark_used_in_reloc (FIXP->fx_addsy);	     \
++      goto SKIP;					     \
++    }
++
++/* This macro is evaluated for any fixup with a fx_subsy that
++   fixup_segment cannot reduce to a number.  If the macro returns
++   false an error will be reported. */
++#define TC_VALIDATE_FIX_SUB(fix, seg)   pru_validate_fix_sub (fix)
++extern int pru_validate_fix_sub (struct fix *);
++
 +/* We want .cfi_* pseudo-ops for generating unwind info.  */
 +#define TARGET_USE_CFIPOP 1
 +#define DWARF2_DEFAULT_RETURN_COLUMN 31
@@ -3303,12 +4250,17 @@ index 0000000..f4c4121
 +#define tc_cfi_frame_initial_instructions  pru_frame_initial_instructions
 +extern void pru_frame_initial_instructions (void);
 +
++/* The difference between same-section symbols may be affected by linker
++   relaxation, so do not resolve such expressions in the assembler.  */
++#define md_allow_local_subtract(l,r,s) pru_allow_local_subtract (l, r, s)
++extern bfd_boolean pru_allow_local_subtract (expressionS *, expressionS *, segT);
++
 +#endif /* TC_PRU */
 diff --git a/gas/configure.tgt b/gas/configure.tgt
-index 00fa104..bdbed06 100644
+index 0b490d4..ffba2e0 100644
 --- a/gas/configure.tgt
 +++ b/gas/configure.tgt
-@@ -389,6 +389,8 @@ case ${generic_target} in
+@@ -391,6 +391,8 @@ case ${generic_target} in
    ppc-*-kaos*)				fmt=elf ;;
    ppc-*-lynxos*)			fmt=elf em=lynx ;;
  
@@ -3317,6 +4269,256 @@ index 00fa104..bdbed06 100644
    s390-*-linux-*)			fmt=elf em=linux ;;
    s390-*-tpf*)				fmt=elf ;;
  
+diff --git a/gas/doc/Makefile.am b/gas/doc/Makefile.am
+index 38ab88b..6066333 100644
+--- a/gas/doc/Makefile.am
++++ b/gas/doc/Makefile.am
+@@ -80,6 +80,7 @@ CPU_DOCS = \
+ 	c-pdp11.texi \
+ 	c-pj.texi \
+ 	c-ppc.texi \
++	c-pru.texi \
+ 	c-rl78.texi \
+ 	c-rx.texi \
+ 	c-s390.texi \
+diff --git a/gas/doc/Makefile.in b/gas/doc/Makefile.in
+index 3018dcc..10e0c1d 100644
+--- a/gas/doc/Makefile.in
++++ b/gas/doc/Makefile.in
+@@ -324,6 +324,7 @@ CPU_DOCS = \
+ 	c-pdp11.texi \
+ 	c-pj.texi \
+ 	c-ppc.texi \
++	c-pru.texi \
+ 	c-rl78.texi \
+ 	c-rx.texi \
+ 	c-s390.texi \
+diff --git a/gas/doc/all.texi b/gas/doc/all.texi
+index d2fee14..e2d16f1 100644
+--- a/gas/doc/all.texi
++++ b/gas/doc/all.texi
+@@ -62,6 +62,7 @@
+ @set PDP11
+ @set PJ
+ @set PPC
++@set PRU
+ @set RL78
+ @set RX
+ @set S390
+diff --git a/gas/doc/as.texinfo b/gas/doc/as.texinfo
+index 834e161..6dd1a55 100644
+--- a/gas/doc/as.texinfo
++++ b/gas/doc/as.texinfo
+@@ -487,6 +487,11 @@ gcc(1), ld(1), and the Info entries for @file{binutils} and @file{ld}.
+    [@b{-msolaris}|@b{-mno-solaris}]
+    [@b{-nops=@var{count}}]
+ @end ifset
++@ifset PRU
++
++@emph{Target PRU options:}
++   [@b{-relax}]
++@end ifset
+ @ifset RL78
+ 
+ @emph{Target RL78 options:}
+@@ -1196,6 +1201,24 @@ Generate ``little endian'' format output.
+ @end table
+ @end ifset
+ 
++@ifset PRU
++
++@ifclear man
++@xref{PRU Options}, for the options available when @value{AS} is configured
++for a PRU processor.
++@end ifclear
++
++@ifset man
++@c man begin OPTIONS
++The following options are available when @value{AS} is configured for a
++PRU processor.
++@c man end
++@c man begin INCLUDE
++@include c-pru.texi
++@c ended inside the included file
++@end ifset
++@end ifset
++
+ @ifset M68HC11
+ The following options are available when @value{AS} is configured for the
+ Motorola 68HC11 or 68HC12 series.
+@@ -7420,6 +7443,9 @@ subject, see the hardware manufacturer's manual.
+ @ifset PPC
+ * PPC-Dependent::               PowerPC Dependent Features
+ @end ifset
++@ifset PRU
++* PRU-Dependent::               PRU Dependent Features
++@end ifset
+ @ifset RL78
+ * RL78-Dependent::              RL78 Dependent Features
+ @end ifset
+@@ -7646,6 +7672,10 @@ family.
+ @include c-ppc.texi
+ @end ifset
+ 
++@ifset PRU
++@include c-pru.texi
++@end ifset
++
+ @ifset RL78
+ @include c-rl78.texi
+ @end ifset
+diff --git a/gas/doc/c-pru.texi b/gas/doc/c-pru.texi
+new file mode 100644
+index 0000000..8c60f20
+--- /dev/null
++++ b/gas/doc/c-pru.texi
+@@ -0,0 +1,146 @@
++@c Copyright (C) 2015 Free Software Foundation, Inc.
++@c This is part of the GAS manual.
++@c For copying conditions, see the file as.texinfo.
++@c man end
++@ifset GENERIC
++@page
++@node PRU-Dependent
++@chapter PRU Dependent Features
++@end ifset
++
++@cindex PRU support
++@menu
++* PRU Options::              Options
++* PRU Syntax::               Syntax
++* PRU Relocations::          Relocations
++* PRU Directives::           PRU Machine Directives
++* PRU Opcodes::              Opcodes
++@end menu
++
++@node PRU Options
++@section Options
++@cindex PRU options
++@cindex options for PRU
++
++@c man begin OPTIONS
++@table @gcctabopt
++
++@cindex @code{relax} command line option, PRU
++@item -relax
++For LDI instructions marked with @code{%hi_rlz(expression)}, check
++the upper 16 bits of the @var{expression}. If they are all zeros,
++then delete the instruction.
++
++@cindex @code{no-relax} command line option, PRU
++@item -no-relax
++Do not optimize LDI instructions marked with @code{%hi_rlz}.
++
++@end table
++@c man end
++
++@node PRU Syntax
++@section Syntax
++@menu
++* PRU Chars::                Special Characters
++@end menu
++
++
++@node PRU Chars
++@subsection Special Characters
++
++@cindex line comment character, PRU
++@cindex PRU line comment character
++@cindex line separator character, PRU
++@cindex PRU line separator character
++@samp{#} is the line comment character.
++@samp{;} is the line separator character.
++
++
++@node PRU Relocations
++@section PRU Machine Relocations
++
++@cindex machine relocations, PRU
++@cindex PRU machine relocations
++
++@table @code
++
++@cindex @code{hi} directive, PRU
++@item %hi(@var{expression})
++Extract the upper 16 bits of @var{expression}.
++
++@cindex @code{lo} directive, PRU
++@item %lo(@var{expression})
++Extract the lower 16 bits of @var{expression}.
++
++@cindex @code{hi_rlz} directive, PRU
++@item %hi_rlz(@var{expression})
++Extract the upper 16 bits of @var{expression} and
++mark this instruction for deletion during relaxation
++if the extracted upper 16 bits are zero. This directive
++is used mainly for implementing the LDI32 pseudo
++instruction.
++
++@smallexample
++.macro ldi32 rx, expr
++	ldi	\rx, %lo(\expr)
++	ldi	\rx\().w2, %hi_rlz(\expr)
++.endm
++	
++	ldi32	sp, __stack_top
++@end smallexample
++
++@cindex @code{pmem} directive, PRU
++@item %pmem(@var{expression})
++Convert @var{expression} from byte-address to a
++word-address. In other words, shift right by two.
++
++These relocations are not compatible with the TI CGT tools!
++
++@end table
++
++
++@node PRU Directives
++@section PRU Machine Directives
++
++@cindex machine directives, PRU
++@cindex PRU machine directives
++
++@table @code
++
++@cindex @code{align} directive, PRU
++@item .align @var{expression} [, @var{expression}]
++This is the generic @code{.align} directive, however
++this aligns to a power of two.
++
++@cindex @code{word} directive, PRU
++@item .word @var{expression}
++Create an aligned constant 4 bytes in size.
++
++@cindex @code{dword} directive, PRU
++@item .dword @var{expression}
++Create an aligned constant 8 bytes in size.
++
++@cindex @code{2byte} directive, PRU
++@item .2byte @var{expression}
++Create an unaligned constant 2 bytes in size.
++
++@cindex @code{4byte} directive, PRU
++@item .4byte @var{expression}
++Create an unaligned constant 4 bytes in size.
++
++@cindex @code{8byte} directive, PRU
++@item .8byte @var{expression}
++Create an unaligned constant 8 bytes in size.
++
++@cindex @code{16byte} directive, PRU
++@item .16byte @var{expression}
++Create an unaligned constant 16 bytes in size.
++
++@end table
++
++@node PRU Opcodes
++@section Opcodes
++
++@cindex PRU opcodes
++@cindex opcodes for PRU
++@code{@value{AS}} implements all the standard PRU core V3 opcodes in the original pasm assembler. Older cores are not supported by @code{@value{AS}}.
 diff --git a/gas/po/POTFILES.in b/gas/po/POTFILES.in
 index 509b722..ca9686e 100644
 --- a/gas/po/POTFILES.in
@@ -3406,10 +4608,10 @@ index 0000000..e61e101
 +	set	r1, r2, 12
 diff --git a/gas/testsuite/gas/pru/branch.d b/gas/testsuite/gas/pru/branch.d
 new file mode 100644
-index 0000000..c42612d
+index 0000000..50509d6
 --- /dev/null
 +++ b/gas/testsuite/gas/pru/branch.d
-@@ -0,0 +1,35 @@
+@@ -0,0 +1,56 @@
 +#objdump: -dr --prefix-addresses --show-raw-insn
 +#name: PRU branch
 +
@@ -3424,27 +4626,48 @@ index 0000000..c42612d
 +0+000c <[^>]*> 22ca00f6 	jal	r22, r10.w2
 +0+0010 <[^>]*> 230000f7 	jal	r23, 00000000 <[^>]*>
 +0+0014 <[^>]*> 23ffffb7 	jal	r23.w1, 0003fffc <[^>]*>
-+0+0018 <[^>]*> 6100f712 	qbgt	00000060 <L5>, r23, 0
-+0+001c <[^>]*> 71ff5711 	qbge	00000060 <L5>, r23.b2, 255
-+0+0020 <[^>]*> 4820b610 	qblt	00000060 <L5>, r22.w1, r0.b1
-+0+0024 <[^>]*> 5821000f 	qble	00000060 <L5>, r0.b0, r1.b1
-+0+0028 <[^>]*> 5003410e 	qbeq	00000060 <L5>, r1.b2, ra.b0
-+0+002c <[^>]*> 68f6f50d 	qbne	00000060 <L5>, r21, r22
-+0+0030 <[^>]*> 7800000c 	qba	00000060 <L5>
-+0+0034 <[^>]*> d0edec0b 	qbbs	00000060 <L5>, r12, r13
-+0+0038 <[^>]*> d105ec0a 	qbbs	00000060 <L5>, r12, 5
-+0+003c <[^>]*> c8edec09 	qbbc	00000060 <L5>, r12, r13
-+0+0040 <[^>]*> c905ec08 	qbbc	00000060 <L5>, r12, 5
-+0+0044 <[^>]*> 6700f7f2 	qbgt	0000000c <L2>, r23, 0
-+0+0048 <[^>]*> 77ff57f1 	qbge	0000000c <L2>, r23.b2, 255
-+0+004c <[^>]*> 4e20b6f0 	qblt	0000000c <L2>, r22.w1, r0.b1
-+0+0050 <[^>]*> 5e2100ef 	qble	0000000c <L2>, r0.b0, r1.b1
-+0+0054 <[^>]*> 560341ee 	qbeq	0000000c <L2>, r1.b2, ra.b0
-+0+0058 <[^>]*> 6ef6f5ed 	qbne	0000000c <L2>, r21, r22
-+0+005c <[^>]*> 7e0000ec 	qba	0000000c <L2>
-+0+0060 <[^>]*> d6edeceb 	qbbs	0000000c <L2>, r12, r13
-+0+0064 <[^>]*> d705ecea 	qbbs	0000000c <L2>, r12, 5
-+0+0068 <[^>]*> ceedece9 	qbbc	0000000c <L2>, r12, r13
++0+0018 <[^>]*> 6100f700 	qbgt	00000018 <[^>]*>, r23, 0
++[\t ]*18: R_PRU_S10_PCREL[\t ]*.text\+0x60
++0+001c <[^>]*> 71ff5700 	qbge	0000001c <[^>]*>, r23.b2, 255
++[\t ]*1c: R_PRU_S10_PCREL[\t ]*.text\+0x60
++0+0020 <[^>]*> 4820b600 	qblt	00000020 <[^>]*>, r22.w1, r0.b1
++[\t ]*20: R_PRU_S10_PCREL[\t ]*.text\+0x60
++0+0024 <[^>]*> 58210000 	qble	00000024 <[^>]*>, r0.b0, r1.b1
++[\t ]*24: R_PRU_S10_PCREL[\t ]*.text\+0x60
++0+0028 <[^>]*> 50034100 	qbeq	00000028 <[^>]*>, r1.b2, ra.b0
++[\t ]*28: R_PRU_S10_PCREL[\t ]*.text\+0x60
++0+002c <[^>]*> 68f6f500 	qbne	0000002c <[^>]*>, r21, r22
++[\t ]*2c: R_PRU_S10_PCREL[\t ]*.text\+0x60
++0+0030 <[^>]*> 78000000 	qba	00000030 <[^>]*>
++[\t ]*30: R_PRU_S10_PCREL[\t ]*.text\+0x60
++0+0034 <[^>]*> d0edec00 	qbbs	00000034 <[^>]*>, r12, r13
++[\t ]*34: R_PRU_S10_PCREL[\t ]*.text\+0x60
++0+0038 <[^>]*> d105ec00 	qbbs	00000038 <[^>]*>, r12, 5
++[\t ]*38: R_PRU_S10_PCREL[\t ]*.text\+0x60
++0+003c <[^>]*> c8edec00 	qbbc	0000003c <[^>]*>, r12, r13
++[\t ]*3c: R_PRU_S10_PCREL[\t ]*.text\+0x60
++0+0040 <[^>]*> c905ec00 	qbbc	00000040 <[^>]*>, r12, 5
++[\t ]*40: R_PRU_S10_PCREL[\t ]*.text\+0x60
++0+0044 <[^>]*> 6100f700 	qbgt	00000044 <[^>]*>, r23, 0
++[\t ]*44: R_PRU_S10_PCREL[\t ]*.text\+0xc
++0+0048 <[^>]*> 71ff5700 	qbge	00000048 <[^>]*>, r23.b2, 255
++[\t ]*48: R_PRU_S10_PCREL[\t ]*.text\+0xc
++0+004c <[^>]*> 4820b600 	qblt	0000004c <[^>]*>, r22.w1, r0.b1
++[\t ]*4c: R_PRU_S10_PCREL[\t ]*.text\+0xc
++0+0050 <[^>]*> 58210000 	qble	00000050 <[^>]*>, r0.b0, r1.b1
++[\t ]*50: R_PRU_S10_PCREL[\t ]*.text\+0xc
++0+0054 <[^>]*> 50034100 	qbeq	00000054 <[^>]*>, r1.b2, ra.b0
++[\t ]*54: R_PRU_S10_PCREL[\t ]*.text\+0xc
++0+0058 <[^>]*> 68f6f500 	qbne	00000058 <[^>]*>, r21, r22
++[\t ]*58: R_PRU_S10_PCREL[\t ]*.text\+0xc
++0+005c <[^>]*> 78000000 	qba	0000005c <[^>]*>
++[\t ]*5c: R_PRU_S10_PCREL[\t ]*.text\+0xc
++0+0060 <[^>]*> d0edec00 	qbbs	00000060 <[^>]*>, r12, r13
++[\t ]*60: R_PRU_S10_PCREL[\t ]*.text\+0xc
++0+0064 <[^>]*> d105ec00 	qbbs	00000064 <[^>]*>, r12, 5
++[\t ]*64: R_PRU_S10_PCREL[\t ]*.text\+0xc
++0+0068 <[^>]*> c8edec00 	qbbc	00000068 <[^>]*>, r12, r13
++[\t ]*68: R_PRU_S10_PCREL[\t ]*.text\+0xc
 diff --git a/gas/testsuite/gas/pru/branch.s b/gas/testsuite/gas/pru/branch.s
 new file mode 100644
 index 0000000..ab43c74
@@ -3521,26 +4744,49 @@ index 0000000..1571f74
 +# Extra operands
 +	nop Crapola
 +	add r2, r2, r2, r4
-diff --git a/gas/testsuite/gas/pru/illegal2.l b/gas/testsuite/gas/pru/illegal2.l
+diff --git a/gas/testsuite/gas/pru/ldi.d b/gas/testsuite/gas/pru/ldi.d
 new file mode 100644
-index 0000000..9d448de
+index 0000000..7ec9a70
 --- /dev/null
-+++ b/gas/testsuite/gas/pru/illegal2.l
-@@ -0,0 +1,2 @@
-+.*illegal2.s: Assembler messages:
-+.*illegal2.s:6: Error: overflow in immediate argument
-diff --git a/gas/testsuite/gas/pru/illegal2.s b/gas/testsuite/gas/pru/illegal2.s
-new file mode 100644
-index 0000000..1ef318b
---- /dev/null
-+++ b/gas/testsuite/gas/pru/illegal2.s
-@@ -0,0 +1,6 @@
-+# Source file used to test illegal operands.
++++ b/gas/testsuite/gas/pru/ldi.d
+@@ -0,0 +1,19 @@
++#objdump: -dr --prefix-addresses --show-raw-insn
++#name: PRU ldi
 +
++# Test the load/store operations
++
++.*: +file format elf32-pru
++
++Disassembly of section .text:
++0+0000 <[^>]*> 245678f0 	ldi	r16, 22136
++0+0004 <[^>]*> 241234f0 	ldi	r16, 4660
++0+0008 <[^>]*> 241234f0 	ldi	r16, 4660
++0+000c <[^>]*> 240000f0 	ldi	r16, 0
++[\t ]*c: R_PRU_U16_PMEMIMM	.text
++0+0010 <[^>]*> 240000f0 	ldi	r16, 0
++[\t ]*10: R_PRU_LO16	var1
++0+0014 <[^>]*> 240000f0 	ldi	r16, 0
++[\t ]*14: R_PRU_HI16	var1
++0+0018 <[^>]*> 240000f0 	ldi	r16, 0
++[\t ]*18: R_PRU_HI16_RLZ	var1
+diff --git a/gas/testsuite/gas/pru/ldi.s b/gas/testsuite/gas/pru/ldi.s
+new file mode 100644
+index 0000000..4f43294
+--- /dev/null
++++ b/gas/testsuite/gas/pru/ldi.s
+@@ -0,0 +1,12 @@
++# Source file used to test the LDI instructions.
++
++	.extern var1
 +foo:
-+# Negative loop termination point
-+	nop
-+	loop foo, r20
++	# immediate load
++	ldi	r16, %lo(0x12345678)
++	ldi	r16, %hi(0x12345678)
++	ldi	r16, 0x1234
++	ldi	r16, %pmem(foo)
++	ldi	r16, %lo(var1)
++	ldi	r16, %hi(var1)
++	ldi	r16, %hi_rlz(var1)
 diff --git a/gas/testsuite/gas/pru/ldst.d b/gas/testsuite/gas/pru/ldst.d
 new file mode 100644
 index 0000000..7e44b6d
@@ -3625,10 +4871,10 @@ index 0000000..96fdd15
 +	sbco	r10, 31, 5, 8
 diff --git a/gas/testsuite/gas/pru/loop.d b/gas/testsuite/gas/pru/loop.d
 new file mode 100644
-index 0000000..42c941b
+index 0000000..b6d4a8a
 --- /dev/null
 +++ b/gas/testsuite/gas/pru/loop.d
-@@ -0,0 +1,13 @@
+@@ -0,0 +1,15 @@
 +#objdump: -dr --prefix-addresses --show-raw-insn
 +#name: PRU loop
 +
@@ -3637,8 +4883,10 @@ index 0000000..42c941b
 +.*: +file format elf32-pru
 +
 +Disassembly of section .text:
-+0+0000 <[^>]*> 304a0005 	loop	00000014 <[^>]*>, r10.b2
-+0+0004 <[^>]*> 30eb8004 	iloop	00000014 <[^>]*>, r11
++0+0000 <[^>]*> 304a0000 	loop	00000000 <[^>]*>, r10.b2
++[\t ]*0: R_PRU_U8_PCREL[\t ]*.text\+0x14
++0+0004 <[^>]*> 30eb8000 	iloop	00000004 <[^>]*>, r11
++[\t ]*4: R_PRU_U8_PCREL[\t ]*.text\+0x14
 +0+0008 <[^>]*> 00e0e0e0 	add	r0, r0, r0
 +0+000c <[^>]*> 00e0e0e0 	add	r0, r0, r0
 +0+0010 <[^>]*> 00e0e0e0 	add	r0, r0, r0
@@ -3690,10 +4938,10 @@ index 0000000..cfe4d88
 +	slp	0
 diff --git a/gas/testsuite/gas/pru/pru.exp b/gas/testsuite/gas/pru/pru.exp
 new file mode 100644
-index 0000000..f98ad08
+index 0000000..a8b7aeb
 --- /dev/null
 +++ b/gas/testsuite/gas/pru/pru.exp
-@@ -0,0 +1,27 @@
+@@ -0,0 +1,26 @@
 +# Copyright (C) 2014 Free Software Foundation, Inc.
 +
 +# This program is free software; you can redistribute it and/or modify
@@ -3718,7 +4966,6 @@ index 0000000..f98ad08
 +    run_dump_tests [lsort [glob -nocomplain $srcdir/$subdir/*.d]]
 +    
 +    run_list_test "illegal" ""
-+    run_list_test "illegal2" ""
 +    run_list_test "warn_reglabel" ""
 +}
 diff --git a/gas/testsuite/gas/pru/pseudo.d b/gas/testsuite/gas/pru/pseudo.d
@@ -3884,10 +5131,10 @@ index 0000000..875e1ca
 +	sxchg	253, r10.b2, 124
 +	sxchg	85, r12.b0, 85
 diff --git a/gdb/Makefile.in b/gdb/Makefile.in
-index d5ca2ee..7c5135c 100644
+index c07baad..a371929 100644
 --- a/gdb/Makefile.in
 +++ b/gdb/Makefile.in
-@@ -693,7 +693,7 @@ ALL_TARGET_OBS = \
+@@ -694,7 +694,7 @@ ALL_TARGET_OBS = \
  	nios2-tdep.o nios2-linux-tdep.o \
  	nto-tdep.o \
  	ppc-linux-tdep.o ppcfbsd-tdep.o ppcnbsd-tdep.o ppcobsd-tdep.o  \
@@ -3896,8 +5143,8 @@ index d5ca2ee..7c5135c 100644
  	rs6000-aix-tdep.o rs6000-tdep.o solib-aix.o ppc-ravenscar-thread.o \
  	rs6000-lynx178-tdep.o \
  	rx-tdep.o \
-@@ -968,7 +968,7 @@ dicos-tdep.h filesystem.h gcore.h gdb_wchar.h hppabsd-tdep.h \
- i386-darwin-tdep.h i386-nat.h linux-record.h moxie-tdep.h nios2-tdep.h \
+@@ -969,7 +969,7 @@ dicos-tdep.h filesystem.h gcore.h gdb_wchar.h hppabsd-tdep.h \
+ i386-darwin-tdep.h x86-nat.h linux-record.h moxie-tdep.h nios2-tdep.h \
  ft32-tdep.h \
  osdata.h procfs.h python/py-event.h python/py-events.h python/py-stopevent.h \
 -python/python-internal.h python/python.h ravenscar-thread.h record.h \
@@ -3905,7 +5152,7 @@ index d5ca2ee..7c5135c 100644
  record-full.h solib-aix.h \
  solib-darwin.h solib-spu.h windows-nat.h xcoffread.h \
  gnulib/import/extra/snippet/arg-nonnull.h gnulib/import/extra/snippet/c++defs.h \
-@@ -1719,6 +1719,7 @@ ALLDEPFILES = \
+@@ -1723,6 +1723,7 @@ ALLDEPFILES = \
  	ppcnbsd-nat.c ppcnbsd-tdep.c \
  	ppcobsd-nat.c ppcobsd-tdep.c \
  	procfs.c \
@@ -3914,10 +5161,10 @@ index d5ca2ee..7c5135c 100644
  	remote-m32r-sdi.c remote-mips.c \
  	remote-sim.c \
 diff --git a/gdb/configure.tgt b/gdb/configure.tgt
-index 33d4cfc..6564b0d 100644
+index 6e50dd2..a583c49 100644
 --- a/gdb/configure.tgt
 +++ b/gdb/configure.tgt
-@@ -453,6 +453,12 @@ powerpc*-*-*)
+@@ -457,6 +457,12 @@ powerpc*-*-*)
  	fi
  	;;
  
@@ -3929,7 +5176,7 @@ index 33d4cfc..6564b0d 100644
 +
  s390*-*-linux*)
  	# Target: S390 running Linux
- 	gdb_target_obs="s390-linux-tdep.o solib-svr4.o linux-tdep.o"
+ 	gdb_target_obs="s390-linux-tdep.o solib-svr4.o linux-tdep.o \
 diff --git a/gdb/features/Makefile b/gdb/features/Makefile
 index 74006e2..a2af304 100644
 --- a/gdb/features/Makefile
@@ -5003,7 +6250,7 @@ index 0000000..ca7ba62
 +
 +#endif /* PRU_TDEP_H */
 diff --git a/include/dis-asm.h b/include/dis-asm.h
-index ebc2604..08f1051 100644
+index f82149b..3b0af7d 100644
 --- a/include/dis-asm.h
 +++ b/include/dis-asm.h
 @@ -288,6 +288,7 @@ extern int print_insn_ns32k		(bfd_vma, disassemble_info *);
@@ -5015,7 +6262,7 @@ index ebc2604..08f1051 100644
  extern int print_insn_s390		(bfd_vma, disassemble_info *);
  extern int print_insn_sh		(bfd_vma, disassemble_info *);
 diff --git a/include/elf/common.h b/include/elf/common.h
-index fbf1f3c..eef7fe8 100644
+index 5c20c5e..5b5bf89 100644
 --- a/include/elf/common.h
 +++ b/include/elf/common.h
 @@ -246,7 +246,7 @@
@@ -5029,10 +6276,10 @@ index fbf1f3c..eef7fe8 100644
  #define EM_res147	147	/* Reserved */
 diff --git a/include/elf/pru.h b/include/elf/pru.h
 new file mode 100644
-index 0000000..7418ef8
+index 0000000..2dc51c6
 --- /dev/null
 +++ b/include/elf/pru.h
-@@ -0,0 +1,54 @@
+@@ -0,0 +1,58 @@
 +/* TI PRU ELF support for BFD.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -5072,16 +6319,20 @@ index 0000000..7418ef8
 +  RELOC_NUMBER (R_PRU_U8,	    1)
 +  RELOC_NUMBER (R_PRU_U16,	    2)
 +  RELOC_NUMBER (R_PRU_HI16,	    3)
-+  RELOC_NUMBER (R_PRU_LO16,	    4)
-+  RELOC_NUMBER (R_PRU_U16_PMEMIMM,  5)
-+  RELOC_NUMBER (R_PRU_S10_PCREL,    6)
-+  RELOC_NUMBER (R_PRU_U8_PCREL,	    7)
-+  RELOC_NUMBER (R_PRU_32_PMEM,	    8)
-+  RELOC_NUMBER (R_PRU_16_PMEM,	    9)
-+  RELOC_NUMBER (R_PRU_BFD_RELOC_32, 10)
-+  RELOC_NUMBER (R_PRU_BFD_RELOC_16, 11)
-+  RELOC_NUMBER (R_PRU_BFD_RELOC_8,  12)
-+  RELOC_NUMBER (R_PRU_ILLEGAL,	    13)
++  RELOC_NUMBER (R_PRU_HI16_RLZ,	    4)
++  RELOC_NUMBER (R_PRU_LO16,	    5)
++  RELOC_NUMBER (R_PRU_U16_PMEMIMM,  6)
++  RELOC_NUMBER (R_PRU_S10_PCREL,    7)
++  RELOC_NUMBER (R_PRU_U8_PCREL,	    8)
++  RELOC_NUMBER (R_PRU_32_PMEM,	    9)
++  RELOC_NUMBER (R_PRU_16_PMEM,	    10)
++  RELOC_NUMBER (R_PRU_DIFF8,	    11)
++  RELOC_NUMBER (R_PRU_DIFF16,	    12)
++  RELOC_NUMBER (R_PRU_DIFF32,	    13)
++  RELOC_NUMBER (R_PRU_BFD_RELOC_32, 14)
++  RELOC_NUMBER (R_PRU_BFD_RELOC_16, 15)
++  RELOC_NUMBER (R_PRU_BFD_RELOC_8,  16)
++  RELOC_NUMBER (R_PRU_ILLEGAL,	    17)
 +END_RELOC_NUMBERS (R_PRU_maxext)
 +
 +/* Processor-specific section flags.  */
@@ -5499,42 +6750,44 @@ index 0000000..f601d14
 +
 +#endif /* _PRU_H */
 diff --git a/ld/Makefile.am b/ld/Makefile.am
-index df88d6a..aa1bf29 100644
+index 0b3b049..a7e378b 100644
 --- a/ld/Makefile.am
 +++ b/ld/Makefile.am
-@@ -1643,6 +1643,11 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
+@@ -1676,6 +1676,12 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
  eppcpe.c: $(srcdir)/emulparams/ppcpe.sh \
    $(srcdir)/emultempl/pe.em $(srcdir)/scripttempl/ppcpe.sc ${GEN_DEPENDS}
  
 +epruelf.c: $(srcdir)/emulparams/pruelf.sh \
 +  $(srcdir)/emultempl/elf32.em \
-+  $(ELF_DEPS) $(srcdir)/scripttempl/pru.sc ${GEN_DEPENDS}
++  $(ELF_DEPS) $(srcdir)/scripttempl/pru.sc \
++  $(srcdir)/emultempl/pruelf.em ${GEN_DEPENDS}
 +	${GENSCRIPTS} pruelf "$(tdir_pruelf)"
 +
  eriscix.c: $(srcdir)/emulparams/riscix.sh \
    $(srcdir)/emultempl/generic.em $(srcdir)/scripttempl/aout.sc ${GEN_DEPENDS}
  
 diff --git a/ld/Makefile.in b/ld/Makefile.in
-index a29690b..0533799 100644
+index ed98f87..ce49a23 100644
 --- a/ld/Makefile.in
 +++ b/ld/Makefile.in
-@@ -3142,6 +3142,11 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
+@@ -3182,6 +3182,12 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
  eppcpe.c: $(srcdir)/emulparams/ppcpe.sh \
    $(srcdir)/emultempl/pe.em $(srcdir)/scripttempl/ppcpe.sc ${GEN_DEPENDS}
  
 +epruelf.c: $(srcdir)/emulparams/pruelf.sh \
 +  $(srcdir)/emultempl/elf32.em \
-+  $(ELF_DEPS) $(srcdir)/scripttempl/pru.sc ${GEN_DEPENDS}
++  $(ELF_DEPS) $(srcdir)/scripttempl/pru.sc \
++  $(srcdir)/emultempl/pruelf.em ${GEN_DEPENDS}
 +	${GENSCRIPTS} pruelf "$(tdir_pruelf)"
 +
  eriscix.c: $(srcdir)/emulparams/riscix.sh \
    $(srcdir)/emultempl/generic.em $(srcdir)/scripttempl/aout.sc ${GEN_DEPENDS}
  
 diff --git a/ld/configure.tgt b/ld/configure.tgt
-index 90fb887..19bf6d3 100644
+index 27742c0..22205e4 100644
 --- a/ld/configure.tgt
 +++ b/ld/configure.tgt
-@@ -632,6 +632,7 @@ powerpc-*-aix*)		targ_emul=aixppc ;;
+@@ -639,6 +639,7 @@ powerpc-*-aix*)		targ_emul=aixppc ;;
  powerpc-*-beos*)	targ_emul=aixppc ;;
  powerpc-*-windiss*)	targ_emul=elf32ppcwindiss ;;
  powerpc-*-lynxos*)	targ_emul=ppclynx ;;
@@ -5544,10 +6797,10 @@ index 90fb887..19bf6d3 100644
  			;;
 diff --git a/ld/emulparams/pruelf.sh b/ld/emulparams/pruelf.sh
 new file mode 100644
-index 0000000..8cfd10f
+index 0000000..02debba
 --- /dev/null
 +++ b/ld/emulparams/pruelf.sh
-@@ -0,0 +1,18 @@
+@@ -0,0 +1,19 @@
 +SCRIPT_NAME=elf
 +TEMPLATE_NAME=elf32
 +OUTPUT_FORMAT="elf32-pru"
@@ -5566,6 +6819,63 @@ index 0000000..8cfd10f
 +DATA_LENGTH=8K
 +
 +ENTRY=_start
++EXTRA_EM_FILE=pruelf
+diff --git a/ld/emultempl/pruelf.em b/ld/emultempl/pruelf.em
+new file mode 100644
+index 0000000..dd3ec76
+--- /dev/null
++++ b/ld/emultempl/pruelf.em
+@@ -0,0 +1,50 @@
++# This shell script emits a C file. -*- C -*-
++#   Copyright (C) 2016 Free Software Foundation, Inc.
++#
++# This file is part of the GNU Binutils.
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write to the Free Software
++# Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
++# MA 02110-1301, USA.
++#
++
++# This file is sourced from elf32.em, and defines extra pru-elf
++# specific routines.
++#
++fragment <<EOF
++
++#include "ldctor.h"
++
++/* This is called after the sections have been attached to output
++   sections, but before any sizes or addresses have been set.  */
++
++static void
++pruelf_before_allocation (void)
++{
++  /* Call the default first.  */
++  gld${EMULATION_NAME}_before_allocation ();
++
++  /* Enable relaxation by default if the "--no-relax" option was not
++     specified.  This is done here instead of in the before_parse hook
++     because there is a check in main() to prohibit use of --relax and
++     -r together.  */
++  if (RELAXATION_DISABLED_BY_DEFAULT)
++    ENABLE_RELAXATION;
++}
++
++EOF
++
++# Put these extra pru-elf routines in ld_${EMULATION_NAME}_emulation
++#
++LDEMUL_BEFORE_ALLOCATION=pruelf_before_allocation
 diff --git a/ld/scripttempl/pru.sc b/ld/scripttempl/pru.sc
 new file mode 100644
 index 0000000..db2516a
@@ -5785,6 +7095,632 @@ index 0000000..db2516a
 +cat <<EOF
 +}
 +EOF
+diff --git a/ld/testsuite/ld-pru/emit-relocs-1.d b/ld/testsuite/ld-pru/emit-relocs-1.d
+new file mode 100644
+index 0000000..414234f
+--- /dev/null
++++ b/ld/testsuite/ld-pru/emit-relocs-1.d
+@@ -0,0 +1,37 @@
++#name: Emit relocs 1
++#source: emit-relocs-1a.s
++#source: emit-relocs-1b.s
++#ld: -q -T emit-relocs-1.ld
++#objdump: -sr
++
++.*:     file format .*
++
++RELOCATION RECORDS FOR \[\.data\]:
++OFFSET   TYPE              VALUE *
++00000000 R_PRU_BFD_RELOC32  \.data
++00000004 R_PRU_BFD_RELOC32  \.data\+0x00001000
++00000008 R_PRU_BFD_RELOC32  \.merge1\+0x00000002
++0000000c R_PRU_BFD_RELOC32  \.merge2
++00000010 R_PRU_BFD_RELOC32  \.merge3
++00000014 R_PRU_BFD_RELOC32  \.merge3\+0x00000004
++00000020 R_PRU_BFD_RELOC32  \.data\+0x00000020
++00000024 R_PRU_BFD_RELOC32  \.data\+0x00001020
++00000028 R_PRU_BFD_RELOC32  \.merge1
++0000002c R_PRU_BFD_RELOC32  \.merge2\+0x00000002
++00000030 R_PRU_BFD_RELOC32  \.merge3\+0x00000008
++00000034 R_PRU_BFD_RELOC32  \.merge3\+0x00000004
++
++
++Contents of section \.text:
++ 80000 e0e0e012 00000000 00000000 00000000  .*
++Contents of section \.merge1:
++ 80400 666c7574 74657200                    flutter.*
++Contents of section \.merge2:
++ 80800 74617374 696e6700                    tasting.*
++Contents of section \.merge3:
++ 80c00 00010000 00020000 00030000           .*
++Contents of section \.data:
++ 81000 00100800 00200800 02040800 00080800  .*
++ 81010 000c0800 040c0800 00000000 00000000  .*
++ 81020 20100800 20200800 00040800 02080800  .*
++ 81030 080c0800 040c0800 .*
+diff --git a/ld/testsuite/ld-pru/emit-relocs-1.ld b/ld/testsuite/ld-pru/emit-relocs-1.ld
+new file mode 100644
+index 0000000..574030b
+--- /dev/null
++++ b/ld/testsuite/ld-pru/emit-relocs-1.ld
+@@ -0,0 +1,20 @@
++ENTRY(__start)
++SECTIONS
++{
++  . = 0x80000;
++  .text : { *(.text) }
++
++  . = ALIGN (0x400);
++  .merge1 : { *(.merge1) }
++
++  . = ALIGN (0x400);
++  .merge2 : { *(.merge2) }
++
++  . = ALIGN (0x400);
++  .merge3 : { *(.merge3) }
++
++  . = ALIGN (0x400);
++  .data : { *(.data) }
++
++  /DISCARD/ : { *(*) }
++}
+diff --git a/ld/testsuite/ld-pru/emit-relocs-1a.s b/ld/testsuite/ld-pru/emit-relocs-1a.s
+new file mode 100644
+index 0000000..89bbf99
+--- /dev/null
++++ b/ld/testsuite/ld-pru/emit-relocs-1a.s
+@@ -0,0 +1,24 @@
++	.text
++	.align	4
++	.globl	__start
++__start:
++	nop
++
++	.section .merge1,"aMS",@progbits,1
++A:	.string	"utter"
++
++	.section .merge2,"aMS",@progbits,1
++B:	.string "tasting"
++
++	.section .merge3,"aM",@progbits,4
++C:	.4byte	0x100
++D:	.4byte	0x200
++
++	.data
++	.align	4
++E:	.4byte	E
++	.4byte	E + 0x1000
++	.4byte	A
++	.4byte	B
++	.4byte	C
++	.4byte	D
+diff --git a/ld/testsuite/ld-pru/emit-relocs-1b.s b/ld/testsuite/ld-pru/emit-relocs-1b.s
+new file mode 100644
+index 0000000..82229c1
+--- /dev/null
++++ b/ld/testsuite/ld-pru/emit-relocs-1b.s
+@@ -0,0 +1,18 @@
++	.section .merge1,"aMS",@progbits,1
++A:	.string	"flutter"
++
++	.section .merge2,"aMS",@progbits,1
++B:	.string "sting"
++
++	.section .merge3,"aM",@progbits,4
++C:	.4byte	0x300
++D:	.4byte	0x200
++
++	.data
++	.align	4
++E:	.4byte	E
++	.4byte	E + 0x1000
++	.4byte	A
++	.4byte	B
++	.4byte	C
++	.4byte	D
+diff --git a/ld/testsuite/ld-pru/hilo16.d b/ld/testsuite/ld-pru/hilo16.d
+new file mode 100644
+index 0000000..ea52a8d
+--- /dev/null
++++ b/ld/testsuite/ld-pru/hilo16.d
+@@ -0,0 +1,13 @@
++#name: PRU R_PRU_HI16,LO16,HI16_RLZ
++#source: hilo16.s
++#source: hilo16_symbol.s
++#ld:
++#objdump: -dr --prefix-addresses
++
++# Test the %hi, %lo and %hi_rlz relocations
++.*: +file format elf32-pru
++
++Disassembly of section .text:
++[0-9a-f]+ <[^>]*> ldi	r16, 57005
++[0-9a-f]+ <[^>]*> ldi	r16, 57005
++[0-9a-f]+ <[^>]*> ldi	r16, 48879
+diff --git a/ld/testsuite/ld-pru/hilo16.s b/ld/testsuite/ld-pru/hilo16.s
+new file mode 100644
+index 0000000..078ac40
+--- /dev/null
++++ b/ld/testsuite/ld-pru/hilo16.s
+@@ -0,0 +1,8 @@
++# Test the %hi, lo and %hi_rlz relocations
++
++.text
++.global __start
++__start:
++	ldi	r16, %hi(long_symbol)
++	ldi	r16, %hi_rlz(long_symbol)
++	ldi	r16, %lo(long_symbol)
+diff --git a/ld/testsuite/ld-pru/hilo16_symbol.s b/ld/testsuite/ld-pru/hilo16_symbol.s
+new file mode 100644
+index 0000000..88fdddc
+--- /dev/null
++++ b/ld/testsuite/ld-pru/hilo16_symbol.s
+@@ -0,0 +1,3 @@
++.global long_symbol
++.set long_symbol, 0xDEADBEEF
++
+diff --git a/ld/testsuite/ld-pru/norelax_hi_rlz-data.d b/ld/testsuite/ld-pru/norelax_hi_rlz-data.d
+new file mode 100644
+index 0000000..7ab5c04
+--- /dev/null
++++ b/ld/testsuite/ld-pru/norelax_hi_rlz-data.d
+@@ -0,0 +1,18 @@
++#name: PRU HI16_RLZ disabled-relaxation data
++#source: relax_hi_rlz.s
++#source: relax_hi_rlz_symbol.s
++#as: --mlink-relax
++#ld: --no-relax
++#objdump: -s
++
++# Note: default linker script should put a guard at DRAM address 0
++
++.*: +file format elf32-pru
++
++Contents of section .text:
++ [0-9a-f]+ f0adde24 0900f630 f0adde24 f0000024  ................
++ [0-9a-f]+ f0000024 f0010024 f0acde24 f0341224  ................
++ [0-9a-f]+ f0000024 f00b0024 f700007e ........  ................
++Contents of section .data:
++ 0000 00000000 2c000020 28000000 0b002800  ................
++ 0010 28aa0000                             ................
+diff --git a/ld/testsuite/ld-pru/norelax_hi_rlz-dis.d b/ld/testsuite/ld-pru/norelax_hi_rlz-dis.d
+new file mode 100644
+index 0000000..fca3738
+--- /dev/null
++++ b/ld/testsuite/ld-pru/norelax_hi_rlz-dis.d
+@@ -0,0 +1,22 @@
++#name: PRU HI16_RLZ disabled-relaxation
++#source: relax_hi_rlz.s
++#source: relax_hi_rlz_symbol.s
++#as: --mlink-relax
++#ld: --no-relax
++#objdump: -dr --prefix-addresses
++
++# Test the %hi_rlz relaxation
++.*: +file format elf32-pru
++
++Disassembly of section .text:
++..000000 <[^>]*> ldi	r16, 57005
++..000004 <[^>]*> loop	..000028 <__end_loop>, r22
++..000008 <[^>]*> ldi	r16, 57005
++..00000c <[^>]*> ldi	r16, 0
++..000010 <[^>]*> ldi	r16, 0
++..000014 <[^>]*> ldi	r16, 1
++..000018 <[^>]*> ldi	r16, 57004
++..00001c <[^>]*> ldi	r16, 4660
++..000020 <[^>]*> ldi	r16, 0
++..000024 <[^>]*> ldi	r16, 11
++..000028 <[^>]*> qba	..000004 <__intermediate>
+diff --git a/ld/testsuite/ld-pru/pcrel_s10.d b/ld/testsuite/ld-pru/pcrel_s10.d
+new file mode 100644
+index 0000000..95602c5
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_s10.d
+@@ -0,0 +1,18 @@
++#name: PRU R_PRU_S10_PCREL
++#source: pcrel_s10.s
++#source: pcrel_s10_label.s
++#ld:
++#objdump: -dr --prefix-addresses
++
++# Test the relative quick branch relocations.
++.*: +file format elf32-pru
++
++Disassembly of section .text:
++[0-9a-f]+ <[^>]*> qba	[0-9a-f]+ <ext_label>
++[0-9a-f]+ <[^>]*> qba	[0-9a-f]+ <ext_label\+0x10>
++[0-9a-f]+ <[^>]*> nop
++[0-9a-f]+ <[^>]*> nop
++[0-9a-f]+ <[^>]*> nop
++[0-9a-f]+ <[^>]*> nop
++[0-9a-f]+ <[^>]*> nop
++[0-9a-f]+ <[^>]*> nop
+diff --git a/ld/testsuite/ld-pru/pcrel_s10.s b/ld/testsuite/ld-pru/pcrel_s10.s
+new file mode 100644
+index 0000000..07352f8
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_s10.s
+@@ -0,0 +1,8 @@
++# Test for pc-relative relocations
++.text
++.section .init0, "x"
++.global __start
++__start:
++	qba ext_label
++	qba ext_label + 16
++
+diff --git a/ld/testsuite/ld-pru/pcrel_s10_label.s b/ld/testsuite/ld-pru/pcrel_s10_label.s
+new file mode 100644
+index 0000000..3aea34e
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_s10_label.s
+@@ -0,0 +1,9 @@
++.text
++ext_label:
++	nop
++	nop
++	nop
++	nop
++	nop
++	nop
++.global ext_label
+diff --git a/ld/testsuite/ld-pru/pcrel_u8-illegal.d b/ld/testsuite/ld-pru/pcrel_u8-illegal.d
+new file mode 100644
+index 0000000..a885237
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_u8-illegal.d
+@@ -0,0 +1,7 @@
++#name: PRU R_PRU_U8_PCREL illegal
++#source: pcrel_u8-illegal.s
++#source: pcrel_u8_label.s
++#ld:
++#error: [^\n]*: relocation truncated to fit: R_PRU_U8_PCREL against `.init0'
++
++# Check that LOOP cannot reference "prior" labels.
+diff --git a/ld/testsuite/ld-pru/pcrel_u8-illegal.s b/ld/testsuite/ld-pru/pcrel_u8-illegal.s
+new file mode 100644
+index 0000000..13d310b
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_u8-illegal.s
+@@ -0,0 +1,10 @@
++# Test for illegal pc-relative relocations
++.text
++.section .init0, "x"
++.global __start
++__start:
++foo:
++# Negative loop termination point
++        nop
++        loop foo, r20
++
+diff --git a/ld/testsuite/ld-pru/pcrel_u8.d b/ld/testsuite/ld-pru/pcrel_u8.d
+new file mode 100644
+index 0000000..60ff058
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_u8.d
+@@ -0,0 +1,15 @@
++#name: PRU R_PRU_U8_PCREL
++#source: pcrel_u8.s
++#source: pcrel_u8_label.s
++#ld:
++#objdump: -dr --prefix-addresses
++
++# Test the relative quick branch relocations.
++.*: +file format elf32-pru
++
++Disassembly of section .text:
++[0-9a-f]+ <[^>]*> loop	[0-9a-f]+ <end_loop>, 5
++[0-9a-f]+ <[^>]*> nop
++[0-9a-f]+ <[^>]*> nop
++[0-9a-f]+ <[^>]*> nop
++[0-9a-f]+ <[^>]*> nop
+diff --git a/ld/testsuite/ld-pru/pcrel_u8.s b/ld/testsuite/ld-pru/pcrel_u8.s
+new file mode 100644
+index 0000000..2562030
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_u8.s
+@@ -0,0 +1,10 @@
++# Test for pc-relative relocations
++.text
++.section .init0, "x"
++.global __start
++__start:
++	loop end_loop, 5
++	nop
++	nop
++	nop
++
+diff --git a/ld/testsuite/ld-pru/pcrel_u8_label.s b/ld/testsuite/ld-pru/pcrel_u8_label.s
+new file mode 100644
+index 0000000..b716ce5
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_u8_label.s
+@@ -0,0 +1,4 @@
++.text
++end_loop:
++	nop
++.global end_loop
+diff --git a/ld/testsuite/ld-pru/pmem.d b/ld/testsuite/ld-pru/pmem.d
+new file mode 100644
+index 0000000..2bb7c16
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pmem.d
+@@ -0,0 +1,15 @@
++#name: PRU R_PRU_BFD_*_PMEM
++#source: pmem.s
++#source: pmem_symbol.s
++#ld:
++#objdump: -s
++
++# Note: default linker script should put a guard at DRAM address 0
++
++.*: +file format elf32-pru
++
++Contents of section .text:
++ [0-9a-f]+ e0050024 e0070024 05000000 05000600  ................
++ [0-9a-f]+ e0e0e012 e0e0e012                    ........        
++Contents of section .data:
++ 0000 00000000                             ....            
+diff --git a/ld/testsuite/ld-pru/pmem.s b/ld/testsuite/ld-pru/pmem.s
+new file mode 100644
+index 0000000..8c9f3d4
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pmem.s
+@@ -0,0 +1,15 @@
++# Test for PRU pmem relocations
++
++.global byte_sym
++.global short_sym
++.global long_sym
++
++.set byte_sym, 0xFA
++.set short_sym, 0xFACE
++.set long_sym, 0xDEADBEEF
++
++.text
++.global _text_label
++	nop
++_text_label:
++	nop
+diff --git a/ld/testsuite/ld-pru/pmem_symbol.s b/ld/testsuite/ld-pru/pmem_symbol.s
+new file mode 100644
+index 0000000..5c92dc3
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pmem_symbol.s
+@@ -0,0 +1,15 @@
++.text
++.section .init0, "x"
++.global __start
++__start:
++
++	# U16_PMEMIMM
++	ldi r0, %pmem(_text_label)
++	ldi r0, %pmem(_text_label + 8)
++
++# Try 32/16_PMEM
++.4byte %pmem(_text_label)
++.2byte %pmem(_text_label)
++.2byte %pmem(_text_label + 4)
++
++
+diff --git a/ld/testsuite/ld-pru/pru.exp b/ld/testsuite/ld-pru/pru.exp
+new file mode 100644
+index 0000000..39161e8
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pru.exp
+@@ -0,0 +1,9 @@
++if { ! [istarget pru-*-*] } {
++    return 
++}
++
++foreach test [lsort [glob -nocomplain $srcdir/$subdir/*.d]] {
++    verbose [file rootname $test]
++    run_dump_test [file rootname $test]
++}
++
+diff --git a/ld/testsuite/ld-pru/relax_hi_rlz-data.d b/ld/testsuite/ld-pru/relax_hi_rlz-data.d
+new file mode 100644
+index 0000000..b8e4310
+--- /dev/null
++++ b/ld/testsuite/ld-pru/relax_hi_rlz-data.d
+@@ -0,0 +1,18 @@
++#name: PRU HI16_RLZ relaxation data
++#source: relax_hi_rlz.s
++#source: relax_hi_rlz_symbol.s
++#as: --mlink-relax
++#ld: --relax
++#objdump: -s
++
++# Note: default linker script should put a guard at DRAM address 0
++
++.*: +file format elf32-pru
++
++Contents of section .text:
++ [0-9a-f]+ f0adde24 0700f630 f0adde24 f0000024  ................
++ [0-9a-f]+ f0010024 f0acde24 f0341224 f0090024  ................
++ [0-9a-f]+ f900007e ........ ........ ........  ................
++Contents of section .data:
++ 0000 00000000 24000020 20000000 09002000  ................
++ 0010 20aa0000                             ................
+diff --git a/ld/testsuite/ld-pru/relax_hi_rlz-dis.d b/ld/testsuite/ld-pru/relax_hi_rlz-dis.d
+new file mode 100644
+index 0000000..2dafc17
+--- /dev/null
++++ b/ld/testsuite/ld-pru/relax_hi_rlz-dis.d
+@@ -0,0 +1,20 @@
++#name: PRU HI16_RLZ relaxation
++#source: relax_hi_rlz.s
++#source: relax_hi_rlz_symbol.s
++#as: --mlink-relax
++#ld: --relax
++#objdump: -dr --prefix-addresses
++
++# Test the %hi_rlz relaxation
++.*: +file format elf32-pru
++
++Disassembly of section .text:
++..000000 <[^>]*> ldi	r16, 57005
++..000004 <[^>]*> loop	..000020 <__end_loop>, r22
++..000008 <[^>]*> ldi	r16, 57005
++..00000c <[^>]*> ldi	r16, 0
++..000010 <[^>]*> ldi	r16, 1
++..000014 <[^>]*> ldi	r16, 57004
++..000018 <[^>]*> ldi	r16, 4660
++..00001c <[^>]*> ldi	r16, 9
++..000020 <[^>]*> qba	..000004 <__intermediate>
+diff --git a/ld/testsuite/ld-pru/relax_hi_rlz.s b/ld/testsuite/ld-pru/relax_hi_rlz.s
+new file mode 100644
+index 0000000..04eb80a
+--- /dev/null
++++ b/ld/testsuite/ld-pru/relax_hi_rlz.s
+@@ -0,0 +1,27 @@
++# Test %hi_rlz relaxation
++
++.text
++.global __start
++__start:
++	ldi	r16, %hi(long_symbol)
++__intermediate:
++	loop	__end_loop, r22
++	ldi	r16, %hi_rlz(long_symbol)
++	ldi	r16, %hi(short_symbol)
++	ldi	r16, %hi_rlz(short_symbol)
++	ldi	r16, %hi_rlz(short_symbol + 0x10000)
++	ldi	r16, %hi_rlz(long_symbol - 0x10000)
++	ldi	r16, %hi_rlz(0x12345678)
++	ldi	r16, %hi_rlz(0x5678)
++	ldi	r16, %pmem(__end)
++__end_loop:
++	qba	__intermediate
++__end:
++
++.data
++	.4byte	__end
++	.4byte	(__end - __intermediate)
++	.2byte	%pmem(__end)
++	.2byte	(__end - __intermediate)
++	.byte	(__end - __intermediate)
++	.byte	0xaa
+diff --git a/ld/testsuite/ld-pru/relax_hi_rlz_symbol.s b/ld/testsuite/ld-pru/relax_hi_rlz_symbol.s
+new file mode 100644
+index 0000000..a34f6e1
+--- /dev/null
++++ b/ld/testsuite/ld-pru/relax_hi_rlz_symbol.s
+@@ -0,0 +1,6 @@
++.global long_symbol
++.global short_symbol
++
++.set long_symbol, 0xDEADBEEF
++.set short_symbol, 0xceca
++
+diff --git a/ld/testsuite/ld-pru/reloc.d b/ld/testsuite/ld-pru/reloc.d
+new file mode 100644
+index 0000000..a494e0c
+--- /dev/null
++++ b/ld/testsuite/ld-pru/reloc.d
+@@ -0,0 +1,14 @@
++#name: PRU R_PRU_BFD_RELOC_XX
++#source: reloc.s
++#source: reloc_symbol.s
++#ld:
++#objdump: -s
++
++# Note: default linker script should put a guard at DRAM address 0
++
++.*: +file format elf32-pru
++
++Contents of section .text:
++ [0-9a-f]+ fa00cefa efbeadde facefaef beadde00  ................
++Contents of section .data:
++ 0000 00000000                             ....            
+diff --git a/ld/testsuite/ld-pru/reloc.s b/ld/testsuite/ld-pru/reloc.s
+new file mode 100644
+index 0000000..4bf79bf
+--- /dev/null
++++ b/ld/testsuite/ld-pru/reloc.s
+@@ -0,0 +1,9 @@
++# Test for PRU 32-bit, 16 and 8-bit relocations
++
++.global byte_sym
++.global short_sym
++.global long_sym
++
++.set byte_sym, 0xFA
++.set short_sym, 0xFACE
++.set long_sym, 0xDEADBEEF
+diff --git a/ld/testsuite/ld-pru/reloc_symbol.s b/ld/testsuite/ld-pru/reloc_symbol.s
+new file mode 100644
+index 0000000..a1d6e9c
+--- /dev/null
++++ b/ld/testsuite/ld-pru/reloc_symbol.s
+@@ -0,0 +1,25 @@
++.text
++.section .init0, "x"
++.global __start
++__start:
++
++# byte aligned
++.align 0
++.byte byte_sym
++
++# short aligned
++.align 1
++.short short_sym
++
++# word aligned
++.align 2
++.long  long_sym
++
++# now lets try some unaligned words and halfwords
++.byte byte_sym
++.2byte short_sym
++.4byte  long_sym
++
++#.align 2
++#nop
++
+diff --git a/ld/testsuite/ld-pru/u16_u8.d b/ld/testsuite/ld-pru/u16_u8.d
+new file mode 100644
+index 0000000..429bc70
+--- /dev/null
++++ b/ld/testsuite/ld-pru/u16_u8.d
+@@ -0,0 +1,12 @@
++#name: PRU R_PRU_U16,U8
++#source: u16_u8.s
++#source: u16_u8_symbol.s
++#ld:
++#objdump: -dr --prefix-addresses
++
++# Test the regulard LDI and <OP256> relocations
++.*: +file format elf32-pru
++
++Disassembly of section .text:
++[0-9a-f]+ <[^>]*> ldi	r16, 54321
++[0-9a-f]+ <[^>]*> add	r16, r16, 123
+diff --git a/ld/testsuite/ld-pru/u16_u8.s b/ld/testsuite/ld-pru/u16_u8.s
+new file mode 100644
+index 0000000..819a0f3
+--- /dev/null
++++ b/ld/testsuite/ld-pru/u16_u8.s
+@@ -0,0 +1,5 @@
++.text
++.global __start
++__start:
++	ldi	r16, short_symbol
++	add	r16, r16, byte_symbol
+diff --git a/ld/testsuite/ld-pru/u16_u8_symbol.s b/ld/testsuite/ld-pru/u16_u8_symbol.s
+new file mode 100644
+index 0000000..2707060
+--- /dev/null
++++ b/ld/testsuite/ld-pru/u16_u8_symbol.s
+@@ -0,0 +1,6 @@
++.global short_symbol
++.set short_symbol, 54321
++
++.global byte_symbol
++.set byte_symbol, 123
++
 diff --git a/opcodes/Makefile.am b/opcodes/Makefile.am
 index 6a4f6c1..cea3cad 100644
 --- a/opcodes/Makefile.am
@@ -5821,7 +7757,7 @@ index 3517739..4e9baba 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rl78-dis.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rx-decode.Plo@am__quote@
 diff --git a/opcodes/configure b/opcodes/configure
-index 86412c5..d269019 100755
+index 2d5baaf..f781bb7 100755
 --- a/opcodes/configure
 +++ b/opcodes/configure
 @@ -12602,6 +12602,7 @@ if test x${all_targets} = xfalse ; then
@@ -6391,10 +8327,10 @@ index d07267e..9b6f5dd 100755
  	| romp-* | rs6000-* \
  	| sh-* | sh[1234]-* | sh[24]a-* | sh[23]e-* | sh[34]eb-* | sheb-* | shbe-* \
 diff --git a/sim/configure b/sim/configure
-index a90d352..254821e 100755
+index 3447321..2d1ace1 100755
 --- a/sim/configure
 +++ b/sim/configure
-@@ -653,6 +653,7 @@ mips
+@@ -654,6 +654,7 @@ mips
  mn10300
  moxie
  msp430
@@ -6402,7 +8338,7 @@ index a90d352..254821e 100755
  rl78
  rx
  sh64
-@@ -3762,6 +3763,13 @@ subdirs="$subdirs arm"
+@@ -3770,6 +3771,13 @@ subdirs="$subdirs aarch64"
  
  
         ;;
@@ -6417,10 +8353,10 @@ index a90d352..254821e 100755
  
    sim_arch=rl78
 diff --git a/sim/configure.tgt b/sim/configure.tgt
-index 5f3bb03..20e078b 100644
+index 83f6cb2..51c9f5f 100644
 --- a/sim/configure.tgt
 +++ b/sim/configure.tgt
-@@ -74,6 +74,9 @@ case "${target}" in
+@@ -77,6 +77,9 @@ case "${target}" in
     msp430*-*-*)
         SIM_ARCH(msp430)
         ;;
@@ -6600,10 +8536,10 @@ index 0000000..a24bbeb
 +
 diff --git a/sim/pru/config.in b/sim/pru/config.in
 new file mode 100644
-index 0000000..3152bea
+index 0000000..fc7af77
 --- /dev/null
 +++ b/sim/pru/config.in
-@@ -0,0 +1,160 @@
+@@ -0,0 +1,158 @@
 +/* config.in.  Generated from configure.ac by autoheader.  */
 +
 +/* Define if building universal (internal helper macro) */
@@ -6762,8 +8698,6 @@ index 0000000..3152bea
 +
 +/* Define to 1 if you need to in order for `stat' and other things to work. */
 +#undef _POSIX_SOURCE
-+
-+#include "tconfig.h"
 diff --git a/sim/pru/configure b/sim/pru/configure
 new file mode 100755
 index 0000000..39f93ad
@@ -22467,7 +24401,7 @@ index 0000000..96d0ffd
 +SIM_AC_OUTPUT
 diff --git a/sim/pru/interp.c b/sim/pru/interp.c
 new file mode 100644
-index 0000000..2ccbc2c
+index 0000000..9b2d412
 --- /dev/null
 +++ b/sim/pru/interp.c
 @@ -0,0 +1,952 @@
@@ -22513,13 +24447,14 @@ index 0000000..2ccbc2c
 +
 +#define max(a,b) ((a) > (b) ? (a) : (b))
 +
++/* TODO - remove global variables */
 +static int issue_messages = 0;
-+static int tracing = 0;
++const static int tracing = 0;
 +static int sim_dmem_size = DMEM_DEFAULT_SIZE;
 +
 +/* DMEM zero address is perfectly valid. But if CRT leaves the first word
 +   alone, we can use it as a trap to catch NULL pointer access. */
-+static int abort_on_dmem_zero_access = 0;
++const static int abort_on_dmem_zero_access = 0;
 +
 +/* Extract (from PRU endianess) and return an integer in HOST's endianness. */
 +static uint32_t
@@ -23182,11 +25117,9 @@ index 0000000..2ccbc2c
 +}
 +
 +
-+int
-+sim_store_register (SIM_DESC sd, int rn, unsigned char *memory, int length)
++static int
++pru_store_register (SIM_CPU *cpu, int rn, unsigned char *memory, int length)
 +{
-+  SIM_CPU *cpu = STATE_CPU (sd, 0);
-+
 +  init_pointers (cpu);
 +
 +  if (rn < NUM_REGS && rn >= 0)
@@ -23208,10 +25141,9 @@ index 0000000..2ccbc2c
 +    return 0;
 +}
 +
-+int
-+sim_fetch_register (SIM_DESC sd, int rn, unsigned char *memory, int length)
++static int
++pru_fetch_register (SIM_CPU *cpu, int rn, unsigned char *memory, int length)
 +{
-+  SIM_CPU *cpu = STATE_CPU (sd, 0);
 +  long ival;
 +
 +  init_pointers (cpu);
@@ -23343,6 +25275,8 @@ index 0000000..2ccbc2c
 +      SIM_CPU *cpu = STATE_CPU (sd, i);
 +      int odsize = sim_dmem_size;
 +
++      CPU_REG_STORE (cpu) = pru_store_register;
++      CPU_REG_FETCH (cpu) = pru_fetch_register;
 +      CPU_PC_FETCH (cpu) = pru_pc_get;
 +      CPU_PC_STORE (cpu) = pru_pc_set;
 +
@@ -23867,5 +25801,5 @@ index 0000000..01f683c
 +#endif /* PRU_SIM_MAIN */
 +
 -- 
-2.6.1
+2.6.4
 
