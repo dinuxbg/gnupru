@@ -1,7 +1,7 @@
 From 7f82ef575480653601654578e578961c03dd5ec8 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Mon, 30 Dec 2013 23:47:32 +0200
-Subject: [PATCH 1/2] Initial TI PRU GCC port
+Subject: [PATCH 1/5] Initial TI PRU GCC port
 
 Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---
@@ -11743,5 +11743,5 @@ index 0000000..470f0d4
 +# mode: Makefile
 +# End:
 -- 
-2.6.4
+2.7.0
 

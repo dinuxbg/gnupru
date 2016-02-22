@@ -1,0 +1,90 @@
+From 121999eff462f106f2d0fec380dd8156280d3c77 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dinuxbg@gmail.com>
+Date: Sat, 2 Jan 2016 14:46:05 +0200
+Subject: [PATCH 4/5] Minor cleanup
+
+Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+---
+ gcc/config/pru/alu-zext.md          | 8 ++++----
+ gcc/config/pru/alu-zext.template.md | 2 +-
+ gcc/config/pru/pru.md               | 4 +++-
+ 3 files changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/gcc/config/pru/alu-zext.md b/gcc/config/pru/alu-zext.md
+index 8ea4645..4501dad 100644
+--- a/gcc/config/pru/alu-zext.md
++++ b/gcc/config/pru/alu-zext.md
+@@ -41,7 +41,7 @@
+   "@
+    add\\t%x0, %x1, %x2
+    add\\t%x0, %x1, %x2
+-   sub\\t%x0, %x1, -(%2)"
++   sub\\t%x0, %x1, %n2"
+   [(set_attr "type" "alu")])
+ 
+ (define_insn "sub_impl<EQD:mode>_<EQS0:mode><EQS1:mode>"
+@@ -153,7 +153,7 @@
+   "@
+    add\\t%x0, %x1, %x2
+    add\\t%x0, %x1, %x2
+-   sub\\t%x0, %x1, -(%2)"
++   sub\\t%x0, %x1, %n2"
+   [(set_attr "type" "alu")])
+ 
+ (define_insn "sub_impl<EQD:mode>_<EQS0:mode>eqd"
+@@ -265,7 +265,7 @@
+   "@
+    add\\t%x0, %x1, %x2
+    add\\t%x0, %x1, %x2
+-   sub\\t%x0, %x1, -(%2)"
++   sub\\t%x0, %x1, %n2"
+   [(set_attr "type" "alu")])
+ 
+ (define_insn "sub_impl<EQD:mode>_eqd<EQS1:mode>"
+@@ -377,7 +377,7 @@
+   "@
+    add\\t%x0, %x1, %x2
+    add\\t%x0, %x1, %x2
+-   sub\\t%x0, %x1, -(%2)"
++   sub\\t%x0, %x1, %n2"
+   [(set_attr "type" "alu")])
+ 
+ (define_insn "sub_impl<EQD:mode>_eqdeqd"
+diff --git a/gcc/config/pru/alu-zext.template.md b/gcc/config/pru/alu-zext.template.md
+index a16e7f9..3df28d8 100644
+--- a/gcc/config/pru/alu-zext.template.md
++++ b/gcc/config/pru/alu-zext.template.md
+@@ -38,7 +38,7 @@
+   "@
+    add\\t%x0, %x1, %x2
+    add\\t%x0, %x1, %x2
+-   sub\\t%x0, %x1, -(%2)"
++   sub\\t%x0, %x1, %n2"
+   [(set_attr "type" "alu")])
+ 
+ (define_insn "sub_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@<EQS1:mode>}"
+diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
+index 16a0409..be990be 100644
+--- a/gcc/config/pru/pru.md
++++ b/gcc/config/pru/pru.md
+@@ -148,6 +148,8 @@
+ 	       "ldi\\t%0.w2, %%hi_rlz((%1) & 0xffffffff)\;"
+ 	       "ldi\\t%N0, %%lo((%1) >> 32)\;"
+ 	       "ldi\\t%N0.w2, %%hi_rlz((%1) >> 32)";
++      default:
++	gcc_unreachable ();
+     }
+   }
+   [(set_attr "type" "st,ld,alu,alu,alu,alu")   (set_attr "length" "4,4,8,8,8,16")])
+@@ -283,7 +285,7 @@
+   "@
+    add\\t%0, %1, %2\;adc\\t%N0, %N1, %N2
+    add\\t%0, %1, %2\;adc\\t%N0, %N1, 0
+-   sub\\t%0, %1, -(%2)\;suc\\t%N0, %N1, 0"
++   sub\\t%0, %1, %n2\;suc\\t%N0, %N1, 0"
+   [(set_attr "type" "alu,alu,alu")
+    (set_attr "length" "8,8,8")])
+ 
+-- 
+2.7.0
+
