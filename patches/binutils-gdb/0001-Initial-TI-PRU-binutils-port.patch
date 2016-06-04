@@ -1,4 +1,4 @@
-From 91a207da47686de287b81272c2f370a81db701af Mon Sep 17 00:00:00 2001
+From d665c0d7d544a37a6a2b7530d3bac6d252b09c8c Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sun, 23 Feb 2014 22:25:35 +0200
 Subject: [PATCH 1/2] Initial TI PRU binutils port
@@ -65,7 +65,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  gdb/features/pru-cpu.xml                  |    43 +
  gdb/features/pru.c                        |    53 +
  gdb/features/pru.xml                      |    12 +
- gdb/pru-tdep.c                            |   871 ++
+ gdb/pru-tdep.c                            |   865 ++
  gdb/pru-tdep.h                            |    51 +
  include/dis-asm.h                         |     1 +
  include/elf/common.h                      |     2 +-
@@ -122,16 +122,16 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  readline/support/config.sub               |     2 +
  sim/configure                             |     8 +
  sim/configure.tgt                         |     3 +
- sim/pru/Makefile.in                       |    26 +
- sim/pru/aclocal.m4                        |   130 +
- sim/pru/config.in                         |   158 +
- sim/pru/configure                         | 15674 ++++++++++++++++++++++++++++
- sim/pru/configure.ac                      |    15 +
- sim/pru/interp.c                          |   952 ++
+ sim/pru/Makefile.in                       |    24 +
+ sim/pru/aclocal.m4                        |   129 +
+ sim/pru/config.in                         |   248 +
+ sim/pru/configure                         | 15903 ++++++++++++++++++++++++++++
+ sim/pru/configure.ac                      |    12 +
+ sim/pru/interp.c                          |   960 ++
  sim/pru/pru.h                             |    95 +
- sim/pru/pru.isa                           |   250 +
+ sim/pru/pru.isa                           |   240 +
  sim/pru/sim-main.h                        |    80 +
- 123 files changed, 24533 insertions(+), 3 deletions(-)
+ 123 files changed, 24838 insertions(+), 3 deletions(-)
  create mode 100644 bfd/cpu-pru.c
  create mode 100644 bfd/elf32-pru.c
  create mode 100644 gas/config/tc-pru.c
@@ -216,17 +216,17 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 sim/pru/sim-main.h
 
 diff --git a/.gitignore b/.gitignore
-index bda55a3..1104322 100644
+index c9a6158..1203175 100644
 --- a/.gitignore
 +++ b/.gitignore
-@@ -40,3 +40,5 @@ core
- !core/
- 
- lost+found
+@@ -49,3 +49,5 @@ lost+found
+ # ignore ./contrib/gcc_update output
+ LAST_UPDATED
+ REVISION
 +*.swp
 +cscope.*
 diff --git a/bfd/Makefile.am b/bfd/Makefile.am
-index cdfed8f..3549f6f 100644
+index 6720f86..9f8d10f 100644
 --- a/bfd/Makefile.am
 +++ b/bfd/Makefile.am
 @@ -147,6 +147,7 @@ ALL_MACHINES = \
@@ -262,10 +262,10 @@ index cdfed8f..3549f6f 100644
  	elf32-rx.c \
  	elf32-s390.c \
 diff --git a/bfd/Makefile.in b/bfd/Makefile.in
-index 6cf4b70..31edaab 100644
+index 7283ed9..a928c7f 100644
 --- a/bfd/Makefile.in
 +++ b/bfd/Makefile.in
-@@ -450,6 +450,7 @@ ALL_MACHINES = \
+@@ -479,6 +479,7 @@ ALL_MACHINES = \
  	cpu-pj.lo \
  	cpu-plugin.lo \
  	cpu-powerpc.lo \
@@ -273,7 +273,7 @@ index 6cf4b70..31edaab 100644
  	cpu-rs6000.lo \
  	cpu-rl78.lo \
  	cpu-rx.lo \
-@@ -537,6 +538,7 @@ ALL_MACHINES_CFILES = \
+@@ -566,6 +567,7 @@ ALL_MACHINES_CFILES = \
  	cpu-pj.c \
  	cpu-plugin.c \
  	cpu-powerpc.c \
@@ -281,7 +281,7 @@ index 6cf4b70..31edaab 100644
  	cpu-rs6000.c \
  	cpu-rl78.c \
  	cpu-rx.c \
-@@ -667,6 +669,7 @@ BFD32_BACKENDS = \
+@@ -696,6 +698,7 @@ BFD32_BACKENDS = \
  	elf32-or1k.lo \
  	elf32-pj.lo \
  	elf32-ppc.lo \
@@ -289,7 +289,7 @@ index 6cf4b70..31edaab 100644
  	elf32-rl78.lo \
  	elf32-rx.lo \
  	elf32-s390.lo \
-@@ -859,6 +862,7 @@ BFD32_BACKENDS_CFILES = \
+@@ -888,6 +891,7 @@ BFD32_BACKENDS_CFILES = \
  	elf32-or1k.c \
  	elf32-pj.c \
  	elf32-ppc.c \
@@ -297,7 +297,7 @@ index 6cf4b70..31edaab 100644
  	elf32-rl78.c \
  	elf32-rx.c \
  	elf32-s390.c \
-@@ -1380,6 +1384,7 @@ distclean-compile:
+@@ -1410,6 +1414,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-pj.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-plugin.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-powerpc.Plo@am__quote@
@@ -305,7 +305,7 @@ index 6cf4b70..31edaab 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-rl78.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-rs6000.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-rx.Plo@am__quote@
-@@ -1469,6 +1474,7 @@ distclean-compile:
+@@ -1499,6 +1504,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-or1k.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-pj.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-ppc.Plo@am__quote@
@@ -314,10 +314,10 @@ index 6cf4b70..31edaab 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-rx.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-s390.Plo@am__quote@
 diff --git a/bfd/archures.c b/bfd/archures.c
-index 51068b9..d014ba1 100644
+index 7ff1e82..aab771b 100644
 --- a/bfd/archures.c
 +++ b/bfd/archures.c
-@@ -509,6 +509,8 @@ DESCRIPTION
+@@ -510,6 +510,8 @@ DESCRIPTION
  .#define bfd_mach_nios2r2	2
  .  bfd_arch_visium,	{* Visium *}
  .#define bfd_mach_visium	1
@@ -326,7 +326,7 @@ index 51068b9..d014ba1 100644
  .  bfd_arch_last
  .  };
  */
-@@ -612,6 +614,7 @@ extern const bfd_arch_info_type bfd_pj_arch;
+@@ -613,6 +615,7 @@ extern const bfd_arch_info_type bfd_pj_arch;
  extern const bfd_arch_info_type bfd_plugin_arch;
  extern const bfd_arch_info_type bfd_powerpc_archs[];
  #define bfd_powerpc_arch bfd_powerpc_archs[0]
@@ -334,7 +334,7 @@ index 51068b9..d014ba1 100644
  extern const bfd_arch_info_type bfd_rs6000_arch;
  extern const bfd_arch_info_type bfd_rl78_arch;
  extern const bfd_arch_info_type bfd_rx_arch;
-@@ -701,6 +704,7 @@ static const bfd_arch_info_type * const bfd_archures_list[] =
+@@ -702,6 +705,7 @@ static const bfd_arch_info_type * const bfd_archures_list[] =
      &bfd_or1k_arch,
      &bfd_pdp11_arch,
      &bfd_powerpc_arch,
@@ -343,10 +343,10 @@ index 51068b9..d014ba1 100644
      &bfd_rl78_arch,
      &bfd_rx_arch,
 diff --git a/bfd/bfd-in2.h b/bfd/bfd-in2.h
-index ca0cafd..cd841b0 100644
+index 7292492..c5ea891 100644
 --- a/bfd/bfd-in2.h
 +++ b/bfd/bfd-in2.h
-@@ -2324,6 +2324,8 @@ enum bfd_architecture
+@@ -2329,6 +2329,8 @@ enum bfd_architecture
  #define bfd_mach_nios2r2       2
    bfd_arch_visium,     /* Visium */
  #define bfd_mach_visium        1
@@ -355,7 +355,7 @@ index ca0cafd..cd841b0 100644
    bfd_arch_last
    };
  
-@@ -5459,6 +5461,37 @@ a matching LO8XG part.  */
+@@ -5465,6 +5467,37 @@ a matching LO8XG part.  */
    BFD_RELOC_NIOS2_R2_T1X1I6,
    BFD_RELOC_NIOS2_R2_T1X1I6_2,
  
@@ -394,10 +394,10 @@ index ca0cafd..cd841b0 100644
    BFD_RELOC_IQ2000_OFFSET_16,
    BFD_RELOC_IQ2000_OFFSET_21,
 diff --git a/bfd/config.bfd b/bfd/config.bfd
-index c11204e..8500213 100644
+index 8fef9c4..1336e73 100644
 --- a/bfd/config.bfd
 +++ b/bfd/config.bfd
-@@ -121,6 +121,7 @@ or1k*|or1knd*)	 targ_archs=bfd_or1k_arch ;;
+@@ -122,6 +122,7 @@ or1k*|or1knd*)	 targ_archs=bfd_or1k_arch ;;
  pdp11*)		 targ_archs=bfd_pdp11_arch ;;
  pj*)		 targ_archs="bfd_pj_arch bfd_i386_arch";;
  powerpc*)	 targ_archs="bfd_rs6000_arch bfd_powerpc_arch" ;;
@@ -405,7 +405,7 @@ index c11204e..8500213 100644
  rs6000)		 targ_archs="bfd_rs6000_arch bfd_powerpc_arch" ;;
  s390*)		 targ_archs=bfd_s390_arch ;;
  sh*)		 targ_archs=bfd_sh_arch ;;
-@@ -1352,6 +1353,10 @@ case "${targ}" in
+@@ -1358,6 +1359,10 @@ case "${targ}" in
      targ_selvecs="powerpc_pei_le_vec powerpc_pei_vec powerpc_pe_le_vec powerpc_pe_vec"
      ;;
  
@@ -417,10 +417,10 @@ index c11204e..8500213 100644
      targ_defvec=rl78_elf32_vec
      ;;
 diff --git a/bfd/configure b/bfd/configure
-index c8cdcc5..004c73a 100755
+index bc49dc4..98a87a6 100755
 --- a/bfd/configure
 +++ b/bfd/configure
-@@ -15474,6 +15474,7 @@ do
+@@ -14431,6 +14431,7 @@ do
      powerpc_pei_vec)		 tb="$tb pei-ppc.lo peigen.lo $coff" ;;
      powerpc_pei_le_vec)		 tb="$tb pei-ppc.lo peigen.lo $coff" ;;
      powerpc_xcoff_vec)		 tb="$tb coff-rs6000.lo $xcoff" ;;
@@ -429,10 +429,10 @@ index c8cdcc5..004c73a 100755
      rs6000_xcoff64_vec)		 tb="$tb coff64-rs6000.lo aix5ppc-core.lo $xcoff"; target_size=64 ;;
      rs6000_xcoff64_aix_vec)	 tb="$tb coff64-rs6000.lo aix5ppc-core.lo $xcoff"; target_size=64 ;;
 diff --git a/bfd/configure.ac b/bfd/configure.ac
-index bf76fb1..85d97f8 100644
+index 669cff7..58b5feb 100644
 --- a/bfd/configure.ac
 +++ b/bfd/configure.ac
-@@ -920,6 +920,7 @@ do
+@@ -606,6 +606,7 @@ do
      powerpc_pei_vec)		 tb="$tb pei-ppc.lo peigen.lo $coff" ;;
      powerpc_pei_le_vec)		 tb="$tb pei-ppc.lo peigen.lo $coff" ;;
      powerpc_xcoff_vec)		 tb="$tb coff-rs6000.lo $xcoff" ;;
@@ -490,10 +490,10 @@ index 0000000..9a558c3
 +
 +const bfd_arch_info_type bfd_pru_arch = N (32, 32, 0, "pru", TRUE, NULL);
 diff --git a/bfd/elf-bfd.h b/bfd/elf-bfd.h
-index 129aa64..311a008 100644
+index 99dbbce..7eb3688 100644
 --- a/bfd/elf-bfd.h
 +++ b/bfd/elf-bfd.h
-@@ -465,6 +465,7 @@ enum elf_target_id
+@@ -466,6 +466,7 @@ enum elf_target_id
    OR1K_ELF_DATA,
    PPC32_ELF_DATA,
    PPC64_ELF_DATA,
@@ -503,7 +503,7 @@ index 129aa64..311a008 100644
    SPARC_ELF_DATA,
 diff --git a/bfd/elf32-pru.c b/bfd/elf32-pru.c
 new file mode 100644
-index 0000000..4143323
+index 0000000..642ac9f
 --- /dev/null
 +++ b/bfd/elf32-pru.c
 @@ -0,0 +1,1562 @@
@@ -1372,16 +1372,16 @@ index 0000000..4143323
 +	  switch (r)
 +	    {
 +	    case bfd_reloc_overflow:
-+	      r = info->callbacks->reloc_overflow (info, NULL, name,
-+						   howto->name, (bfd_vma) 0,
-+						   input_bfd, input_section,
-+						   rel->r_offset);
++	      (*info->callbacks->reloc_overflow) (info, NULL, name,
++						  howto->name, (bfd_vma) 0,
++						  input_bfd, input_section,
++						  rel->r_offset);
 +	      break;
 +
 +	    case bfd_reloc_undefined:
-+	      r = info->callbacks->undefined_symbol (info, name, input_bfd,
-+						     input_section,
-+						     rel->r_offset, TRUE);
++	      (*info->callbacks->undefined_symbol) (info, name, input_bfd,
++						    input_section,
++						    rel->r_offset, TRUE);
 +	      break;
 +
 +	    case bfd_reloc_outofrange:
@@ -1407,8 +1407,8 @@ index 0000000..4143323
 +
 +	  if (msg)
 +	    {
-+	      r = info->callbacks->warning
-+		(info, msg, name, input_bfd, input_section, rel->r_offset);
++	      (*info->callbacks->warning) (info, msg, name, input_bfd,
++					   input_section, rel->r_offset);
 +	      return FALSE;
 +	    }
 +	}
@@ -2070,10 +2070,10 @@ index 0000000..4143323
 +
 +#include "elf32-target.h"
 diff --git a/bfd/libbfd.h b/bfd/libbfd.h
-index 8765bee..8085725 100644
+index bf17f43..6b10cda 100644
 --- a/bfd/libbfd.h
 +++ b/bfd/libbfd.h
-@@ -2686,6 +2686,19 @@ static const char *const bfd_reloc_code_real_names[] = { "@@uninitialized@@",
+@@ -2712,6 +2712,19 @@ static const char *const bfd_reloc_code_real_names[] = { "@@uninitialized@@",
    "BFD_RELOC_NIOS2_R2_L5I4X1",
    "BFD_RELOC_NIOS2_R2_T1X1I6",
    "BFD_RELOC_NIOS2_R2_T1X1I6_2",
@@ -2094,7 +2094,7 @@ index 8765bee..8085725 100644
    "BFD_RELOC_IQ2000_OFFSET_21",
    "BFD_RELOC_IQ2000_UHI16",
 diff --git a/bfd/po/SRC-POTFILES.in b/bfd/po/SRC-POTFILES.in
-index 25375de..d9fffc2 100644
+index a74faad..4e26774 100644
 --- a/bfd/po/SRC-POTFILES.in
 +++ b/bfd/po/SRC-POTFILES.in
 @@ -119,6 +119,7 @@ cpu-pdp11.c
@@ -2114,10 +2114,10 @@ index 25375de..d9fffc2 100644
  elf32-rx.c
  elf32-s390.c
 diff --git a/bfd/reloc.c b/bfd/reloc.c
-index 869503c..f11db2c 100644
+index 443ad6f..360b459 100644
 --- a/bfd/reloc.c
 +++ b/bfd/reloc.c
-@@ -6404,6 +6404,51 @@ ENUMDOC
+@@ -6407,6 +6407,51 @@ ENUMDOC
    Relocations used by the Altera Nios II core.
  
  ENUM
@@ -2170,10 +2170,10 @@ index 869503c..f11db2c 100644
  ENUMX
    BFD_RELOC_IQ2000_OFFSET_21
 diff --git a/bfd/targets.c b/bfd/targets.c
-index bfb34f1..1dec15d 100644
+index a9edd4c..5d308fb 100644
 --- a/bfd/targets.c
 +++ b/bfd/targets.c
-@@ -795,6 +795,7 @@ extern const bfd_target powerpc_pe_le_vec;
+@@ -799,6 +799,7 @@ extern const bfd_target powerpc_pe_le_vec;
  extern const bfd_target powerpc_pei_vec;
  extern const bfd_target powerpc_pei_le_vec;
  extern const bfd_target powerpc_xcoff_vec;
@@ -2181,7 +2181,7 @@ index bfb34f1..1dec15d 100644
  extern const bfd_target rl78_elf32_vec;
  extern const bfd_target rs6000_xcoff64_vec;
  extern const bfd_target rs6000_xcoff64_aix_vec;
-@@ -1299,6 +1300,8 @@ static const bfd_target * const _bfd_target_vector[] =
+@@ -1303,6 +1304,8 @@ static const bfd_target * const _bfd_target_vector[] =
  	&powerpc_xcoff_vec,
  #endif
  
@@ -2191,7 +2191,7 @@ index bfb34f1..1dec15d 100644
  
  #ifdef BFD64
 diff --git a/binutils/readelf.c b/binutils/readelf.c
-index 5986456..f3988c5 100644
+index 25ccb6a..bc038fd 100644
 --- a/binutils/readelf.c
 +++ b/binutils/readelf.c
 @@ -136,6 +136,7 @@
@@ -2202,7 +2202,7 @@ index 5986456..f3988c5 100644
  #include "elf/rl78.h"
  #include "elf/rx.h"
  #include "elf/s390.h"
-@@ -771,6 +772,7 @@ guess_is_rela (unsigned int e_machine)
+@@ -775,6 +776,7 @@ guess_is_rela (unsigned int e_machine)
      case EM_OR1K:
      case EM_PPC64:
      case EM_PPC:
@@ -2210,7 +2210,7 @@ index 5986456..f3988c5 100644
      case EM_RL78:
      case EM_RX:
      case EM_S390:
-@@ -1472,6 +1474,10 @@ dump_relocations (FILE * file,
+@@ -1476,6 +1478,10 @@ dump_relocations (FILE * file,
  	case EM_ALTERA_NIOS2:
  	  rtype = elf_nios2_reloc_type (type);
  	  break;
@@ -2221,7 +2221,7 @@ index 5986456..f3988c5 100644
  	}
  
        if (rtype == NULL)
-@@ -2264,6 +2270,7 @@ get_machine_name (unsigned e_machine)
+@@ -2339,6 +2345,7 @@ get_machine_name (unsigned e_machine)
      case EM_TILEGX:		return "Tilera TILE-Gx multicore architecture family";
      case EM_CUDA:		return "NVIDIA CUDA architecture";
      case EM_XGATE:		return "Motorola XGATE embedded processor";
@@ -2229,7 +2229,7 @@ index 5986456..f3988c5 100644
      default:
        snprintf (buff, sizeof (buff), _("<unknown>: 0x%x"), e_machine);
        return buff;
-@@ -11447,6 +11454,8 @@ is_32bit_abs_reloc (unsigned int reloc_type)
+@@ -11613,6 +11620,8 @@ is_32bit_abs_reloc (unsigned int reloc_type)
        return reloc_type == 1; /* R_PPC64_ADDR32.  */
      case EM_PPC:
        return reloc_type == 1; /* R_PPC_ADDR32.  */
@@ -2238,20 +2238,20 @@ index 5986456..f3988c5 100644
      case EM_RL78:
        return reloc_type == 1; /* R_RL78_DIR32.  */
      case EM_RX:
-@@ -11788,6 +11797,8 @@ is_none_reloc (unsigned int reloc_type)
+@@ -11969,6 +11978,8 @@ is_none_reloc (unsigned int reloc_type)
+ 	      || reloc_type == 17  /* R_XTENSA_DIFF8.  */
+ 	      || reloc_type == 18  /* R_XTENSA_DIFF16.  */
  	      || reloc_type == 19  /* R_XTENSA_DIFF32.  */);
-     case EM_METAG:
-       return reloc_type == 3; /* R_METAG_NONE.  */
 +    case EM_PRU:  /* R_PRU_NONE.  */
 +      return reloc_type == 0;
      }
    return FALSE;
  }
 diff --git a/config.sub b/config.sub
-index f018151..f6585d9 100755
+index 2377e13..e4df780 100755
 --- a/config.sub
 +++ b/config.sub
-@@ -302,6 +302,7 @@ case $basic_machine in
+@@ -301,6 +301,7 @@ case $basic_machine in
  	| open8 | or1k | or1knd | or32 \
  	| pdp10 | pdp11 | pj | pjl \
  	| powerpc | powerpc64 | powerpc64le | powerpcle \
@@ -2259,7 +2259,7 @@ index f018151..f6585d9 100755
  	| pyramid \
  	| riscv32 | riscv64 \
  	| rl78 | rx \
-@@ -429,6 +430,7 @@ case $basic_machine in
+@@ -428,6 +429,7 @@ case $basic_machine in
  	| orion-* \
  	| pdp10-* | pdp11-* | pj-* | pjl-* | pn-* | power-* \
  	| powerpc-* | powerpc64-* | powerpc64le-* | powerpcle-* \
@@ -2268,7 +2268,7 @@ index f018151..f6585d9 100755
  	| riscv32-* | riscv64-* \
  	| rl78-* | romp-* | rs6000-* | rx-* \
 diff --git a/elfcpp/elfcpp.h b/elfcpp/elfcpp.h
-index 0e6833f..4e5c478 100644
+index 3d7039a..719fc03 100644
 --- a/elfcpp/elfcpp.h
 +++ b/elfcpp/elfcpp.h
 @@ -268,6 +268,7 @@ enum EM
@@ -2280,7 +2280,7 @@ index 0e6833f..4e5c478 100644
    EM_TILEGX = 191,
    // The Morph MT.
 diff --git a/gas/Makefile.am b/gas/Makefile.am
-index 5161b5e..a51a111 100644
+index 596e469..4d773f6 100644
 --- a/gas/Makefile.am
 +++ b/gas/Makefile.am
 @@ -177,6 +177,7 @@ TARGET_CPU_CFILES = \
@@ -2300,10 +2300,10 @@ index 5161b5e..a51a111 100644
  	config/tc-rx.h \
  	config/tc-s390.h \
 diff --git a/gas/Makefile.in b/gas/Makefile.in
-index 1efdb5c..9198c42 100644
+index 59746f3..dd50e86 100644
 --- a/gas/Makefile.in
 +++ b/gas/Makefile.in
-@@ -448,6 +448,7 @@ TARGET_CPU_CFILES = \
+@@ -471,6 +471,7 @@ TARGET_CPU_CFILES = \
  	config/tc-pdp11.c \
  	config/tc-pj.c \
  	config/tc-ppc.c \
@@ -2311,7 +2311,7 @@ index 1efdb5c..9198c42 100644
  	config/tc-rl78.c \
  	config/tc-rx.c \
  	config/tc-s390.c \
-@@ -521,6 +522,7 @@ TARGET_CPU_HFILES = \
+@@ -544,6 +545,7 @@ TARGET_CPU_HFILES = \
  	config/tc-pdp11.h \
  	config/tc-pj.h \
  	config/tc-ppc.h \
@@ -2319,7 +2319,7 @@ index 1efdb5c..9198c42 100644
  	config/tc-rl78.h \
  	config/tc-rx.h \
  	config/tc-s390.h \
-@@ -878,6 +880,7 @@ distclean-compile:
+@@ -899,6 +901,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-pdp11.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-pj.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-ppc.Po@am__quote@
@@ -2327,7 +2327,7 @@ index 1efdb5c..9198c42 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-rl78.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-rx.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-s390.Po@am__quote@
-@@ -1598,6 +1601,20 @@ tc-ppc.obj: config/tc-ppc.c
+@@ -1619,6 +1622,20 @@ tc-ppc.obj: config/tc-ppc.c
  @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
  @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tc-ppc.obj `if test -f 'config/tc-ppc.c'; then $(CYGPATH_W) 'config/tc-ppc.c'; else $(CYGPATH_W) '$(srcdir)/config/tc-ppc.c'; fi`
  
@@ -2349,7 +2349,7 @@ index 1efdb5c..9198c42 100644
  @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tc-rl78.o -MD -MP -MF $(DEPDIR)/tc-rl78.Tpo -c -o tc-rl78.o `test -f 'config/tc-rl78.c' || echo '$(srcdir)/'`config/tc-rl78.c
  @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tc-rl78.Tpo $(DEPDIR)/tc-rl78.Po
 diff --git a/gas/config/obj-elf.c b/gas/config/obj-elf.c
-index f930dc6..4e0d087 100644
+index 8af563f..9baf05e 100644
 --- a/gas/config/obj-elf.c
 +++ b/gas/config/obj-elf.c
 @@ -64,6 +64,10 @@
@@ -2365,7 +2365,7 @@ index f930dc6..4e0d087 100644
  static void obj_elf_type (int);
 diff --git a/gas/config/tc-pru.c b/gas/config/tc-pru.c
 new file mode 100644
-index 0000000..c63151f
+index 0000000..3878a25
 --- /dev/null
 +++ b/gas/config/tc-pru.c
 @@ -0,0 +1,1794 @@
@@ -2545,7 +2545,7 @@ index 0000000..c63151f
 +   of type TYPE, and store the appropriate bytes in *LITP.  The number
 +   of LITTLENUMS emitted is stored in *SIZEP.  An error message is
 +   returned, or NULL on OK.  */
-+char *
++const char *
 +md_atof (int type, char *litP, int *sizeP)
 +{
 +  return ieee_md_atof (type, litP, sizeP, FALSE);
@@ -3208,7 +3208,7 @@ index 0000000..c63151f
 +pru_insn_reloc_new (bfd_reloc_code_real_type reloc_type, unsigned int pcrel)
 +{
 +  pru_insn_relocS *retval;
-+  retval = (pru_insn_relocS *) malloc (sizeof (pru_insn_relocS));
++  retval = XNEW (pru_insn_relocS);
 +  if (retval == NULL)
 +    {
 +      as_bad (_("can't create relocation"));
@@ -3732,7 +3732,7 @@ index 0000000..c63151f
 +/* The following functions are called by machine-independent parts of
 +   the assembler. */
 +int
-+md_parse_option (int c, char *arg ATTRIBUTE_UNUSED)
++md_parse_option (int c, const char *arg ATTRIBUTE_UNUSED)
 +{
 +  switch (c)
 +    {
@@ -3983,8 +3983,8 @@ index 0000000..c63151f
 +arelent *
 +tc_gen_reloc (asection *section ATTRIBUTE_UNUSED, fixS *fixp)
 +{
-+  arelent *reloc = (arelent *) xmalloc (sizeof (arelent));
-+  reloc->sym_ptr_ptr = (asymbol **) xmalloc (sizeof (asymbol *));
++  arelent *reloc = XNEW (arelent);
++  reloc->sym_ptr_ptr = XNEW (asymbol *);
 +  *reloc->sym_ptr_ptr = symbol_get_bfdsym (fixp->fx_addsy);
 +
 +  reloc->address = fixp->fx_frag->fr_address + fixp->fx_where;
@@ -4012,7 +4012,7 @@ index 0000000..c63151f
 +
 +/* Called just before the assembler exits.  */
 +void
-+md_end ()
++md_end (void)
 +{
 +  /* FIXME - not yet implemented */
 +}
@@ -4327,10 +4327,10 @@ index 0000000..2f67634
 +
 +#endif /* TC_PRU */
 diff --git a/gas/configure.tgt b/gas/configure.tgt
-index 0b490d4..ffba2e0 100644
+index eda38a2..fbcd845 100644
 --- a/gas/configure.tgt
 +++ b/gas/configure.tgt
-@@ -391,6 +391,8 @@ case ${generic_target} in
+@@ -392,6 +392,8 @@ case ${generic_target} in
    ppc-*-kaos*)				fmt=elf ;;
    ppc-*-lynxos*)			fmt=elf em=lynx ;;
  
@@ -4340,7 +4340,7 @@ index 0b490d4..ffba2e0 100644
    s390-*-tpf*)				fmt=elf ;;
  
 diff --git a/gas/doc/Makefile.am b/gas/doc/Makefile.am
-index 38ab88b..6066333 100644
+index 88fa602..69846d9 100644
 --- a/gas/doc/Makefile.am
 +++ b/gas/doc/Makefile.am
 @@ -80,6 +80,7 @@ CPU_DOCS = \
@@ -4352,10 +4352,10 @@ index 38ab88b..6066333 100644
  	c-rx.texi \
  	c-s390.texi \
 diff --git a/gas/doc/Makefile.in b/gas/doc/Makefile.in
-index 3018dcc..10e0c1d 100644
+index 9ca5e8e..29e208b 100644
 --- a/gas/doc/Makefile.in
 +++ b/gas/doc/Makefile.in
-@@ -324,6 +324,7 @@ CPU_DOCS = \
+@@ -353,6 +353,7 @@ CPU_DOCS = \
  	c-pdp11.texi \
  	c-pj.texi \
  	c-ppc.texi \
@@ -4364,7 +4364,7 @@ index 3018dcc..10e0c1d 100644
  	c-rx.texi \
  	c-s390.texi \
 diff --git a/gas/doc/all.texi b/gas/doc/all.texi
-index d2fee14..e2d16f1 100644
+index abbca2f..2e8bd9a 100644
 --- a/gas/doc/all.texi
 +++ b/gas/doc/all.texi
 @@ -62,6 +62,7 @@
@@ -4376,10 +4376,10 @@ index d2fee14..e2d16f1 100644
  @set RX
  @set S390
 diff --git a/gas/doc/as.texinfo b/gas/doc/as.texinfo
-index 834e161..6dd1a55 100644
+index 1cd60ed..5f0adb4 100644
 --- a/gas/doc/as.texinfo
 +++ b/gas/doc/as.texinfo
-@@ -487,6 +487,11 @@ gcc(1), ld(1), and the Info entries for @file{binutils} and @file{ld}.
+@@ -492,6 +492,11 @@ gcc(1), ld(1), and the Info entries for @file{binutils} and @file{ld}.
     [@b{-msolaris}|@b{-mno-solaris}]
     [@b{-nops=@var{count}}]
  @end ifset
@@ -4391,7 +4391,7 @@ index 834e161..6dd1a55 100644
  @ifset RL78
  
  @emph{Target RL78 options:}
-@@ -1196,6 +1201,24 @@ Generate ``little endian'' format output.
+@@ -1209,6 +1214,24 @@ Generate ``little endian'' format output.
  @end table
  @end ifset
  
@@ -4416,7 +4416,7 @@ index 834e161..6dd1a55 100644
  @ifset M68HC11
  The following options are available when @value{AS} is configured for the
  Motorola 68HC11 or 68HC12 series.
-@@ -7420,6 +7443,9 @@ subject, see the hardware manufacturer's manual.
+@@ -7538,6 +7561,9 @@ subject, see the hardware manufacturer's manual.
  @ifset PPC
  * PPC-Dependent::               PowerPC Dependent Features
  @end ifset
@@ -4426,7 +4426,7 @@ index 834e161..6dd1a55 100644
  @ifset RL78
  * RL78-Dependent::              RL78 Dependent Features
  @end ifset
-@@ -7646,6 +7672,10 @@ family.
+@@ -7764,6 +7790,10 @@ family.
  @include c-ppc.texi
  @end ifset
  
@@ -5201,7 +5201,7 @@ index 0000000..875e1ca
 +	sxchg	253, r10.b2, 124
 +	sxchg	85, r12.b0, 85
 diff --git a/gdb/Makefile.in b/gdb/Makefile.in
-index c07baad..a371929 100644
+index 60cfc97..383e440 100644
 --- a/gdb/Makefile.in
 +++ b/gdb/Makefile.in
 @@ -694,7 +694,7 @@ ALL_TARGET_OBS = \
@@ -5222,20 +5222,20 @@ index c07baad..a371929 100644
  record-full.h solib-aix.h \
  solib-darwin.h solib-spu.h windows-nat.h xcoffread.h \
  gnulib/import/extra/snippet/arg-nonnull.h gnulib/import/extra/snippet/c++defs.h \
-@@ -1723,6 +1723,7 @@ ALLDEPFILES = \
+@@ -1734,6 +1734,7 @@ ALLDEPFILES = \
  	ppcnbsd-nat.c ppcnbsd-tdep.c \
  	ppcobsd-nat.c ppcobsd-tdep.c \
  	procfs.c \
 +	pru-tdep.c \
  	ravenscar-thread.c \
- 	remote-m32r-sdi.c remote-mips.c \
  	remote-sim.c \
+ 	dcache.c \
 diff --git a/gdb/configure.tgt b/gdb/configure.tgt
-index 6e50dd2..a583c49 100644
+index cd8e05d..ccae2ee 100644
 --- a/gdb/configure.tgt
 +++ b/gdb/configure.tgt
-@@ -457,6 +457,12 @@ powerpc*-*-*)
- 	fi
+@@ -455,6 +455,12 @@ powerpc*-*-*)
+ 	gdb_sim=../sim/ppc/libsim.a
  	;;
  
 +pru*-*-*)
@@ -5248,10 +5248,10 @@ index 6e50dd2..a583c49 100644
  	# Target: S390 running Linux
  	gdb_target_obs="s390-linux-tdep.o solib-svr4.o linux-tdep.o \
 diff --git a/gdb/features/Makefile b/gdb/features/Makefile
-index 74006e2..a2af304 100644
+index e5c5154..666159d 100644
 --- a/gdb/features/Makefile
 +++ b/gdb/features/Makefile
-@@ -181,6 +181,7 @@ XMLTOC = \
+@@ -191,6 +191,7 @@ XMLTOC = \
  	mips64-linux.xml \
  	nios2-linux.xml \
  	nios2.xml \
@@ -5387,10 +5387,10 @@ index 0000000..f865b67
 +</target>
 diff --git a/gdb/pru-tdep.c b/gdb/pru-tdep.c
 new file mode 100644
-index 0000000..b194a8c
+index 0000000..d4ceb69
 --- /dev/null
 +++ b/gdb/pru-tdep.c
-@@ -0,0 +1,871 @@
+@@ -0,0 +1,865 @@
 +/* Target-machine dependent code for PRU, for GDB.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -5519,6 +5519,7 @@ index 0000000..b194a8c
 +  PRU_PC_REGNUM		/* 32 */
 +};
 +
++gdb_static_assert (ARRAY_SIZE (pru_dwarf2gdb_regno_map) == PRU_NUM_REGS);
 +
 +/* Implement the dwarf2_reg_to_regnum gdbarch method.  */
 +
@@ -5526,10 +5527,7 @@ index 0000000..b194a8c
 +pru_dwarf_reg_to_regnum (struct gdbarch *gdbarch, int dw_reg)
 +{
 +  if (dw_reg < 0 || dw_reg > PRU_NUM_REGS)
-+    {
-+      warning (_("Dwarf-2 uses unmapped register #%d"), dw_reg);
-+      return dw_reg;
-+    }
++    return -1;
 +
 +  return pru_dwarf2gdb_regno_map[dw_reg];
 +}
@@ -5848,11 +5846,9 @@ index 0000000..b194a8c
 +  for (argnum = 0; argnum < nargs; argnum++)
 +    {
 +      const gdb_byte *val;
-+      gdb_byte valbuf[MAX_REGISTER_SIZE];
 +      struct value *arg = args[argnum];
 +      struct type *arg_type = check_typedef (value_type (arg));
 +      int len = TYPE_LENGTH (arg_type);
-+      enum type_code typecode = TYPE_CODE (arg_type);
 +
 +      val = value_contents (arg);
 +
@@ -5925,7 +5921,7 @@ index 0000000..b194a8c
 +  int i;
 +
 +  if (*this_prologue_cache)
-+    return *this_prologue_cache;
++    return (struct pru_unwind_cache *) *this_prologue_cache;
 +
 +  cache = FRAME_OBSTACK_ZALLOC (struct pru_unwind_cache);
 +  *this_prologue_cache = cache;
@@ -6033,10 +6029,9 @@ index 0000000..b194a8c
 +  CORE_ADDR stack_addr;
 +  struct trad_frame_cache *this_trad_cache;
 +  struct gdbarch *gdbarch = get_frame_arch (this_frame);
-+  int num_regs = gdbarch_num_regs (gdbarch);
 +
 +  if (*this_cache != NULL)
-+    return *this_cache;
++    return (struct trad_frame_cache *) *this_cache;
 +  this_trad_cache = trad_frame_cache_zalloc (this_frame);
 +  *this_cache = this_trad_cache;
 +
@@ -6091,7 +6086,6 @@ index 0000000..b194a8c
 +			  struct frame_info *this_frame, void **cache)
 +{
 +  gdb_byte dummy[4];
-+  struct obj_section *s;
 +  CORE_ADDR pc = get_frame_address_in_block (this_frame);
 +
 +  /* Use the stub unwinder for unreadable code.  */
@@ -6137,7 +6131,7 @@ index 0000000..b194a8c
 +{
 +  struct gdbarch *gdbarch;
 +  struct gdbarch_tdep *tdep;
-+  int register_bytes, i;
++  int i;
 +  struct tdesc_arch_data *tdesc_data = NULL;
 +  const struct target_desc *tdesc = info.target_desc;
 +
@@ -6320,7 +6314,7 @@ index 0000000..ca7ba62
 +
 +#endif /* PRU_TDEP_H */
 diff --git a/include/dis-asm.h b/include/dis-asm.h
-index f82149b..3b0af7d 100644
+index 60bbc8d..3cb3e84 100644
 --- a/include/dis-asm.h
 +++ b/include/dis-asm.h
 @@ -288,6 +288,7 @@ extern int print_insn_ns32k		(bfd_vma, disassemble_info *);
@@ -6332,7 +6326,7 @@ index f82149b..3b0af7d 100644
  extern int print_insn_s390		(bfd_vma, disassemble_info *);
  extern int print_insn_sh		(bfd_vma, disassemble_info *);
 diff --git a/include/elf/common.h b/include/elf/common.h
-index 5c20c5e..5b5bf89 100644
+index 087d876..cc5be6b 100644
 --- a/include/elf/common.h
 +++ b/include/elf/common.h
 @@ -246,7 +246,7 @@
@@ -6820,10 +6814,10 @@ index 0000000..f601d14
 +
 +#endif /* _PRU_H */
 diff --git a/ld/Makefile.am b/ld/Makefile.am
-index 0b3b049..a7e378b 100644
+index 0598923..a526842 100644
 --- a/ld/Makefile.am
 +++ b/ld/Makefile.am
-@@ -1676,6 +1676,12 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
+@@ -1693,6 +1693,12 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
  eppcpe.c: $(srcdir)/emulparams/ppcpe.sh \
    $(srcdir)/emultempl/pe.em $(srcdir)/scripttempl/ppcpe.sc ${GEN_DEPENDS}
  
@@ -6837,10 +6831,10 @@ index 0b3b049..a7e378b 100644
    $(srcdir)/emultempl/generic.em $(srcdir)/scripttempl/aout.sc ${GEN_DEPENDS}
  
 diff --git a/ld/Makefile.in b/ld/Makefile.in
-index ed98f87..ce49a23 100644
+index 7c78198..5e47fef 100644
 --- a/ld/Makefile.in
 +++ b/ld/Makefile.in
-@@ -3182,6 +3182,12 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
+@@ -3281,6 +3281,12 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
  eppcpe.c: $(srcdir)/emulparams/ppcpe.sh \
    $(srcdir)/emultempl/pe.em $(srcdir)/scripttempl/ppcpe.sc ${GEN_DEPENDS}
  
@@ -6854,10 +6848,10 @@ index ed98f87..ce49a23 100644
    $(srcdir)/emultempl/generic.em $(srcdir)/scripttempl/aout.sc ${GEN_DEPENDS}
  
 diff --git a/ld/configure.tgt b/ld/configure.tgt
-index 27742c0..22205e4 100644
+index 6251943..a359cb0 100644
 --- a/ld/configure.tgt
 +++ b/ld/configure.tgt
-@@ -639,6 +639,7 @@ powerpc-*-aix*)		targ_emul=aixppc ;;
+@@ -644,6 +644,7 @@ powerpc-*-aix*)		targ_emul=aixppc ;;
  powerpc-*-beos*)	targ_emul=aixppc ;;
  powerpc-*-windiss*)	targ_emul=elf32ppcwindiss ;;
  powerpc-*-lynxos*)	targ_emul=ppclynx ;;
@@ -7844,7 +7838,7 @@ index 0000000..2707060
 +.set byte_symbol, 123
 +
 diff --git a/opcodes/Makefile.am b/opcodes/Makefile.am
-index 6a4f6c1..cea3cad 100644
+index e954cbe..7cf64a1 100644
 --- a/opcodes/Makefile.am
 +++ b/opcodes/Makefile.am
 @@ -223,6 +223,8 @@ TARGET_LIBOPCODES_CFILES = \
@@ -7857,10 +7851,10 @@ index 6a4f6c1..cea3cad 100644
  	rl78-dis.c \
  	rx-decode.c \
 diff --git a/opcodes/Makefile.in b/opcodes/Makefile.in
-index 3517739..4e9baba 100644
+index 80cef60..1c14d36 100644
 --- a/opcodes/Makefile.in
 +++ b/opcodes/Makefile.in
-@@ -495,6 +495,8 @@ TARGET_LIBOPCODES_CFILES = \
+@@ -524,6 +524,8 @@ TARGET_LIBOPCODES_CFILES = \
  	pj-opc.c \
  	ppc-dis.c \
  	ppc-opc.c \
@@ -7869,7 +7863,7 @@ index 3517739..4e9baba 100644
  	rl78-decode.c \
  	rl78-dis.c \
  	rx-decode.c \
-@@ -899,6 +901,8 @@ distclean-compile:
+@@ -927,6 +929,8 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pj-opc.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ppc-dis.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ppc-opc.Plo@am__quote@
@@ -7879,10 +7873,10 @@ index 3517739..4e9baba 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rl78-dis.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rx-decode.Plo@am__quote@
 diff --git a/opcodes/configure b/opcodes/configure
-index 2d5baaf..f781bb7 100755
+index 46b8018..86d42f7 100755
 --- a/opcodes/configure
 +++ b/opcodes/configure
-@@ -12602,6 +12602,7 @@ if test x${all_targets} = xfalse ; then
+@@ -12639,6 +12639,7 @@ if test x${all_targets} = xfalse ; then
  	bfd_pj_arch)		ta="$ta pj-dis.lo pj-opc.lo" ;;
  	bfd_powerpc_arch)	ta="$ta ppc-dis.lo ppc-opc.lo" ;;
  	bfd_powerpc_64_arch)	ta="$ta ppc-dis.lo ppc-opc.lo" ;;
@@ -7891,7 +7885,7 @@ index 2d5baaf..f781bb7 100755
  	bfd_romp_arch)		;;
  	bfd_rs6000_arch)	ta="$ta ppc-dis.lo ppc-opc.lo" ;;
 diff --git a/opcodes/configure.ac b/opcodes/configure.ac
-index 07e3162..c0fb26f 100644
+index c7f4783..9ecbece 100644
 --- a/opcodes/configure.ac
 +++ b/opcodes/configure.ac
 @@ -307,6 +307,7 @@ if test x${all_targets} = xfalse ; then
@@ -7903,7 +7897,7 @@ index 07e3162..c0fb26f 100644
  	bfd_romp_arch)		;;
  	bfd_rs6000_arch)	ta="$ta ppc-dis.lo ppc-opc.lo" ;;
 diff --git a/opcodes/disassemble.c b/opcodes/disassemble.c
-index 1f353c6..059bdf8 100644
+index b818d8b..8199d4b 100644
 --- a/opcodes/disassemble.c
 +++ b/opcodes/disassemble.c
 @@ -73,6 +73,7 @@
@@ -7914,7 +7908,7 @@ index 1f353c6..059bdf8 100644
  #define ARCH_rs6000
  #define ARCH_rl78
  #define ARCH_rx
-@@ -376,6 +377,11 @@ disassembler (abfd)
+@@ -375,6 +376,11 @@ disassembler (bfd *abfd)
  	disassemble = print_insn_little_powerpc;
        break;
  #endif
@@ -8449,7 +8443,7 @@ index d07267e..9b6f5dd 100755
  	| romp-* | rs6000-* \
  	| sh-* | sh[1234]-* | sh[24]a-* | sh[23]e-* | sh[34]eb-* | sheb-* | shbe-* \
 diff --git a/sim/configure b/sim/configure
-index 3447321..2d1ace1 100755
+index 2729e69..5d858ad 100755
 --- a/sim/configure
 +++ b/sim/configure
 @@ -654,6 +654,7 @@ mips
@@ -8460,7 +8454,7 @@ index 3447321..2d1ace1 100755
  rl78
  rx
  sh64
-@@ -3770,6 +3771,13 @@ subdirs="$subdirs aarch64"
+@@ -3768,6 +3769,13 @@ subdirs="$subdirs aarch64"
  
  
         ;;
@@ -8475,10 +8469,10 @@ index 3447321..2d1ace1 100755
  
    sim_arch=rl78
 diff --git a/sim/configure.tgt b/sim/configure.tgt
-index 83f6cb2..51c9f5f 100644
+index c958fb3..357d7ac 100644
 --- a/sim/configure.tgt
 +++ b/sim/configure.tgt
-@@ -77,6 +77,9 @@ case "${target}" in
+@@ -76,6 +76,9 @@ case "${target}" in
     msp430*-*-*)
         SIM_ARCH(msp430)
         ;;
@@ -8490,12 +8484,12 @@ index 83f6cb2..51c9f5f 100644
         ;;
 diff --git a/sim/pru/Makefile.in b/sim/pru/Makefile.in
 new file mode 100644
-index 0000000..407b600
+index 0000000..cdf2ba1
 --- /dev/null
 +++ b/sim/pru/Makefile.in
-@@ -0,0 +1,26 @@
+@@ -0,0 +1,24 @@
 +#    Makefile template for Configure for the MCore sim library.
-+#    Copyright (C) 1990-2015 Free Software Foundation, Inc.
++#    Copyright (C) 1990-2016 Free Software Foundation, Inc.
 +#    Written by Cygnus Solutions.
 +#
 +# This program is free software; you can redistribute it and/or modify
@@ -8515,22 +8509,19 @@ index 0000000..407b600
 +
 +SIM_OBJS = \
 +	interp.o \
-+	$(SIM_NEW_COMMON_OBJS) \
-+	sim-hload.o \
-+	sim-stop.o
++	$(SIM_NEW_COMMON_OBJS)
 +
 +## COMMON_POST_CONFIG_FRAG
 diff --git a/sim/pru/aclocal.m4 b/sim/pru/aclocal.m4
 new file mode 100644
-index 0000000..a24bbeb
+index 0000000..517bc73
 --- /dev/null
 +++ b/sim/pru/aclocal.m4
-@@ -0,0 +1,130 @@
-+# generated automatically by aclocal 1.11.3 -*- Autoconf -*-
+@@ -0,0 +1,129 @@
++# generated automatically by aclocal 1.11.1 -*- Autoconf -*-
 +
 +# Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-+# 2005, 2006, 2007, 2008, 2009, 2010, 2011 Free Software Foundation,
-+# Inc.
++# 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
 +# This file is free software; the Free Software Foundation
 +# gives unlimited permission to copy and/or distribute it,
 +# with or without modifications, as long as this notice is preserved.
@@ -8600,8 +8591,8 @@ index 0000000..a24bbeb
 +# Add --enable-maintainer-mode option to configure.         -*- Autoconf -*-
 +# From Jim Meyering
 +
-+# Copyright (C) 1996, 1998, 2000, 2001, 2002, 2003, 2004, 2005, 2008,
-+# 2011 Free Software Foundation, Inc.
++# Copyright (C) 1996, 1998, 2000, 2001, 2002, 2003, 2004, 2005, 2008
++# Free Software Foundation, Inc.
 +#
 +# This file is free software; the Free Software Foundation
 +# gives unlimited permission to copy and/or distribute it,
@@ -8621,7 +8612,7 @@ index 0000000..a24bbeb
 +       [disable], [m4_define([am_maintainer_other], [enable])],
 +       [m4_define([am_maintainer_other], [enable])
 +        m4_warn([syntax], [unexpected argument to AM@&t@_MAINTAINER_MODE: $1])])
-+AC_MSG_CHECKING([whether to enable maintainer-specific portions of Makefiles])
++AC_MSG_CHECKING([whether to am_maintainer_other maintainer-specific portions of Makefiles])
 +  dnl maintainer-mode's default is 'disable' unless 'enable' is passed
 +  AC_ARG_ENABLE([maintainer-mode],
 +[  --][am_maintainer_other][-maintainer-mode  am_maintainer_other make rules and dependencies not useful
@@ -8637,13 +8628,13 @@ index 0000000..a24bbeb
 +
 +AU_DEFUN([jm_MAINTAINER_MODE], [AM_MAINTAINER_MODE])
 +
-+# Copyright (C) 2006, 2008, 2010 Free Software Foundation, Inc.
++# Copyright (C) 2006, 2008  Free Software Foundation, Inc.
 +#
 +# This file is free software; the Free Software Foundation
 +# gives unlimited permission to copy and/or distribute it,
 +# with or without modifications, as long as this notice is preserved.
 +
-+# serial 3
++# serial 2
 +
 +# _AM_SUBST_NOTMAKE(VARIABLE)
 +# ---------------------------
@@ -8652,20 +8643,23 @@ index 0000000..a24bbeb
 +AC_DEFUN([_AM_SUBST_NOTMAKE])
 +
 +# AM_SUBST_NOTMAKE(VARIABLE)
-+# --------------------------
++# ---------------------------
 +# Public sister of _AM_SUBST_NOTMAKE.
 +AC_DEFUN([AM_SUBST_NOTMAKE], [_AM_SUBST_NOTMAKE($@)])
 +
 diff --git a/sim/pru/config.in b/sim/pru/config.in
 new file mode 100644
-index 0000000..fc7af77
+index 0000000..aa3e45c
 --- /dev/null
 +++ b/sim/pru/config.in
-@@ -0,0 +1,158 @@
+@@ -0,0 +1,248 @@
 +/* config.in.  Generated from configure.ac by autoheader.  */
 +
 +/* Define if building universal (internal helper macro) */
 +#undef AC_APPLE_UNIVERSAL_BUILD
++
++/* Sim debug setting */
++#undef DEBUG
 +
 +/* Define to 1 if translation of program messages to the user's native
 +   language is requested. */
@@ -8683,6 +8677,9 @@ index 0000000..fc7af77
 +/* Define to 1 if you have the <fpu_control.h> header file. */
 +#undef HAVE_FPU_CONTROL_H
 +
++/* Define to 1 if you have the `ftruncate' function. */
++#undef HAVE_FTRUNCATE
++
 +/* Define to 1 if you have the `getrusage' function. */
 +#undef HAVE_GETRUSAGE
 +
@@ -8695,11 +8692,26 @@ index 0000000..fc7af77
 +/* Define to 1 if you have the `socket' library (-lsocket). */
 +#undef HAVE_LIBSOCKET
 +
++/* Define to 1 if you have the `lstat' function. */
++#undef HAVE_LSTAT
++
 +/* Define to 1 if you have the <memory.h> header file. */
 +#undef HAVE_MEMORY_H
 +
++/* Define to 1 if you have the `mmap' function. */
++#undef HAVE_MMAP
++
++/* Define to 1 if you have the `munmap' function. */
++#undef HAVE_MUNMAP
++
++/* Define to 1 if you have the `posix_fallocate' function. */
++#undef HAVE_POSIX_FALLOCATE
++
 +/* Define to 1 if you have the `sigaction' function. */
 +#undef HAVE_SIGACTION
++
++/* Define to 1 if the system has the type `socklen_t'. */
++#undef HAVE_SOCKLEN_T
 +
 +/* Define to 1 if you have the <stdint.h> header file. */
 +#undef HAVE_STDINT_H
@@ -8713,11 +8725,56 @@ index 0000000..fc7af77
 +/* Define to 1 if you have the <string.h> header file. */
 +#undef HAVE_STRING_H
 +
++/* Define to 1 if `struct stat' is a member of `st_atime'. */
++#undef HAVE_STRUCT_STAT_ST_ATIME
++
++/* Define to 1 if `struct stat' is a member of `st_blksize'. */
++#undef HAVE_STRUCT_STAT_ST_BLKSIZE
++
++/* Define to 1 if `struct stat' is a member of `st_blocks'. */
++#undef HAVE_STRUCT_STAT_ST_BLOCKS
++
++/* Define to 1 if `struct stat' is a member of `st_ctime'. */
++#undef HAVE_STRUCT_STAT_ST_CTIME
++
++/* Define to 1 if `struct stat' is a member of `st_dev'. */
++#undef HAVE_STRUCT_STAT_ST_DEV
++
++/* Define to 1 if `struct stat' is a member of `st_gid'. */
++#undef HAVE_STRUCT_STAT_ST_GID
++
++/* Define to 1 if `struct stat' is a member of `st_ino'. */
++#undef HAVE_STRUCT_STAT_ST_INO
++
++/* Define to 1 if `struct stat' is a member of `st_mode'. */
++#undef HAVE_STRUCT_STAT_ST_MODE
++
++/* Define to 1 if `struct stat' is a member of `st_mtime'. */
++#undef HAVE_STRUCT_STAT_ST_MTIME
++
++/* Define to 1 if `struct stat' is a member of `st_nlink'. */
++#undef HAVE_STRUCT_STAT_ST_NLINK
++
++/* Define to 1 if `struct stat' is a member of `st_rdev'. */
++#undef HAVE_STRUCT_STAT_ST_RDEV
++
++/* Define to 1 if `struct stat' is a member of `st_size'. */
++#undef HAVE_STRUCT_STAT_ST_SIZE
++
++/* Define to 1 if `struct stat' is a member of `st_uid'. */
++#undef HAVE_STRUCT_STAT_ST_UID
++
++/* Define to 1 if you have the <sys/mman.h> header file. */
++#undef HAVE_SYS_MMAN_H
++
 +/* Define to 1 if you have the <sys/resource.h> header file. */
 +#undef HAVE_SYS_RESOURCE_H
 +
 +/* Define to 1 if you have the <sys/stat.h> header file. */
 +#undef HAVE_SYS_STAT_H
++
++/* Define to 1 if you have the <sys/times.h> header file. */
++#undef HAVE_SYS_TIMES_H
 +
 +/* Define to 1 if you have the <sys/time.h> header file. */
 +#undef HAVE_SYS_TIME_H
@@ -8730,6 +8787,9 @@ index 0000000..fc7af77
 +
 +/* Define to 1 if you have the <time.h> header file. */
 +#undef HAVE_TIME_H
++
++/* Define to 1 if you have the `truncate' function. */
++#undef HAVE_TRUNCATE
 +
 +/* Define to 1 if you have the <unistd.h> header file. */
 +#undef HAVE_UNISTD_H
@@ -8768,6 +8828,9 @@ index 0000000..fc7af77
 +/* Additional package description */
 +#undef PKGVERSION
 +
++/* Sim profile settings */
++#undef PROFILE
++
 +/* Bug reporting address */
 +#undef REPORT_BUGS_TO
 +
@@ -8799,6 +8862,24 @@ index 0000000..fc7af77
 +#endif
 +
 +
++/* Sim assert settings */
++#undef WITH_ASSERT
++
++/* Sim debug setting */
++#undef WITH_DEBUG
++
++/* Sim default environment */
++#undef WITH_ENVIRONMENT
++
++/* Sim profile settings */
++#undef WITH_PROFILE
++
++/* How to route I/O */
++#undef WITH_STDIO
++
++/* Sim trace settings */
++#undef WITH_TRACE
++
 +/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
 +   significant byte first (like Motorola and SPARC, unlike Intel). */
 +#if defined AC_APPLE_UNIVERSAL_BUILD
@@ -8822,10 +8903,10 @@ index 0000000..fc7af77
 +#undef _POSIX_SOURCE
 diff --git a/sim/pru/configure b/sim/pru/configure
 new file mode 100755
-index 0000000..39f93ad
+index 0000000..e177055
 --- /dev/null
 +++ b/sim/pru/configure
-@@ -0,0 +1,15674 @@
+@@ -0,0 +1,15903 @@
 +#! /bin/sh
 +# Guess values for system-dependent variables and create Makefiles.
 +# Generated by GNU Autoconf 2.64.
@@ -9432,12 +9513,6 @@ index 0000000..39f93ad
 +REPORT_BUGS_TEXI
 +REPORT_BUGS_TO
 +PKGVERSION
-+sim_profile
-+sim_trace
-+sim_stdio
-+sim_debug
-+sim_cflags
-+sim_bswap
 +MAINT
 +MAINTAINER_MODE_FALSE
 +MAINTAINER_MODE_TRUE
@@ -9512,12 +9587,7 @@ index 0000000..39f93ad
 +CC
 +WERROR_CFLAGS
 +WARN_CFLAGS
-+sim_xor_endian
-+sim_stdcall
-+sim_smp
 +sim_reserved_bits
-+sim_regparm
-+sim_packages
 +sim_inline
 +sim_hw
 +sim_hw_objs
@@ -9525,12 +9595,9 @@ index 0000000..39f93ad
 +sim_default_model
 +sim_scache
 +sim_float
-+sim_hostendian
 +sim_endian
 +sim_bitsize
-+sim_assert
 +sim_alignment
-+sim_environment
 +target_alias
 +host_alias
 +build_alias
@@ -9581,19 +9648,17 @@ index 0000000..39f93ad
 +with_gnu_ld
 +enable_libtool_lock
 +enable_maintainer_mode
-+enable_sim_bswap
-+enable_sim_cflags
 +enable_sim_debug
 +enable_sim_stdio
 +enable_sim_trace
 +enable_sim_profile
++enable_sim_assert
++enable_sim_environment
++enable_sim_inline
 +with_pkgversion
 +with_bugurl
 +enable_sim_endian
 +enable_sim_alignment
-+enable_sim_hostendian
-+enable_sim_environment
-+enable_sim_inline
 +enable_werror
 +enable_build_warnings
 +enable_sim_build_warnings
@@ -10233,17 +10298,24 @@ index 0000000..39f93ad
 +  --disable-libtool-lock  avoid locking (might break parallel builds)
 +  --enable-maintainer-mode  enable make rules and dependencies not useful
 +			  (and sometimes confusing) to the casual installer
-+  --enable-sim-bswap			Use Host specific BSWAP instruction.
-+  --enable-sim-cflags=opts		Extra CFLAGS for use in building simulator
-+  --enable-sim-debug=opts		Enable debugging flags
-+  --enable-sim-stdio			Specify whether to use stdio for console input/output.
-+  --enable-sim-trace=opts		Enable tracing flags
-+  --enable-sim-profile=opts		Enable profiling flags
-+  --enable-sim-endian=endian		Specify target byte endian orientation.
-+  --enable-sim-alignment=align		Specify strict,  nonstrict or forced alignment of memory accesses.
-+  --enable-sim-hostendian=end		Specify host byte endian orientation.
-+  --enable-sim-environment=environment	Specify mixed, user, virtual or operating environment.
-+  --enable-sim-inline=inlines		Specify which functions should be inlined.
++  --enable-sim-debug=opts Enable debugging flags (for developers of the sim
++                          itself)
++  --enable-sim-stdio      Specify whether to use stdio for console
++                          input/output
++  --enable-sim-trace=opts Enable tracing of simulated programs
++  --enable-sim-profile=opts
++                          Enable profiling flags
++  --enable-sim-assert     Specify whether to perform random assertions
++  --enable-sim-environment=environment
++                          Specify mixed, user, virtual or operating
++                          environment
++  --enable-sim-inline=inlines
++                          Specify which functions should be inlined
++  --enable-sim-endian=endian
++                          Specify target byte endian orientation
++  --enable-sim-alignment=align
++                          Specify strict, nonstrict or forced alignment of
++                          memory accesses
 +  --enable-werror         treat compile warnings as errors
 +  --enable-build-warnings enable build-time compiler warnings if gcc is used
 +  --enable-sim-build-warnings
@@ -10697,6 +10769,117 @@ index 0000000..39f93ad
 +  eval $as_lineno_stack; test "x$as_lineno_stack" = x && { as_lineno=; unset as_lineno;}
 +
 +} # ac_fn_c_check_func
++
++# ac_fn_c_check_member LINENO AGGR MEMBER VAR INCLUDES
++# ----------------------------------------------------
++# Tries to find if the field MEMBER exists in type AGGR, after including
++# INCLUDES, setting cache variable VAR accordingly.
++ac_fn_c_check_member ()
++{
++  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
++  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $2.$3" >&5
++$as_echo_n "checking for $2.$3... " >&6; }
++if { as_var=$4; eval "test \"\${$as_var+set}\" = set"; }; then :
++  $as_echo_n "(cached) " >&6
++else
++  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++$5
++int
++main ()
++{
++static $2 ac_aggr;
++if (ac_aggr.$3)
++return 0;
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++  eval "$4=yes"
++else
++  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++$5
++int
++main ()
++{
++static $2 ac_aggr;
++if (sizeof ac_aggr.$3)
++return 0;
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++  eval "$4=yes"
++else
++  eval "$4=no"
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++fi
++eval ac_res=\$$4
++	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
++$as_echo "$ac_res" >&6; }
++  eval $as_lineno_stack; test "x$as_lineno_stack" = x && { as_lineno=; unset as_lineno;}
++
++} # ac_fn_c_check_member
++
++# ac_fn_c_check_type LINENO TYPE VAR INCLUDES
++# -------------------------------------------
++# Tests whether TYPE exists after having included INCLUDES, setting cache
++# variable VAR accordingly.
++ac_fn_c_check_type ()
++{
++  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
++  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $2" >&5
++$as_echo_n "checking for $2... " >&6; }
++if { as_var=$3; eval "test \"\${$as_var+set}\" = set"; }; then :
++  $as_echo_n "(cached) " >&6
++else
++  eval "$3=no"
++  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++$4
++int
++main ()
++{
++if (sizeof ($2))
++	 return 0;
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++$4
++int
++main ()
++{
++if (sizeof (($2)))
++	    return 0;
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++
++else
++  eval "$3=yes"
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++fi
++eval ac_res=\$$3
++	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
++$as_echo "$ac_res" >&6; }
++  eval $as_lineno_stack; test "x$as_lineno_stack" = x && { as_lineno=; unset as_lineno;}
++
++} # ac_fn_c_check_type
 +cat >config.log <<_ACEOF
 +This file contains any messages produced by compilers while
 +running configure, to aid debugging if configure makes a mistake.
@@ -11055,7 +11238,7 @@ index 0000000..39f93ad
 +# SIM_AC_OUTPUT is a cover function to AC_OUTPUT to generate the Makefile.
 +# It is intended to be invoked last.
 +#
-+# The simulator's configure.in should look like:
++# The simulator's configure.ac should look like:
 +#
 +# dnl Process this file with autoconf to produce a configure script.
 +# AC_PREREQ(2.64)dnl
@@ -12714,27 +12897,6 @@ index 0000000..39f93ad
 +
 +
 +
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+sim_inline="-DDEFAULT_INLINE=0"
 +
 +
 +
@@ -17009,6 +17171,230 @@ index 0000000..39f93ad
 +
 +
 +
++ { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether byte ordering is bigendian" >&5
++$as_echo_n "checking whether byte ordering is bigendian... " >&6; }
++if test "${ac_cv_c_bigendian+set}" = set; then :
++  $as_echo_n "(cached) " >&6
++else
++  ac_cv_c_bigendian=unknown
++    # See if we're dealing with a universal compiler.
++    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++#ifndef __APPLE_CC__
++	       not a universal capable compiler
++	     #endif
++	     typedef int dummy;
++
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++
++	# Check for potential -arch flags.  It is not universal unless
++	# there are at least two -arch flags with different values.
++	ac_arch=
++	ac_prev=
++	for ac_word in $CC $CFLAGS $CPPFLAGS $LDFLAGS; do
++	 if test -n "$ac_prev"; then
++	   case $ac_word in
++	     i?86 | x86_64 | ppc | ppc64)
++	       if test -z "$ac_arch" || test "$ac_arch" = "$ac_word"; then
++		 ac_arch=$ac_word
++	       else
++		 ac_cv_c_bigendian=universal
++		 break
++	       fi
++	       ;;
++	   esac
++	   ac_prev=
++	 elif test "x$ac_word" = "x-arch"; then
++	   ac_prev=arch
++	 fi
++       done
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++    if test $ac_cv_c_bigendian = unknown; then
++      # See if sys/param.h defines the BYTE_ORDER macro.
++      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++#include <sys/types.h>
++	     #include <sys/param.h>
++
++int
++main ()
++{
++#if ! (defined BYTE_ORDER && defined BIG_ENDIAN \
++		     && defined LITTLE_ENDIAN && BYTE_ORDER && BIG_ENDIAN \
++		     && LITTLE_ENDIAN)
++	      bogus endian macros
++	     #endif
++
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++  # It does; now see whether it defined to BIG_ENDIAN or not.
++	 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++#include <sys/types.h>
++		#include <sys/param.h>
++
++int
++main ()
++{
++#if BYTE_ORDER != BIG_ENDIAN
++		 not big endian
++		#endif
++
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++  ac_cv_c_bigendian=yes
++else
++  ac_cv_c_bigendian=no
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++    fi
++    if test $ac_cv_c_bigendian = unknown; then
++      # See if <limits.h> defines _LITTLE_ENDIAN or _BIG_ENDIAN (e.g., Solaris).
++      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++#include <limits.h>
++
++int
++main ()
++{
++#if ! (defined _LITTLE_ENDIAN || defined _BIG_ENDIAN)
++	      bogus endian macros
++	     #endif
++
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++  # It does; now see whether it defined to _BIG_ENDIAN or not.
++	 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++#include <limits.h>
++
++int
++main ()
++{
++#ifndef _BIG_ENDIAN
++		 not big endian
++		#endif
++
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++  ac_cv_c_bigendian=yes
++else
++  ac_cv_c_bigendian=no
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++    fi
++    if test $ac_cv_c_bigendian = unknown; then
++      # Compile a test program.
++      if test "$cross_compiling" = yes; then :
++  # Try to guess by grepping values from an object file.
++	 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++short int ascii_mm[] =
++		  { 0x4249, 0x4765, 0x6E44, 0x6961, 0x6E53, 0x7953, 0 };
++		short int ascii_ii[] =
++		  { 0x694C, 0x5454, 0x656C, 0x6E45, 0x6944, 0x6E61, 0 };
++		int use_ascii (int i) {
++		  return ascii_mm[i] + ascii_ii[i];
++		}
++		short int ebcdic_ii[] =
++		  { 0x89D3, 0xE3E3, 0x8593, 0x95C5, 0x89C4, 0x9581, 0 };
++		short int ebcdic_mm[] =
++		  { 0xC2C9, 0xC785, 0x95C4, 0x8981, 0x95E2, 0xA8E2, 0 };
++		int use_ebcdic (int i) {
++		  return ebcdic_mm[i] + ebcdic_ii[i];
++		}
++		extern int foo;
++
++int
++main ()
++{
++return use_ascii (foo) == use_ebcdic (foo);
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_compile "$LINENO"; then :
++  if grep BIGenDianSyS conftest.$ac_objext >/dev/null; then
++	      ac_cv_c_bigendian=yes
++	    fi
++	    if grep LiTTleEnDian conftest.$ac_objext >/dev/null ; then
++	      if test "$ac_cv_c_bigendian" = unknown; then
++		ac_cv_c_bigendian=no
++	      else
++		# finding both strings is unlikely to happen, but who knows?
++		ac_cv_c_bigendian=unknown
++	      fi
++	    fi
++fi
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++else
++  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++$ac_includes_default
++int
++main ()
++{
++
++	     /* Are we little or big endian?  From Harbison&Steele.  */
++	     union
++	     {
++	       long int l;
++	       char c[sizeof (long int)];
++	     } u;
++	     u.l = 1;
++	     return u.c[sizeof (long int) - 1] == 1;
++
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_run "$LINENO"; then :
++  ac_cv_c_bigendian=no
++else
++  ac_cv_c_bigendian=yes
++fi
++rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
++  conftest.$ac_objext conftest.beam conftest.$ac_ext
++fi
++
++    fi
++fi
++{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_c_bigendian" >&5
++$as_echo "$ac_cv_c_bigendian" >&6; }
++ case $ac_cv_c_bigendian in #(
++   yes)
++     $as_echo "#define WORDS_BIGENDIAN 1" >>confdefs.h
++;; #(
++   no)
++      ;; #(
++   universal)
++
++$as_echo "#define AC_APPLE_UNIVERSAL_BUILD 1" >>confdefs.h
++
++     ;; #(
++   *)
++     as_fn_error "unknown endianness
++ presetting ac_cv_c_bigendian=no (or yes) will help" "$LINENO" 5 ;;
++ esac
++
 +
 +
 +
@@ -17115,8 +17501,6 @@ index 0000000..39f93ad
 +else
 +  RANLIB="$ac_cv_prog_RANLIB"
 +fi
-+
-+
 +
 +
 +# Some of the common include files depend on bfd.h, and bfd.h checks
@@ -17378,7 +17762,7 @@ index 0000000..39f93ad
 +
 +done
 +
-+for ac_header in sys/time.h sys/resource.h
++for ac_header in sys/time.h sys/times.h sys/resource.h sys/mman.h
 +do :
 +  as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
 +ac_fn_c_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
@@ -17432,6 +17816,228 @@ index 0000000..39f93ad
 +
 +fi
 +done
++
++for ac_func in mmap munmap lstat truncate ftruncate posix_fallocate
++do :
++  as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
++ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
++eval as_val=\$$as_ac_var
++   if test "x$as_val" = x""yes; then :
++  cat >>confdefs.h <<_ACEOF
++#define `$as_echo "HAVE_$ac_func" | $as_tr_cpp` 1
++_ACEOF
++
++fi
++done
++
++ac_fn_c_check_member "$LINENO" "struct stat" "st_dev" "ac_cv_member_struct_stat_st_dev" "#ifdef HAVE_SYS_TYPES_H
++#include <sys/types.h>
++#endif
++#ifdef HAVE_SYS_STAT_H
++#include <sys/stat.h>
++#endif
++"
++if test "x$ac_cv_member_struct_stat_st_dev" = x""yes; then :
++
++cat >>confdefs.h <<_ACEOF
++#define HAVE_STRUCT_STAT_ST_DEV 1
++_ACEOF
++
++
++fi
++ac_fn_c_check_member "$LINENO" "struct stat" "st_ino" "ac_cv_member_struct_stat_st_ino" "#ifdef HAVE_SYS_TYPES_H
++#include <sys/types.h>
++#endif
++#ifdef HAVE_SYS_STAT_H
++#include <sys/stat.h>
++#endif
++"
++if test "x$ac_cv_member_struct_stat_st_ino" = x""yes; then :
++
++cat >>confdefs.h <<_ACEOF
++#define HAVE_STRUCT_STAT_ST_INO 1
++_ACEOF
++
++
++fi
++ac_fn_c_check_member "$LINENO" "struct stat" "st_mode" "ac_cv_member_struct_stat_st_mode" "#ifdef HAVE_SYS_TYPES_H
++#include <sys/types.h>
++#endif
++#ifdef HAVE_SYS_STAT_H
++#include <sys/stat.h>
++#endif
++"
++if test "x$ac_cv_member_struct_stat_st_mode" = x""yes; then :
++
++cat >>confdefs.h <<_ACEOF
++#define HAVE_STRUCT_STAT_ST_MODE 1
++_ACEOF
++
++
++fi
++ac_fn_c_check_member "$LINENO" "struct stat" "st_nlink" "ac_cv_member_struct_stat_st_nlink" "#ifdef HAVE_SYS_TYPES_H
++#include <sys/types.h>
++#endif
++#ifdef HAVE_SYS_STAT_H
++#include <sys/stat.h>
++#endif
++"
++if test "x$ac_cv_member_struct_stat_st_nlink" = x""yes; then :
++
++cat >>confdefs.h <<_ACEOF
++#define HAVE_STRUCT_STAT_ST_NLINK 1
++_ACEOF
++
++
++fi
++ac_fn_c_check_member "$LINENO" "struct stat" "st_uid" "ac_cv_member_struct_stat_st_uid" "#ifdef HAVE_SYS_TYPES_H
++#include <sys/types.h>
++#endif
++#ifdef HAVE_SYS_STAT_H
++#include <sys/stat.h>
++#endif
++"
++if test "x$ac_cv_member_struct_stat_st_uid" = x""yes; then :
++
++cat >>confdefs.h <<_ACEOF
++#define HAVE_STRUCT_STAT_ST_UID 1
++_ACEOF
++
++
++fi
++ac_fn_c_check_member "$LINENO" "struct stat" "st_gid" "ac_cv_member_struct_stat_st_gid" "#ifdef HAVE_SYS_TYPES_H
++#include <sys/types.h>
++#endif
++#ifdef HAVE_SYS_STAT_H
++#include <sys/stat.h>
++#endif
++"
++if test "x$ac_cv_member_struct_stat_st_gid" = x""yes; then :
++
++cat >>confdefs.h <<_ACEOF
++#define HAVE_STRUCT_STAT_ST_GID 1
++_ACEOF
++
++
++fi
++ac_fn_c_check_member "$LINENO" "struct stat" "st_rdev" "ac_cv_member_struct_stat_st_rdev" "#ifdef HAVE_SYS_TYPES_H
++#include <sys/types.h>
++#endif
++#ifdef HAVE_SYS_STAT_H
++#include <sys/stat.h>
++#endif
++"
++if test "x$ac_cv_member_struct_stat_st_rdev" = x""yes; then :
++
++cat >>confdefs.h <<_ACEOF
++#define HAVE_STRUCT_STAT_ST_RDEV 1
++_ACEOF
++
++
++fi
++ac_fn_c_check_member "$LINENO" "struct stat" "st_size" "ac_cv_member_struct_stat_st_size" "#ifdef HAVE_SYS_TYPES_H
++#include <sys/types.h>
++#endif
++#ifdef HAVE_SYS_STAT_H
++#include <sys/stat.h>
++#endif
++"
++if test "x$ac_cv_member_struct_stat_st_size" = x""yes; then :
++
++cat >>confdefs.h <<_ACEOF
++#define HAVE_STRUCT_STAT_ST_SIZE 1
++_ACEOF
++
++
++fi
++ac_fn_c_check_member "$LINENO" "struct stat" "st_blksize" "ac_cv_member_struct_stat_st_blksize" "#ifdef HAVE_SYS_TYPES_H
++#include <sys/types.h>
++#endif
++#ifdef HAVE_SYS_STAT_H
++#include <sys/stat.h>
++#endif
++"
++if test "x$ac_cv_member_struct_stat_st_blksize" = x""yes; then :
++
++cat >>confdefs.h <<_ACEOF
++#define HAVE_STRUCT_STAT_ST_BLKSIZE 1
++_ACEOF
++
++
++fi
++ac_fn_c_check_member "$LINENO" "struct stat" "st_blocks" "ac_cv_member_struct_stat_st_blocks" "#ifdef HAVE_SYS_TYPES_H
++#include <sys/types.h>
++#endif
++#ifdef HAVE_SYS_STAT_H
++#include <sys/stat.h>
++#endif
++"
++if test "x$ac_cv_member_struct_stat_st_blocks" = x""yes; then :
++
++cat >>confdefs.h <<_ACEOF
++#define HAVE_STRUCT_STAT_ST_BLOCKS 1
++_ACEOF
++
++
++fi
++ac_fn_c_check_member "$LINENO" "struct stat" "st_atime" "ac_cv_member_struct_stat_st_atime" "#ifdef HAVE_SYS_TYPES_H
++#include <sys/types.h>
++#endif
++#ifdef HAVE_SYS_STAT_H
++#include <sys/stat.h>
++#endif
++"
++if test "x$ac_cv_member_struct_stat_st_atime" = x""yes; then :
++
++cat >>confdefs.h <<_ACEOF
++#define HAVE_STRUCT_STAT_ST_ATIME 1
++_ACEOF
++
++
++fi
++ac_fn_c_check_member "$LINENO" "struct stat" "st_mtime" "ac_cv_member_struct_stat_st_mtime" "#ifdef HAVE_SYS_TYPES_H
++#include <sys/types.h>
++#endif
++#ifdef HAVE_SYS_STAT_H
++#include <sys/stat.h>
++#endif
++"
++if test "x$ac_cv_member_struct_stat_st_mtime" = x""yes; then :
++
++cat >>confdefs.h <<_ACEOF
++#define HAVE_STRUCT_STAT_ST_MTIME 1
++_ACEOF
++
++
++fi
++ac_fn_c_check_member "$LINENO" "struct stat" "st_ctime" "ac_cv_member_struct_stat_st_ctime" "#ifdef HAVE_SYS_TYPES_H
++#include <sys/types.h>
++#endif
++#ifdef HAVE_SYS_STAT_H
++#include <sys/stat.h>
++#endif
++"
++if test "x$ac_cv_member_struct_stat_st_ctime" = x""yes; then :
++
++cat >>confdefs.h <<_ACEOF
++#define HAVE_STRUCT_STAT_ST_CTIME 1
++_ACEOF
++
++
++fi
++
++ac_fn_c_check_type "$LINENO" "socklen_t" "ac_cv_type_socklen_t" "#include <sys/types.h>
++#include <sys/socket.h>
++
++"
++if test "x$ac_cv_type_socklen_t" = x""yes; then :
++
++cat >>confdefs.h <<_ACEOF
++#define HAVE_SOCKLEN_T 1
++_ACEOF
++
++
++fi
 +
 +
 +# Check for socket libraries
@@ -21134,7 +21740,7 @@ index 0000000..39f93ad
 +  lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
 +  lt_status=$lt_dlunknown
 +  cat > conftest.$ac_ext <<_LT_EOF
-+#line 12309 "configure"
++#line 12834 "configure"
 +#include "confdefs.h"
 +
 +#if HAVE_DLFCN_H
@@ -21240,7 +21846,7 @@ index 0000000..39f93ad
 +  lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
 +  lt_status=$lt_dlunknown
 +  cat > conftest.$ac_ext <<_LT_EOF
-+#line 12415 "configure"
++#line 12940 "configure"
 +#include "confdefs.h"
 +
 +#if HAVE_DLFCN_H
@@ -21508,121 +22114,192 @@ index 0000000..39f93ad
 +
 +
 +
-+# Check whether --enable-sim-bswap was given.
-+if test "${enable_sim_bswap+set}" = set; then :
-+  enableval=$enable_sim_bswap; case "${enableval}" in
-+  yes)	sim_bswap="-DWITH_BSWAP=1 -DUSE_BSWAP=1";;
-+  no)	sim_bswap="-DWITH_BSWAP=0";;
-+  *)	as_fn_error "\"--enable-sim-bswap does not take a value\"" "$LINENO" 5; sim_bswap="";;
-+esac
-+if test x"$silent" != x"yes" && test x"$sim_bswap" != x""; then
-+  echo "Setting bswap flags = $sim_bswap" 6>&1
-+fi
-+else
-+  sim_bswap=""
-+fi
-+
-+
-+
-+# Check whether --enable-sim-cflags was given.
-+if test "${enable_sim_cflags+set}" = set; then :
-+  enableval=$enable_sim_cflags; case "${enableval}" in
-+  yes)	 sim_cflags="-O2 -fomit-frame-pointer";;
-+  trace) as_fn_error "\"Please use --enable-sim-debug instead.\"" "$LINENO" 5; sim_cflags="";;
-+  no)	 sim_cflags="";;
-+  *)	 sim_cflags=`echo "${enableval}" | sed -e "s/,/ /g"`;;
-+esac
-+if test x"$silent" != x"yes" && test x"$sim_cflags" != x""; then
-+  echo "Setting sim cflags = $sim_cflags" 6>&1
-+fi
-+else
-+  sim_cflags=""
-+fi
-+
-+
-+
++{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for sim debug setting" >&5
++$as_echo_n "checking for sim debug setting... " >&6; }
++sim_debug="0"
 +# Check whether --enable-sim-debug was given.
 +if test "${enable_sim_debug+set}" = set; then :
 +  enableval=$enable_sim_debug; case "${enableval}" in
-+  yes) sim_debug="-DDEBUG=7 -DWITH_DEBUG=7";;
-+  no)  sim_debug="-DDEBUG=0 -DWITH_DEBUG=0";;
-+  *)   sim_debug="-DDEBUG='(${enableval})' -DWITH_DEBUG='(${enableval})'";;
++  yes) sim_debug="7";;
++  no)  sim_debug="0";;
++  *)   sim_debug="($enableval)";;
 +esac
-+if test x"$silent" != x"yes" && test x"$sim_debug" != x""; then
-+  echo "Setting sim debug = $sim_debug" 6>&1
 +fi
-+else
-+  sim_debug=""
++if test "$sim_debug" != "0"; then
++
++cat >>confdefs.h <<_ACEOF
++#define DEBUG $sim_debug
++_ACEOF
++
 +fi
 +
++cat >>confdefs.h <<_ACEOF
++#define WITH_DEBUG $sim_debug
++_ACEOF
++
++{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $sim_debug" >&5
++$as_echo "$sim_debug" >&6; }
 +
 +
++{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for sim stdio debug behavior" >&5
++$as_echo_n "checking for sim stdio debug behavior... " >&6; }
++sim_stdio="0"
 +# Check whether --enable-sim-stdio was given.
 +if test "${enable_sim_stdio+set}" = set; then :
 +  enableval=$enable_sim_stdio; case "${enableval}" in
-+  yes)	sim_stdio="-DWITH_STDIO=DO_USE_STDIO";;
-+  no)	sim_stdio="-DWITH_STDIO=DONT_USE_STDIO";;
-+  *)	as_fn_error "\"Unknown value $enableval passed to --enable-sim-stdio\"" "$LINENO" 5; sim_stdio="";;
++  yes)	sim_stdio="DO_USE_STDIO";;
++  no)	sim_stdio="DONT_USE_STDIO";;
++  *)	as_fn_error "Unknown value $enableval passed to --enable-sim-stdio" "$LINENO" 5;;
 +esac
-+if test x"$silent" != x"yes" && test x"$sim_stdio" != x""; then
-+  echo "Setting stdio flags = $sim_stdio" 6>&1
-+fi
-+else
-+  sim_stdio=""
 +fi
 +
++cat >>confdefs.h <<_ACEOF
++#define WITH_STDIO $sim_stdio
++_ACEOF
++
++{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $sim_stdio" >&5
++$as_echo "$sim_stdio" >&6; }
 +
 +
++{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for sim trace settings" >&5
++$as_echo_n "checking for sim trace settings... " >&6; }
++sim_trace="~TRACE_debug"
 +# Check whether --enable-sim-trace was given.
 +if test "${enable_sim_trace+set}" = set; then :
 +  enableval=$enable_sim_trace; case "${enableval}" in
-+  yes)	sim_trace="-DTRACE=1 -DWITH_TRACE=-1";;
-+  no)	sim_trace="-DTRACE=0 -DWITH_TRACE=0";;
++  yes)	sim_trace="-1";;
++  no)	sim_trace="0";;
 +  [-0-9]*)
-+	sim_trace="-DTRACE='(${enableval})' -DWITH_TRACE='(${enableval})'";;
++	sim_trace="'(${enableval})'";;
 +  [[:lower:]]*)
 +	sim_trace=""
 +	for x in `echo "$enableval" | sed -e "s/,/ /g"`; do
 +	  if test x"$sim_trace" = x; then
-+	    sim_trace="-DWITH_TRACE='(TRACE_$x"
++	    sim_trace="(TRACE_$x"
 +	  else
 +	    sim_trace="${sim_trace}|TRACE_$x"
 +	  fi
 +	done
-+	sim_trace="$sim_trace)'" ;;
++	sim_trace="$sim_trace)" ;;
 +esac
-+if test x"$silent" != x"yes" && test x"$sim_trace" != x""; then
-+  echo "Setting sim trace = $sim_trace" 6>&1
-+fi
-+else
-+  sim_trace=""
 +fi
 +
++cat >>confdefs.h <<_ACEOF
++#define WITH_TRACE $sim_trace
++_ACEOF
++
++{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $sim_trace" >&5
++$as_echo "$sim_trace" >&6; }
 +
 +
++{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for sim profile settings" >&5
++$as_echo_n "checking for sim profile settings... " >&6; }
++profile="1"
++sim_profile="-1"
 +# Check whether --enable-sim-profile was given.
 +if test "${enable_sim_profile+set}" = set; then :
 +  enableval=$enable_sim_profile; case "${enableval}" in
-+  yes)	sim_profile="-DPROFILE=1 -DWITH_PROFILE=-1";;
-+  no)	sim_profile="-DPROFILE=0 -DWITH_PROFILE=0";;
++  yes)	profile="1" sim_profile="-1";;
++  no)	profile="0" sim_profile="0";;
 +  [-0-9]*)
-+	sim_profile="-DPROFILE='(${enableval})' -DWITH_PROFILE='(${enableval})'";;
++	profile="(${enableval})" sim_profile="(${enableval})";;
 +  [a-z]*)
++    profile="1"
 +	sim_profile=""
 +	for x in `echo "$enableval" | sed -e "s/,/ /g"`; do
 +	  if test x"$sim_profile" = x; then
-+	    sim_profile="-DWITH_PROFILE='(PROFILE_$x"
++	    sim_profile="(PROFILE_$x"
 +	  else
 +	    sim_profile="${sim_profile}|PROFILE_$x"
 +	  fi
 +	done
-+	sim_profile="$sim_profile)'" ;;
++	sim_profile="$sim_profile)" ;;
 +esac
-+if test x"$silent" != x"yes" && test x"$sim_profile" != x""; then
-+  echo "Setting sim profile = $sim_profile" 6>&1
 +fi
-+else
-+  sim_profile="-DPROFILE=1 -DWITH_PROFILE=-1"
++
++cat >>confdefs.h <<_ACEOF
++#define PROFILE $profile
++_ACEOF
++
++
++cat >>confdefs.h <<_ACEOF
++#define WITH_PROFILE $sim_profile
++_ACEOF
++
++{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $sim_profile" >&5
++$as_echo "$sim_profile" >&6; }
++
++
++
++{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable sim asserts" >&5
++$as_echo_n "checking whether to enable sim asserts... " >&6; }
++sim_assert="1"
++# Check whether --enable-sim-assert was given.
++if test "${enable_sim_assert+set}" = set; then :
++  enableval=$enable_sim_assert; case "${enableval}" in
++  yes)	sim_assert="1";;
++  no)	sim_assert="0";;
++  *)	as_fn_error "--enable-sim-assert does not take a value" "$LINENO" 5;;
++esac
++fi
++
++cat >>confdefs.h <<_ACEOF
++#define WITH_ASSERT $sim_assert
++_ACEOF
++
++{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $sim_assert" >&5
++$as_echo "$sim_assert" >&6; }
++
++
++{ $as_echo "$as_me:${as_lineno-$LINENO}: checking default sim environment setting" >&5
++$as_echo_n "checking default sim environment setting... " >&6; }
++sim_environment="ALL_ENVIRONMENT"
++# Check whether --enable-sim-environment was given.
++if test "${enable_sim_environment+set}" = set; then :
++  enableval=$enable_sim_environment; case "${enableval}" in
++  all | ALL)             sim_environment="ALL_ENVIRONMENT";;
++  user | USER)           sim_environment="USER_ENVIRONMENT";;
++  virtual | VIRTUAL)     sim_environment="VIRTUAL_ENVIRONMENT";;
++  operating | OPERATING) sim_environment="OPERATING_ENVIRONMENT";;
++  *)   as_fn_error "Unknown value $enableval passed to --enable-sim-environment" "$LINENO" 5;;
++esac
++fi
++
++cat >>confdefs.h <<_ACEOF
++#define WITH_ENVIRONMENT $sim_environment
++_ACEOF
++
++{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $sim_environment" >&5
++$as_echo "$sim_environment" >&6; }
++
++
++sim_inline="-DDEFAULT_INLINE=0"
++# Check whether --enable-sim-inline was given.
++if test "${enable_sim_inline+set}" = set; then :
++  enableval=$enable_sim_inline; sim_inline=""
++case "$enableval" in
++  no)		sim_inline="-DDEFAULT_INLINE=0";;
++  0)		sim_inline="-DDEFAULT_INLINE=0";;
++  yes | 2)	sim_inline="-DDEFAULT_INLINE=ALL_C_INLINE";;
++  1)		sim_inline="-DDEFAULT_INLINE=INLINE_LOCALS";;
++  *) for x in `echo "$enableval" | sed -e "s/,/ /g"`; do
++       new_flag=""
++       case "$x" in
++	 *_INLINE=*)	new_flag="-D$x";;
++	 *=*)		new_flag=`echo "$x" | sed -e "s/=/_INLINE=/" -e "s/^/-D/"`;;
++	 *_INLINE)	new_flag="-D$x=ALL_C_INLINE";;
++	 *)		new_flag="-D$x""_INLINE=ALL_C_INLINE";;
++       esac
++       if test x"$sim_inline" = x""; then
++	 sim_inline="$new_flag"
++       else
++	 sim_inline="$sim_inline $new_flag"
++       fi
++     done;;
++esac
++if test x"$silent" != x"yes" && test x"$sim_inline" != x""; then
++  echo "Setting inline flags = $sim_inline" 6>&1
++fi
 +fi
 +
 +
@@ -21718,16 +22395,6 @@ index 0000000..39f93ad
 +
 +
 +
-+sim_link_files=
-+sim_link_links=
-+
-+# targ-vals.def points to the libc macro description file.
-+case "${target}" in
-+*-*-*) TARG_VALS_DEF=../common/nltvals.def ;;
-+esac
-+sim_link_files="${sim_link_files} ${TARG_VALS_DEF}"
-+sim_link_links="${sim_link_links} targ-vals.def"
-+
 +
 +
 +
@@ -21736,26 +22403,26 @@ index 0000000..39f93ad
 +# Check whether --enable-sim-endian was given.
 +if test "${enable_sim_endian+set}" = set; then :
 +  enableval=$enable_sim_endian; case "${enableval}" in
-+  b*|B*) sim_endian="-DWITH_TARGET_BYTE_ORDER=BIG_ENDIAN";;
-+  l*|L*) sim_endian="-DWITH_TARGET_BYTE_ORDER=LITTLE_ENDIAN";;
++  b*|B*) sim_endian="-DWITH_TARGET_BYTE_ORDER=BFD_ENDIAN_BIG";;
++  l*|L*) sim_endian="-DWITH_TARGET_BYTE_ORDER=BFD_ENDIAN_LITTLE";;
 +  yes)	 if test x"$wire_endian" != x; then
-+	   sim_endian="-DWITH_TARGET_BYTE_ORDER=${wire_endian}"
++	   sim_endian="-DWITH_TARGET_BYTE_ORDER=BFD_ENDIAN_${wire_endian}"
 +	 else
-+           if test x"$default_endian" != x; then
-+	     sim_endian="-DWITH_TARGET_BYTE_ORDER=${default_endian}"
++	  if test x"$default_endian" != x; then
++	     sim_endian="-DWITH_TARGET_BYTE_ORDER=BFD_ENDIAN_${default_endian}"
 +	   else
 +	     echo "No hard-wired endian for target $target" 1>&6
-+	     sim_endian="-DWITH_TARGET_BYTE_ORDER=0"
++	     sim_endian="-DWITH_TARGET_BYTE_ORDER=BFD_ENDIAN_UNKNOWN"
 +	   fi
 +	 fi;;
 +  no)	 if test x"$default_endian" != x; then
-+	   sim_endian="-DWITH_DEFAULT_TARGET_BYTE_ORDER=${default_endian}"
++	   sim_endian="-DWITH_DEFAULT_TARGET_BYTE_ORDER=BFD_ENDIAN_${default_endian}"
 +	 else
 +	   if test x"$wire_endian" != x; then
-+	     sim_endian="-DWITH_DEFAULT_TARGET_BYTE_ORDER=${wire_endian}"
++	     sim_endian="-DWITH_DEFAULT_TARGET_BYTE_ORDER=BFD_ENDIAN_${wire_endian}"
 +	   else
 +	     echo "No default endian for target $target" 1>&6
-+	     sim_endian="-DWITH_DEFAULT_TARGET_BYTE_ORDER=0"
++	     sim_endian="-DWITH_DEFAULT_TARGET_BYTE_ORDER=BFD_ENDIAN_UNKNOWN"
 +	   fi
 +	 fi;;
 +  *)	 as_fn_error "\"Unknown value $enableval for --enable-sim-endian\"" "$LINENO" 5; sim_endian="";;
@@ -21765,10 +22432,10 @@ index 0000000..39f93ad
 +fi
 +else
 +  if test x"$default_endian" != x; then
-+  sim_endian="-DWITH_DEFAULT_TARGET_BYTE_ORDER=${default_endian}"
++  sim_endian="-DWITH_DEFAULT_TARGET_BYTE_ORDER=BFD_ENDIAN_${default_endian}"
 +else
 +  if test x"$wire_endian" != x; then
-+    sim_endian="-DWITH_TARGET_BYTE_ORDER=${wire_endian}"
++    sim_endian="-DWITH_TARGET_BYTE_ORDER=BFD_ENDIAN_${wire_endian}"
 +  else
 +    sim_endian=
 +  fi
@@ -21818,317 +22485,6 @@ index 0000000..39f93ad
 +  else
 +    sim_alignment=
 +  fi
-+fi
-+fi
-+
-+
-+# Check whether --enable-sim-hostendian was given.
-+if test "${enable_sim_hostendian+set}" = set; then :
-+  enableval=$enable_sim_hostendian; case "${enableval}" in
-+  no)	 sim_hostendian="-DWITH_HOST_BYTE_ORDER=0";;
-+  b*|B*) sim_hostendian="-DWITH_HOST_BYTE_ORDER=BIG_ENDIAN";;
-+  l*|L*) sim_hostendian="-DWITH_HOST_BYTE_ORDER=LITTLE_ENDIAN";;
-+  *)	 as_fn_error "\"Unknown value $enableval for --enable-sim-hostendian\"" "$LINENO" 5; sim_hostendian="";;
-+esac
-+if test x"$silent" != x"yes" && test x"$sim_hostendian" != x""; then
-+  echo "Setting hostendian flags = $sim_hostendian" 6>&1
-+fi
-+else
-+
-+if test "x$cross_compiling" = "xno"; then
-+   { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether byte ordering is bigendian" >&5
-+$as_echo_n "checking whether byte ordering is bigendian... " >&6; }
-+if test "${ac_cv_c_bigendian+set}" = set; then :
-+  $as_echo_n "(cached) " >&6
-+else
-+  ac_cv_c_bigendian=unknown
-+    # See if we're dealing with a universal compiler.
-+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-+/* end confdefs.h.  */
-+#ifndef __APPLE_CC__
-+	       not a universal capable compiler
-+	     #endif
-+	     typedef int dummy;
-+
-+_ACEOF
-+if ac_fn_c_try_compile "$LINENO"; then :
-+
-+	# Check for potential -arch flags.  It is not universal unless
-+	# there are at least two -arch flags with different values.
-+	ac_arch=
-+	ac_prev=
-+	for ac_word in $CC $CFLAGS $CPPFLAGS $LDFLAGS; do
-+	 if test -n "$ac_prev"; then
-+	   case $ac_word in
-+	     i?86 | x86_64 | ppc | ppc64)
-+	       if test -z "$ac_arch" || test "$ac_arch" = "$ac_word"; then
-+		 ac_arch=$ac_word
-+	       else
-+		 ac_cv_c_bigendian=universal
-+		 break
-+	       fi
-+	       ;;
-+	   esac
-+	   ac_prev=
-+	 elif test "x$ac_word" = "x-arch"; then
-+	   ac_prev=arch
-+	 fi
-+       done
-+fi
-+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-+    if test $ac_cv_c_bigendian = unknown; then
-+      # See if sys/param.h defines the BYTE_ORDER macro.
-+      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-+/* end confdefs.h.  */
-+#include <sys/types.h>
-+	     #include <sys/param.h>
-+
-+int
-+main ()
-+{
-+#if ! (defined BYTE_ORDER && defined BIG_ENDIAN \
-+		     && defined LITTLE_ENDIAN && BYTE_ORDER && BIG_ENDIAN \
-+		     && LITTLE_ENDIAN)
-+	      bogus endian macros
-+	     #endif
-+
-+  ;
-+  return 0;
-+}
-+_ACEOF
-+if ac_fn_c_try_compile "$LINENO"; then :
-+  # It does; now see whether it defined to BIG_ENDIAN or not.
-+	 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-+/* end confdefs.h.  */
-+#include <sys/types.h>
-+		#include <sys/param.h>
-+
-+int
-+main ()
-+{
-+#if BYTE_ORDER != BIG_ENDIAN
-+		 not big endian
-+		#endif
-+
-+  ;
-+  return 0;
-+}
-+_ACEOF
-+if ac_fn_c_try_compile "$LINENO"; then :
-+  ac_cv_c_bigendian=yes
-+else
-+  ac_cv_c_bigendian=no
-+fi
-+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-+fi
-+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-+    fi
-+    if test $ac_cv_c_bigendian = unknown; then
-+      # See if <limits.h> defines _LITTLE_ENDIAN or _BIG_ENDIAN (e.g., Solaris).
-+      cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-+/* end confdefs.h.  */
-+#include <limits.h>
-+
-+int
-+main ()
-+{
-+#if ! (defined _LITTLE_ENDIAN || defined _BIG_ENDIAN)
-+	      bogus endian macros
-+	     #endif
-+
-+  ;
-+  return 0;
-+}
-+_ACEOF
-+if ac_fn_c_try_compile "$LINENO"; then :
-+  # It does; now see whether it defined to _BIG_ENDIAN or not.
-+	 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-+/* end confdefs.h.  */
-+#include <limits.h>
-+
-+int
-+main ()
-+{
-+#ifndef _BIG_ENDIAN
-+		 not big endian
-+		#endif
-+
-+  ;
-+  return 0;
-+}
-+_ACEOF
-+if ac_fn_c_try_compile "$LINENO"; then :
-+  ac_cv_c_bigendian=yes
-+else
-+  ac_cv_c_bigendian=no
-+fi
-+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-+fi
-+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-+    fi
-+    if test $ac_cv_c_bigendian = unknown; then
-+      # Compile a test program.
-+      if test "$cross_compiling" = yes; then :
-+  # Try to guess by grepping values from an object file.
-+	 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-+/* end confdefs.h.  */
-+short int ascii_mm[] =
-+		  { 0x4249, 0x4765, 0x6E44, 0x6961, 0x6E53, 0x7953, 0 };
-+		short int ascii_ii[] =
-+		  { 0x694C, 0x5454, 0x656C, 0x6E45, 0x6944, 0x6E61, 0 };
-+		int use_ascii (int i) {
-+		  return ascii_mm[i] + ascii_ii[i];
-+		}
-+		short int ebcdic_ii[] =
-+		  { 0x89D3, 0xE3E3, 0x8593, 0x95C5, 0x89C4, 0x9581, 0 };
-+		short int ebcdic_mm[] =
-+		  { 0xC2C9, 0xC785, 0x95C4, 0x8981, 0x95E2, 0xA8E2, 0 };
-+		int use_ebcdic (int i) {
-+		  return ebcdic_mm[i] + ebcdic_ii[i];
-+		}
-+		extern int foo;
-+
-+int
-+main ()
-+{
-+return use_ascii (foo) == use_ebcdic (foo);
-+  ;
-+  return 0;
-+}
-+_ACEOF
-+if ac_fn_c_try_compile "$LINENO"; then :
-+  if grep BIGenDianSyS conftest.$ac_objext >/dev/null; then
-+	      ac_cv_c_bigendian=yes
-+	    fi
-+	    if grep LiTTleEnDian conftest.$ac_objext >/dev/null ; then
-+	      if test "$ac_cv_c_bigendian" = unknown; then
-+		ac_cv_c_bigendian=no
-+	      else
-+		# finding both strings is unlikely to happen, but who knows?
-+		ac_cv_c_bigendian=unknown
-+	      fi
-+	    fi
-+fi
-+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-+else
-+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-+/* end confdefs.h.  */
-+$ac_includes_default
-+int
-+main ()
-+{
-+
-+	     /* Are we little or big endian?  From Harbison&Steele.  */
-+	     union
-+	     {
-+	       long int l;
-+	       char c[sizeof (long int)];
-+	     } u;
-+	     u.l = 1;
-+	     return u.c[sizeof (long int) - 1] == 1;
-+
-+  ;
-+  return 0;
-+}
-+_ACEOF
-+if ac_fn_c_try_run "$LINENO"; then :
-+  ac_cv_c_bigendian=no
-+else
-+  ac_cv_c_bigendian=yes
-+fi
-+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
-+  conftest.$ac_objext conftest.beam conftest.$ac_ext
-+fi
-+
-+    fi
-+fi
-+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_c_bigendian" >&5
-+$as_echo "$ac_cv_c_bigendian" >&6; }
-+ case $ac_cv_c_bigendian in #(
-+   yes)
-+     $as_echo "#define WORDS_BIGENDIAN 1" >>confdefs.h
-+;; #(
-+   no)
-+      ;; #(
-+   universal)
-+
-+$as_echo "#define AC_APPLE_UNIVERSAL_BUILD 1" >>confdefs.h
-+
-+     ;; #(
-+   *)
-+     as_fn_error "unknown endianness
-+ presetting ac_cv_c_bigendian=no (or yes) will help" "$LINENO" 5 ;;
-+ esac
-+
-+  if test $ac_cv_c_bigendian = yes; then
-+    sim_hostendian="-DWITH_HOST_BYTE_ORDER=BIG_ENDIAN"
-+  else
-+    sim_hostendian="-DWITH_HOST_BYTE_ORDER=LITTLE_ENDIAN"
-+  fi
-+else
-+  sim_hostendian="-DWITH_HOST_BYTE_ORDER=0"
-+fi
-+fi
-+
-+
-+# Check whether --enable-sim-environment was given.
-+if test "${enable_sim_environment+set}" = set; then :
-+  enableval=$enable_sim_environment; case "${enableval}" in
-+  all | ALL)             sim_environment="-DWITH_ENVIRONMENT=ALL_ENVIRONMENT";;
-+  user | USER)           sim_environment="-DWITH_ENVIRONMENT=USER_ENVIRONMENT";;
-+  virtual | VIRTUAL)     sim_environment="-DWITH_ENVIRONMENT=VIRTUAL_ENVIRONMENT";;
-+  operating | OPERATING) sim_environment="-DWITH_ENVIRONMENT=OPERATING_ENVIRONMENT";;
-+  *)   as_fn_error "\"Unknown value $enableval passed to --enable-sim-environment\"" "$LINENO" 5;
-+       sim_environment="";;
-+esac
-+if test x"$silent" != x"yes" && test x"$sim_environment" != x""; then
-+  echo "Setting sim environment = $sim_environment" 6>&1
-+fi
-+else
-+  sim_environment="-DWITH_ENVIRONMENT=ALL_ENVIRONMENT"
-+fi
-+
-+
-+default_sim_inline=""
-+# Check whether --enable-sim-inline was given.
-+if test "${enable_sim_inline+set}" = set; then :
-+  enableval=$enable_sim_inline; sim_inline=""
-+case "$enableval" in
-+  no)		sim_inline="-DDEFAULT_INLINE=0";;
-+  0)		sim_inline="-DDEFAULT_INLINE=0";;
-+  yes | 2)	sim_inline="-DDEFAULT_INLINE=ALL_C_INLINE";;
-+  1)		sim_inline="-DDEFAULT_INLINE=INLINE_LOCALS";;
-+  *) for x in `echo "$enableval" | sed -e "s/,/ /g"`; do
-+       new_flag=""
-+       case "$x" in
-+	 *_INLINE=*)	new_flag="-D$x";;
-+	 *=*)		new_flag=`echo "$x" | sed -e "s/=/_INLINE=/" -e "s/^/-D/"`;;
-+	 *_INLINE)	new_flag="-D$x=ALL_C_INLINE";;
-+	 *)		new_flag="-D$x""_INLINE=ALL_C_INLINE";;
-+       esac
-+       if test x"$sim_inline" = x""; then
-+	 sim_inline="$new_flag"
-+       else
-+	 sim_inline="$sim_inline $new_flag"
-+       fi
-+     done;;
-+esac
-+if test x"$silent" != x"yes" && test x"$sim_inline" != x""; then
-+  echo "Setting inline flags = $sim_inline" 6>&1
-+fi
-+else
-+
-+if test "x$cross_compiling" = "xno"; then
-+  if test x"$GCC" != "x" -a x"${default_sim_inline}" != "x" ; then
-+    sim_inline="${default_sim_inline}"
-+    if test x"$silent" != x"yes"; then
-+      echo "Setting inline flags = $sim_inline" 6>&1
-+    fi
-+  else
-+    sim_inline=""
-+  fi
-+else
-+  sim_inline="-DDEFAULT_INLINE=0"
 +fi
 +fi
 +
@@ -22235,15 +22591,6 @@ index 0000000..39f93ad
 +fi
 +
 +
-+
-+ac_sources="$sim_link_files"
-+ac_dests="$sim_link_links"
-+while test -n "$ac_sources"; do
-+  set $ac_dests; ac_dest=$1; shift; ac_dests=$*
-+  set $ac_sources; ac_source=$1; shift; ac_sources=$*
-+  ac_config_links_1="$ac_config_links_1 $ac_dest:$ac_source"
-+done
-+ac_config_links="$ac_config_links $ac_config_links_1"
 +
 +cgen_breaks=""
 +if grep CGEN_MAINT $srcdir/Makefile.in >/dev/null; then
@@ -22357,6 +22704,7 @@ index 0000000..39f93ad
 +LTLIBOBJS=$ac_ltlibobjs
 +
 +
++
 +if test -z "${GMAKE_TRUE}" && test -z "${GMAKE_FALSE}"; then
 +  as_fn_error "conditional \"GMAKE\" was never defined.
 +Usually this means the macro was only invoked conditionally." "$LINENO" 5
@@ -22369,7 +22717,6 @@ index 0000000..39f93ad
 +  as_fn_error "conditional \"MAINTAINER_MODE\" was never defined.
 +Usually this means the macro was only invoked conditionally." "$LINENO" 5
 +fi
-+
 +
 +: ${CONFIG_STATUS=./config.status}
 +ac_write_fail=0
@@ -22805,7 +23152,6 @@ index 0000000..39f93ad
 +# Files that config.status was made for.
 +config_files="$ac_config_files"
 +config_headers="$ac_config_headers"
-+config_links="$ac_config_links"
 +config_commands="$ac_config_commands"
 +
 +_ACEOF
@@ -22834,9 +23180,6 @@ index 0000000..39f93ad
 +
 +Configuration headers:
 +$config_headers
-+
-+Configuration links:
-+$config_links
 +
 +Configuration commands:
 +$config_commands
@@ -23229,7 +23572,6 @@ index 0000000..39f93ad
 +    "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h:config.in" ;;
 +    "depdir") CONFIG_COMMANDS="$CONFIG_COMMANDS depdir" ;;
 +    "libtool") CONFIG_COMMANDS="$CONFIG_COMMANDS libtool" ;;
-+    "$ac_config_links_1") CONFIG_LINKS="$CONFIG_LINKS $ac_config_links_1" ;;
 +    "Makefile.sim") CONFIG_FILES="$CONFIG_FILES Makefile.sim:Makefile.in" ;;
 +    "Make-common.sim") CONFIG_FILES="$CONFIG_FILES Make-common.sim:../common/Make-common.in" ;;
 +    ".gdbinit") CONFIG_FILES="$CONFIG_FILES .gdbinit:../common/gdbinit.in" ;;
@@ -23248,7 +23590,6 @@ index 0000000..39f93ad
 +if $ac_need_defaults; then
 +  test "${CONFIG_FILES+set}" = set || CONFIG_FILES=$config_files
 +  test "${CONFIG_HEADERS+set}" = set || CONFIG_HEADERS=$config_headers
-+  test "${CONFIG_LINKS+set}" = set || CONFIG_LINKS=$config_links
 +  test "${CONFIG_COMMANDS+set}" = set || CONFIG_COMMANDS=$config_commands
 +fi
 +
@@ -23536,7 +23877,7 @@ index 0000000..39f93ad
 +fi # test -n "$CONFIG_HEADERS"
 +
 +
-+eval set X "  :F $CONFIG_FILES  :H $CONFIG_HEADERS  :L $CONFIG_LINKS  :C $CONFIG_COMMANDS"
++eval set X "  :F $CONFIG_FILES  :H $CONFIG_HEADERS    :C $CONFIG_COMMANDS"
 +shift
 +for ac_tag
 +do
@@ -23772,38 +24113,7 @@ index 0000000..39f93ad
 +      || as_fn_error "could not create -" "$LINENO" 5
 +  fi
 + ;;
-+  :L)
-+  #
-+  # CONFIG_LINK
-+  #
 +
-+  if test "$ac_source" = "$ac_file" && test "$srcdir" = '.'; then
-+    :
-+  else
-+    # Prefer the file from the source tree if names are identical.
-+    if test "$ac_source" = "$ac_file" || test ! -r "$ac_source"; then
-+      ac_source=$srcdir/$ac_source
-+    fi
-+
-+    { $as_echo "$as_me:${as_lineno-$LINENO}: linking $ac_source to $ac_file" >&5
-+$as_echo "$as_me: linking $ac_source to $ac_file" >&6;}
-+
-+    if test ! -r "$ac_source"; then
-+      as_fn_error "$ac_source: file not found" "$LINENO" 5
-+    fi
-+    rm -f "$ac_file"
-+
-+    # Try a relative symlink, then a hard link, then a copy.
-+    case $srcdir in
-+    [\\/$]* | ?:[\\/]* ) ac_rel_source=$ac_source ;;
-+	*) ac_rel_source=$ac_top_build_prefix$ac_source ;;
-+    esac
-+    ln -s "$ac_rel_source" "$ac_file" 2>/dev/null ||
-+      ln "$ac_source" "$ac_file" 2>/dev/null ||
-+      cp -p "$ac_source" "$ac_file" ||
-+      as_fn_error "cannot link or copy $ac_source to $ac_file" "$LINENO" 5
-+  fi
-+ ;;
 +  :C)  { $as_echo "$as_me:${as_lineno-$LINENO}: executing $ac_file commands" >&5
 +$as_echo "$as_me: executing $ac_file commands" >&6;}
 + ;;
@@ -24502,10 +24812,10 @@ index 0000000..39f93ad
 +
 diff --git a/sim/pru/configure.ac b/sim/pru/configure.ac
 new file mode 100644
-index 0000000..96d0ffd
+index 0000000..a93418f
 --- /dev/null
 +++ b/sim/pru/configure.ac
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,12 @@
 +dnl Process this file with autoconf to produce a configure script.
 +AC_PREREQ(2.64)dnl
 +AC_INIT(Makefile.in)
@@ -24515,18 +24825,15 @@ index 0000000..96d0ffd
 +
 +SIM_AC_OPTION_ENDIAN
 +SIM_AC_OPTION_ALIGNMENT(STRICT_ALIGNMENT,STRICT_ALIGNMENT)
-+SIM_AC_OPTION_HOSTENDIAN
-+SIM_AC_OPTION_ENVIRONMENT
-+SIM_AC_OPTION_INLINE
 +SIM_AC_OPTION_WARNINGS
 +
 +SIM_AC_OUTPUT
 diff --git a/sim/pru/interp.c b/sim/pru/interp.c
 new file mode 100644
-index 0000000..9b2d412
+index 0000000..f676094
 --- /dev/null
 +++ b/sim/pru/interp.c
-@@ -0,0 +1,952 @@
+@@ -0,0 +1,960 @@
 +/* Simulator for PRU processor
 +   Copyright 2014 Free Software Foundation, Inc.
 +   Inspired by the Microblase simulator
@@ -24571,12 +24878,12 @@ index 0000000..9b2d412
 +
 +/* TODO - remove global variables */
 +static int issue_messages = 0;
-+const static int tracing = 0;
++static const int tracing = 0;
 +static int sim_dmem_size = DMEM_DEFAULT_SIZE;
 +
 +/* DMEM zero address is perfectly valid. But if CRT leaves the first word
 +   alone, we can use it as a trap to catch NULL pointer access. */
-+const static int abort_on_dmem_zero_access = 0;
++static const int abort_on_dmem_zero_access = 0;
 +
 +/* Extract (from PRU endianess) and return an integer in HOST's endianness. */
 +static uint32_t
@@ -25157,7 +25464,13 @@ index 0000000..9b2d412
 +
 +      /* handle PC match of loop end */
 +      if (LOOP_IN_PROGRESS && (PC == LOOPEND))
-+	PC = LOOPTOP;
++	{
++	  assert (LOOPCNT > 0);
++	  if (--LOOPCNT == 0)
++	    LOOP_IN_PROGRESS = 0;
++	  else
++	    PC = LOOPTOP;
++	}
 +
 +      /* Update cycle counts */
 +      insts++;
@@ -25334,7 +25647,8 @@ index 0000000..9b2d412
 +}
 +
 +SIM_DESC
-+sim_open (SIM_OPEN_KIND kind, host_callback *cb, struct bfd *abfd, char **argv)
++sim_open (SIM_OPEN_KIND kind, host_callback *cb,
++	  struct bfd *abfd, char * const *argv)
 +{
 +  int i;
 +  SIM_DESC sd = sim_state_alloc (kind, cb);
@@ -25419,7 +25733,8 @@ index 0000000..9b2d412
 +}
 +
 +SIM_RC
-+sim_create_inferior (SIM_DESC sd, struct bfd *prog_bfd, char **argv, char **env)
++sim_create_inferior (SIM_DESC sd, struct bfd *prog_bfd,
++		     char * const *argv, char * const *env)
 +{
 +  SIM_CPU *cpu = STATE_CPU (sd, 0);
 +
@@ -25582,10 +25897,10 @@ index 0000000..221ea73
 +
 diff --git a/sim/pru/pru.isa b/sim/pru/pru.isa
 new file mode 100644
-index 0000000..686822d
+index 0000000..0932e81
 --- /dev/null
 +++ b/sim/pru/pru.isa
-@@ -0,0 +1,250 @@
+@@ -0,0 +1,240 @@
 +/* Copyright 2014 Free Software Foundation, Inc.
 +
 +   This file is part of the PRU simulator.
@@ -25798,42 +26113,32 @@ index 0000000..686822d
 +
 +INSTRUCTION(loop,
 +	    OP2 = (IO ? IMM8 : (RS2 & 0xffffu));
-+	    LOOPTOP = PC;
-+	    LOOPEND = PC + LOOP_JMPOFFS;
-+	    if (!LOOP_IN_PROGRESS)
++	    if (OP2 == 0)
 +	      {
-+		LOOPCNT = OP2;
-+		LOOP_IN_PROGRESS = 1;
-+	      }
-+	    if (LOOPCNT > 0)
-+	      {
-+	        LOOPCNT--;
-+		PC++;
++		PC = LOOPEND;
 +	      }
 +	    else
 +	      {
-+		LOOP_IN_PROGRESS = 0;
-+		PC = LOOPEND;
++		LOOPTOP = PC + 1;
++		LOOPEND = PC + LOOP_JMPOFFS;
++		LOOPCNT = OP2;
++		LOOP_IN_PROGRESS = 1;
++		PC++;
 +	      })
 +
 +INSTRUCTION(iloop,
 +	    OP2 = (IO ? IMM8 : (RS2 & 0xffffu));
-+	    LOOPTOP = PC;
-+	    LOOPEND = PC + LOOP_JMPOFFS;
-+	    if (!LOOP_IN_PROGRESS)
++	    if (OP2 == 0)
 +	      {
-+		LOOPCNT = OP2;
-+		LOOP_IN_PROGRESS = 1;
-+	      }
-+	    if (LOOPCNT > 0)
-+	      {
-+	        LOOPCNT--;
-+		PC++;
++		PC = LOOPEND;
 +	      }
 +	    else
 +	      {
-+		LOOP_IN_PROGRESS = 0;
-+		PC = LOOPEND;
++		LOOPTOP = PC + 1;
++		LOOPEND = PC + LOOP_JMPOFFS;
++		LOOPCNT = OP2;
++		LOOP_IN_PROGRESS = 1;
++		PC++;
 +	      })
 +
 diff --git a/sim/pru/sim-main.h b/sim/pru/sim-main.h
@@ -25923,5 +26228,5 @@ index 0000000..01f683c
 +#endif /* PRU_SIM_MAIN */
 +
 -- 
-2.7.0
+2.8.1
 
