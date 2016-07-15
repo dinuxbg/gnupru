@@ -37,7 +37,7 @@ There are experimental scripts for packaging binutils and gcc+newlib.
 
 Installing the prerequisites:
 
-	sudo apt-get install dh-autoreconf libgmp-dev libmpfr-dev libmpc-dev libzip-dev
+	sudo apt-get install dh-autoreconf libgmp-dev libmpfr-dev libmpc-dev libzip-dev autoconf2.64 lsb-release patchutils
 
 Building and packaging:
 
