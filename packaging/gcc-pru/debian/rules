@@ -26,7 +26,8 @@ CONFARGS = -v \
 	--disable-libssp \
     --build=$(DEB_BUILD_GNU_TYPE) \
     --host=$(DEB_HOST_GNU_TYPE) \
-    --target=$(TARGET) 
+    --target=$(TARGET) \
+    --with-bugurl="https://github.com/dinuxbg/gnupru/issues"
 #    $(shell dpkg-buildflags --export=configure) 
 
 srcdir=src
