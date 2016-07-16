@@ -27,8 +27,8 @@ CONFARGS = -v \
     --build=$(DEB_BUILD_GNU_TYPE) \
     --host=$(DEB_HOST_GNU_TYPE) \
     --target=$(TARGET) \
-    --with-bugurl="https://github.com/dinuxbg/gnupru/issues"
-#    $(shell dpkg-buildflags --export=configure) 
+    --with-bugurl="https://github.com/dinuxbg/gnupru/issues" \
+    $(shell dpkg-buildflags --export=configure | sed -e 's/-Werror=format-security//g')
 
 srcdir=src
 
