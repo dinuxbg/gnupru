@@ -1,7 +1,7 @@
-From e72a89b7c593d9f203e0b5c1b4b3130172b880e9 Mon Sep 17 00:00:00 2001
+From 0e7276129bd06196344697b788112c5647cdd096 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sat, 6 Feb 2016 21:47:44 +0200
-Subject: [PATCH 3/3] WIP: doloop support
+Subject: [PATCH 3/4] WIP: doloop support
 
 TODO:
   - Add recognition for and handle "double-entry" loops, e.g.:
@@ -23,17 +23,21 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  gcc/testsuite/gcc.target/pru/loop-hi-2.c           |  18 +
  gcc/testsuite/gcc.target/pru/loop-qi-1.c           |  38 ++
  gcc/testsuite/gcc.target/pru/loop-qi-2.c           |  18 +
+ gcc/testsuite/gcc.target/pru/loop-short-1.c        |  38 ++
+ gcc/testsuite/gcc.target/pru/loop-short-2.c        |  21 +
  gcc/testsuite/gcc.target/pru/loop-si-1.c           |  41 ++
  gcc/testsuite/gcc.target/pru/loop-si-2.c           |  20 +
  .../gcc.target/pru/loop-u8_pcrel_overflow.c        |  49 ++
  gcc/testsuite/gcc.target/pru/loop-ubyte-1.c        |  30 ++
  gcc/testsuite/gcc.target/pru/loop-ubyte-2.c        |  18 +
- 17 files changed, 937 insertions(+), 17 deletions(-)
+ 19 files changed, 996 insertions(+), 17 deletions(-)
  create mode 100644 gcc/testsuite/gcc.target/pru/loop-dowhile.c
  create mode 100644 gcc/testsuite/gcc.target/pru/loop-hi-1.c
  create mode 100644 gcc/testsuite/gcc.target/pru/loop-hi-2.c
  create mode 100644 gcc/testsuite/gcc.target/pru/loop-qi-1.c
  create mode 100644 gcc/testsuite/gcc.target/pru/loop-qi-2.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/loop-short-1.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/loop-short-2.c
  create mode 100644 gcc/testsuite/gcc.target/pru/loop-si-1.c
  create mode 100644 gcc/testsuite/gcc.target/pru/loop-si-2.c
  create mode 100644 gcc/testsuite/gcc.target/pru/loop-u8_pcrel_overflow.c
@@ -1042,6 +1046,77 @@ index 0000000..eb4882e
 +  volatile unsigned int s = 0;
 +
 +  /* { dg-final { scan-assembler "loop\\t.L\[0-9\]*, r\[0-9b.\]*" } } */
++  for (i = 0; i < n; i++)
++    s++;
++  return s;
++}
+diff --git a/gcc/testsuite/gcc.target/pru/loop-short-1.c b/gcc/testsuite/gcc.target/pru/loop-short-1.c
+new file mode 100644
+index 0000000..b921c6e
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/loop-short-1.c
+@@ -0,0 +1,38 @@
++/* Test LOOP generation for very short loops. */
++
++/* { dg-do run } */
++/* { dg-options "-O1 -mloop" } */
++
++/* -O1 in the options is significant.  Without it do-loop will not be
++   run.  */
++
++extern void abort (void);
++
++volatile unsigned int int_12345 = 12345;
++volatile unsigned int int_0 = 0;
++volatile unsigned int int_1 = 1;
++
++unsigned int
++test_loop (unsigned int n, unsigned )
++{
++	unsigned i;
++	for (i = 0; i < 100; i++) {
++		x <<= 2;
++	}
++	return x;
++}
++
++
++int
++main (int argc, char** argv)
++{
++  if (test_loop (int_0) != 0)
++    abort();
++  if (test_loop (int_1) != 1)
++    abort();
++  if (test_loop (int_12345) != 12345)
++    abort();
++
++  return 0;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/loop-short-2.c b/gcc/testsuite/gcc.target/pru/loop-short-2.c
+new file mode 100644
+index 0000000..7554763
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/loop-short-2.c
+@@ -0,0 +1,21 @@
++/* Test LOOP generation for very short loops. */
++
++/* { dg-options "-O1 -mloop" } */
++
++/* -O1 in the options is significant.  Without it do-loop will not be
++   run.  */
++
++unsigned int
++test_loop (unsigned int n)
++{
++  unsigned int i;
++  volatile unsigned int s = 0;
++
++  if (n >= 0x10000) return 0;
++
++  /* { dg-final { scan-assembler "loop\\t.L\[0-9\]*, r\[0-9\]*" } } */
++  /* { dg-final { scan-assembler "nop" } } */
 +  for (i = 0; i < n; i++)
 +    s++;
 +  return s;

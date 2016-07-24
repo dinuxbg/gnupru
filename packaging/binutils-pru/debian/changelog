@@ -1,3 +1,9 @@
+binutils-pru (2.27.51.20160724-1) unstable; urgency=medium
+
+  * Update to gnupru release 2016.07-beta-rc1
+
+ -- Dimitar Dimitrov <dinux@tpdeb>  Sun, 24 Jul 2016 17:02:58 +0300
+
 binutils-pru (2.25.51.20150928-1) unstable; urgency=high
 
   * Initial package for PRU binutils.

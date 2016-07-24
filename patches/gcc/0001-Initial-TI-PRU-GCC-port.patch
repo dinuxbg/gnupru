@@ -1,7 +1,7 @@
-From 9f1027bccf3feaa26daa933051ffb62aa2e6a854 Mon Sep 17 00:00:00 2001
+From a345a8b24ad2d1b3f5c29ce62eee7a2a052e0fd7 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Mon, 30 Dec 2013 23:47:32 +0200
-Subject: [PATCH 1/3] Initial TI PRU GCC port
+Subject: [PATCH 1/4] Initial TI PRU GCC port
 
 Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---
@@ -29,6 +29,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  gcc/doc/extend.texi                                |   20 +
  gcc/doc/md.texi                                    |   22 +
  gcc/testsuite/gcc.c-torture/execute/20101011-1.c   |    3 +
+ gcc/testsuite/gcc.c-torture/execute/pr47237.c      |    2 +-
  gcc/testsuite/gcc.dg/20020312-2.c                  |    2 +
  gcc/testsuite/gcc.dg/stack-usage-1.c               |    2 +
  gcc/testsuite/gcc.dg/tree-ssa/20040204-1.c         |    2 +-
@@ -36,6 +37,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c         |    2 +-
  gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c         |    2 +-
  gcc/testsuite/gcc.dg/tree-ssa/reassoc-36.c         |    2 +-
+ gcc/testsuite/gcc.dg/tree-ssa/ssa-thread-14.c      |    2 +-
  gcc/testsuite/gcc.target/pru/builtins-1.c          |   12 +
  gcc/testsuite/gcc.target/pru/builtins-error.c      |    6 +
  gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c |   22 +
@@ -63,7 +65,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgcc/config/pru/pru-asm.h                        |   36 +
  libgcc/config/pru/pru-divmod.h                     |  117 +
  libgcc/config/pru/t-pru                            |   40 +
- 58 files changed, 11254 insertions(+), 7 deletions(-)
+ 60 files changed, 11256 insertions(+), 9 deletions(-)
  create mode 100644 gcc/common/config/pru/pru-common.c
  create mode 100644 gcc/config/pru/alu-zext.md
  create mode 100755 gcc/config/pru/alu-zext.sh
@@ -136,7 +138,7 @@ index 6d86a1e..5248c5f 100755
  	| riscv32-* | riscv64-* \
  	| rl78-* | romp-* | rs6000-* | rx-* \
 diff --git a/configure b/configure
-index ea63784..a39e314 100755
+index cd0e7b9..89d4131 100755
 --- a/configure
 +++ b/configure
 @@ -3361,6 +3361,10 @@ case "${target}" in
@@ -150,7 +152,7 @@ index ea63784..a39e314 100755
    rl78-*-*)
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
-@@ -3610,6 +3614,9 @@ case "${target}" in
+@@ -3613,6 +3617,9 @@ case "${target}" in
    powerpc*-*-*)
      libgloss_dir=rs6000
      ;;
@@ -161,7 +163,7 @@ index ea63784..a39e314 100755
      libgloss_dir=sparc
      ;;
 diff --git a/configure.ac b/configure.ac
-index 54558df..387f9e4 100644
+index 51b53b5..d18dafe 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -697,6 +697,10 @@ case "${target}" in
@@ -175,7 +177,7 @@ index 54558df..387f9e4 100644
    rl78-*-*)
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
-@@ -946,6 +950,9 @@ case "${target}" in
+@@ -949,6 +953,9 @@ case "${target}" in
    powerpc*-*-*)
      libgloss_dir=rs6000
      ;;
@@ -236,10 +238,10 @@ index 0000000..46e73bd
 +
 +struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index ae6e9ae..93a2fd2 100644
+index 1f75f17..8adcc78 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -453,6 +453,9 @@ powerpc*-*-*)
+@@ -446,6 +446,9 @@ powerpc*-*-*)
  	esac
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
@@ -249,7 +251,7 @@ index ae6e9ae..93a2fd2 100644
  rs6000*-*-*)
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
-@@ -2513,6 +2516,13 @@ powerpcle-*-eabi*)
+@@ -2460,6 +2463,13 @@ powerpcle-*-eabi*)
  	extra_options="${extra_options} rs6000/sysv4.opt"
  	use_gcc_stdint=wrap
  	;;
@@ -10645,10 +10647,10 @@ index 0000000..2bbdeb9
 +	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $<
 +
 diff --git a/gcc/doc/extend.texi b/gcc/doc/extend.texi
-index 727a694..7eeea29 100644
+index ad8898c..322b0c5 100644
 --- a/gcc/doc/extend.texi
 +++ b/gcc/doc/extend.texi
-@@ -19902,6 +19902,7 @@ for further explanation.
+@@ -20139,6 +20139,7 @@ for further explanation.
  * ARM Pragmas::
  * M32C Pragmas::
  * MeP Pragmas::
@@ -10656,7 +10658,7 @@ index 727a694..7eeea29 100644
  * RS/6000 and PowerPC Pragmas::
  * S/390 Pragmas::
  * Darwin Pragmas::
-@@ -20053,6 +20054,25 @@ extern int foo ();
+@@ -20290,6 +20291,25 @@ extern int foo ();
  
  @end table
  
@@ -10683,10 +10685,10 @@ index 727a694..7eeea29 100644
  @subsection RS/6000 and PowerPC Pragmas
  
 diff --git a/gcc/doc/md.texi b/gcc/doc/md.texi
-index 12fc712..70b45df 100644
+index 996b164..8fb6e0b 100644
 --- a/gcc/doc/md.texi
 +++ b/gcc/doc/md.texi
-@@ -3346,6 +3346,28 @@ Vector constant that is all zeros.
+@@ -3248,6 +3248,28 @@ Vector constant that is all zeros.
  
  @end table
  
@@ -10729,6 +10731,16 @@ index 744763f..bb5d603 100644
  #else
  # define DO_TEST 1
  #endif
+diff --git a/gcc/testsuite/gcc.c-torture/execute/pr47237.c b/gcc/testsuite/gcc.c-torture/execute/pr47237.c
+index 0802531..bfd6c18 100644
+--- a/gcc/testsuite/gcc.c-torture/execute/pr47237.c
++++ b/gcc/testsuite/gcc.c-torture/execute/pr47237.c
+@@ -1,4 +1,4 @@
+-/* { dg-xfail-if "can cause stack underflow" { nios2-*-* } "*" "" } */
++/* { dg-xfail-if "can cause stack underflow" { nios2-*-* pru*-*-*"} "*" "" } */
+ /* { dg-require-effective-target untyped_assembly } */
+ #define INTEGER_ARG  5
+ 
 diff --git a/gcc/testsuite/gcc.dg/20020312-2.c b/gcc/testsuite/gcc.dg/20020312-2.c
 index 5fce50d..46eff97 100644
 --- a/gcc/testsuite/gcc.dg/20020312-2.c
@@ -10743,10 +10755,10 @@ index 5fce50d..46eff97 100644
  # error "Modify the test for your target."
  #endif
 diff --git a/gcc/testsuite/gcc.dg/stack-usage-1.c b/gcc/testsuite/gcc.dg/stack-usage-1.c
-index 7864c6a..5787140 100644
+index bdc5656..3f4a074 100644
 --- a/gcc/testsuite/gcc.dg/stack-usage-1.c
 +++ b/gcc/testsuite/gcc.dg/stack-usage-1.c
-@@ -83,6 +83,8 @@
+@@ -87,6 +87,8 @@
  #  define SIZE 254
  #elif defined (__nios2__)
  #  define SIZE 252
@@ -10766,45 +10778,55 @@ index f7b5dfa..d39f135 100644
 -/* { dg-final { scan-tree-dump-times "link_error" 0 "optimized" { xfail { ! "alpha*-*-* arm*-*-* aarch64*-*-* powerpc*-*-* cris-*-* crisv32-*-* hppa*-*-* i?86-*-* mmix-*-* mips*-*-* m68k*-*-* moxie-*-* nds32*-*-* s390*-*-* sh*-*-* sparc*-*-* spu-*-* visium-*-* x86_64-*-*" } } } } */
 +/* { dg-final { scan-tree-dump-times "link_error" 0 "optimized" { xfail { ! "alpha*-*-* arm*-*-* aarch64*-*-* powerpc*-*-* cris-*-* crisv32-*-* hppa*-*-* i?86-*-* mmix-*-* mips*-*-* m68k*-*-* moxie-*-* nds32*-*-* pru*-*-* s390*-*-* sh*-*-* sparc*-*-* spu-*-* visium-*-* x86_64-*-*" } } } } */
 diff --git a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c
-index 9a5517d..b43a502 100644
+index 6811a42..af4a752 100644
 --- a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c
 +++ b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c
 @@ -1,4 +1,4 @@
--/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* mep*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-*"} } } */
-+/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* mep*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-* pru*-*-*"} } } */
+-/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-*"} } } */
++/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-* pru*-*-*"} } } */
  
  /* { dg-options "-O2 -fno-inline -fdump-tree-reassoc1-details" } */
  /* { dg-additional-options "-mbranch-cost=2" { target mips*-*-* avr-*-* s390*-*-* i?86-*-* x86_64-*-* } } */
 diff --git a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c
-index 3b568cb..285b580 100644
+index 523654d..bf204f0 100644
 --- a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c
 +++ b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c
 @@ -1,4 +1,4 @@
--/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* mep*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-*"} } } */
-+/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* mep*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-* pru*-*-*"} } } */
+-/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-*"} } } */
++/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-* pru*-*-*"} } } */
  
  /* { dg-options "-O2 -fno-inline -fdump-tree-reassoc1-details" } */
  /* { dg-additional-options "-mbranch-cost=2" { target mips*-*-* avr-*-* s390*-*-* i?86-*-* x86_64-*-* } } */
 diff --git a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c
-index 55902eb..5b5b5f7 100644
+index 216604e..d886353 100644
 --- a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c
 +++ b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c
 @@ -1,4 +1,4 @@
--/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* mep*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-*"} } } */
-+/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* mep*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-* pru*-*-*"} } } */
+-/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-*"} } } */
++/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-* pru*-*-*"} } } */
  
  /* { dg-options "-O2 -fno-inline -fdump-tree-reassoc1-details" } */
  /* { dg-additional-options "-mbranch-cost=2" { target mips*-*-* avr-*-* s390*-*-* i?86-*-* x86_64-*-* } } */
 diff --git a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-36.c b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-36.c
-index 800aac0..52ae2f4 100644
+index dbbf8a1..d51a2c9 100644
 --- a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-36.c
 +++ b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-36.c
 @@ -1,4 +1,4 @@
--/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* mep*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-*"} } } */
-+/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* mep*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-* pru*-*-*"} } } */
+-/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-*"} } } */
++/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-* pru*-*-*"} } } */
  
  /* { dg-options "-O2 -fno-inline -fdump-tree-reassoc1-details" } */
  /* { dg-additional-options "-mbranch-cost=2" { target mips*-*-* avr-*-* s390*-*-* i?86-*-* x86_64-*-* } } */
+diff --git a/gcc/testsuite/gcc.dg/tree-ssa/ssa-thread-14.c b/gcc/testsuite/gcc.dg/tree-ssa/ssa-thread-14.c
+index c754b5b..372af82 100644
+--- a/gcc/testsuite/gcc.dg/tree-ssa/ssa-thread-14.c
++++ b/gcc/testsuite/gcc.dg/tree-ssa/ssa-thread-14.c
+@@ -1,4 +1,4 @@
+-/* { dg-do compile { target { ! { m68k*-*-* mmix*-*-* mep*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-* } } } }  */
++/* { dg-do compile { target { ! { m68k*-*-* mmix*-*-* mep*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-* pru*-*-*} } } }  */
+ /* { dg-additional-options "-O2 -fdump-tree-vrp-details" }  */
+ /* { dg-additional-options "-mbranch-cost=2" { target mips*-*-* avr-*-* s390*-*-* i?86-*-* x86_64-*-* } }  */
+ /* { dg-final { scan-tree-dump-times "Threaded jump" 8 "vrp1" } }  */
 diff --git a/gcc/testsuite/gcc.target/pru/builtins-1.c b/gcc/testsuite/gcc.target/pru/builtins-1.c
 new file mode 100644
 index 0000000..7b7472b
@@ -11236,7 +11258,7 @@ index 0000000..0e9ae4c
 +}
 +
 diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
-index 7039140..0a88487 100644
+index b7f0ff7..83e07a3 100644
 --- a/gcc/testsuite/lib/gcc-dg.exp
 +++ b/gcc/testsuite/lib/gcc-dg.exp
 @@ -358,6 +358,11 @@ proc gcc-dg-prune { system text } {
@@ -11252,7 +11274,7 @@ index 7039140..0a88487 100644
            && [check_effective_target_tiny] } {
          return "::unsupported::memory full"
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index f4cb276..6b99e25 100644
+index b9909ad..ac4413a 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
 @@ -486,7 +486,8 @@ proc check_effective_target_trampolines { } {
@@ -11265,7 +11287,7 @@ index f4cb276..6b99e25 100644
  	return 0;
      }
      return 1
-@@ -586,6 +587,7 @@ proc check_profiling_available { test_what } {
+@@ -622,6 +623,7 @@ proc check_profiling_available { test_what } {
  	     || [istarget nvptx-*-*]
  	     || [istarget powerpc-*-eabi*]
  	     || [istarget powerpc-*-elf]
@@ -11273,7 +11295,7 @@ index f4cb276..6b99e25 100644
  	     || [istarget rx-*-*]	
  	     || [istarget tic6x-*-elf]
  	     || [istarget visium-*-*]
-@@ -781,7 +783,7 @@ proc check_effective_target_tls_emulated {} {
+@@ -817,7 +819,7 @@ proc check_effective_target_tls_emulated {} {
  proc check_effective_target_tls_runtime {} {
      # The runtime does not have TLS support, but just
      # running the test below is insufficient to show this.
@@ -11282,7 +11304,7 @@ index f4cb276..6b99e25 100644
  	return 0
      }
      return [check_runtime tls_runtime {
-@@ -6894,6 +6896,7 @@ proc check_effective_target_logical_op_short_circuit {} {
+@@ -7105,6 +7107,7 @@ proc check_effective_target_logical_op_short_circuit {} {
  	 || [istarget powerpc*-*-*]
  	 || [istarget nios2*-*-*]
  	 || [istarget visium-*-*]
@@ -11305,10 +11327,10 @@ index 6e61bba..e503211 100644
  	return "memory full"
      }
 diff --git a/libgcc/config.host b/libgcc/config.host
-index 7899216..b41191f 100644
+index 4ccf25d..f24516c 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
-@@ -167,6 +167,9 @@ nios2*-*-*)
+@@ -165,6 +165,9 @@ nios2*-*-*)
  powerpc*-*-*)
  	cpu_type=rs6000
  	;;
@@ -11318,7 +11340,7 @@ index 7899216..b41191f 100644
  rs6000*-*-*)
  	;;
  sparc64*-*-*)
-@@ -1097,6 +1100,9 @@ powerpcle-*-eabi*)
+@@ -1083,6 +1086,9 @@ powerpcle-*-eabi*)
  	tmake_file="${tmake_file} rs6000/t-ppccomm rs6000/t-crtstuff t-crtstuff-pic t-fdpbit"
  	extra_parts="$extra_parts crtbegin.o crtend.o crtbeginS.o crtendS.o crtbeginT.o ecrti.o ecrtn.o ncrti.o ncrtn.o"
  	;;

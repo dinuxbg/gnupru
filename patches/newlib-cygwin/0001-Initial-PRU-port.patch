@@ -1,4 +1,4 @@
-From 033d9fe12d8f02d00d33a5d0ca0a767d0fff0c63 Mon Sep 17 00:00:00 2001
+From b9c955d929cd7d22b79e2fe178f28d92a66ae06a Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Thu, 1 May 2014 16:43:07 +0300
 Subject: [PATCH 1/2] Initial PRU port
@@ -118,7 +118,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 newlib/libc/machine/pru/setjmp.s
 
 diff --git a/config.sub b/config.sub
-index da6d1b6..58e01c5 100755
+index 6d86a1e..5248c5f 100755
 --- a/config.sub
 +++ b/config.sub
 @@ -301,6 +301,7 @@ case $basic_machine in
@@ -138,7 +138,7 @@ index da6d1b6..58e01c5 100755
  	| riscv32-* | riscv64-* \
  	| rl78-* | romp-* | rs6000-* | rx-* \
 diff --git a/configure b/configure
-index ea63784..adfc526 100755
+index 2d0963b..efeaf65 100755
 --- a/configure
 +++ b/configure
 @@ -3361,6 +3361,10 @@ case "${target}" in
@@ -153,7 +153,7 @@ index ea63784..adfc526 100755
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
 diff --git a/configure.ac b/configure.ac
-index 54558df..4a6a88b 100644
+index 3cb95d6..021d364 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -697,6 +697,10 @@ case "${target}" in

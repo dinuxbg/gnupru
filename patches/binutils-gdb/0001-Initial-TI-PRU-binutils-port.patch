@@ -1,4 +1,4 @@
-From d665c0d7d544a37a6a2b7530d3bac6d252b09c8c Mon Sep 17 00:00:00 2001
+From 08403ae94f955389e6e02c606e36b1c160228bab Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sun, 23 Feb 2014 22:25:35 +0200
 Subject: [PATCH 1/2] Initial TI PRU binutils port
@@ -12,16 +12,16 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  bfd/Makefile.am                           |     4 +
  bfd/Makefile.in                           |     6 +
  bfd/archures.c                            |     4 +
- bfd/bfd-in2.h                             |    33 +
+ bfd/bfd-in2.h                             |    36 +
  bfd/config.bfd                            |     5 +
  bfd/configure                             |     1 +
  bfd/configure.ac                          |     1 +
  bfd/cpu-pru.c                             |    43 +
  bfd/elf-bfd.h                             |     1 +
- bfd/elf32-pru.c                           |  1562 +++
- bfd/libbfd.h                              |    13 +
+ bfd/elf32-pru.c                           |  1639 +++
+ bfd/libbfd.h                              |    15 +
  bfd/po/SRC-POTFILES.in                    |     2 +
- bfd/reloc.c                               |    45 +
+ bfd/reloc.c                               |    50 +
  bfd/targets.c                             |     3 +
  binutils/readelf.c                        |    11 +
  config.sub                                |     2 +
@@ -29,7 +29,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  gas/Makefile.am                           |     2 +
  gas/Makefile.in                           |    17 +
  gas/config/obj-elf.c                      |     4 +
- gas/config/tc-pru.c                       |  1794 ++++
+ gas/config/tc-pru.c                       |  1850 ++++
  gas/config/tc-pru.h                       |   157 +
  gas/configure.tgt                         |     2 +
  gas/doc/Makefile.am                       |     1 +
@@ -69,8 +69,8 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  gdb/pru-tdep.h                            |    51 +
  include/dis-asm.h                         |     1 +
  include/elf/common.h                      |     2 +-
- include/elf/pru.h                         |    58 +
- include/opcode/pru.h                      |   405 +
+ include/elf/pru.h                         |    60 +
+ include/opcode/pru.h                      |   406 +
  ld/Makefile.am                            |     6 +
  ld/Makefile.in                            |     6 +
  ld/configure.tgt                          |     1 +
@@ -104,7 +104,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  ld/testsuite/ld-pru/pru.exp               |     9 +
  ld/testsuite/ld-pru/relax_hi_rlz-data.d   |    18 +
  ld/testsuite/ld-pru/relax_hi_rlz-dis.d    |    20 +
- ld/testsuite/ld-pru/relax_hi_rlz.s        |    27 +
+ ld/testsuite/ld-pru/relax_hi_rlz.s        |    30 +
  ld/testsuite/ld-pru/relax_hi_rlz_symbol.s |     6 +
  ld/testsuite/ld-pru/reloc.d               |    14 +
  ld/testsuite/ld-pru/reloc.s               |     9 +
@@ -117,7 +117,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  opcodes/configure                         |     1 +
  opcodes/configure.ac                      |     1 +
  opcodes/disassemble.c                     |     6 +
- opcodes/pru-dis.c                         |   269 +
+ opcodes/pru-dis.c                         |   284 +
  opcodes/pru-opc.c                         |   221 +
  readline/support/config.sub               |     2 +
  sim/configure                             |     8 +
@@ -131,7 +131,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  sim/pru/pru.h                             |    95 +
  sim/pru/pru.isa                           |   240 +
  sim/pru/sim-main.h                        |    80 +
- 123 files changed, 24838 insertions(+), 3 deletions(-)
+ 123 files changed, 25002 insertions(+), 3 deletions(-)
  create mode 100644 bfd/cpu-pru.c
  create mode 100644 bfd/elf32-pru.c
  create mode 100644 gas/config/tc-pru.c
@@ -314,10 +314,10 @@ index 7283ed9..a928c7f 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-rx.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-s390.Plo@am__quote@
 diff --git a/bfd/archures.c b/bfd/archures.c
-index 7ff1e82..aab771b 100644
+index af70b18..a5f5d2e 100644
 --- a/bfd/archures.c
 +++ b/bfd/archures.c
-@@ -510,6 +510,8 @@ DESCRIPTION
+@@ -525,6 +525,8 @@ DESCRIPTION
  .#define bfd_mach_nios2r2	2
  .  bfd_arch_visium,	{* Visium *}
  .#define bfd_mach_visium	1
@@ -326,7 +326,7 @@ index 7ff1e82..aab771b 100644
  .  bfd_arch_last
  .  };
  */
-@@ -613,6 +615,7 @@ extern const bfd_arch_info_type bfd_pj_arch;
+@@ -628,6 +630,7 @@ extern const bfd_arch_info_type bfd_pj_arch;
  extern const bfd_arch_info_type bfd_plugin_arch;
  extern const bfd_arch_info_type bfd_powerpc_archs[];
  #define bfd_powerpc_arch bfd_powerpc_archs[0]
@@ -334,7 +334,7 @@ index 7ff1e82..aab771b 100644
  extern const bfd_arch_info_type bfd_rs6000_arch;
  extern const bfd_arch_info_type bfd_rl78_arch;
  extern const bfd_arch_info_type bfd_rx_arch;
-@@ -702,6 +705,7 @@ static const bfd_arch_info_type * const bfd_archures_list[] =
+@@ -717,6 +720,7 @@ static const bfd_arch_info_type * const bfd_archures_list[] =
      &bfd_or1k_arch,
      &bfd_pdp11_arch,
      &bfd_powerpc_arch,
@@ -343,10 +343,10 @@ index 7ff1e82..aab771b 100644
      &bfd_rl78_arch,
      &bfd_rx_arch,
 diff --git a/bfd/bfd-in2.h b/bfd/bfd-in2.h
-index 7292492..c5ea891 100644
+index f9f0e26..b6c56d1 100644
 --- a/bfd/bfd-in2.h
 +++ b/bfd/bfd-in2.h
-@@ -2329,6 +2329,8 @@ enum bfd_architecture
+@@ -2344,6 +2344,8 @@ enum bfd_architecture
  #define bfd_mach_nios2r2       2
    bfd_arch_visium,     /* Visium */
  #define bfd_mach_visium        1
@@ -355,7 +355,7 @@ index 7292492..c5ea891 100644
    bfd_arch_last
    };
  
-@@ -5465,6 +5467,37 @@ a matching LO8XG part.  */
+@@ -5486,6 +5488,40 @@ a matching LO8XG part.  */
    BFD_RELOC_NIOS2_R2_T1X1I6,
    BFD_RELOC_NIOS2_R2_T1X1I6_2,
  
@@ -385,16 +385,19 @@ index 7292492..c5ea891 100644
 +when not relaxing.  The field is set to the value of the difference
 +assuming no relaxation.  The relocation encodes the position of the
 +second symbol so the linker can determine whether to adjust the field
-+value.  */
++value. The PMEM variants encode the word difference, instead of byte
++difference between symbols.  */
 +  BFD_RELOC_PRU_DIFF8,
 +  BFD_RELOC_PRU_DIFF16,
 +  BFD_RELOC_PRU_DIFF32,
++  BFD_RELOC_PRU_DIFF16_PMEM,
++  BFD_RELOC_PRU_DIFF32_PMEM,
 +
  /* IQ2000 Relocations.  */
    BFD_RELOC_IQ2000_OFFSET_16,
    BFD_RELOC_IQ2000_OFFSET_21,
 diff --git a/bfd/config.bfd b/bfd/config.bfd
-index 8fef9c4..1336e73 100644
+index 6400722..907dde4 100644
 --- a/bfd/config.bfd
 +++ b/bfd/config.bfd
 @@ -122,6 +122,7 @@ or1k*|or1knd*)	 targ_archs=bfd_or1k_arch ;;
@@ -405,7 +408,7 @@ index 8fef9c4..1336e73 100644
  rs6000)		 targ_archs="bfd_rs6000_arch bfd_powerpc_arch" ;;
  s390*)		 targ_archs=bfd_s390_arch ;;
  sh*)		 targ_archs=bfd_sh_arch ;;
-@@ -1358,6 +1359,10 @@ case "${targ}" in
+@@ -1359,6 +1360,10 @@ case "${targ}" in
      targ_selvecs="powerpc_pei_le_vec powerpc_pei_vec powerpc_pe_le_vec powerpc_pe_vec"
      ;;
  
@@ -417,7 +420,7 @@ index 8fef9c4..1336e73 100644
      targ_defvec=rl78_elf32_vec
      ;;
 diff --git a/bfd/configure b/bfd/configure
-index bc49dc4..98a87a6 100755
+index 3e03324..d4b6f31 100755
 --- a/bfd/configure
 +++ b/bfd/configure
 @@ -14431,6 +14431,7 @@ do
@@ -490,7 +493,7 @@ index 0000000..9a558c3
 +
 +const bfd_arch_info_type bfd_pru_arch = N (32, 32, 0, "pru", TRUE, NULL);
 diff --git a/bfd/elf-bfd.h b/bfd/elf-bfd.h
-index 99dbbce..7eb3688 100644
+index bb3371f..abc2a63 100644
 --- a/bfd/elf-bfd.h
 +++ b/bfd/elf-bfd.h
 @@ -466,6 +466,7 @@ enum elf_target_id
@@ -503,10 +506,10 @@ index 99dbbce..7eb3688 100644
    SPARC_ELF_DATA,
 diff --git a/bfd/elf32-pru.c b/bfd/elf32-pru.c
 new file mode 100644
-index 0000000..642ac9f
+index 0000000..740787e
 --- /dev/null
 +++ b/bfd/elf32-pru.c
-@@ -0,0 +1,1562 @@
+@@ -0,0 +1,1639 @@
 +/* 32-bit ELF support for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -548,6 +551,13 @@ index 0000000..642ac9f
 +#ifdef USE_REL
 +#undef USE_REL
 +#endif
++
++#define SWAP_VALS(A,B)		      \
++  do {				      \
++      (A) ^= (B);		      \
++      (B) ^= (A);		      \
++      (A) ^= (B);		      \
++  } while (0)
 +
 +/* Enable debugging printout at stdout with this variable.  */
 +static bfd_boolean debug_relax = FALSE;
@@ -774,6 +784,34 @@ index 0000000..642ac9f
 +	 0xffffffff,    	/* dst_mask */
 +	 FALSE),        	/* pcrel_offset */
 +
++  HOWTO (R_PRU_DIFF16_PMEM,  	/* type */
++	 0,             	/* rightshift */
++	 1,			/* size (0 = byte, 1 = short, 2 = long) */
++	 16,			/* bitsize */
++	 FALSE,         	/* pc_relative */
++	 0,             	/* bitpos */
++	 complain_overflow_bitfield, /* complain_on_overflow */
++	 bfd_elf_pru_diff_relocate,/* special_function */
++	 "R_PRU_DIFF16_PMEM",   /* name */
++	 FALSE,         	/* partial_inplace */
++	 0,             	/* src_mask */
++	 0xffff,        	/* dst_mask */
++	 FALSE),        	/* pcrel_offset */
++
++  HOWTO (R_PRU_DIFF32_PMEM,  	/* type */
++	 0,             	/* rightshift */
++	 2,         		/* size (0 = byte, 1 = short, 2 = long) */
++	 32,        		/* bitsize */
++	 FALSE,         	/* pc_relative */
++	 0,             	/* bitpos */
++	 complain_overflow_bitfield, /* complain_on_overflow */
++	 bfd_elf_pru_diff_relocate,/* special_function */
++	 "R_PRU_DIFF32_PMEM",   /* name */
++	 FALSE,         	/* partial_inplace */
++	 0,             	/* src_mask */
++	 0xffffffff,    	/* dst_mask */
++	 FALSE),        	/* pcrel_offset */
++
 +  HOWTO (R_PRU_BFD_RELOC_32,
 +	 0,
 +	 2,			/* long */
@@ -868,6 +906,8 @@ index 0000000..642ac9f
 +  {BFD_RELOC_PRU_DIFF8, R_PRU_DIFF8},
 +  {BFD_RELOC_PRU_DIFF16, R_PRU_DIFF16},
 +  {BFD_RELOC_PRU_DIFF32, R_PRU_DIFF32},
++  {BFD_RELOC_PRU_DIFF16_PMEM, R_PRU_DIFF16_PMEM},
++  {BFD_RELOC_PRU_DIFF32_PMEM, R_PRU_DIFF32_PMEM},
 +  {BFD_RELOC_32, R_PRU_BFD_RELOC_32},
 +  {BFD_RELOC_16, R_PRU_BFD_RELOC_16},
 +  {BFD_RELOC_8, R_PRU_BFD_RELOC_8},
@@ -1341,6 +1381,8 @@ index 0000000..642ac9f
 +	    case R_PRU_DIFF8:
 +	    case R_PRU_DIFF16:
 +	    case R_PRU_DIFF32:
++	    case R_PRU_DIFF16_PMEM:
++	    case R_PRU_DIFF32_PMEM:
 +	      /* Nothing to do here, as contents already contains the diff value. */
 +	      r = bfd_reloc_ok;
 +	      break;
@@ -1508,8 +1550,10 @@ index 0000000..642ac9f
 +elf32_pru_is_diff_reloc (Elf_Internal_Rela *irel)
 +{
 +  return (ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF8
-+          ||ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF16
-+          || ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF32);
++          || ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF16
++          || ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF32
++          || ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF16_PMEM
++          || ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF32_PMEM);
 +}
 +
 +/* Reduce the diff value written in the section by count if the shrinked
@@ -1537,22 +1581,32 @@ index 0000000..642ac9f
 +  reloc_contents = isec_contents + irel->r_offset;
 +
 +  /* Read value written in object file. */
-+  bfd_vma x = 0;
++  bfd_signed_vma x = 0;
 +  switch (ELF32_R_TYPE (irel->r_info))
 +  {
 +  case R_PRU_DIFF8:
 +    {
-+      x = *reloc_contents;
++      x = bfd_get_signed_8 (abfd, reloc_contents);
 +      break;
 +    }
 +  case R_PRU_DIFF16:
 +    {
-+      x = bfd_get_16 (abfd, reloc_contents);
++      x = bfd_get_signed_16 (abfd, reloc_contents);
 +      break;
 +    }
 +  case R_PRU_DIFF32:
 +    {
-+      x = bfd_get_32 (abfd, reloc_contents);
++      x = bfd_get_signed_32 (abfd, reloc_contents);
++      break;
++    }
++  case R_PRU_DIFF16_PMEM:
++    {
++      x = bfd_get_signed_16 (abfd, reloc_contents) * 4;
++      break;
++    }
++  case R_PRU_DIFF32_PMEM:
++    {
++      x = bfd_get_signed_32 (abfd, reloc_contents) * 4;
 +      break;
 +    }
 +  default:
@@ -1569,6 +1623,19 @@ index 0000000..642ac9f
 +  bfd_vma end_address = symval + irel->r_addend;
 +  bfd_vma start_address = end_address - x;
 +
++  /* Shrink the absolute DIFF value (get the to labels "closer"
++     together), because we have removed data between labels.  */
++  if (x < 0)
++    {
++      x += count;
++      /* In case the signed x is negative, restore order. */
++      SWAP_VALS (end_address, start_address);
++    }
++  else
++    {
++      x -= count;
++    }
++
 +  /* Reduce the diff value by count bytes and write it back into section
 +    contents. */
 +
@@ -1579,18 +1646,28 @@ index 0000000..642ac9f
 +    {
 +    case R_PRU_DIFF8:
 +      {
-+        *reloc_contents = (x - count);
++        bfd_put_signed_8 (abfd, x & 0xFFFF, reloc_contents);
 +        break;
 +      }
 +    case R_PRU_DIFF16:
 +      {
-+        bfd_put_16 (abfd, (x - count) & 0xFFFF, reloc_contents);
++        bfd_put_signed_16 (abfd, x & 0xFFFF, reloc_contents);
 +        break;
 +      }
 +    case R_PRU_DIFF32:
 +      {
-+        bfd_put_32 (abfd, (x - count) & 0xFFFFFFFF, reloc_contents);
++        bfd_put_signed_32 (abfd, x & 0xFFFFFFFF, reloc_contents);
 +        break;
++      }
++    case R_PRU_DIFF16_PMEM:
++      {
++	bfd_put_signed_16 (abfd, (x / 4) & 0xFFFF, reloc_contents);
++	break;
++      }
++    case R_PRU_DIFF32_PMEM:
++      {
++	bfd_put_signed_32 (abfd, (x / 4) & 0xFFFFFFFF, reloc_contents);
++	break;
 +      }
 +    default:
 +      {
@@ -1735,16 +1812,19 @@ index 0000000..642ac9f
 +                             (unsigned int) (symval + irel->r_addend),
 +                             (unsigned int) shrinked_insn_address);
 +
++		   /* shrink the special DIFF relocations */
++		   if (elf32_pru_is_diff_reloc (irel))
++		     {
++		       elf32_pru_adjust_diff_reloc_value (abfd, isec, irel,
++							  symval,
++							  shrinked_insn_address,
++							  count);
++		     }
++
++		   /* fix the addend, if it is affected */
 +                   if (symval <= shrinked_insn_address
 +                       && (symval + irel->r_addend) > shrinked_insn_address)
 +                     {
-+                       if (elf32_pru_is_diff_reloc (irel))
-+                         {
-+                           elf32_pru_adjust_diff_reloc_value (abfd, isec, irel,
-+                                                         symval,
-+                                                         shrinked_insn_address,
-+                                                        count);
-+                         }
 +
 +                       irel->r_addend -= count;
 +
@@ -2070,10 +2150,10 @@ index 0000000..642ac9f
 +
 +#include "elf32-target.h"
 diff --git a/bfd/libbfd.h b/bfd/libbfd.h
-index bf17f43..6b10cda 100644
+index 9d751ee..babdb85 100644
 --- a/bfd/libbfd.h
 +++ b/bfd/libbfd.h
-@@ -2712,6 +2712,19 @@ static const char *const bfd_reloc_code_real_names[] = { "@@uninitialized@@",
+@@ -2704,6 +2704,21 @@ static const char *const bfd_reloc_code_real_names[] = { "@@uninitialized@@",
    "BFD_RELOC_NIOS2_R2_L5I4X1",
    "BFD_RELOC_NIOS2_R2_T1X1I6",
    "BFD_RELOC_NIOS2_R2_T1X1I6_2",
@@ -2090,6 +2170,8 @@ index bf17f43..6b10cda 100644
 +  "BFD_RELOC_PRU_DIFF8",
 +  "BFD_RELOC_PRU_DIFF16",
 +  "BFD_RELOC_PRU_DIFF32",
++  "BFD_RELOC_PRU_DIFF16_PMEM",
++  "BFD_RELOC_PRU_DIFF32_PMEM",
    "BFD_RELOC_IQ2000_OFFSET_16",
    "BFD_RELOC_IQ2000_OFFSET_21",
    "BFD_RELOC_IQ2000_UHI16",
@@ -2114,10 +2196,10 @@ index a74faad..4e26774 100644
  elf32-rx.c
  elf32-s390.c
 diff --git a/bfd/reloc.c b/bfd/reloc.c
-index 443ad6f..360b459 100644
+index 0e5fde2..9128890 100644
 --- a/bfd/reloc.c
 +++ b/bfd/reloc.c
-@@ -6407,6 +6407,51 @@ ENUMDOC
+@@ -6417,6 +6417,56 @@ ENUMDOC
    Relocations used by the Altera Nios II core.
  
  ENUM
@@ -2157,20 +2239,25 @@ index 443ad6f..360b459 100644
 +  BFD_RELOC_PRU_DIFF16
 +ENUMX
 +  BFD_RELOC_PRU_DIFF32
++ENUMX
++  BFD_RELOC_PRU_DIFF16_PMEM
++ENUMX
++  BFD_RELOC_PRU_DIFF32_PMEM
 +ENUMDOC
 +  PRU relocations to mark the difference of two local symbols.
 +  These are only needed to support linker relaxation and can be ignored
 +  when not relaxing.  The field is set to the value of the difference
 +  assuming no relaxation.  The relocation encodes the position of the
 +  second symbol so the linker can determine whether to adjust the field
-+  value.
++  value. The PMEM variants encode the word difference, instead of byte
++  difference between symbols.
 +
 +ENUM
    BFD_RELOC_IQ2000_OFFSET_16
  ENUMX
    BFD_RELOC_IQ2000_OFFSET_21
 diff --git a/bfd/targets.c b/bfd/targets.c
-index a9edd4c..5d308fb 100644
+index 19d442a..5a841c4 100644
 --- a/bfd/targets.c
 +++ b/bfd/targets.c
 @@ -799,6 +799,7 @@ extern const bfd_target powerpc_pe_le_vec;
@@ -2191,7 +2278,7 @@ index a9edd4c..5d308fb 100644
  
  #ifdef BFD64
 diff --git a/binutils/readelf.c b/binutils/readelf.c
-index 25ccb6a..bc038fd 100644
+index 4c7ad4c..bb23e12 100644
 --- a/binutils/readelf.c
 +++ b/binutils/readelf.c
 @@ -136,6 +136,7 @@
@@ -2229,7 +2316,7 @@ index 25ccb6a..bc038fd 100644
      default:
        snprintf (buff, sizeof (buff), _("<unknown>: 0x%x"), e_machine);
        return buff;
-@@ -11613,6 +11620,8 @@ is_32bit_abs_reloc (unsigned int reloc_type)
+@@ -11610,6 +11617,8 @@ is_32bit_abs_reloc (unsigned int reloc_type)
        return reloc_type == 1; /* R_PPC64_ADDR32.  */
      case EM_PPC:
        return reloc_type == 1; /* R_PPC_ADDR32.  */
@@ -2238,7 +2325,7 @@ index 25ccb6a..bc038fd 100644
      case EM_RL78:
        return reloc_type == 1; /* R_RL78_DIR32.  */
      case EM_RX:
-@@ -11969,6 +11978,8 @@ is_none_reloc (unsigned int reloc_type)
+@@ -11968,6 +11977,8 @@ is_none_reloc (unsigned int reloc_type)
  	      || reloc_type == 17  /* R_XTENSA_DIFF8.  */
  	      || reloc_type == 18  /* R_XTENSA_DIFF16.  */
  	      || reloc_type == 19  /* R_XTENSA_DIFF32.  */);
@@ -2268,7 +2355,7 @@ index 2377e13..e4df780 100755
  	| riscv32-* | riscv64-* \
  	| rl78-* | romp-* | rs6000-* | rx-* \
 diff --git a/elfcpp/elfcpp.h b/elfcpp/elfcpp.h
-index 3d7039a..719fc03 100644
+index 7469bd8..1826539 100644
 --- a/elfcpp/elfcpp.h
 +++ b/elfcpp/elfcpp.h
 @@ -268,6 +268,7 @@ enum EM
@@ -2280,7 +2367,7 @@ index 3d7039a..719fc03 100644
    EM_TILEGX = 191,
    // The Morph MT.
 diff --git a/gas/Makefile.am b/gas/Makefile.am
-index 596e469..4d773f6 100644
+index 7e302fb..b48e908 100644
 --- a/gas/Makefile.am
 +++ b/gas/Makefile.am
 @@ -177,6 +177,7 @@ TARGET_CPU_CFILES = \
@@ -2300,7 +2387,7 @@ index 596e469..4d773f6 100644
  	config/tc-rx.h \
  	config/tc-s390.h \
 diff --git a/gas/Makefile.in b/gas/Makefile.in
-index 59746f3..dd50e86 100644
+index 19b63f3..c4f6e60 100644
 --- a/gas/Makefile.in
 +++ b/gas/Makefile.in
 @@ -471,6 +471,7 @@ TARGET_CPU_CFILES = \
@@ -2365,10 +2452,10 @@ index 8af563f..9baf05e 100644
  static void obj_elf_type (int);
 diff --git a/gas/config/tc-pru.c b/gas/config/tc-pru.c
 new file mode 100644
-index 0000000..3878a25
+index 0000000..c3adf1d
 --- /dev/null
 +++ b/gas/config/tc-pru.c
-@@ -0,0 +1,1794 @@
+@@ -0,0 +1,1850 @@
 +/* TI PRU assembler.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -3064,6 +3151,11 @@ index 0000000..3878a25
 +         but leave fx_offset as is - during relaxation,
 +         fx_offset - value gives sym1's value.  */
 +
++      offsetT diffval;	/* valueT is unsigned, so use offsetT */
++
++      diffval = S_GET_VALUE (fixP->fx_addsy) +
++		fixP->fx_offset - S_GET_VALUE (fixP->fx_subsy);
++
 +       switch (fixP->fx_r_type)
 +         {
 +           case BFD_RELOC_8:
@@ -3075,14 +3167,26 @@ index 0000000..3878a25
 +           case BFD_RELOC_32:
 +             fixP->fx_r_type = BFD_RELOC_PRU_DIFF32;
 +             break;
++	   case BFD_RELOC_PRU_16_PMEM:
++	     fixP->fx_r_type = BFD_RELOC_PRU_DIFF16_PMEM;
++	     if (diffval % 4)
++	       as_bad_where (fixP->fx_file, fixP->fx_line,
++			     _("residual low bits in pmem diff relocation"));
++	     diffval /= 4;
++	     break;
++	   case BFD_RELOC_PRU_32_PMEM:
++	     fixP->fx_r_type = BFD_RELOC_PRU_DIFF32_PMEM;
++	     if (diffval % 4)
++	       as_bad_where (fixP->fx_file, fixP->fx_line,
++			     _("residual low bits in pmem diff relocation"));
++	     diffval /= 4;
++	     break;
 +           default:
 +             as_bad_where (fixP->fx_file, fixP->fx_line, _("expression too complex"));
 +             break;
 +         }
 +
-+      value = S_GET_VALUE (fixP->fx_addsy) +
-+          fixP->fx_offset - S_GET_VALUE (fixP->fx_subsy);
-+      *valP = value;
++      value = *valP = diffval;
 +
 +      fixP->fx_subsy = NULL;
 +  }
@@ -3100,9 +3204,11 @@ index 0000000..3878a25
 +      *where = value;
 +      break;
 +    case BFD_RELOC_PRU_DIFF16:
++    case BFD_RELOC_PRU_DIFF16_PMEM:
 +      bfd_putl16 ((bfd_vma) value, where);
 +      break;
 +    case BFD_RELOC_PRU_DIFF32:
++    case BFD_RELOC_PRU_DIFF32_PMEM:
 +      bfd_putl32 ((bfd_vma) value, where);
 +      break;
 +    default:
@@ -3431,6 +3537,39 @@ index 0000000..3878a25
 +}
 +
 +static void
++pru_assemble_arg_B (pru_insn_infoS *insn_info, const char *argstr)
++{
++  struct pru_reg *src2 = pru_reg_lookup (argstr);
++  if (src2 == NULL)
++    {
++#if 0
++      /* TODO - can we get away without introducing yet another
++	 relocation? Perhaps decrement addsy?  */
++      unsigned long imm8 =
++	pru_assemble_expression (argstr, insn_info,
++				 insn_info->insn_reloc,
++				 BFD_RELOC_8, 0);
++#endif
++      unsigned long imm8;
++      imm8 = pru_assemble_noreloc_expression (argstr);
++      if (!imm8 || imm8 > 0xff)
++	as_bad (_("loop count constant %ld is out of range [1..%d]"),
++		imm8, 0xff);
++      /* note: HW expects the immediate loop count field
++         to be one less than the actual loop count.  */
++      SET_INSN_FIELD (IMM8, insn_info->insn_code, imm8 - 1);
++      SET_INSN_FIELD (IO, insn_info->insn_code, 1);
++    }
++  else
++    {
++      SET_INSN_FIELD (IO, insn_info->insn_code, 0);
++      SET_INSN_FIELD (RS2, insn_info->insn_code, src2->index);
++      SET_INSN_FIELD (RS2SEL, insn_info->insn_code, src2->regsel);
++    }
++
++}
++
++static void
 +pru_assemble_arg_j (pru_insn_infoS *insn_info, const char *argstr)
 +{
 +  struct pru_reg *src2 = pru_reg_lookup (argstr);
@@ -3600,6 +3739,7 @@ index 0000000..3878a25
 +	}
 +      break;
 +    case 'b':
++    case 'B':
 +    case 'd':
 +    case 'D':
 +    case 'j':
@@ -3890,6 +4030,9 @@ index 0000000..3878a25
 +	      continue;
 +	    case 'b':
 +	      pru_assemble_arg_b (insn, *argtk++);
++	      continue;
++	    case 'B':
++	      pru_assemble_arg_B (insn, *argtk++);
 +	      continue;
 +	    case 'j':
 +	      pru_assemble_arg_j (insn, *argtk++);
@@ -4327,10 +4470,10 @@ index 0000000..2f67634
 +
 +#endif /* TC_PRU */
 diff --git a/gas/configure.tgt b/gas/configure.tgt
-index eda38a2..fbcd845 100644
+index e2df659..3b1106e 100644
 --- a/gas/configure.tgt
 +++ b/gas/configure.tgt
-@@ -392,6 +392,8 @@ case ${generic_target} in
+@@ -391,6 +391,8 @@ case ${generic_target} in
    ppc-*-kaos*)				fmt=elf ;;
    ppc-*-lynxos*)			fmt=elf em=lynx ;;
  
@@ -4376,10 +4519,10 @@ index abbca2f..2e8bd9a 100644
  @set RX
  @set S390
 diff --git a/gas/doc/as.texinfo b/gas/doc/as.texinfo
-index 1cd60ed..5f0adb4 100644
+index 9ebfda0..66a74c2 100644
 --- a/gas/doc/as.texinfo
 +++ b/gas/doc/as.texinfo
-@@ -492,6 +492,11 @@ gcc(1), ld(1), and the Info entries for @file{binutils} and @file{ld}.
+@@ -493,6 +493,11 @@ gcc(1), ld(1), and the Info entries for @file{binutils} and @file{ld}.
     [@b{-msolaris}|@b{-mno-solaris}]
     [@b{-nops=@var{count}}]
  @end ifset
@@ -4391,7 +4534,7 @@ index 1cd60ed..5f0adb4 100644
  @ifset RL78
  
  @emph{Target RL78 options:}
-@@ -1209,6 +1214,24 @@ Generate ``little endian'' format output.
+@@ -1215,6 +1220,24 @@ Generate ``little endian'' format output.
  @end table
  @end ifset
  
@@ -4416,7 +4559,7 @@ index 1cd60ed..5f0adb4 100644
  @ifset M68HC11
  The following options are available when @value{AS} is configured for the
  Motorola 68HC11 or 68HC12 series.
-@@ -7538,6 +7561,9 @@ subject, see the hardware manufacturer's manual.
+@@ -7554,6 +7577,9 @@ subject, see the hardware manufacturer's manual.
  @ifset PPC
  * PPC-Dependent::               PowerPC Dependent Features
  @end ifset
@@ -4426,7 +4569,7 @@ index 1cd60ed..5f0adb4 100644
  @ifset RL78
  * RL78-Dependent::              RL78 Dependent Features
  @end ifset
-@@ -7764,6 +7790,10 @@ family.
+@@ -7780,6 +7806,10 @@ family.
  @include c-ppc.texi
  @end ifset
  
@@ -5201,10 +5344,10 @@ index 0000000..875e1ca
 +	sxchg	253, r10.b2, 124
 +	sxchg	85, r12.b0, 85
 diff --git a/gdb/Makefile.in b/gdb/Makefile.in
-index 60cfc97..383e440 100644
+index 5af6103..764a5d3 100644
 --- a/gdb/Makefile.in
 +++ b/gdb/Makefile.in
-@@ -694,7 +694,7 @@ ALL_TARGET_OBS = \
+@@ -695,7 +695,7 @@ ALL_TARGET_OBS = \
  	nios2-tdep.o nios2-linux-tdep.o \
  	nto-tdep.o \
  	ppc-linux-tdep.o ppcfbsd-tdep.o ppcnbsd-tdep.o ppcobsd-tdep.o  \
@@ -5213,16 +5356,16 @@ index 60cfc97..383e440 100644
  	rs6000-aix-tdep.o rs6000-tdep.o solib-aix.o ppc-ravenscar-thread.o \
  	rs6000-lynx178-tdep.o \
  	rx-tdep.o \
-@@ -969,7 +969,7 @@ dicos-tdep.h filesystem.h gcore.h gdb_wchar.h hppabsd-tdep.h \
+@@ -970,7 +970,7 @@ dicos-tdep.h filesystem.h gcore.h gdb_wchar.h hppabsd-tdep.h \
  i386-darwin-tdep.h x86-nat.h linux-record.h moxie-tdep.h nios2-tdep.h \
- ft32-tdep.h \
+ ft32-tdep.h nds32-tdep.h \
  osdata.h procfs.h python/py-event.h python/py-events.h python/py-stopevent.h \
 -python/python-internal.h python/python.h ravenscar-thread.h record.h \
 +python/python-internal.h python/python.h pru-tdep.h ravenscar-thread.h record.h \
  record-full.h solib-aix.h \
  solib-darwin.h solib-spu.h windows-nat.h xcoffread.h \
  gnulib/import/extra/snippet/arg-nonnull.h gnulib/import/extra/snippet/c++defs.h \
-@@ -1734,6 +1734,7 @@ ALLDEPFILES = \
+@@ -1736,6 +1736,7 @@ ALLDEPFILES = \
  	ppcnbsd-nat.c ppcnbsd-tdep.c \
  	ppcobsd-nat.c ppcobsd-tdep.c \
  	procfs.c \
@@ -5231,10 +5374,10 @@ index 60cfc97..383e440 100644
  	remote-sim.c \
  	dcache.c \
 diff --git a/gdb/configure.tgt b/gdb/configure.tgt
-index cd8e05d..ccae2ee 100644
+index 7f1aac3..2c57baf 100644
 --- a/gdb/configure.tgt
 +++ b/gdb/configure.tgt
-@@ -455,6 +455,12 @@ powerpc*-*-*)
+@@ -460,6 +460,12 @@ powerpc*-*-*)
  	gdb_sim=../sim/ppc/libsim.a
  	;;
  
@@ -5248,11 +5391,11 @@ index cd8e05d..ccae2ee 100644
  	# Target: S390 running Linux
  	gdb_target_obs="s390-linux-tdep.o solib-svr4.o linux-tdep.o \
 diff --git a/gdb/features/Makefile b/gdb/features/Makefile
-index e5c5154..666159d 100644
+index 809c811..cc6ad7b 100644
 --- a/gdb/features/Makefile
 +++ b/gdb/features/Makefile
-@@ -191,6 +191,7 @@ XMLTOC = \
- 	mips64-linux.xml \
+@@ -192,6 +192,7 @@ XMLTOC = \
+ 	nds32.xml \
  	nios2-linux.xml \
  	nios2.xml \
 +	pru.xml \
@@ -6314,7 +6457,7 @@ index 0000000..ca7ba62
 +
 +#endif /* PRU_TDEP_H */
 diff --git a/include/dis-asm.h b/include/dis-asm.h
-index 60bbc8d..3cb3e84 100644
+index 05bfa37..d9f8332 100644
 --- a/include/dis-asm.h
 +++ b/include/dis-asm.h
 @@ -288,6 +288,7 @@ extern int print_insn_ns32k		(bfd_vma, disassemble_info *);
@@ -6326,7 +6469,7 @@ index 60bbc8d..3cb3e84 100644
  extern int print_insn_s390		(bfd_vma, disassemble_info *);
  extern int print_insn_sh		(bfd_vma, disassemble_info *);
 diff --git a/include/elf/common.h b/include/elf/common.h
-index 087d876..cc5be6b 100644
+index d2da009d..21e7af8 100644
 --- a/include/elf/common.h
 +++ b/include/elf/common.h
 @@ -246,7 +246,7 @@
@@ -6340,10 +6483,10 @@ index 087d876..cc5be6b 100644
  #define EM_res147	147	/* Reserved */
 diff --git a/include/elf/pru.h b/include/elf/pru.h
 new file mode 100644
-index 0000000..2dc51c6
+index 0000000..fb40080
 --- /dev/null
 +++ b/include/elf/pru.h
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,60 @@
 +/* TI PRU ELF support for BFD.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -6393,10 +6536,12 @@ index 0000000..2dc51c6
 +  RELOC_NUMBER (R_PRU_DIFF8,	    11)
 +  RELOC_NUMBER (R_PRU_DIFF16,	    12)
 +  RELOC_NUMBER (R_PRU_DIFF32,	    13)
-+  RELOC_NUMBER (R_PRU_BFD_RELOC_32, 14)
-+  RELOC_NUMBER (R_PRU_BFD_RELOC_16, 15)
-+  RELOC_NUMBER (R_PRU_BFD_RELOC_8,  16)
-+  RELOC_NUMBER (R_PRU_ILLEGAL,	    17)
++  RELOC_NUMBER (R_PRU_DIFF16_PMEM,  14)
++  RELOC_NUMBER (R_PRU_DIFF32_PMEM,  15)
++  RELOC_NUMBER (R_PRU_BFD_RELOC_32, 16)
++  RELOC_NUMBER (R_PRU_BFD_RELOC_16, 17)
++  RELOC_NUMBER (R_PRU_BFD_RELOC_8,  18)
++  RELOC_NUMBER (R_PRU_ILLEGAL,	    19)
 +END_RELOC_NUMBERS (R_PRU_maxext)
 +
 +/* Processor-specific section flags.  */
@@ -6404,10 +6549,10 @@ index 0000000..2dc51c6
 +#endif /* _ELF_PRU_H */
 diff --git a/include/opcode/pru.h b/include/opcode/pru.h
 new file mode 100644
-index 0000000..f601d14
+index 0000000..6707513
 --- /dev/null
 +++ b/include/opcode/pru.h
-@@ -0,0 +1,405 @@
+@@ -0,0 +1,406 @@
 +/* TI PRU opcode list for GAS, the GNU assembler.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -6479,6 +6624,7 @@ index 0000000..f601d14
 +   The args field is a string describing the operands.  The following
 +   letters can appear in the args:
 +     b - a 5.3-bit right source register index OR 8-bit unsigned immediate
++     B - same as 'b', but for LOOP instruction where IMM is decremented
 +     c - a 5 bit unsigned immediate for constant table offset
 +     d - a 5.3-bit destination register index
 +     D - a 5.2-bit destination register index
@@ -6814,7 +6960,7 @@ index 0000000..f601d14
 +
 +#endif /* _PRU_H */
 diff --git a/ld/Makefile.am b/ld/Makefile.am
-index 0598923..a526842 100644
+index 16d95bc..0796d58 100644
 --- a/ld/Makefile.am
 +++ b/ld/Makefile.am
 @@ -1693,6 +1693,12 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
@@ -6831,7 +6977,7 @@ index 0598923..a526842 100644
    $(srcdir)/emultempl/generic.em $(srcdir)/scripttempl/aout.sc ${GEN_DEPENDS}
  
 diff --git a/ld/Makefile.in b/ld/Makefile.in
-index 7c78198..5e47fef 100644
+index 1ce019a..5e656b3 100644
 --- a/ld/Makefile.in
 +++ b/ld/Makefile.in
 @@ -3281,6 +3281,12 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
@@ -6848,7 +6994,7 @@ index 7c78198..5e47fef 100644
    $(srcdir)/emultempl/generic.em $(srcdir)/scripttempl/aout.sc ${GEN_DEPENDS}
  
 diff --git a/ld/configure.tgt b/ld/configure.tgt
-index 6251943..a359cb0 100644
+index a3db909..050b161 100644
 --- a/ld/configure.tgt
 +++ b/ld/configure.tgt
 @@ -644,6 +644,7 @@ powerpc-*-aix*)		targ_emul=aixppc ;;
@@ -7326,7 +7472,7 @@ index 0000000..88fdddc
 +
 diff --git a/ld/testsuite/ld-pru/norelax_hi_rlz-data.d b/ld/testsuite/ld-pru/norelax_hi_rlz-data.d
 new file mode 100644
-index 0000000..7ab5c04
+index 0000000..1e933ad
 --- /dev/null
 +++ b/ld/testsuite/ld-pru/norelax_hi_rlz-data.d
 @@ -0,0 +1,18 @@
@@ -7347,7 +7493,7 @@ index 0000000..7ab5c04
 + [0-9a-f]+ f0000024 f00b0024 f700007e ........  ................
 +Contents of section .data:
 + 0000 00000000 2c000020 28000000 0b002800  ................
-+ 0010 28aa0000                             ................
++ 0010 0a000000 f6ffffff 0a0028aa           ................
 diff --git a/ld/testsuite/ld-pru/norelax_hi_rlz-dis.d b/ld/testsuite/ld-pru/norelax_hi_rlz-dis.d
 new file mode 100644
 index 0000000..fca3738
@@ -7637,7 +7783,7 @@ index 0000000..39161e8
 +
 diff --git a/ld/testsuite/ld-pru/relax_hi_rlz-data.d b/ld/testsuite/ld-pru/relax_hi_rlz-data.d
 new file mode 100644
-index 0000000..b8e4310
+index 0000000..1125c15
 --- /dev/null
 +++ b/ld/testsuite/ld-pru/relax_hi_rlz-data.d
 @@ -0,0 +1,18 @@
@@ -7658,7 +7804,7 @@ index 0000000..b8e4310
 + [0-9a-f]+ f900007e ........ ........ ........  ................
 +Contents of section .data:
 + 0000 00000000 24000020 20000000 09002000  ................
-+ 0010 20aa0000                             ................
++ 0010 08000000 f8ffffff 080020aa           ................
 diff --git a/ld/testsuite/ld-pru/relax_hi_rlz-dis.d b/ld/testsuite/ld-pru/relax_hi_rlz-dis.d
 new file mode 100644
 index 0000000..2dafc17
@@ -7687,10 +7833,10 @@ index 0000000..2dafc17
 +..000020 <[^>]*> qba	..000004 <__intermediate>
 diff --git a/ld/testsuite/ld-pru/relax_hi_rlz.s b/ld/testsuite/ld-pru/relax_hi_rlz.s
 new file mode 100644
-index 0000000..04eb80a
+index 0000000..f5e673c
 --- /dev/null
 +++ b/ld/testsuite/ld-pru/relax_hi_rlz.s
-@@ -0,0 +1,27 @@
+@@ -0,0 +1,30 @@
 +# Test %hi_rlz relaxation
 +
 +.text
@@ -7716,6 +7862,9 @@ index 0000000..04eb80a
 +	.4byte	(__end - __intermediate)
 +	.2byte	%pmem(__end)
 +	.2byte	(__end - __intermediate)
++	.4byte	%pmem(__end - __intermediate)
++	.4byte	%pmem(__intermediate - __end)
++	.2byte	%pmem(__end - __intermediate)
 +	.byte	(__end - __intermediate)
 +	.byte	0xaa
 diff --git a/ld/testsuite/ld-pru/relax_hi_rlz_symbol.s b/ld/testsuite/ld-pru/relax_hi_rlz_symbol.s
@@ -7873,7 +8022,7 @@ index 80cef60..1c14d36 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rl78-dis.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rx-decode.Plo@am__quote@
 diff --git a/opcodes/configure b/opcodes/configure
-index 46b8018..86d42f7 100755
+index 252ab2f..d400a11 100755
 --- a/opcodes/configure
 +++ b/opcodes/configure
 @@ -12639,6 +12639,7 @@ if test x${all_targets} = xfalse ; then
@@ -7897,7 +8046,7 @@ index c7f4783..9ecbece 100644
  	bfd_romp_arch)		;;
  	bfd_rs6000_arch)	ta="$ta ppc-dis.lo ppc-opc.lo" ;;
 diff --git a/opcodes/disassemble.c b/opcodes/disassemble.c
-index b818d8b..8199d4b 100644
+index 45ae34e..c7e8d5c 100644
 --- a/opcodes/disassemble.c
 +++ b/opcodes/disassemble.c
 @@ -73,6 +73,7 @@
@@ -7922,10 +8071,10 @@ index b818d8b..8199d4b 100644
        if (bfd_get_mach (abfd) == bfd_mach_ppc_620)
 diff --git a/opcodes/pru-dis.c b/opcodes/pru-dis.c
 new file mode 100644
-index 0000000..8eddf99
+index 0000000..f4fd984
 --- /dev/null
 +++ b/opcodes/pru-dis.c
-@@ -0,0 +1,269 @@
+@@ -0,0 +1,284 @@
 +/* TI PRU disassemble routines
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -8046,6 +8195,21 @@ index 0000000..8eddf99
 +      if (io)
 +	{
 +	  i = GET_INSN_FIELD (IMM8, opcode);
++	  (*info->fprintf_func) (info->stream, "%ld", i);
++	}
++      else
++	{
++	pru_print_insn_arg_reg (GET_INSN_FIELD (RS2, opcode),
++				GET_INSN_FIELD (RS2SEL, opcode),
++				info);
++	}
++      break;
++    case 'B':
++      io = GET_INSN_FIELD (IO, opcode);
++
++      if (io)
++	{
++	  i = GET_INSN_FIELD (IMM8, opcode) + 1;
 +	  (*info->fprintf_func) (info->stream, "%ld", i);
 +	}
 +      else
@@ -8197,7 +8361,7 @@ index 0000000..8eddf99
 +}
 diff --git a/opcodes/pru-opc.c b/opcodes/pru-opc.c
 new file mode 100644
-index 0000000..0bc8bda
+index 0000000..9168ea7
 --- /dev/null
 +++ b/opcodes/pru-opc.c
 @@ -0,0 +1,221 @@
@@ -8341,9 +8505,9 @@ index 0000000..0bc8bda
 +  { "sxchg", prui_sxchg, "x,D,n",
 +   OP_MATCH_SXCHG, OP_MASK_XFR_OP, 0, unsigned_immed8_overflow},
 +
-+  { "loop", prui_loop, "O,b",
++  { "loop", prui_loop, "O,B",
 +   OP_MATCH_LOOP, OP_MASK_LOOP_OP, 0, unsigned_immed8_overflow},
-+  { "iloop", prui_loop, "O,b",
++  { "iloop", prui_loop, "O,B",
 +   OP_MATCH_ILOOP, OP_MASK_LOOP_OP, 0, unsigned_immed8_overflow},
 +
 +  { "qbgt", prui_qbgt, "o,s,b",
@@ -25897,7 +26061,7 @@ index 0000000..221ea73
 +
 diff --git a/sim/pru/pru.isa b/sim/pru/pru.isa
 new file mode 100644
-index 0000000..0932e81
+index 0000000..9615476
 --- /dev/null
 +++ b/sim/pru/pru.isa
 @@ -0,0 +1,240 @@
@@ -26112,7 +26276,7 @@ index 0000000..0932e81
 +	    CPU.exception = SIGILL)
 +
 +INSTRUCTION(loop,
-+	    OP2 = (IO ? IMM8 : (RS2 & 0xffffu));
++	    OP2 = (IO ? IMM8 + 1 : (RS2 & 0xffffu));
 +	    if (OP2 == 0)
 +	      {
 +		PC = LOOPEND;
@@ -26127,7 +26291,7 @@ index 0000000..0932e81
 +	      })
 +
 +INSTRUCTION(iloop,
-+	    OP2 = (IO ? IMM8 : (RS2 & 0xffffu));
++	    OP2 = (IO ? IMM8 + 1 : (RS2 & 0xffffu));
 +	    if (OP2 == 0)
 +	      {
 +		PC = LOOPEND;
