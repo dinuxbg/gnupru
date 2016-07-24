@@ -24,7 +24,7 @@ The toolchain is published as a series of patches inside the patches subdirector
 
 You'll need some prerequisites. For a Debian host:
 
-	sudo apt-get install build-essential libmpfr-dev libgmp-dev libmpc-dev texinfo libncurses5-dev
+	sudo apt-get install build-essential libmpfr-dev libgmp-dev libmpc-dev texinfo libncurses5-dev bison flex
 
 Then it should be a simple matter of:
 
