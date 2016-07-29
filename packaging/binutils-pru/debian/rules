@@ -38,7 +38,7 @@ BUILD_TREE=src
 #
 unpack: unpack-stamp
 unpack-stamp:
-	tar xjf binutils-pru-*.tar.bz2
+	tar xjf binutils-pru_*.tar.bz2
 	mv `ls -d binutils* | grep -v tar` src
 	#mkdir build
 	touch unpack-stamp

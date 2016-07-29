@@ -48,8 +48,8 @@ clean-source:
 
 unpack: unpack-stamp
 unpack-stamp:
-	tar xjf gcc-pru-*.tar.bz2
-	mv $(shell basename gcc-pru-*.tar.bz2 .orig.tar.bz2) src
+	tar xjf gcc-pru_*.tar.bz2
+	mv $(shell basename gcc-pru_*.tar.bz2 .orig.tar.bz2) src
 	touch unpack-stamp
 
 BUILD_TREE=src
