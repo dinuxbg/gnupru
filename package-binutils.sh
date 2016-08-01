@@ -21,7 +21,7 @@ VERSION=`head -1 packaging/binutils-pru/debian/changelog | grep -o '(.\+)'| sed 
 cp -Rfp $SRC/binutils-gdb/ packaging/binutils-pru/binutils-pru_$VERSION/ || die Could not copy binutils sources
 cd packaging/binutils-pru || die
 rm -fr binutils-pru*/.git
-tar cjf binutils-pru_$VERSION.orig.tar.bz2 binutils-pru_$VERSION/ || die Could not create binutils source archive
+tar cjf binutils-pru_$VERSION.tar.bz2 binutils-pru_$VERSION/ || die Could not create binutils source archive
 rm -fr binutils-pru_$VERSION
 
 # TODO: sign the package

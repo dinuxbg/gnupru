@@ -22,7 +22,7 @@ cp -Rfp $SRC/newlib-cygwin/newlib/ packaging/gcc-pru/gcc-pru_$VERSION/ || die Co
 cp -Rfp $SRC/newlib-cygwin/libgloss/ packaging/gcc-pru/gcc-pru_$VERSION/ || die Could not copy newlib sources
 cd packaging/gcc-pru || die
 rm -fr gcc-pru*/.git
-tar cjf gcc-pru_$VERSION.orig.tar.bz2 gcc-pru_$VERSION/ || die Could not create gcc source archive
+tar cjf gcc-pru_$VERSION.tar.bz2 gcc-pru_$VERSION/ || die Could not create gcc source archive
 rm -fr gcc-pru_$VERSION
 
 # TODO: sign the package
