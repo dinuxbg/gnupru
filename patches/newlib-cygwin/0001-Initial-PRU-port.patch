@@ -1,4 +1,4 @@
-From b9c955d929cd7d22b79e2fe178f28d92a66ae06a Mon Sep 17 00:00:00 2001
+From 9d4ee79684aeb97e1ba7bc0e7cc6096b1a22fe9f Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Thu, 1 May 2014 16:43:07 +0300
 Subject: [PATCH 1/2] Initial PRU port
@@ -14524,5 +14524,5 @@ index 0000000..cc22975
 +1:
 +	ret
 -- 
-2.8.1
+2.9.3
 

@@ -1,7 +1,7 @@
-From a345a8b24ad2d1b3f5c29ce62eee7a2a052e0fd7 Mon Sep 17 00:00:00 2001
+From b022c8d940bf64cc9fb124bf3b76860a4605d1f5 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Mon, 30 Dec 2013 23:47:32 +0200
-Subject: [PATCH 1/4] Initial TI PRU GCC port
+Subject: [PATCH 1/5] Initial TI PRU GCC port
 
 Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---
@@ -11,19 +11,19 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  configure.ac                                       |    7 +
  gcc/common/config/pru/pru-common.c                 |   44 +
  gcc/config.gcc                                     |   10 +
- gcc/config/pru/alu-zext.md                         |  451 ++
+ gcc/config/pru/alu-zext.md                         |  559 ++
  gcc/config/pru/alu-zext.sh                         |   36 +
- gcc/config/pru/alu-zext.template.md                |  112 +
+ gcc/config/pru/alu-zext.template.md                |  139 +
  gcc/config/pru/constraints.md                      |   74 +
- gcc/config/pru/predicates.md                       |  211 +
+ gcc/config/pru/predicates.md                       |  224 +
  gcc/config/pru/pru-ldst-multiple.md                | 5998 ++++++++++++++++++++
  gcc/config/pru/pru-ldst-multiple.ml                |  145 +
  gcc/config/pru/pru-modes.def                       |   29 +
  gcc/config/pru/pru-pragma.c                        |   89 +
  gcc/config/pru/pru-protos.h                        |   61 +
- gcc/config/pru/pru.c                               | 1911 +++++++
+ gcc/config/pru/pru.c                               | 1923 +++++++
  gcc/config/pru/pru.h                               |  427 ++
- gcc/config/pru/pru.md                              |  691 +++
+ gcc/config/pru/pru.md                              |  720 +++
  gcc/config/pru/pru.opt                             |   31 +
  gcc/config/pru/t-pru                               |   25 +
  gcc/doc/extend.texi                                |   20 +
@@ -40,12 +40,15 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  gcc/testsuite/gcc.dg/tree-ssa/ssa-thread-14.c      |    2 +-
  gcc/testsuite/gcc.target/pru/builtins-1.c          |   12 +
  gcc/testsuite/gcc.target/pru/builtins-error.c      |    6 +
+ gcc/testsuite/gcc.target/pru/clearbit.c            |   13 +
+ gcc/testsuite/gcc.target/pru/pr64366.c             |  128 +
  gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c |   22 +
  gcc/testsuite/gcc.target/pru/pru.exp               |   41 +
  gcc/testsuite/gcc.target/pru/qbbc-1.c              |   29 +
  gcc/testsuite/gcc.target/pru/qbbc-2.c              |   15 +
  gcc/testsuite/gcc.target/pru/qbbs-1.c              |   29 +
  gcc/testsuite/gcc.target/pru/qbbs-2.c              |   15 +
+ gcc/testsuite/gcc.target/pru/setbit.c              |   13 +
  .../gcc.target/pru/zero_extend-and-hisi.c          |   16 +
  .../gcc.target/pru/zero_extend-and-qihi.c          |   16 +
  .../gcc.target/pru/zero_extend-and-qisi.c          |   16 +
@@ -65,7 +68,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgcc/config/pru/pru-asm.h                        |   36 +
  libgcc/config/pru/pru-divmod.h                     |  117 +
  libgcc/config/pru/t-pru                            |   40 +
- 60 files changed, 11256 insertions(+), 9 deletions(-)
+ 63 files changed, 11599 insertions(+), 9 deletions(-)
  create mode 100644 gcc/common/config/pru/pru-common.c
  create mode 100644 gcc/config/pru/alu-zext.md
  create mode 100755 gcc/config/pru/alu-zext.sh
@@ -84,12 +87,15 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 gcc/config/pru/t-pru
  create mode 100644 gcc/testsuite/gcc.target/pru/builtins-1.c
  create mode 100644 gcc/testsuite/gcc.target/pru/builtins-error.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/clearbit.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/pr64366.c
  create mode 100644 gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c
  create mode 100644 gcc/testsuite/gcc.target/pru/pru.exp
  create mode 100644 gcc/testsuite/gcc.target/pru/qbbc-1.c
  create mode 100644 gcc/testsuite/gcc.target/pru/qbbc-2.c
  create mode 100644 gcc/testsuite/gcc.target/pru/qbbs-1.c
  create mode 100644 gcc/testsuite/gcc.target/pru/qbbs-2.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/setbit.c
  create mode 100644 gcc/testsuite/gcc.target/pru/zero_extend-and-hisi.c
  create mode 100644 gcc/testsuite/gcc.target/pru/zero_extend-and-qihi.c
  create mode 100644 gcc/testsuite/gcc.target/pru/zero_extend-and-qisi.c
@@ -107,13 +113,13 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 libgcc/config/pru/t-pru
 
 diff --git a/.gitignore b/.gitignore
-index c9a6158..8f48251 100644
+index b53f60d..d3b11af 100644
 --- a/.gitignore
 +++ b/.gitignore
-@@ -49,3 +49,6 @@ lost+found
- # ignore ./contrib/gcc_update output
- LAST_UPDATED
- REVISION
+@@ -55,3 +55,6 @@ REVISION
+ /mpc*
+ /gmp*
+ /isl*
 +
 +cscope.*
 +.*.swp
@@ -138,10 +144,10 @@ index 6d86a1e..5248c5f 100755
  	| riscv32-* | riscv64-* \
  	| rl78-* | romp-* | rs6000-* | rx-* \
 diff --git a/configure b/configure
-index cd0e7b9..89d4131 100755
+index f9650c9..dfc5fae 100755
 --- a/configure
 +++ b/configure
-@@ -3361,6 +3361,10 @@ case "${target}" in
+@@ -3315,6 +3315,10 @@ case "${target}" in
    powerpc-*-aix* | rs6000-*-aix*)
      noconfigdirs="$noconfigdirs target-libssp"
      ;;
@@ -152,7 +158,7 @@ index cd0e7b9..89d4131 100755
    rl78-*-*)
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
-@@ -3613,6 +3617,9 @@ case "${target}" in
+@@ -3502,6 +3506,9 @@ case "${target}" in
    powerpc*-*-*)
      libgloss_dir=rs6000
      ;;
@@ -163,10 +169,10 @@ index cd0e7b9..89d4131 100755
      libgloss_dir=sparc
      ;;
 diff --git a/configure.ac b/configure.ac
-index 51b53b5..d18dafe 100644
+index aec703a..4371dfd 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -697,6 +697,10 @@ case "${target}" in
+@@ -657,6 +657,10 @@ case "${target}" in
    powerpc-*-aix* | rs6000-*-aix*)
      noconfigdirs="$noconfigdirs target-libssp"
      ;;
@@ -177,7 +183,7 @@ index 51b53b5..d18dafe 100644
    rl78-*-*)
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
-@@ -949,6 +953,9 @@ case "${target}" in
+@@ -844,6 +848,9 @@ case "${target}" in
    powerpc*-*-*)
      libgloss_dir=rs6000
      ;;
@@ -238,10 +244,10 @@ index 0000000..46e73bd
 +
 +struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index 1f75f17..8adcc78 100644
+index 8fd07c5..866d280 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -446,6 +446,9 @@ powerpc*-*-*)
+@@ -448,6 +448,9 @@ powerpc*-*-*)
  	esac
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
@@ -251,7 +257,7 @@ index 1f75f17..8adcc78 100644
  rs6000*-*-*)
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
-@@ -2460,6 +2463,13 @@ powerpcle-*-eabi*)
+@@ -2470,6 +2473,13 @@ powerpcle-*-eabi*)
  	extra_options="${extra_options} rs6000/sysv4.opt"
  	use_gcc_stdint=wrap
  	;;
@@ -267,10 +273,10 @@ index 1f75f17..8adcc78 100644
  	tmake_file="rs6000/t-aix43 t-slibgcc"
 diff --git a/gcc/config/pru/alu-zext.md b/gcc/config/pru/alu-zext.md
 new file mode 100644
-index 0000000..4501dad
+index 0000000..534752c
 --- /dev/null
 +++ b/gcc/config/pru/alu-zext.md
-@@ -0,0 +1,451 @@
+@@ -0,0 +1,559 @@
 +;; WARNING: This is machine generated! DO NOT EDIT!
 +;;
 +;;
@@ -358,6 +364,33 @@ index 0000000..4501dad
 +  "not\\t%x0, %x1"
 +  [(set_attr "type" "alu")])
 +
++; Specialized IOR/AND patterns for matching setbit/clearbit instructions.
++;
++; TODO - allow clrbit and setbit to support (1 << REG) constructs
++
++(define_insn "clearbit_<EQD:mode>_<EQS0:mode>_dummy"
++  [(set (match_operand:EQD 0 "register_operand"			"=r")
++        (and:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand"	"r")
++	 )
++          (match_operand:EQD 2 "single_zero_operand" "n")))]
++  ""
++  "clr\\t%x0, %x1, %V2"
++  [(set_attr "type" "alu")])
++
++(define_insn "setbit_<EQD:mode>_<EQS0:mode>_dummy"
++  [(set (match_operand:EQD 0 "register_operand"			"=r")
++        (ior:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand"	"r")
++	 )
++          (match_operand:EQD 2 "single_one_operand" "n")))]
++  ""
++  "set\\t%x0, %x1, %T2"
++  [(set_attr "type" "alu")])
++
++; Regular ALU ops
 +(define_insn "<code>_impl<EQD:mode>_<EQS0:mode><EQS1:mode>"
 +  [(set (match_operand:EQD 0 "register_operand"                 "=r")
 +        (LOGICAL:EQD
@@ -372,7 +405,7 @@ index 0000000..4501dad
 +  "<logical_asm>\\t%x0, %x1, %x2"
 +  [(set_attr "type" "alu")])
 +
-+
++; Shift ALU ops
 +(define_insn "<shift_op>_impl<EQD:mode>_<EQS0:mode><EQS1:mode>"
 +  [(set (match_operand:EQD 0 "register_operand"          "=r")
 +        (SHIFT:EQD
@@ -470,6 +503,33 @@ index 0000000..4501dad
 +  "not\\t%x0, %x1"
 +  [(set_attr "type" "alu")])
 +
++; Specialized IOR/AND patterns for matching setbit/clearbit instructions.
++;
++; TODO - allow clrbit and setbit to support (1 << REG) constructs
++
++(define_insn "clearbit_<EQD:mode>_<EQS0:mode>eqd"
++  [(set (match_operand:EQD 0 "register_operand"			"=r")
++        (and:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand"	"r")
++	 )
++          (match_operand:EQD 2 "single_zero_operand" "n")))]
++  ""
++  "clr\\t%x0, %x1, %V2"
++  [(set_attr "type" "alu")])
++
++(define_insn "setbit_<EQD:mode>_<EQS0:mode>eqd"
++  [(set (match_operand:EQD 0 "register_operand"			"=r")
++        (ior:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand"	"r")
++	 )
++          (match_operand:EQD 2 "single_one_operand" "n")))]
++  ""
++  "set\\t%x0, %x1, %T2"
++  [(set_attr "type" "alu")])
++
++; Regular ALU ops
 +(define_insn "<code>_impl<EQD:mode>_<EQS0:mode>eqd"
 +  [(set (match_operand:EQD 0 "register_operand"                 "=r")
 +        (LOGICAL:EQD
@@ -484,7 +544,7 @@ index 0000000..4501dad
 +  "<logical_asm>\\t%x0, %x1, %x2"
 +  [(set_attr "type" "alu")])
 +
-+
++; Shift ALU ops
 +(define_insn "<shift_op>_impl<EQD:mode>_<EQS0:mode>eqd"
 +  [(set (match_operand:EQD 0 "register_operand"          "=r")
 +        (SHIFT:EQD
@@ -582,6 +642,33 @@ index 0000000..4501dad
 +  "not\\t%x0, %x1"
 +  [(set_attr "type" "alu")])
 +
++; Specialized IOR/AND patterns for matching setbit/clearbit instructions.
++;
++; TODO - allow clrbit and setbit to support (1 << REG) constructs
++
++(define_insn "clearbit_<EQD:mode>_eqd_dummy"
++  [(set (match_operand:EQD 0 "register_operand"			"=r")
++        (and:EQD
++	 
++	  (match_operand:EQD 1 "register_operand"	"r")
++	 
++          (match_operand:EQD 2 "single_zero_operand" "n")))]
++  ""
++  "clr\\t%x0, %x1, %V2"
++  [(set_attr "type" "alu")])
++
++(define_insn "setbit_<EQD:mode>_eqd_dummy"
++  [(set (match_operand:EQD 0 "register_operand"			"=r")
++        (ior:EQD
++	 
++	  (match_operand:EQD 1 "register_operand"	"r")
++	 
++          (match_operand:EQD 2 "single_one_operand" "n")))]
++  ""
++  "set\\t%x0, %x1, %T2"
++  [(set_attr "type" "alu")])
++
++; Regular ALU ops
 +(define_insn "<code>_impl<EQD:mode>_eqd<EQS1:mode>"
 +  [(set (match_operand:EQD 0 "register_operand"                 "=r")
 +        (LOGICAL:EQD
@@ -596,7 +683,7 @@ index 0000000..4501dad
 +  "<logical_asm>\\t%x0, %x1, %x2"
 +  [(set_attr "type" "alu")])
 +
-+
++; Shift ALU ops
 +(define_insn "<shift_op>_impl<EQD:mode>_eqd<EQS1:mode>"
 +  [(set (match_operand:EQD 0 "register_operand"          "=r")
 +        (SHIFT:EQD
@@ -694,6 +781,33 @@ index 0000000..4501dad
 +  "not\\t%x0, %x1"
 +  [(set_attr "type" "alu")])
 +
++; Specialized IOR/AND patterns for matching setbit/clearbit instructions.
++;
++; TODO - allow clrbit and setbit to support (1 << REG) constructs
++
++(define_insn "clearbit_<EQD:mode>_eqdeqd"
++  [(set (match_operand:EQD 0 "register_operand"			"=r")
++        (and:EQD
++	 
++	  (match_operand:EQD 1 "register_operand"	"r")
++	 
++          (match_operand:EQD 2 "single_zero_operand" "n")))]
++  ""
++  "clr\\t%x0, %x1, %V2"
++  [(set_attr "type" "alu")])
++
++(define_insn "setbit_<EQD:mode>_eqdeqd"
++  [(set (match_operand:EQD 0 "register_operand"			"=r")
++        (ior:EQD
++	 
++	  (match_operand:EQD 1 "register_operand"	"r")
++	 
++          (match_operand:EQD 2 "single_one_operand" "n")))]
++  ""
++  "set\\t%x0, %x1, %T2"
++  [(set_attr "type" "alu")])
++
++; Regular ALU ops
 +(define_insn "<code>_impl<EQD:mode>_eqdeqd"
 +  [(set (match_operand:EQD 0 "register_operand"                 "=r")
 +        (LOGICAL:EQD
@@ -708,7 +822,7 @@ index 0000000..4501dad
 +  "<logical_asm>\\t%x0, %x1, %x2"
 +  [(set_attr "type" "alu")])
 +
-+
++; Shift ALU ops
 +(define_insn "<shift_op>_impl<EQD:mode>_eqdeqd"
 +  [(set (match_operand:EQD 0 "register_operand"          "=r")
 +        (SHIFT:EQD
@@ -766,10 +880,10 @@ index 0000000..0f4b9d5
 +) > alu-zext.md
 diff --git a/gcc/config/pru/alu-zext.template.md b/gcc/config/pru/alu-zext.template.md
 new file mode 100644
-index 0000000..3df28d8
+index 0000000..7352d2b
 --- /dev/null
 +++ b/gcc/config/pru/alu-zext.template.md
-@@ -0,0 +1,112 @@
+@@ -0,0 +1,139 @@
 +;; ALU operations with zero extensions
 +;;
 +;; <ZOP0@Operand0:SI@Operand0:Zero-extended>
@@ -854,6 +968,33 @@ index 0000000..3df28d8
 +  "not\\t%x0, %x1"
 +  [(set_attr "type" "alu")])
 +
++; Specialized IOR/AND patterns for matching setbit/clearbit instructions.
++;
++; TODO - allow clrbit and setbit to support (1 << REG) constructs
++
++(define_insn "clearbit_<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@_dummy}"
++  [(set (match_operand:EQD 0 "register_operand"			"=r")
++        (and:EQD
++	 {ZOP0@@(zero_extend:EQD}
++	  (match_operand:{ZOP0@EQD@EQS0} 1 "register_operand"	"r")
++	 {ZOP0@@)}
++          (match_operand:EQD 2 "single_zero_operand" "n")))]
++  ""
++  "clr\\t%x0, %x1, %V2"
++  [(set_attr "type" "alu")])
++
++(define_insn "setbit_<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@_dummy}"
++  [(set (match_operand:EQD 0 "register_operand"			"=r")
++        (ior:EQD
++	 {ZOP0@@(zero_extend:EQD}
++	  (match_operand:{ZOP0@EQD@EQS0} 1 "register_operand"	"r")
++	 {ZOP0@@)}
++          (match_operand:EQD 2 "single_one_operand" "n")))]
++  ""
++  "set\\t%x0, %x1, %T2"
++  [(set_attr "type" "alu")])
++
++; Regular ALU ops
 +(define_insn "<code>_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@<EQS1:mode>}"
 +  [(set (match_operand:EQD 0 "register_operand"                 "=r")
 +        (LOGICAL:EQD
@@ -868,7 +1009,7 @@ index 0000000..3df28d8
 +  "<logical_asm>\\t%x0, %x1, %x2"
 +  [(set_attr "type" "alu")])
 +
-+
++; Shift ALU ops
 +(define_insn "<shift_op>_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@<EQS1:mode>}"
 +  [(set (match_operand:EQD 0 "register_operand"          "=r")
 +        (SHIFT:EQD
@@ -964,10 +1105,10 @@ index 0000000..f6a4165
 +
 diff --git a/gcc/config/pru/predicates.md b/gcc/config/pru/predicates.md
 new file mode 100644
-index 0000000..2fe7d46
+index 0000000..d16b034
 --- /dev/null
 +++ b/gcc/config/pru/predicates.md
-@@ -0,0 +1,211 @@
+@@ -0,0 +1,224 @@
 +;; Predicate definitions for TI PRU.
 +;; Copyright (C) 2014 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -1018,6 +1159,19 @@ index 0000000..2fe7d46
 +  (and (match_code "const_int")
 +       (match_test ("   INTVAL (op) >= 0
 +		     && INTVAL (op) <= 2 "))))
++
++;; Return true if OP is a constant that contains only one 1 in its
++;; binary representation.
++(define_predicate "single_one_operand"
++  (and (match_code "const_int")
++       (match_test "exact_log2(INTVAL (op) & GET_MODE_MASK (mode)) >= 0")))
++
++;; Return true if OP is a constant that contains only one 0 in its
++;; binary representation.
++(define_predicate "single_zero_operand"
++  (and (match_code "const_int")
++       (match_test "exact_log2(~INTVAL (op) & GET_MODE_MASK (mode)) >= 0")))
++
 +
 +(define_predicate "reg_or_ubyte_operand"
 +  (ior (match_operand 0 "const_ubyte_operand")
@@ -7533,10 +7687,10 @@ index 0000000..43d6e80
 +#endif /* GCC_PRU_PROTOS_H */
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
 new file mode 100644
-index 0000000..b9153e4
+index 0000000..10c0e5b
 --- /dev/null
 +++ b/gcc/config/pru/pru.c
-@@ -0,0 +1,1911 @@
+@@ -0,0 +1,1923 @@
 +/* Target machine subroutines for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -8705,7 +8859,9 @@ index 0000000..b9153e4
 +     Q: prints swapped and reversed condition.
 +     R: prints reversed condition.
 +     S: print operand mode size (but do not print the operand itself)
++     T: print exact_log2() for const_int operands
 +     U: for upper half of 32 bit value
++     V: print exact_log2() of negated const_int operands
 +*/
 +static void
 +pru_print_operand (FILE *file, rtx op, int letter)
@@ -8773,11 +8929,24 @@ index 0000000..b9153e4
 +          output_addr_const (file, op);
 +          return;
 +        }
-+
-+      if (letter == 'U')
++      else if (letter == 'U')
 +        {
 +          HOST_WIDE_INT val = INTVAL (op);
 +	  val = (val >> 16) & 0xFFFF;
++	  output_addr_const (file, gen_int_mode (val, SImode));
++          return;
++        }
++      else if (letter == 'T')
++        {
++          HOST_WIDE_INT val = exact_log2 (INTVAL (op) & 0xffffffff);
++	  gcc_assert (val >= 0 && val <= 31);
++	  output_addr_const (file, gen_int_mode (val, SImode));
++          return;
++        }
++      else if (letter == 'V')
++        {
++          HOST_WIDE_INT val = exact_log2 (~INTVAL (op) & 0xffffffff);
++	  gcc_assert (val >= 0 && val <= 31);
 +	  output_addr_const (file, gen_int_mode (val, SImode));
 +          return;
 +        }
@@ -9433,9 +9602,6 @@ index 0000000..b9153e4
 +#undef TARGET_PRINT_OPERAND_ADDRESS
 +#define TARGET_PRINT_OPERAND_ADDRESS pru_print_operand_address
 +
-+#undef TARGET_LRA_P
-+#define TARGET_LRA_P hook_bool_void_true
-+
 +#undef TARGET_OPTION_OVERRIDE
 +#define TARGET_OPTION_OVERRIDE pru_option_override
 +
@@ -9450,7 +9616,7 @@ index 0000000..b9153e4
 +#include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
 new file mode 100644
-index 0000000..5ed3f09
+index 0000000..bc7045c
 --- /dev/null
 +++ b/gcc/config/pru/pru.h
 @@ -0,0 +1,427 @@
@@ -9835,7 +10001,7 @@ index 0000000..5ed3f09
 +  {									\
 +    fprintf ((FILE), "%s", COMMON_ASM_OP);				\
 +    assemble_name ((FILE), (NAME));					\
-+    fprintf ((FILE), ","HOST_WIDE_INT_PRINT_UNSIGNED",%u\n", (SIZE),	\
++    fprintf ((FILE), "," HOST_WIDE_INT_PRINT_UNSIGNED ",%u\n", (SIZE),	\
 +	     (ALIGN) / BITS_PER_UNIT);					\
 +  }									\
 +while (0)
@@ -9883,10 +10049,10 @@ index 0000000..5ed3f09
 +#endif /* GCC_PRU_H */
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
 new file mode 100644
-index 0000000..7a9561f
+index 0000000..fe7fe9c
 --- /dev/null
 +++ b/gcc/config/pru/pru.md
-@@ -0,0 +1,691 @@
+@@ -0,0 +1,720 @@
 +;; Machine Description for TI PRU.
 +;; Copyright (C) 2014 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -9980,21 +10146,51 @@ index 0000000..7a9561f
 +
 +;; Move instructions
 +
-+;; Assume that Program Mem (T constraint) can fit in 16 bits!
-+(define_insn "mov<mode>"
-+  [(set (match_operand:ALL 0 "nonimmediate_operand" "=m,r,r,r,r,r")
-+        (match_operand:ALL 1 "general_operand"       "r,m,r,T,J,i"))]
-+;  "(which_alternative == 5) ? (<MODE>mode == SImode) : true"
++(define_expand "mov<mode>"
++  [(set (match_operand:ALL 0 "nonimmediate_operand" "")
++        (match_operand:ALL 1 "general_operand"       ""))]
++  ""
++  "
++  {
++    /* It helps to split constant loading and memory access
++       early, so that the LDI/LDI32 instructions can be hoisted
++       outside a loop body.  */
++    if (MEM_P (operands[0]))
++      operands[1] = force_reg (<MODE>mode, operands[1]);
++  }
++  "
++)
++
++;; Leave mem and reg operands in the same insn. Otherwise LRA gets
++;; confused, and gcc.target/pru/pr64366.c triggers infinite loops in reload.
++(define_insn "prumov<mode>"
++  [(set (match_operand:ALL 0 "nonimmediate_operand" "=m,r,r")
++        (match_operand:ALL 1 "nonimmediate_operand" "r,m,r"))]
 +  ""
 +  "@
 +    sb%B0o\\t%1, %0, %S0
 +    lb%B1o\\t%0, %1, %S1
-+    mov\\t%x0, %x1
++    mov\\t%x0, %x1"
++  [(set_attr "type" "st,ld,alu")
++   (set_attr "length" "4,4,4")])
++
++
++;; Split loading of integer constants into a distinct pattern, in order to
++;; prevent CSE from considering "SET (MEM, CONST_INT)" as a valid insn
++;; selection. This fixes an abnormally long compile time exposed by
++;; gcc.dg/pr48141.c
++;;
++;; Note: Assume that Program Mem (T constraint) can fit in 16 bits!
++(define_insn "prumov_ldi<mode>"
++  [(set (match_operand:ALL 0 "register_operand"	      "=r,r,r")
++        (match_operand:ALL 1 "immediate_operand"       "T,J,i"))]
++  ""
++  "@
 +    ldi\\t%x0, %%pmem(%1)
 +    ldi\\t%x0, %1
 +    ldi\\t%0, %L1\;ldi\\t%0.w2, %H1"
-+  [(set_attr "type" "st,ld,alu,alu,alu,alu")
-+   (set_attr "length" "4,4,4,4,4,8")])
++  [(set_attr "type" "alu,alu,alu")
++   (set_attr "length" "4,4,8")])
 +
 +; I cannot think of any reason for the core to pass a 64-bit symbolic
 +; constants. Hence simplify the rule and handle only numeric constants.
@@ -10259,7 +10455,6 @@ index 0000000..7a9561f
 +  ""
 +  ""
 +  [(set_attr "type" "shift")])
-+;; TODO - add clrbit, setbit,
 +
 +
 +;; Include ALU patterns with zero-extension of operands. That's where
@@ -10647,10 +10842,10 @@ index 0000000..2bbdeb9
 +	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $<
 +
 diff --git a/gcc/doc/extend.texi b/gcc/doc/extend.texi
-index ad8898c..322b0c5 100644
+index 49367f5..9b8d740 100644
 --- a/gcc/doc/extend.texi
 +++ b/gcc/doc/extend.texi
-@@ -20139,6 +20139,7 @@ for further explanation.
+@@ -20390,6 +20390,7 @@ for further explanation.
  * ARM Pragmas::
  * M32C Pragmas::
  * MeP Pragmas::
@@ -10658,7 +10853,7 @@ index ad8898c..322b0c5 100644
  * RS/6000 and PowerPC Pragmas::
  * S/390 Pragmas::
  * Darwin Pragmas::
-@@ -20290,6 +20291,25 @@ extern int foo ();
+@@ -20541,6 +20542,25 @@ extern int foo ();
  
  @end table
  
@@ -10685,7 +10880,7 @@ index ad8898c..322b0c5 100644
  @subsection RS/6000 and PowerPC Pragmas
  
 diff --git a/gcc/doc/md.texi b/gcc/doc/md.texi
-index 996b164..8fb6e0b 100644
+index 201f0a5..e0ffa1e 100644
 --- a/gcc/doc/md.texi
 +++ b/gcc/doc/md.texi
 @@ -3248,6 +3248,28 @@ Vector constant that is all zeros.
@@ -10856,6 +11051,159 @@ index 0000000..af1ca1a
 +void delay (long a)
 +{
 +    __delay_cycles (a); /* { dg-error "__delay_cycles\\(\\) only takes constant arguments" } */
++}
+diff --git a/gcc/testsuite/gcc.target/pru/clearbit.c b/gcc/testsuite/gcc.target/pru/clearbit.c
+new file mode 100644
+index 0000000..cc24b3b
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/clearbit.c
+@@ -0,0 +1,13 @@
++/* clearbit instruction generation */
++
++/* { dg-do compile } */
++/* { dg-options "-O1" } */
++
++unsigned int
++test_clearbit (unsigned int val)
++{
++  /* { dg-final { scan-assembler "clr\\tr14, r14, 19" } } */
++  val &= ~(1u << 19);
++  return val;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/pr64366.c b/gcc/testsuite/gcc.target/pru/pr64366.c
+new file mode 100644
+index 0000000..1608d46
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/pr64366.c
+@@ -0,0 +1,128 @@
++/* { dg-do compile } */
++/* { dg-options "-O2" } */
++
++typedef int int8_t __attribute__ ((__mode__ (__QI__)));
++typedef int int16_t __attribute__ ((__mode__ (__HI__)));
++typedef int int32_t __attribute__ ((__mode__ (__SI__)));
++typedef int int64_t __attribute__ ((__mode__ (__DI__)));
++typedef unsigned char uint8_t;
++typedef unsigned short int uint16_t;
++typedef unsigned int uint32_t;
++__extension__ typedef unsigned long long int uint64_t;
++typedef int intptr_t;
++typedef struct BigStruct{
++  uint8_t a;
++  int8_t b;
++  uint16_t c;
++  int16_t d;
++  uint32_t e;
++  int32_t f;
++  uint64_t g;
++  int64_t h;
++  float i;
++  double j;
++  long double k;
++  char* l;
++  uint8_t m;
++  int8_t n;
++  uint16_t o;
++  int16_t p;
++  uint32_t q;
++  int32_t r;
++  uint64_t s;
++  int64_t t;
++  float u;
++  double v;
++  long double w;
++  char* x;
++  uint8_t y;
++  int8_t z;
++  uint16_t aa;
++  int16_t bb;
++  uint32_t cc;
++  int32_t dd;
++  uint64_t ee;
++  int64_t ff;
++  float gg;
++  double hh;
++  long double ii;
++  char* jj;
++  uint8_t kk;
++  int8_t ll;
++  uint16_t mm;
++  int16_t nn;
++  uint32_t oo;
++  int32_t pp;
++  uint64_t qq;
++  int64_t rr;
++  float ss;
++  double tt;
++  long double uu;
++  char* vv;
++  uint8_t ww;
++  int8_t xx;
++}  BigStruct;
++
++extern void foobar();
++
++void
++test_large_fn (uint8_t ui8_1, int8_t si8_1, uint16_t ui16_1, int16_t si16_1,
++	       uint32_t ui32_1, int32_t si32_1, uint64_t ui64_1, int64_t si64_1,
++	       float f_1, double d_1, long double ld_1, char* p_1,
++	       uint8_t ui8_2, int8_t si8_2, uint16_t ui16_2, int16_t si16_2,
++	       uint32_t ui32_2, int32_t si32_2, uint64_t ui64_2, int64_t si64_2,
++	       float f_2, double d_2, long double ld_2, char* p_2,
++	       uint8_t ui8_3, int8_t si8_3, uint16_t ui16_3, int16_t si16_3,
++	       uint32_t ui32_3, int32_t si32_3, uint64_t ui64_3, int64_t si64_3,
++	       float f_3, double d_3, long double ld_3, char* p_3,
++	       uint8_t ui8_4, int8_t si8_4, uint16_t ui16_4, int16_t si16_4,
++	       uint32_t ui32_4, int32_t si32_4, uint64_t ui64_4, int64_t si64_4,
++	       float f_4, double d_4, long double ld_4, char* p_4,
++	       uint8_t ui8_5, int8_t si8_5)
++{
++    BigStruct retVal =
++      {
++	ui8_1 + 1, si8_1 + 1, ui16_1 + 1, si16_1 + 1,
++	ui32_1 + 1, si32_1 + 1, ui64_1 + 1, si64_1 + 1,
++	f_1 + 1, d_1 + 1, ld_1 + 1, (char*)((intptr_t)p_1 + 1),
++	ui8_2 + 2, si8_2 + 2, ui16_2 + 2, si16_2 + 2,
++	ui32_2 + 2, si32_2 + 2, ui64_2 + 2, si64_2 + 2,
++	f_2 + 2, d_2 + 2, ld_2 + 2, (char*)((intptr_t)p_2 + 2),
++	ui8_3 + 3, si8_3 + 3, ui16_3 + 3, si16_3 + 3,
++	ui32_3 + 3, si32_3 + 3, ui64_3 + 3, si64_3 + 3,
++	f_3 + 3, d_3 + 3, ld_3 + 3, (char*)((intptr_t)p_3 + 3),
++	ui8_4 + 4, si8_4 + 4, ui16_4 + 4, si16_4 + 4,
++	ui32_4 + 4, si32_4 + 4, ui64_4 + 4, si64_4 + 4,
++	f_4 + 4, d_4 + 4, ld_4 + 4, (char*)((intptr_t)p_4 + 4),
++	ui8_5 + 5, si8_5 + 5
++      };
++
++    foobar ("%" "u" " %" "d" " %hu %hd %u %d %" "ll" "u" " %" "ll" "d"
++	      " %.0f %.0f %.0Lf %#lx " "%" "u" " %" "d" " %hu %hd %u %d %"
++	      "ll" "u" " %" "ll" "d" " %.0f %.0f %.0Lf %#lx " "%" "u"
++	      " %" "d" " %hu %hd %u %d %" "ll" "u" " %" "ll" "d"
++	      " %.0f %.0f %.0Lf %#lx " "%" "u" " %" "d" " %hu %hd %u %d %"
++	      "ll" "u" " %" "ll" "d" " %.0f %.0f %.0Lf %#lx %" "u" " %"
++	      "d" ": " "%" "u" " %" "d" " %hu %hd %u %d %" "ll" "u" " %"
++	      "ll" "d" " %.0f %.0f %.0Lf %#lx " "%" "u" " %" "d"
++	      " %hu %hd %u %d %" "ll" "u" " %" "ll" "d" " %.0f %.0f %.0Lf %#lx "
++	      "%" "u" " %" "d" " %hu %hd %u %d %" "ll" "u" " %" "ll" "d"
++	      " %.0f %.0f %.0Lf %#lx " "%" "u" " %" "d" " %hu %hd %u %d %"
++	    "ll" "u" " %" "ll" "d" " %.0f %.0f %.0Lf %#lx %" "u" " %" "d" "\n",
++	    ui8_1, si8_1, ui16_1, si16_1, ui32_1, si32_1, ui64_1, si64_1,
++	    f_1, d_1, ld_1, (unsigned long)p_1, ui8_2, si8_2, ui16_2, si16_2,
++	    ui32_2, si32_2, ui64_2, si64_2, f_2, d_2, ld_2, (unsigned long)p_2,
++	    ui8_3, si8_3, ui16_3, si16_3, ui32_3, si32_3, ui64_3, si64_3, f_3,
++	    d_3, ld_3, (unsigned long)p_3, ui8_4, si8_4, ui16_4, si16_4, ui32_4,
++	    si32_4, ui64_4, si64_4, f_4, d_4, ld_4, (unsigned long)p_4, ui8_5,
++	    si8_5, retVal.a, retVal.b, retVal.c, retVal.d, retVal.e, retVal.f,
++	    retVal.g, retVal.h, retVal.i, retVal.j, retVal.k,
++	    (unsigned long)retVal.l, retVal.m, retVal.n, retVal.o, retVal.p,
++	    retVal.q, retVal.r, retVal.s, retVal.t, retVal.u, retVal.v,
++	    retVal.w, (unsigned long)retVal.x, retVal.y, retVal.z, retVal.aa,
++	    retVal.bb, retVal.cc, retVal.dd, retVal.ee, retVal.ff, retVal.gg,
++	    retVal.hh, retVal.ii, (unsigned long)retVal.jj, retVal.kk,
++	    retVal.ll, retVal.mm, retVal.nn, retVal.oo, retVal.pp, retVal.qq,
++	    retVal.rr, retVal.ss, retVal.tt, retVal.uu, (unsigned long)retVal.vv,
++	    retVal.ww, retVal.xx);
 +}
 diff --git a/gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c b/gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c
 new file mode 100644
@@ -11044,6 +11392,25 @@ index 0000000..fea7f20
 +    return a;
 +  return b;
 +}
+diff --git a/gcc/testsuite/gcc.target/pru/setbit.c b/gcc/testsuite/gcc.target/pru/setbit.c
+new file mode 100644
+index 0000000..6e63b73
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/setbit.c
+@@ -0,0 +1,13 @@
++/* setbit instruction generation */
++
++/* { dg-do compile } */
++/* { dg-options "-O1" } */
++
++unsigned int
++test_setbit (unsigned int val)
++{
++  /* { dg-final { scan-assembler "set\\tr14, r14, 31" } } */
++  val |= (1u << 31);
++  return val;
++}
++
 diff --git a/gcc/testsuite/gcc.target/pru/zero_extend-and-hisi.c b/gcc/testsuite/gcc.target/pru/zero_extend-and-hisi.c
 new file mode 100644
 index 0000000..cc07d29
@@ -11258,7 +11625,7 @@ index 0000000..0e9ae4c
 +}
 +
 diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
-index b7f0ff7..83e07a3 100644
+index 9c2e041..bebd041 100644
 --- a/gcc/testsuite/lib/gcc-dg.exp
 +++ b/gcc/testsuite/lib/gcc-dg.exp
 @@ -358,6 +358,11 @@ proc gcc-dg-prune { system text } {
@@ -11274,7 +11641,7 @@ index b7f0ff7..83e07a3 100644
            && [check_effective_target_tiny] } {
          return "::unsupported::memory full"
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index b9909ad..ac4413a 100644
+index 50723de..26c8641 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
 @@ -486,7 +486,8 @@ proc check_effective_target_trampolines { } {
@@ -11304,7 +11671,7 @@ index b9909ad..ac4413a 100644
  	return 0
      }
      return [check_runtime tls_runtime {
-@@ -7105,6 +7107,7 @@ proc check_effective_target_logical_op_short_circuit {} {
+@@ -7683,6 +7685,7 @@ proc check_effective_target_logical_op_short_circuit {} {
  	 || [istarget powerpc*-*-*]
  	 || [istarget nios2*-*-*]
  	 || [istarget visium-*-*]
@@ -11327,7 +11694,7 @@ index 6e61bba..e503211 100644
  	return "memory full"
      }
 diff --git a/libgcc/config.host b/libgcc/config.host
-index 4ccf25d..f24516c 100644
+index 002f650..3b9c624 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
 @@ -165,6 +165,9 @@ nios2*-*-*)
@@ -11876,5 +12243,5 @@ index 0000000..470f0d4
 +# mode: Makefile
 +# End:
 -- 
-2.8.1
+2.9.3
 

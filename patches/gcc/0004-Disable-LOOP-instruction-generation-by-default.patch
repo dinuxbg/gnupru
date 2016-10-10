@@ -1,7 +1,7 @@
-From 941a314fcf2aa03a9f50a199b04b09bd1108c3a8 Mon Sep 17 00:00:00 2001
+From 80961f0ace125362ac216d2de7b5cabd30db7fae Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Thu, 21 Jul 2016 22:45:01 +0300
-Subject: [PATCH 4/4] Disable LOOP instruction generation by default
+Subject: [PATCH 4/5] Disable LOOP instruction generation by default
 
 Keep it disabled by default, but still allow
 explicit enabling via -mloop option.
@@ -28,5 +28,5 @@ index 5fe2579..117b2e9 100644
  /* Implement TARGET_OPTION_OPTIMIZATION_TABLE.  */
  static const struct default_options pru_option_optimization_table[] =
 -- 
-2.8.1
+2.9.3
 

@@ -1,0 +1,39 @@
+From 70348db1a2c5f586b23c9bd5a2892ab8fde63171 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dinuxbg@gmail.com>
+Date: Sun, 15 Jun 2014 09:58:48 +0300
+Subject: [PATCH 3/3] Fix silent failure in source command
+
+On a debian with dash as default shell the following error is silently ignored:
+LIB_PATH='' /bin/bash ../../binutils-gdb/ld/genscripts.sh "../../binutils-gdb/ld" "/home/dinux/bin/pru-gcc/lib" "/home/dinux/bin/pru-gcc" "/home/dinux/bin/pru-gcc" x86_64-unknown-linux-gnu pru-unknown-none pru "pruelf" "/usr/local/lib /lib /usr/lib" no no pruelf "pru"
+../../binutils-gdb/ld/genscrba.sh: line 6: ../../binutils-gdb/ld/emultempl/pruelf.em: No such file or directory
+
+This seems to be from different error propagation handling by dash-vs-bash:
+$ /bin/bash -c '. nonexistent ; A=b'  || echo FAIL
+/bin/bash: nonexistent: No such file or directory
+$ /bin/dash -c '. nonexistent ; A=b'  || echo FAIL
+/bin/dash: 1: .: nonexistent: not found
+FAIL
+
+I'm still not sure why dash is involved, even though bash is explicitly called.
+
+Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+---
+ ld/genscrba.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ld/genscrba.sh b/ld/genscrba.sh
+index 030cb7d..dbbce09 100644
+--- a/ld/genscrba.sh
++++ b/ld/genscrba.sh
+@@ -3,7 +3,7 @@ source_em()
+ {
+   local current_script="$em_script"
+   em_script=$1
+-  . $em_script
++  . $em_script || exit $?
+   em_script=$current_script
+ }
+ fragment()
+-- 
+2.9.3
+

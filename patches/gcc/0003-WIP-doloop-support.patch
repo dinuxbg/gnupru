@@ -1,7 +1,7 @@
-From 0e7276129bd06196344697b788112c5647cdd096 Mon Sep 17 00:00:00 2001
+From 9c1a417c2ec8a0c40d11584a9667cccf1d5bd87d Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sat, 6 Feb 2016 21:47:44 +0200
-Subject: [PATCH 3/4] WIP: doloop support
+Subject: [PATCH 3/5] WIP: doloop support
 
 TODO:
   - Add recognition for and handle "double-entry" loops, e.g.:
@@ -14,23 +14,25 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  gcc/common/config/pru/pru-common.c                 |   3 +
  gcc/config/pru/constraints.md                      |   4 +
  gcc/config/pru/pru-protos.h                        |   2 +
- gcc/config/pru/pru.c                               | 502 +++++++++++++++++++++
+ gcc/config/pru/pru.c                               | 530 +++++++++++++++++++++
  gcc/config/pru/pru.h                               |  30 +-
- gcc/config/pru/pru.md                              |  94 +++-
+ gcc/config/pru/pru.md                              |  97 +++-
  gcc/config/pru/pru.opt                             |   4 +
+ gcc/testsuite/gcc.target/pru/loop-asm.c            |  19 +
  gcc/testsuite/gcc.target/pru/loop-dowhile.c        |  45 ++
  gcc/testsuite/gcc.target/pru/loop-hi-1.c           |  38 ++
- gcc/testsuite/gcc.target/pru/loop-hi-2.c           |  18 +
+ gcc/testsuite/gcc.target/pru/loop-hi-2.c           |  17 +
  gcc/testsuite/gcc.target/pru/loop-qi-1.c           |  38 ++
- gcc/testsuite/gcc.target/pru/loop-qi-2.c           |  18 +
- gcc/testsuite/gcc.target/pru/loop-short-1.c        |  38 ++
+ gcc/testsuite/gcc.target/pru/loop-qi-2.c           |  17 +
+ gcc/testsuite/gcc.target/pru/loop-short-1.c        |  53 +++
  gcc/testsuite/gcc.target/pru/loop-short-2.c        |  21 +
  gcc/testsuite/gcc.target/pru/loop-si-1.c           |  41 ++
  gcc/testsuite/gcc.target/pru/loop-si-2.c           |  20 +
- .../gcc.target/pru/loop-u8_pcrel_overflow.c        |  49 ++
+ .../gcc.target/pru/loop-u8_pcrel_overflow.c        |  42 ++
  gcc/testsuite/gcc.target/pru/loop-ubyte-1.c        |  30 ++
  gcc/testsuite/gcc.target/pru/loop-ubyte-2.c        |  18 +
- 19 files changed, 996 insertions(+), 17 deletions(-)
+ 20 files changed, 1052 insertions(+), 17 deletions(-)
+ create mode 100644 gcc/testsuite/gcc.target/pru/loop-asm.c
  create mode 100644 gcc/testsuite/gcc.target/pru/loop-dowhile.c
  create mode 100644 gcc/testsuite/gcc.target/pru/loop-hi-1.c
  create mode 100644 gcc/testsuite/gcc.target/pru/loop-hi-2.c
@@ -93,7 +95,7 @@ index 43d6e80..2fa97cc 100644
  static inline bool pru_regno_ok_for_index_p (int regno, bool strict_p)
  {
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
-index b9153e4..0cfb527 100644
+index 10c0e5b..4caf91d 100644
 --- a/gcc/config/pru/pru.c
 +++ b/gcc/config/pru/pru.c
 @@ -41,7 +41,9 @@
@@ -125,7 +127,7 @@ index b9153e4..0cfb527 100644
  };
  
  
-@@ -1614,6 +1621,495 @@ pru_setup_incoming_varargs (cumulative_args_t cum_v,
+@@ -1629,6 +1636,520 @@ pru_setup_incoming_varargs (cumulative_args_t cum_v,
  
  
  
@@ -147,6 +149,28 @@ index b9153e4..0cfb527 100644
 +
 +  return true;
 +}
++
++/* NULL if INSN insn is valid within a low-overhead loop.
++   Otherwise return why doloop cannot be applied.  */
++
++static const char *
++pru_invalid_within_doloop (const rtx_insn *insn)
++{
++  if (CALL_P (insn))
++    return "Function call in the loop.";
++
++  if (JUMP_P (insn) && INSN_CODE (insn) == CODE_FOR_return)
++    return "Return from a call instruction in the loop.";
++
++  if (NONDEBUG_INSN_P (insn)
++      && INSN_CODE (insn) < 0
++      && (GET_CODE (PATTERN (insn)) == ASM_INPUT
++	  || asm_noperands (PATTERN (insn)) >= 0))
++    return "Loop contains asm statement.";
++
++  return NULL;
++}
++
 +
 +/* Figure out where to put LABEL, which is the label for a repeat loop.
 +   The loop ends just before LAST_INSN. If SHARED, insns other than the
@@ -185,7 +209,6 @@ index b9153e4..0cfb527 100644
 +	    /* Other insns that should not be in the last two opcodes.  */
 +	    icode = recog_memoized (prev);
 +	    if (icode < 0
-+		|| icode == CODE_FOR_pruloopqi
 +		|| icode == CODE_FOR_pruloophi
 +		|| icode == CODE_FOR_pruloopsi)
 +	      break;
@@ -232,7 +255,7 @@ index b9153e4..0cfb527 100644
 +  if (is_end)
 +    {
 +      if (opmode == QImode)
-+	emit_jump_insn (gen_doloop_end_internalqi (operands[0], operands[1], tag));
++	gcc_assert (0);
 +      else if (opmode == HImode)
 +	emit_jump_insn (gen_doloop_end_internalhi (operands[0], operands[1], tag));
 +      else if (opmode == SImode)
@@ -243,7 +266,7 @@ index b9153e4..0cfb527 100644
 +  else
 +    {
 +      if (opmode == QImode)
-+	emit_insn (gen_doloop_begin_internalqi (operands[0], operands[0], tag));
++	gcc_assert (0);
 +      else if (opmode == HImode)
 +	emit_insn (gen_doloop_begin_internalhi (operands[0], operands[0], tag));
 +      else if (opmode == SImode)
@@ -393,7 +416,7 @@ index b9153e4..0cfb527 100644
 +
 +  /* The first doloop_end (X) must branch back to the insn after
 +     the doloop_begin.  */
-+  if (prev_real_insn (loop->end->label) != loop->begin->insn)
++  if (prev_real_insn (as_a<rtx_insn *> (loop->end->label)) != loop->begin->insn)
 +    return false;
 +
 +  /* Check that the first doloop_end (X) can actually reach
@@ -438,7 +461,6 @@ index b9153e4..0cfb527 100644
 +    if (INSN_P (insn))
 +      switch (recog_memoized (insn))
 +	{
-+	case CODE_FOR_doloop_begin_internalqi:
 +	case CODE_FOR_doloop_begin_internalhi:
 +	case CODE_FOR_doloop_begin_internalsi:
 +	  insn_extract (insn);
@@ -453,7 +475,6 @@ index b9153e4..0cfb527 100644
 +	  loop->begin = begin;
 +	  break;
 +
-+	case CODE_FOR_doloop_end_internalqi:
 +	case CODE_FOR_doloop_end_internalhi:
 +	case CODE_FOR_doloop_end_internalsi:
 +	  insn_extract (insn);
@@ -498,8 +519,7 @@ index b9153e4..0cfb527 100644
 +	label_ref = gen_rtx_LABEL_REF (VOIDmode, repeat_label);
 +	machine_mode loop_mode = GET_MODE (loop->begin->loop_count);
 +	if (loop_mode == QImode)
-+	  emit_insn_before (gen_pruloopqi (loop->begin->loop_count, label_ref),
-+			    loop->begin->insn);
++	  gcc_assert (0);
 +	else if (loop_mode == HImode)
 +	  emit_insn_before (gen_pruloophi (loop->begin->loop_count, label_ref),
 +			    loop->begin->insn);
@@ -512,7 +532,7 @@ index b9153e4..0cfb527 100644
 +	  {
 +	    gcc_assert (CONST_INT_P (loop->begin->loop_count));
 +	    gcc_assert (UBYTE_INT ( INTVAL (loop->begin->loop_count)));
-+	    emit_insn_before (gen_pruloopqi (loop->begin->loop_count, label_ref),
++	    emit_insn_before (gen_pruloopsi (loop->begin->loop_count, label_ref),
 +			      loop->begin->insn);
 +	  }
 +	else
@@ -534,7 +554,9 @@ index b9153e4..0cfb527 100644
 +	/* Replace the others with branches to REPEAT_LABEL.  */
 +	for (end = loop->end->next; end != 0; end = end->next)
 +	  {
-+	    emit_jump_insn_before (gen_jump (repeat_label), end->insn);
++	    rtx_insn *newjmp;
++	    newjmp = emit_jump_insn_before (gen_jump (repeat_label), end->insn);
++	    JUMP_LABEL (newjmp) = repeat_label;
 +	    delete_insn (end->insn);
 +	    delete_insn (end->fallthrough);
 +	  }
@@ -610,6 +632,11 @@ index b9153e4..0cfb527 100644
 +     emitting due to U8_PCREL limitations.  */
 +  shorten_branches (get_insns ());
 +
++  /* The generic reorg_loops() is not suitable for PRU because
++     it doesn't handle doloop_begin/end tying. And we need our
++     doloop_begin emitted before reload. it is difficult to coalesce
++     UBYTE constant initial loop values into the LOOP insn during
++     machine reorg phase.  */
 +  pru_reorg_loop (insns);
 +
 +  df_finish_pass (false);
@@ -621,7 +648,7 @@ index b9153e4..0cfb527 100644
  enum pru_builtin
  {
    PRU_BUILTIN_DELAY_CYCLES,
-@@ -1906,6 +2402,12 @@ pru_set_current_function (tree fndecl)
+@@ -1918,6 +2439,15 @@ pru_set_current_function (tree fndecl)
  #undef TARGET_OPTION_VALID_ATTRIBUTE_P
  #define TARGET_OPTION_VALID_ATTRIBUTE_P pru_valid_target_attribute_p
  
@@ -631,11 +658,14 @@ index b9153e4..0cfb527 100644
 +#undef  TARGET_CAN_USE_DOLOOP_P
 +#define TARGET_CAN_USE_DOLOOP_P		pru_can_use_doloop_p
 +
++#undef TARGET_INVALID_WITHIN_DOLOOP
++#define TARGET_INVALID_WITHIN_DOLOOP  pru_invalid_within_doloop
++
  struct gcc_target targetm = TARGET_INITIALIZER;
  
  #include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
-index 5ed3f09..146b9e7 100644
+index bc7045c..04e4aac 100644
 --- a/gcc/config/pru/pru.h
 +++ b/gcc/config/pru/pru.h
 @@ -109,11 +109,13 @@
@@ -729,7 +759,7 @@ index 5ed3f09..146b9e7 100644
      "fake_fp", \
      "fake_ap", \
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
-index 67c748f..6256b9f 100644
+index e7baa36..8f1e8d4 100644
 --- a/gcc/config/pru/pru.md
 +++ b/gcc/config/pru/pru.md
 @@ -33,15 +33,16 @@
@@ -764,7 +794,15 @@ index 67c748f..6256b9f 100644
    UNSPECV_BLOCKAGE
  ])
  
-@@ -646,6 +650,86 @@
+@@ -83,6 +87,7 @@
+ (include "constraints.md")
+ 
+ (define_mode_iterator ALL [QI HI SI])
++(define_mode_iterator HISI [HI SI])
+ (define_mode_iterator BIGI [DI TI OI XI])
+ 
+ ;; EQS0/0 for extension source 0/1 and EQD for extension destination patterns.
+@@ -675,6 +680,88 @@
  	  (const_int 4)
  	  (const_int 8)))])
  
@@ -780,9 +818,9 @@ index 67c748f..6256b9f 100644
 +;; position, just before the loop header.  If it stays there, we might
 +;; be able to convert it into a "loop" insn.
 +(define_insn "doloop_begin_internal<mode>"
-+  [(set (match_operand:ALL 0 "register_operand" "=r")
-+	(unspec_volatile:ALL
-+	 [(match_operand:ALL 1 "reg_or_ubyte_operand" "rI")
++  [(set (match_operand:HISI 0 "register_operand" "=r")
++	(unspec_volatile:HISI
++	 [(match_operand:HISI 1 "reg_or_ubyte_operand" "rI")
 +	  (match_operand 2 "const_int_operand" "")] UNSPECV_LOOP_BEGIN))]
 +  ""
 +  { gcc_unreachable (); }
@@ -801,15 +839,15 @@ index 67c748f..6256b9f 100644
 +; not a register.
 +(define_insn "doloop_end_internal<mode>"
 +  [(set (pc)
-+	(if_then_else (ne (match_operand:ALL 0 "nonimmediate_operand" "+r,*m")
++	(if_then_else (ne (match_operand:HISI 0 "nonimmediate_operand" "+r,*m")
 +			  (const_int 1))
 +		      (label_ref (match_operand 1 "" ""))
 +		      (pc)))
 +   (set (match_dup 0)
-+	(plus:ALL (match_dup 0)
++	(plus:HISI (match_dup 0)
 +		 (const_int -1)))
 +   (unspec [(match_operand 2 "const_int_operand" "")] UNSPECV_LOOP_END)
-+   (clobber (match_scratch:ALL 3 "=X,&r"))]
++   (clobber (match_scratch:HISI 3 "=X,&r"))]
 +  ""
 +  { gcc_unreachable (); }
 +  ;; Worst case length:
@@ -828,13 +866,15 @@ index 67c748f..6256b9f 100644
 +  [(use (match_operand 0 "nonimmediate_operand" ""))
 +   (use (label_ref (match_operand 1 "" "")))]
 +  "TARGET_OPT_LOOP"
-+  "pru_emit_doloop (operands, 1);
++  "if (GET_CODE (operands[0]) == REG && GET_MODE (operands[0]) == QImode)
++     FAIL;
++   pru_emit_doloop (operands, 1);
 +   DONE;
 +  ")
 +
 +(define_insn "pruloop<mode>"
-+  [(set (reg:ALL LOOPCNTR_REG)
-+	(unspec:ALL [(match_operand:ALL 0 "reg_or_ubyte_operand" "rI")
++  [(set (reg:HISI LOOPCNTR_REG)
++	(unspec:HISI [(match_operand:HISI 0 "reg_or_ubyte_operand" "rI")
 +		    (label_ref (match_operand 1 "" ""))]
 +		   UNSPECV_LOOP_BEGIN))]
 +  ""
@@ -863,6 +903,31 @@ index f6debbe..df76ed5 100644
 +mloop
 +Target Mask(OPT_LOOP)
 +Allow gcc to use the LOOP instruction.
+diff --git a/gcc/testsuite/gcc.target/pru/loop-asm.c b/gcc/testsuite/gcc.target/pru/loop-asm.c
+new file mode 100644
+index 0000000..7b737a0
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/loop-asm.c
+@@ -0,0 +1,19 @@
++/* Test that LOOP will not be generated when body contains asm statement */
++
++/* { dg-do compile } */
++/* { dg-options "-O1 -mloop" } */
++
++/* -O1 in the options is significant.  Without it do-loop will not be
++   run.  */
++
++unsigned int
++test_loop (unsigned int n)
++{
++	unsigned i;
++	/* { dg-final { scan-assembler-not "loop\t.\+" } } */
++	for (i = 0; i < 10; i++) {
++		n <<= 2;
++		asm volatile ("nop" : : );
++	}
++	return n;
++}
 diff --git a/gcc/testsuite/gcc.target/pru/loop-dowhile.c b/gcc/testsuite/gcc.target/pru/loop-dowhile.c
 new file mode 100644
 index 0000000..0926b98
@@ -960,27 +1025,26 @@ index 0000000..23caf20
 +
 diff --git a/gcc/testsuite/gcc.target/pru/loop-hi-2.c b/gcc/testsuite/gcc.target/pru/loop-hi-2.c
 new file mode 100644
-index 0000000..ef3eced
+index 0000000..0ef4ec7
 --- /dev/null
 +++ b/gcc/testsuite/gcc.target/pru/loop-hi-2.c
-@@ -0,0 +1,18 @@
+@@ -0,0 +1,17 @@
 +/* Test LOOP recognition - short ints*/
 +
-+/* { dg-options "-O1 -mloop" } */
++/* { dg-options "-O2 -mloop" } */
 +
-+/* -O1 in the options is significant.  Without it do-loop will not be
++/* -O2 in the options is significant.  Without it do-loop will not be
 +   run.  */
 +
 +unsigned int
-+test_loop_short (unsigned short n)
++test_loop_short (int x, short n)
 +{
-+  unsigned short i;
-+  volatile unsigned int s = 0;
++  int i;
 +
 +  /* { dg-final { scan-assembler "loop\\t.L\[0-9\]*, r\[0-9w.\]*" } } */
 +  for (i = 0; i < n; i++)
-+    s++;
-+  return s;
++    x <<= 3;
++  return x;
 +}
 diff --git a/gcc/testsuite/gcc.target/pru/loop-qi-1.c b/gcc/testsuite/gcc.target/pru/loop-qi-1.c
 new file mode 100644
@@ -1028,34 +1092,33 @@ index 0000000..a4bb7d6
 +
 diff --git a/gcc/testsuite/gcc.target/pru/loop-qi-2.c b/gcc/testsuite/gcc.target/pru/loop-qi-2.c
 new file mode 100644
-index 0000000..eb4882e
+index 0000000..24a343d
 --- /dev/null
 +++ b/gcc/testsuite/gcc.target/pru/loop-qi-2.c
-@@ -0,0 +1,18 @@
+@@ -0,0 +1,17 @@
 +/* Test LOOP recognition */
 +
-+/* { dg-options "-O1 -mloop" } */
++/* { dg-options "-O2 -mloop" } */
 +
-+/* -O1 in the options is significant.  Without it do-loop will not be
++/* -O2 in the options is significant.  Without it do-loop will not be
 +   run.  */
 +
 +unsigned int
-+test_loop_char (unsigned char n)
++test_loop_char (unsigned int x, char n)
 +{
-+  unsigned char i;
-+  volatile unsigned int s = 0;
++  int i;
 +
 +  /* { dg-final { scan-assembler "loop\\t.L\[0-9\]*, r\[0-9b.\]*" } } */
 +  for (i = 0; i < n; i++)
-+    s++;
-+  return s;
++    x <<= 2;
++  return x;
 +}
 diff --git a/gcc/testsuite/gcc.target/pru/loop-short-1.c b/gcc/testsuite/gcc.target/pru/loop-short-1.c
 new file mode 100644
-index 0000000..b921c6e
+index 0000000..14d7530
 --- /dev/null
 +++ b/gcc/testsuite/gcc.target/pru/loop-short-1.c
-@@ -0,0 +1,38 @@
+@@ -0,0 +1,53 @@
 +/* Test LOOP generation for very short loops. */
 +
 +/* { dg-do run } */
@@ -1071,24 +1134,39 @@ index 0000000..b921c6e
 +volatile unsigned int int_1 = 1;
 +
 +unsigned int
-+test_loop (unsigned int n, unsigned )
++test_loop_sum (unsigned int n)
 +{
 +	unsigned i;
-+	for (i = 0; i < 100; i++) {
-+		x <<= 2;
++	volatile unsigned int s = 0;
++	for (i = 0; i < n; i++) {
++		s++;
 +	}
-+	return x;
++	return s;
 +}
 +
++unsigned int
++test_loop_shift20 (unsigned int n)
++{
++	unsigned i;
++	for (i = 0; i < 10; i++) {
++		n <<= 2;
++	}
++	return n;
++}
 +
 +int
 +main (int argc, char** argv)
 +{
-+  if (test_loop (int_0) != 0)
++  if (test_loop_sum (int_0) != 0)
 +    abort();
-+  if (test_loop (int_1) != 1)
++  if (test_loop_sum (int_1) != 1)
 +    abort();
-+  if (test_loop (int_12345) != 12345)
++  if (test_loop_sum (int_12345) != 12345)
++    abort();
++
++  if (test_loop_shift20 (int_0) != 0)
++    abort();
++  if (test_loop_shift20 (int_1) != (1u << 20))
 +    abort();
 +
 +  return 0;
@@ -1096,7 +1174,7 @@ index 0000000..b921c6e
 +
 diff --git a/gcc/testsuite/gcc.target/pru/loop-short-2.c b/gcc/testsuite/gcc.target/pru/loop-short-2.c
 new file mode 100644
-index 0000000..7554763
+index 0000000..b0e1986
 --- /dev/null
 +++ b/gcc/testsuite/gcc.target/pru/loop-short-2.c
 @@ -0,0 +1,21 @@
@@ -1108,18 +1186,18 @@ index 0000000..7554763
 +   run.  */
 +
 +unsigned int
-+test_loop (unsigned int n)
++test_loop (unsigned int n, unsigned int x)
 +{
 +  unsigned int i;
-+  volatile unsigned int s = 0;
 +
 +  if (n >= 0x10000) return 0;
++  if (!n) return 0;
 +
 +  /* { dg-final { scan-assembler "loop\\t.L\[0-9\]*, r\[0-9\]*" } } */
 +  /* { dg-final { scan-assembler "nop" } } */
 +  for (i = 0; i < n; i++)
-+    s++;
-+  return s;
++    x <<= 2;
++  return x;
 +}
 diff --git a/gcc/testsuite/gcc.target/pru/loop-si-1.c b/gcc/testsuite/gcc.target/pru/loop-si-1.c
 new file mode 100644
@@ -1196,10 +1274,10 @@ index 0000000..1e8a9d1
 +}
 diff --git a/gcc/testsuite/gcc.target/pru/loop-u8_pcrel_overflow.c b/gcc/testsuite/gcc.target/pru/loop-u8_pcrel_overflow.c
 new file mode 100644
-index 0000000..a2b2dee
+index 0000000..8ae91c6
 --- /dev/null
 +++ b/gcc/testsuite/gcc.target/pru/loop-u8_pcrel_overflow.c
-@@ -0,0 +1,49 @@
+@@ -0,0 +1,42 @@
 +/* Test large loop bodies where U8_PCREL would overflow */
 +
 +/* { dg-do run } */
@@ -1210,45 +1288,38 @@ index 0000000..a2b2dee
 +
 +extern void abort (void);
 +
-+volatile unsigned int int_12345 = 12345;
-+volatile unsigned int int_0 = 0;
-+volatile unsigned int int_1 = 1;
-+
-+#define NOP4()	  "nop\n\tnop\n\tnop\n\tnop\n\t"
-+#define NOP16()	  NOP4() NOP4() NOP4() NOP4()
-+#define NOP64()	  NOP16() NOP16() NOP16() NOP16()
-+#define NOP256()  NOP64() NOP64() NOP64() NOP64()
-+#define NOP1024()  NOP256() NOP256() NOP256() NOP256()
++#define OP	do { i1 <<= 2; i1 >>= 2; i2 *= 3; i2 /= 2; } while(0)
++#define OP4	OP; OP; OP; OP
++#define OP16	OP4; OP4; OP4; OP4
++#define OP64	OP16; OP16; OP16; OP16
++#define OP256	OP64; OP64; OP64; OP64
 +
 +unsigned int
-+test_loop (unsigned int n)
++test_loop (unsigned int i1, unsigned i2)
 +{
 +  unsigned int i;
 +  volatile unsigned int s = 0;
 +
-+  if (n >= 0x10000) return 0;
-+
-+  for (i = 0; i < n; i++) {
-+    asm volatile (NOP1024() :: );
++  for (i = 0; i < 100; i++) {
++    /* cannot use ASM NOP because it will prevent
++       GCC from issuing a LOOP instruction. */
++    OP256;
 +    s++;
 +  }
-+  return s;
++  return s + i1 + i2;
 +}
 +
++volatile unsigned int I1 = 0;
++volatile unsigned int I2 = 0;
 +
 +int
 +main (int argc, char** argv)
 +{
-+  if (test_loop (int_0) != 0)
-+    abort();
-+  if (test_loop (int_1) != 1)
-+    abort();
-+  if (test_loop (int_12345) != 12345)
++  if (test_loop (I1, I2) != 100)
 +    abort();
 +
 +  return 0;
 +}
-+
 diff --git a/gcc/testsuite/gcc.target/pru/loop-ubyte-1.c b/gcc/testsuite/gcc.target/pru/loop-ubyte-1.c
 new file mode 100644
 index 0000000..8444f81
@@ -1310,5 +1381,5 @@ index 0000000..058cbb0
 +  return s;
 +}
 -- 
-2.8.1
+2.9.3
 
