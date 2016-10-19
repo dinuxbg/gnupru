@@ -51,8 +51,8 @@ set_board_info compiler  "[find_gcc]"
 # stack top a few bytes below the simulator's DRAM end.
 set workaround_ldflags "-Wl,--defsym=__stack_top=0x3fff800"
 
-set_board_info cflags  "[libgloss_include_flags] [newlib_include_flags]"
-set_board_info ldflags  "-Tpruelf-sim.x [libgloss_link_flags] [newlib_link_flags] $workaround_ldflags"
+set_board_info cflags  "-mmcu=sim [libgloss_include_flags] [newlib_include_flags]"
+set_board_info ldflags  "[libgloss_link_flags] [newlib_link_flags] $workaround_ldflags"
 
 # No support for signals on this target.
 set_board_info gdb,nosignals 1
