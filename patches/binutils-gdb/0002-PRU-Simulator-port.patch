@@ -1,0 +1,1882 @@
+From c5a02fb7274335f9b0aff8bf86a101931bdb356d Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dinuxbg@gmail.com>
+Date: Mon, 24 Oct 2016 22:37:01 +0300
+Subject: [PATCH 02/23] PRU Simulator port
+
+Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+---
+ sim/configure.tgt    |   3 +
+ sim/pru/Makefile.in  |  24 ++
+ sim/pru/aclocal.m4   | 129 +++++++
+ sim/pru/config.in    | 248 +++++++++++++
+ sim/pru/configure.ac |  12 +
+ sim/pru/interp.c     | 960 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ sim/pru/pru.h        |  98 ++++++
+ sim/pru/pru.isa      | 240 +++++++++++++
+ sim/pru/sim-main.h   |  80 +++++
+ 9 files changed, 1794 insertions(+)
+ create mode 100644 sim/pru/Makefile.in
+ create mode 100644 sim/pru/aclocal.m4
+ create mode 100644 sim/pru/config.in
+ create mode 100644 sim/pru/configure.ac
+ create mode 100644 sim/pru/interp.c
+ create mode 100644 sim/pru/pru.h
+ create mode 100644 sim/pru/pru.isa
+ create mode 100644 sim/pru/sim-main.h
+
+diff --git a/sim/configure.tgt b/sim/configure.tgt
+index c958fb3..357d7ac 100644
+--- a/sim/configure.tgt
++++ b/sim/configure.tgt
+@@ -76,6 +76,9 @@ case "${target}" in
+    msp430*-*-*)
+        SIM_ARCH(msp430)
+        ;;
++   pru*-*-*)
++       SIM_ARCH(pru)
++       ;;
+    rl78-*-*)
+        SIM_ARCH(rl78)
+        ;;
+diff --git a/sim/pru/Makefile.in b/sim/pru/Makefile.in
+new file mode 100644
+index 0000000..cdf2ba1
+--- /dev/null
++++ b/sim/pru/Makefile.in
+@@ -0,0 +1,24 @@
++#    Makefile template for Configure for the MCore sim library.
++#    Copyright (C) 1990-2016 Free Software Foundation, Inc.
++#    Written by Cygnus Solutions.
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program.  If not, see <http://www.gnu.org/licenses/>.
++
++## COMMON_PRE_CONFIG_FRAG
++
++SIM_OBJS = \
++	interp.o \
++	$(SIM_NEW_COMMON_OBJS)
++
++## COMMON_POST_CONFIG_FRAG
+diff --git a/sim/pru/aclocal.m4 b/sim/pru/aclocal.m4
+new file mode 100644
+index 0000000..517bc73
+--- /dev/null
++++ b/sim/pru/aclocal.m4
+@@ -0,0 +1,129 @@
++# generated automatically by aclocal 1.11.1 -*- Autoconf -*-
++
++# Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
++# 2005, 2006, 2007, 2008, 2009  Free Software Foundation, Inc.
++# This file is free software; the Free Software Foundation
++# gives unlimited permission to copy and/or distribute it,
++# with or without modifications, as long as this notice is preserved.
++
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
++# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
++# PARTICULAR PURPOSE.
++
++# AM_CONDITIONAL                                            -*- Autoconf -*-
++
++# Copyright (C) 1997, 2000, 2001, 2003, 2004, 2005, 2006, 2008
++# Free Software Foundation, Inc.
++#
++# This file is free software; the Free Software Foundation
++# gives unlimited permission to copy and/or distribute it,
++# with or without modifications, as long as this notice is preserved.
++
++# serial 9
++
++# AM_CONDITIONAL(NAME, SHELL-CONDITION)
++# -------------------------------------
++# Define a conditional.
++AC_DEFUN([AM_CONDITIONAL],
++[AC_PREREQ(2.52)dnl
++ ifelse([$1], [TRUE],  [AC_FATAL([$0: invalid condition: $1])],
++	[$1], [FALSE], [AC_FATAL([$0: invalid condition: $1])])dnl
++AC_SUBST([$1_TRUE])dnl
++AC_SUBST([$1_FALSE])dnl
++_AM_SUBST_NOTMAKE([$1_TRUE])dnl
++_AM_SUBST_NOTMAKE([$1_FALSE])dnl
++m4_define([_AM_COND_VALUE_$1], [$2])dnl
++if $2; then
++  $1_TRUE=
++  $1_FALSE='#'
++else
++  $1_TRUE='#'
++  $1_FALSE=
++fi
++AC_CONFIG_COMMANDS_PRE(
++[if test -z "${$1_TRUE}" && test -z "${$1_FALSE}"; then
++  AC_MSG_ERROR([[conditional "$1" was never defined.
++Usually this means the macro was only invoked conditionally.]])
++fi])])
++
++# Copyright (C) 2003, 2005  Free Software Foundation, Inc.
++#
++# This file is free software; the Free Software Foundation
++# gives unlimited permission to copy and/or distribute it,
++# with or without modifications, as long as this notice is preserved.
++
++# serial 2
++
++# Check whether the underlying file-system supports filenames
++# with a leading dot.  For instance MS-DOS doesn't.
++AC_DEFUN([AM_SET_LEADING_DOT],
++[rm -rf .tst 2>/dev/null
++mkdir .tst 2>/dev/null
++if test -d .tst; then
++  am__leading_dot=.
++else
++  am__leading_dot=_
++fi
++rmdir .tst 2>/dev/null
++AC_SUBST([am__leading_dot])])
++
++# Add --enable-maintainer-mode option to configure.         -*- Autoconf -*-
++# From Jim Meyering
++
++# Copyright (C) 1996, 1998, 2000, 2001, 2002, 2003, 2004, 2005, 2008
++# Free Software Foundation, Inc.
++#
++# This file is free software; the Free Software Foundation
++# gives unlimited permission to copy and/or distribute it,
++# with or without modifications, as long as this notice is preserved.
++
++# serial 5
++
++# AM_MAINTAINER_MODE([DEFAULT-MODE])
++# ----------------------------------
++# Control maintainer-specific portions of Makefiles.
++# Default is to disable them, unless `enable' is passed literally.
++# For symmetry, `disable' may be passed as well.  Anyway, the user
++# can override the default with the --enable/--disable switch.
++AC_DEFUN([AM_MAINTAINER_MODE],
++[m4_case(m4_default([$1], [disable]),
++       [enable], [m4_define([am_maintainer_other], [disable])],
++       [disable], [m4_define([am_maintainer_other], [enable])],
++       [m4_define([am_maintainer_other], [enable])
++        m4_warn([syntax], [unexpected argument to AM@&t@_MAINTAINER_MODE: $1])])
++AC_MSG_CHECKING([whether to am_maintainer_other maintainer-specific portions of Makefiles])
++  dnl maintainer-mode's default is 'disable' unless 'enable' is passed
++  AC_ARG_ENABLE([maintainer-mode],
++[  --][am_maintainer_other][-maintainer-mode  am_maintainer_other make rules and dependencies not useful
++			  (and sometimes confusing) to the casual installer],
++      [USE_MAINTAINER_MODE=$enableval],
++      [USE_MAINTAINER_MODE=]m4_if(am_maintainer_other, [enable], [no], [yes]))
++  AC_MSG_RESULT([$USE_MAINTAINER_MODE])
++  AM_CONDITIONAL([MAINTAINER_MODE], [test $USE_MAINTAINER_MODE = yes])
++  MAINT=$MAINTAINER_MODE_TRUE
++  AC_SUBST([MAINT])dnl
++]
++)
++
++AU_DEFUN([jm_MAINTAINER_MODE], [AM_MAINTAINER_MODE])
++
++# Copyright (C) 2006, 2008  Free Software Foundation, Inc.
++#
++# This file is free software; the Free Software Foundation
++# gives unlimited permission to copy and/or distribute it,
++# with or without modifications, as long as this notice is preserved.
++
++# serial 2
++
++# _AM_SUBST_NOTMAKE(VARIABLE)
++# ---------------------------
++# Prevent Automake from outputting VARIABLE = @VARIABLE@ in Makefile.in.
++# This macro is traced by Automake.
++AC_DEFUN([_AM_SUBST_NOTMAKE])
++
++# AM_SUBST_NOTMAKE(VARIABLE)
++# ---------------------------
++# Public sister of _AM_SUBST_NOTMAKE.
++AC_DEFUN([AM_SUBST_NOTMAKE], [_AM_SUBST_NOTMAKE($@)])
++
+diff --git a/sim/pru/config.in b/sim/pru/config.in
+new file mode 100644
+index 0000000..aa3e45c
+--- /dev/null
++++ b/sim/pru/config.in
+@@ -0,0 +1,248 @@
++/* config.in.  Generated from configure.ac by autoheader.  */
++
++/* Define if building universal (internal helper macro) */
++#undef AC_APPLE_UNIVERSAL_BUILD
++
++/* Sim debug setting */
++#undef DEBUG
++
++/* Define to 1 if translation of program messages to the user's native
++   language is requested. */
++#undef ENABLE_NLS
++
++/* Define to 1 if you have the <dlfcn.h> header file. */
++#undef HAVE_DLFCN_H
++
++/* Define to 1 if you have the <errno.h> header file. */
++#undef HAVE_ERRNO_H
++
++/* Define to 1 if you have the <fcntl.h> header file. */
++#undef HAVE_FCNTL_H
++
++/* Define to 1 if you have the <fpu_control.h> header file. */
++#undef HAVE_FPU_CONTROL_H
++
++/* Define to 1 if you have the `ftruncate' function. */
++#undef HAVE_FTRUNCATE
++
++/* Define to 1 if you have the `getrusage' function. */
++#undef HAVE_GETRUSAGE
++
++/* Define to 1 if you have the <inttypes.h> header file. */
++#undef HAVE_INTTYPES_H
++
++/* Define to 1 if you have the `nsl' library (-lnsl). */
++#undef HAVE_LIBNSL
++
++/* Define to 1 if you have the `socket' library (-lsocket). */
++#undef HAVE_LIBSOCKET
++
++/* Define to 1 if you have the `lstat' function. */
++#undef HAVE_LSTAT
++
++/* Define to 1 if you have the <memory.h> header file. */
++#undef HAVE_MEMORY_H
++
++/* Define to 1 if you have the `mmap' function. */
++#undef HAVE_MMAP
++
++/* Define to 1 if you have the `munmap' function. */
++#undef HAVE_MUNMAP
++
++/* Define to 1 if you have the `posix_fallocate' function. */
++#undef HAVE_POSIX_FALLOCATE
++
++/* Define to 1 if you have the `sigaction' function. */
++#undef HAVE_SIGACTION
++
++/* Define to 1 if the system has the type `socklen_t'. */
++#undef HAVE_SOCKLEN_T
++
++/* Define to 1 if you have the <stdint.h> header file. */
++#undef HAVE_STDINT_H
++
++/* Define to 1 if you have the <stdlib.h> header file. */
++#undef HAVE_STDLIB_H
++
++/* Define to 1 if you have the <strings.h> header file. */
++#undef HAVE_STRINGS_H
++
++/* Define to 1 if you have the <string.h> header file. */
++#undef HAVE_STRING_H
++
++/* Define to 1 if `struct stat' is a member of `st_atime'. */
++#undef HAVE_STRUCT_STAT_ST_ATIME
++
++/* Define to 1 if `struct stat' is a member of `st_blksize'. */
++#undef HAVE_STRUCT_STAT_ST_BLKSIZE
++
++/* Define to 1 if `struct stat' is a member of `st_blocks'. */
++#undef HAVE_STRUCT_STAT_ST_BLOCKS
++
++/* Define to 1 if `struct stat' is a member of `st_ctime'. */
++#undef HAVE_STRUCT_STAT_ST_CTIME
++
++/* Define to 1 if `struct stat' is a member of `st_dev'. */
++#undef HAVE_STRUCT_STAT_ST_DEV
++
++/* Define to 1 if `struct stat' is a member of `st_gid'. */
++#undef HAVE_STRUCT_STAT_ST_GID
++
++/* Define to 1 if `struct stat' is a member of `st_ino'. */
++#undef HAVE_STRUCT_STAT_ST_INO
++
++/* Define to 1 if `struct stat' is a member of `st_mode'. */
++#undef HAVE_STRUCT_STAT_ST_MODE
++
++/* Define to 1 if `struct stat' is a member of `st_mtime'. */
++#undef HAVE_STRUCT_STAT_ST_MTIME
++
++/* Define to 1 if `struct stat' is a member of `st_nlink'. */
++#undef HAVE_STRUCT_STAT_ST_NLINK
++
++/* Define to 1 if `struct stat' is a member of `st_rdev'. */
++#undef HAVE_STRUCT_STAT_ST_RDEV
++
++/* Define to 1 if `struct stat' is a member of `st_size'. */
++#undef HAVE_STRUCT_STAT_ST_SIZE
++
++/* Define to 1 if `struct stat' is a member of `st_uid'. */
++#undef HAVE_STRUCT_STAT_ST_UID
++
++/* Define to 1 if you have the <sys/mman.h> header file. */
++#undef HAVE_SYS_MMAN_H
++
++/* Define to 1 if you have the <sys/resource.h> header file. */
++#undef HAVE_SYS_RESOURCE_H
++
++/* Define to 1 if you have the <sys/stat.h> header file. */
++#undef HAVE_SYS_STAT_H
++
++/* Define to 1 if you have the <sys/times.h> header file. */
++#undef HAVE_SYS_TIMES_H
++
++/* Define to 1 if you have the <sys/time.h> header file. */
++#undef HAVE_SYS_TIME_H
++
++/* Define to 1 if you have the <sys/types.h> header file. */
++#undef HAVE_SYS_TYPES_H
++
++/* Define to 1 if you have the `time' function. */
++#undef HAVE_TIME
++
++/* Define to 1 if you have the <time.h> header file. */
++#undef HAVE_TIME_H
++
++/* Define to 1 if you have the `truncate' function. */
++#undef HAVE_TRUNCATE
++
++/* Define to 1 if you have the <unistd.h> header file. */
++#undef HAVE_UNISTD_H
++
++/* Define to 1 if you have the <windows.h> header file. */
++#undef HAVE_WINDOWS_H
++
++/* Define to 1 if you have the `__setfpucw' function. */
++#undef HAVE___SETFPUCW
++
++/* Define to the sub-directory in which libtool stores uninstalled libraries.
++   */
++#undef LT_OBJDIR
++
++/* Name of this package. */
++#undef PACKAGE
++
++/* Define to the address where bug reports for this package should be sent. */
++#undef PACKAGE_BUGREPORT
++
++/* Define to the full name of this package. */
++#undef PACKAGE_NAME
++
++/* Define to the full name and version of this package. */
++#undef PACKAGE_STRING
++
++/* Define to the one symbol short name of this package. */
++#undef PACKAGE_TARNAME
++
++/* Define to the home page for this package. */
++#undef PACKAGE_URL
++
++/* Define to the version of this package. */
++#undef PACKAGE_VERSION
++
++/* Additional package description */
++#undef PKGVERSION
++
++/* Sim profile settings */
++#undef PROFILE
++
++/* Bug reporting address */
++#undef REPORT_BUGS_TO
++
++/* Define as the return type of signal handlers (`int' or `void'). */
++#undef RETSIGTYPE
++
++/* Define to 1 if you have the ANSI C header files. */
++#undef STDC_HEADERS
++
++/* Enable extensions on AIX 3, Interix.  */
++#ifndef _ALL_SOURCE
++# undef _ALL_SOURCE
++#endif
++/* Enable GNU extensions on systems that have them.  */
++#ifndef _GNU_SOURCE
++# undef _GNU_SOURCE
++#endif
++/* Enable threading extensions on Solaris.  */
++#ifndef _POSIX_PTHREAD_SEMANTICS
++# undef _POSIX_PTHREAD_SEMANTICS
++#endif
++/* Enable extensions on HP NonStop.  */
++#ifndef _TANDEM_SOURCE
++# undef _TANDEM_SOURCE
++#endif
++/* Enable general extensions on Solaris.  */
++#ifndef __EXTENSIONS__
++# undef __EXTENSIONS__
++#endif
++
++
++/* Sim assert settings */
++#undef WITH_ASSERT
++
++/* Sim debug setting */
++#undef WITH_DEBUG
++
++/* Sim default environment */
++#undef WITH_ENVIRONMENT
++
++/* Sim profile settings */
++#undef WITH_PROFILE
++
++/* How to route I/O */
++#undef WITH_STDIO
++
++/* Sim trace settings */
++#undef WITH_TRACE
++
++/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
++   significant byte first (like Motorola and SPARC, unlike Intel). */
++#if defined AC_APPLE_UNIVERSAL_BUILD
++# if defined __BIG_ENDIAN__
++#  define WORDS_BIGENDIAN 1
++# endif
++#else
++# ifndef WORDS_BIGENDIAN
++#  undef WORDS_BIGENDIAN
++# endif
++#endif
++
++/* Define to 1 if on MINIX. */
++#undef _MINIX
++
++/* Define to 2 if the system does not provide POSIX.1 features except with
++   this defined. */
++#undef _POSIX_1_SOURCE
++
++/* Define to 1 if you need to in order for `stat' and other things to work. */
++#undef _POSIX_SOURCE
+diff --git a/sim/pru/configure.ac b/sim/pru/configure.ac
+new file mode 100644
+index 0000000..a93418f
+--- /dev/null
++++ b/sim/pru/configure.ac
+@@ -0,0 +1,12 @@
++dnl Process this file with autoconf to produce a configure script.
++AC_PREREQ(2.64)dnl
++AC_INIT(Makefile.in)
++sinclude(../common/acinclude.m4)
++
++SIM_AC_COMMON
++
++SIM_AC_OPTION_ENDIAN
++SIM_AC_OPTION_ALIGNMENT(STRICT_ALIGNMENT,STRICT_ALIGNMENT)
++SIM_AC_OPTION_WARNINGS
++
++SIM_AC_OUTPUT
+diff --git a/sim/pru/interp.c b/sim/pru/interp.c
+new file mode 100644
+index 0000000..f676094
+--- /dev/null
++++ b/sim/pru/interp.c
+@@ -0,0 +1,960 @@
++/* Simulator for PRU processor
++   Copyright 2014 Free Software Foundation, Inc.
++   Inspired by the Microblase simulator
++
++   This file is part of GDB, the GNU debugger.
++
++   This program is free software; you can redistribute it and/or modify
++   it under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 3 of the License, or
++   (at your option) any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this program; if not, see <http://www.gnu.org/licenses/>.  */
++
++#include "config.h"
++#include <signal.h>
++#include <stdint.h>
++#include <assert.h>
++#include <sys/param.h>
++#include "bfd.h"
++#include "gdb/callback.h"
++#include "libiberty.h"
++#include "gdb/remote-sim.h"
++#include "sim-main.h"
++#include "sim-utils.h"
++#include "pru.h"
++
++#include "sim-main.h"
++#include "sim-base.h"
++#include "sim-options.h"
++
++#ifndef NUM_ELEM
++#define NUM_ELEM(A) (sizeof (A) / sizeof (A)[0])
++#endif
++
++#define max(a,b) ((a) > (b) ? (a) : (b))
++
++/* TODO - remove global variables */
++static int issue_messages = 0;
++static const int tracing = 0;
++static int sim_dmem_size = DMEM_DEFAULT_SIZE;
++
++/* DMEM zero address is perfectly valid. But if CRT leaves the first word
++   alone, we can use it as a trap to catch NULL pointer access. */
++static const int abort_on_dmem_zero_access = 0;
++
++/* Extract (from PRU endianess) and return an integer in HOST's endianness. */
++static uint32_t
++pru_extract_unsigned_integer (uint8_t *addr, int len)
++{
++  uint32_t retval;
++  uint8_t *p;
++  uint8_t *startaddr = (uint8_t *)addr;
++  uint8_t *endaddr = startaddr + len;
++
++  if (len > (int) sizeof (unsigned long))
++    printf ("That operation is not available on integers of more than "
++	    "%ld bytes.", sizeof (unsigned long));
++
++  /* Start at the most significant end of the integer, and work towards
++     the least significant.  */
++  retval = 0;
++
++  for (p = endaddr; p > startaddr;)
++    retval = (retval << 8) | * -- p;
++  return retval;
++}
++
++/* Store "val" (which is in HOST's endianess) into "addr"
++   (using PRU's endianness). */
++static void
++pru_store_unsigned_integer (uint8_t *addr, int len, uint32_t val)
++{
++  uint8_t *p;
++  uint8_t *startaddr = (uint8_t *)addr;
++  uint8_t *endaddr = startaddr + len;
++
++  for (p = startaddr; p < endaddr;)
++    {
++      *p++ = val & 0xff;
++      val >>= 8;
++    }
++}
++
++/* Extract a field value from CPU register using the given REGSEL selector.
++
++   NOTE: Byte number maps directly to first values of RSEL, so we can
++   safely use "regsel" as a register byte number (0..3). */
++static inline uint32_t
++extract_regval (uint32_t val, uint32_t regsel)
++{
++  assert (RSEL_7_0 == 0);
++  assert (RSEL_15_8 == 1);
++  assert (RSEL_23_16 == 2);
++  assert (RSEL_31_24 == 3);
++
++  switch (regsel)
++    {
++    case RSEL_7_0:    return (val >> 0) & 0xff;
++    case RSEL_15_8:   return (val >> 8) & 0xff;
++    case RSEL_23_16:  return (val >> 16) & 0xff;
++    case RSEL_31_24:  return (val >> 24) & 0xff;
++    case RSEL_15_0:   return (val >> 0) & 0xffff;
++    case RSEL_23_8:   return (val >> 8) & 0xffff;
++    case RSEL_31_16:  return (val >> 16) & 0xffff;
++    case RSEL_31_0:   return val;
++    default:	      assert(0); return 0;
++    }
++}
++
++static inline void
++write_regval (uint32_t val, uint32_t *reg, uint32_t regsel)
++{
++  uint32_t mask, sh;
++
++  switch (regsel)
++    {
++    case RSEL_7_0:    mask = (0xffu << 0); sh = 0; break;
++    case RSEL_15_8:   mask = (0xffu << 8); sh = 8; break;
++    case RSEL_23_16:  mask = (0xffu << 16); sh = 16; break;
++    case RSEL_31_24:  mask = (0xffu << 24); sh = 24; break;
++    case RSEL_15_0:   mask = (0xffffu << 0); sh = 0; break;
++    case RSEL_23_8:   mask = (0xffffu << 8); sh = 8; break;
++    case RSEL_31_16:  mask = (0xffffu << 16); sh = 16; break;
++    case RSEL_31_0:   mask = 0xffffffffu; sh = 0; break;
++    default:	      assert(0); mask = sh = 0;
++    }
++
++  *reg = (*reg & ~mask) | ((val << sh) & mask);
++}
++
++static uint32_t
++imem_wordaddr_to_byteaddr (SIM_CPU *cpu, uint16_t wa)
++{
++  return (((uint32_t)wa << 2) & IMEM_ADDR_MASK) | PC_ADDR_SPACE_MARKER;
++}
++
++static uint16_t
++imem_byteaddr_to_wordaddr (SIM_CPU *cpu, uint32_t ba)
++{
++  return (ba >> 2) & 0xffff;
++}
++
++
++/* Store "nbytes" into DMEM "addr" from CPU register file, starting with
++   register "regn", and byte "regb" within it. */
++static inline void
++pru_reg2dmem (SIM_CPU *cpu, uint32_t addr, unsigned int nbytes,
++	      int regn, int regb)
++{
++  if (abort_on_dmem_zero_access && addr < 4)
++    {
++      if (issue_messages)
++	fprintf (stderr, "NULL pointer write exception!\n");
++
++      CPU.exception = SIGABRT;
++    }
++  else if ((addr + nbytes) > CPU.dsize)
++    {
++      if (issue_messages)
++	fprintf (stderr, "write to 0x%x outside data memory range\n", addr);
++
++      CPU.exception = SIGSEGV;
++    }
++  else if ((regn * 4 + regb + nbytes) > (32 * 4))
++    {
++      if (issue_messages)
++	fprintf (stderr, "register r%d.b%d and store size %u are not valid\n",
++		 regn, regb, nbytes);
++
++      CPU.exception = SIGSEGV;
++    }
++  else
++    {
++      uint8_t *p = CPU.dmem + addr;
++      while (nbytes--)
++	{
++	  *p++ = extract_regval (CPU.regs[regn], regb);
++
++	  if (++regb >= 4)
++	    {
++	      regb = 0;
++	      regn++;
++	    }
++	}
++    }
++}
++
++static inline void
++pru_dmem2reg (SIM_CPU *cpu, uint32_t addr, unsigned int nbytes,
++	      int regn, int regb)
++{
++  if (abort_on_dmem_zero_access && addr < 4)
++    {
++      if (issue_messages)
++	fprintf (stderr, "NULL pointer read exception!\n");
++
++      CPU.exception = SIGABRT;
++    }
++  else if ((addr + nbytes) > CPU.dsize)
++    {
++      if (issue_messages)
++	fprintf (stderr, "read from 0x%x outside data memory range\n", addr);
++
++      CPU.exception = SIGSEGV;
++    }
++  else if ((regn * 4 + regb + nbytes) > (32 * 4))
++    {
++      if (issue_messages)
++	fprintf (stderr, "register r%d.b%d and load size %u are not valid\n",
++		 regn, regb, nbytes);
++
++      CPU.exception = SIGSEGV;
++    }
++  else
++    {
++      uint8_t *p = CPU.dmem + addr;
++      while (nbytes--)
++	{
++	  /* reuse the fact the Register Byte Number maps directly to RSEL */
++	  assert (RSEL_7_0 == 0);
++	  write_regval (*p++, &CPU.regs[regn], regb);
++
++	  if (++regb >= 4)
++	    {
++	      regb = 0;
++	      regn++;
++	    }
++	}
++    }
++}
++
++static inline uint32_t
++pru_read_u8_dmem (SIM_CPU *cpu, uint32_t addr)
++{
++  if (addr >= CPU.dsize)
++    {
++      if (issue_messages)
++	fprintf (stderr, "byte read from 0x%x outside DMEM range\n",
++		 addr << 2);
++
++      CPU.exception = SIGSEGV;
++      return 0;
++    }
++  else
++    {
++      uint8_t *p = CPU.dmem + addr;
++      return p[0];
++    }
++}
++
++static inline uint32_t
++pru_read_u32_imem (SIM_CPU *cpu, uint32_t iwaddr)
++{
++  iwaddr &= IMEM_ADDR_MASK >> 2;
++  if (iwaddr >= CPU.isize / 4)
++    {
++      if (issue_messages)
++	fprintf (stderr, "opcode read from 0x%x outside IMEM range\n",
++		 iwaddr << 2);
++
++      CPU.exception = SIGSEGV;
++      return 0;
++    }
++  else
++    {
++      uint8_t *p = CPU.imem + iwaddr * 4;
++      return (p[3] << 24) | (p[2] << 16) | (p[1] << 8) | p[0];
++    }
++}
++
++/* Set DMEM size. The binutils sim HAL has no notion for separate address
++   spaces, so we take the easy route and always use the maximum possible
++   IMEM size (256KB). */
++static void
++sim_size (SIM_CPU *cpu, int dsize)
++{
++  sim_dmem_size = dsize;
++  CPU.dsize = sim_dmem_size;
++  CPU.isize = IMEM_DEFAULT_SIZE;
++
++  if (CPU.dmem)
++    free (CPU.dmem);
++
++  if (CPU.imem)
++    free (CPU.imem);
++
++  CPU.dmem = (uint8_t *) calloc (1, CPU.dsize);
++
++  if (!CPU.dmem)
++    {
++      if (issue_messages)
++	fprintf (stderr,
++		 "Not enough VM for simulation of %ld bytes of DRAM\n",
++		 CPU.dsize);
++
++      CPU.dsize = 1;
++      CPU.dmem = (unsigned char *) calloc (1, 1);
++    }
++
++  CPU.imem = (uint8_t *) calloc (1, CPU.isize);
++
++  if (!CPU.imem)
++    {
++      if (issue_messages)
++	fprintf (stderr,
++		 "Not enough VM for simulation of %ld bytes of IRAM\n",
++		 CPU.isize);
++
++      CPU.isize = 4;
++      CPU.imem = (unsigned char *) calloc (1, 4);
++    }
++}
++
++static void
++init_pointers (SIM_CPU *cpu)
++{
++  if (CPU.dsize != sim_dmem_size)
++    sim_size (cpu, sim_dmem_size);
++}
++
++static void
++set_initial_gprs (SIM_CPU *cpu)
++{
++  int i;
++  long space;
++
++  init_pointers (cpu);
++
++  /* Set up machine just out of reset.  */
++  CPU_PC_SET (cpu, 0);
++  PC_ADDR_SPACE_MARKER = 0x20000000; /* from default linker script? */
++
++  if (issue_messages > 1) {
++    fprintf (stderr, "Simulated DMEM of %ld Kbytes (0x0 .. 0x%08lx)\n",
++	     CPU.dsize / 1024, CPU.dsize - 1);
++    fprintf (stderr, "Simulated IMEM of %ld Kbytes (0x0 .. 0x%08lx)\n",
++	     CPU.isize / 1024, CPU.isize - 1);
++  }
++
++  /* Clean out the GPRs */
++  for (i = 0; i < NUM_ELEM (CPU.regs); i++)
++    CPU.regs[i] = 0;
++  for (i = 0; i < NUM_ELEM (CPU.macregs); i++)
++    CPU.macregs[i] = 0;
++
++  CPU.loop.looptop = CPU.loop.loopend = 0;
++  CPU.loop.loop_in_progress = 0;
++  CPU.loop.loop_counter = 0;
++
++  CPU.carry = 0;
++  CPU.insts = 0;
++  CPU.cycles = 0;
++
++  /* AM335x should provide sane defaults */
++  CPU.ctable[0] = 0x00020000;
++  CPU.ctable[1] = 0x48040000;
++  CPU.ctable[2] = 0x4802a000;
++  CPU.ctable[3] = 0x00030000;
++  CPU.ctable[4] = 0x00026000;
++  CPU.ctable[5] = 0x48060000;
++  CPU.ctable[6] = 0x48030000;
++  CPU.ctable[7] = 0x00028000;
++  CPU.ctable[8] = 0x46000000;
++  CPU.ctable[9] = 0x4a100000;
++  CPU.ctable[10] = 0x48318000;
++  CPU.ctable[11] = 0x48022000;
++  CPU.ctable[12] = 0x48024000;
++  CPU.ctable[13] = 0x48310000;
++  CPU.ctable[14] = 0x481cc000;
++  CPU.ctable[15] = 0x481d0000;
++  CPU.ctable[16] = 0x481a0000;
++  CPU.ctable[17] = 0x4819c000;
++  CPU.ctable[18] = 0x48300000;
++  CPU.ctable[19] = 0x48302000;
++  CPU.ctable[20] = 0x48304000;
++  CPU.ctable[21] = 0x00032400;
++  CPU.ctable[22] = 0x480c8000;
++  CPU.ctable[23] = 0x480ca000;
++  CPU.ctable[24] = 0x00000000;
++  CPU.ctable[25] = 0x00002000;
++  CPU.ctable[26] = 0x0002e000;
++  CPU.ctable[27] = 0x00032000;
++  CPU.ctable[28] = 0x00000000;
++  CPU.ctable[29] = 0x49000000;
++  CPU.ctable[30] = 0x40000000;
++  CPU.ctable[31] = 0x80000000;
++}
++
++static inline unsigned int
++regsel_width (uint32_t regsel)
++{
++  switch (regsel)
++    {
++    case RSEL_7_0:    return 8;
++    case RSEL_15_8:   return 8;
++    case RSEL_23_16:  return 8;
++    case RSEL_31_24:  return 8;
++    case RSEL_15_0:   return 16;
++    case RSEL_23_8:   return 16;
++    case RSEL_31_16:  return 16;
++    case RSEL_31_0:   return 32;
++    default: assert(0); return 0;
++    }
++}
++
++static void
++pru_sim_xin_mac(SIM_CPU *cpu, unsigned int rd_regn, unsigned int rdb,
++		unsigned int length)
++{
++  if (rd_regn < 25 || (rd_regn * 4 + rdb + length) > (27 + 1) * 4)
++    {
++      fprintf (stderr, "XIN MAC: invalid transfer regn=%u.%u, length=%u\n",
++	       rd_regn, rdb, length);
++      CPU.exception = SIGILL;
++      return;
++    }
++
++  if ((CPU.macregs[PRU_MACREG_MODE] & MAC_R25_MAC_MODE_MASK) == 0)
++    {
++      /* Per TRM, PRU auto-samples R28/R29 on every cycle. But in fact we
++         calculate only when interested in the product. */
++      uint64_t prod;
++      prod = (uint64_t)CPU.regs[28] * (uint64_t)CPU.regs[29];
++      CPU.macregs[PRU_MACREG_PROD_L] = prod & 0xfffffffful;
++      CPU.macregs[PRU_MACREG_PROD_H] = prod >> 32;
++    }
++
++  /* Copy from MAC to PRU regs. Ranges have been validated above. */
++  while (length--)
++    {
++      write_regval (CPU.macregs[rd_regn - 25] >> (rdb * 8),
++		    &CPU.regs[rd_regn],
++		    rdb);
++      if (++rdb == 4)
++	{
++	  rdb = 0;
++	  rd_regn++;
++	}
++    }
++}
++
++static void
++pru_sim_xin(SIM_CPU *cpu, unsigned int wba, unsigned int rd_regn,
++	    unsigned int rdb, unsigned int length)
++{
++  if (wba == 0)
++    {
++      pru_sim_xin_mac (cpu, rd_regn, rdb, length);
++    }
++  else if (wba == 254 || wba == 255)
++    {
++      /* FILL/ZERO pseudos implemented via XIN */
++      unsigned int fillbyte = (wba == 254) ? 0xff : 0x00;
++      while (length--)
++	{
++	  write_regval (fillbyte, &CPU.regs[rd_regn], rdb);
++	  if (++rdb == 4)
++	    {
++	      rdb = 0;
++	      rd_regn++;
++	    }
++	}
++    }
++  else
++    {
++      fprintf (stderr, "XIN: XFR device %d not supported.\n", wba);
++      CPU.exception = SIGILL;
++    }
++}
++
++static void
++pru_sim_xout(SIM_CPU *cpu, unsigned int wba, unsigned int rd_regn,
++	     unsigned int rdb, unsigned int length)
++{
++  const int modereg_accessed = (rd_regn == 25);	/* revise! */
++
++  if (wba != 0)
++    {
++      fprintf (stderr, "XOUT: XFR device %d not supported.\n", wba);
++      CPU.exception = SIGILL;
++      return;
++    }
++
++  /* MAC */
++  if (rd_regn < 25 || (rd_regn * 4 + rdb + length) > (27 + 1) * 4)
++    {
++      fprintf (stderr, "XOUT MAC: invalid transfer regn=%u.%u, length=%u\n",
++	       rd_regn, rdb, length);
++      CPU.exception = SIGILL;
++      return;
++    }
++
++  /* Copy from PRU to MAC regs. Ranges have been validated above. */
++  while (length--)
++    {
++      write_regval (
++		    CPU.regs[rd_regn] >> (rdb * 8),
++		    &CPU.macregs[rd_regn - 25],
++		    rdb);
++      if (++rdb == 4)
++	{
++	  rdb = 0;
++	  rd_regn++;
++	}
++    }
++
++  if (modereg_accessed
++      && (CPU.macregs[PRU_MACREG_MODE] & MAC_R25_ACC_CARRY_MASK))
++    {
++      /* store 1 to clear */
++      CPU.macregs[PRU_MACREG_MODE] &= ~MAC_R25_ACC_CARRY_MASK;
++    }
++
++  if (modereg_accessed
++      && (CPU.macregs[PRU_MACREG_MODE] & MAC_R25_MAC_MODE_MASK))
++    {
++      uint64_t prod, oldsum, sum;
++      prod = (uint64_t)CPU.regs[28] * (uint64_t)CPU.regs[29];
++      oldsum = CPU.macregs[PRU_MACREG_PROD_L];
++      oldsum += (uint64_t)CPU.macregs[PRU_MACREG_PROD_H] << 32;
++      sum = oldsum + prod;
++
++      CPU.macregs[PRU_MACREG_PROD_L] = sum & 0xfffffffful;
++      CPU.macregs[PRU_MACREG_PROD_H] = sum >> 32;
++
++      if (oldsum > sum)
++	CPU.macregs[PRU_MACREG_MODE] |= MAC_R25_ACC_CARRY_MASK;
++    }
++}
++
++static void
++pru_sim_syscall (SIM_CPU *cpu)
++{
++  const uint32_t sysn = CPU.regs[14];
++  uint32_t c, p;
++
++  switch (sysn)
++    {
++    case 0: /* HALT */
++      CPU.exception = SIGTRAP;
++      break;
++    case 1: /* PUTC */
++      fputc (CPU.regs[15], stdout);
++      fflush (stdout);
++      break;
++    case 2: /* EXIT */
++      CPU.exception = SIGQUIT;
++      break;
++    case 3: /* PUTS */
++      p = CPU.regs[15];
++      do {
++	  c = pru_read_u8_dmem (cpu, p++);
++	  if (c)
++	    {
++	      fputc (c, stdout);
++	      fflush (stdout);
++	    }
++      } while (!CPU.exception && c);
++      break;
++    default: fprintf (stderr, "Unknown syscall %u\n", sysn);
++    }
++}
++
++void
++sim_resume (SIM_DESC sd, int step, int siggnal)
++{
++  SIM_CPU *cpu = STATE_CPU (sd, 0);
++  uint16_t PC = imem_byteaddr_to_wordaddr (cpu, CPU_PC_GET (cpu));
++  int memops;
++  int insts;
++
++  CPU.exception = step ? SIGTRAP : 0;
++
++  memops = 0;
++  insts = 0;
++
++  do
++    {
++      const struct pru_opcode *op;
++      uint32_t inst;
++      uint32_t _RDVAL, OP2;	/* intermediate values */
++      int rd_is_modified = 0;	/* RD modified and must be stored back */
++
++      /* Fetch the initial instructions that we'll decode. */
++      inst = pru_read_u32_imem (cpu, PC);
++
++      op = pru_find_opcode (inst);
++
++      if (!op)
++	{
++	  fprintf (stderr, "Unknown instruction 0x%04x", inst);
++	  CPU.exception = SIGILL;
++	  break;
++	}
++
++      if (tracing)
++	fprintf (stderr, "%08x: %08x ; %s %s",
++		 (int)PC * 4 | PC_ADDR_SPACE_MARKER,
++		 inst, op->name, op->args);
++
++      switch(op->type)
++	{
++#define INSTRUCTION(NAME, ACTION)		\
++	case prui_ ## NAME:			\
++	  ACTION;				\
++	  break;
++#include "pru.isa"
++#undef INSTRUCTION
++
++	/* TODO - catch traps and emulate stdio (perhaps rpmsg compatible?) */
++	default:
++	  CPU.exception = SIGILL;
++	  fprintf (stderr, "ERROR: Unknown opcode\n");
++	}
++
++      if (rd_is_modified)
++	write_regval (_RDVAL, &CPU.regs[RD_REGN], RDSEL);
++
++      /* TODO - can we do better? */
++      CPU.regs[30] = 0;
++      CPU.regs[31] = 0;
++
++      /* handle PC match of loop end */
++      if (LOOP_IN_PROGRESS && (PC == LOOPEND))
++	{
++	  assert (LOOPCNT > 0);
++	  if (--LOOPCNT == 0)
++	    LOOP_IN_PROGRESS = 0;
++	  else
++	    PC = LOOPTOP;
++	}
++
++      /* Update cycle counts */
++      insts++;
++      if (op->type == prui_lbbo || op->type == prui_sbbo
++	  || op->type == prui_lbco || op->type == prui_sbco)
++	memops++;
++
++      if (tracing)
++	fprintf (stderr, "\n");
++    }
++  while (!CPU.exception);
++
++  CPU_PC_SET (cpu, imem_wordaddr_to_byteaddr (cpu, PC));
++
++  CPU.insts += insts;				/* instructions done ... */
++  CPU.cycles += insts;				/* and each takes a cycle */
++  CPU.cycles += memops * MEM_ACCESS_CYCLES; 	/* and memop cycle delays */
++}
++
++
++int
++sim_write (SIM_DESC sd, SIM_ADDR addr, const unsigned char *buffer, int size)
++{
++  SIM_CPU *cpu = STATE_CPU (sd, 0);
++  int i;
++
++  init_pointers (cpu);
++
++  if (addr > MAX_DMEM_ADDR)
++    {
++      addr &= IMEM_ADDR_MASK;
++      assert ((addr + size) <= CPU.isize);
++      memcpy (&CPU.imem[addr], buffer, size);
++    }
++  else
++    {
++      assert ((addr + size) <= CPU.dsize);
++      memcpy (&CPU.dmem[addr], buffer, size);
++    }
++
++  return size;
++}
++
++int
++sim_read (SIM_DESC sd, SIM_ADDR addr, unsigned char *buffer, int size)
++{
++  SIM_CPU *cpu = STATE_CPU (sd, 0);
++  int i;
++
++  init_pointers (cpu);
++
++  if (addr > MAX_DMEM_ADDR)
++    {
++      addr &= IMEM_ADDR_MASK;
++      assert ((addr + size) <= CPU.isize);
++      memcpy (buffer, &CPU.imem[addr], size);
++    }
++  else
++    {
++      assert ((addr + size) <= CPU.dsize);
++      memcpy (buffer, &CPU.dmem[addr], size);
++    }
++
++  return size;
++}
++
++static sim_cia
++pru_pc_get (sim_cpu *cpu)
++{
++  /* present PC as byte address */
++  return imem_wordaddr_to_byteaddr (cpu, cpu->pru_cpu.pc);
++}
++
++static void
++pru_pc_set (sim_cpu *cpu, sim_cia pc)
++{
++  /* PC given as byte address */
++  cpu->pru_cpu.pc = imem_byteaddr_to_wordaddr (cpu, pc);
++}
++
++
++static int
++pru_store_register (SIM_CPU *cpu, int rn, unsigned char *memory, int length)
++{
++  init_pointers (cpu);
++
++  if (rn < NUM_REGS && rn >= 0)
++    {
++      if (length == 4)
++	{
++	  /* misalignment safe */
++	  long ival = pru_extract_unsigned_integer (memory, 4);
++	  if (rn < 32)
++	    CPU.regs[rn] = ival;
++	  else
++	    pru_pc_set (cpu, ival);
++	  return 4;
++	}
++      else
++	return 0;
++    }
++  else
++    return 0;
++}
++
++static int
++pru_fetch_register (SIM_CPU *cpu, int rn, unsigned char *memory, int length)
++{
++  long ival;
++
++  init_pointers (cpu);
++
++  if (rn < NUM_REGS && rn >= 0)
++    {
++      if (length == 4)
++	{
++	  if (rn < 32)
++	    ival = CPU.regs[rn];
++	  else
++	    ival = pru_pc_get (cpu);
++
++	  /* misalignment-safe */
++	  pru_store_unsigned_integer (memory, 4, ival);
++	  return 4;
++	}
++      else
++	return 0;
++    }
++  else
++    return 0;
++}
++
++
++void
++sim_stop_reason (SIM_DESC sd, enum sim_stop *reason, int *sigrc)
++{
++  SIM_CPU *cpu = STATE_CPU (sd, 0);
++
++  if (CPU.exception == SIGQUIT)
++    {
++      *reason = sim_exited;
++      /* The syscall number is argument #1, syscall argument is
++	 function argument #2. */
++      *sigrc = CPU.regs[15];
++    }
++  else
++    {
++      *reason = sim_stopped;
++      *sigrc = CPU.exception;
++    }
++}
++
++
++void
++sim_info (SIM_DESC sd, int verbose)
++{
++  SIM_CPU *cpu = STATE_CPU (sd, 0);
++  host_callback *callback = STATE_CALLBACK (sd);
++
++  callback->printf_filtered (callback, "\n\n# instructions executed  %10d\n",
++			     CPU.insts);
++  callback->printf_filtered (callback, "# cycles                 %10d\n",
++			     (CPU.cycles) ? CPU.cycles+2 : 0);
++
++}
++
++static void
++free_state (SIM_DESC sd)
++{
++  if (STATE_MODULES (sd) != NULL)
++    sim_module_uninstall (sd);
++  sim_cpu_free_all (sd);
++  sim_state_free (sd);
++}
++
++SIM_DESC
++sim_open (SIM_OPEN_KIND kind, host_callback *cb,
++	  struct bfd *abfd, char * const *argv)
++{
++  int i;
++  SIM_DESC sd = sim_state_alloc (kind, cb);
++  SIM_ASSERT (STATE_MAGIC (sd) == SIM_MAGIC_NUMBER);
++
++  /* The cpu data is kept in a separately allocated chunk of memory.  */
++  if (sim_cpu_alloc_all (sd, 1, /*cgen_cpu_max_extra_bytes ()*/0) != SIM_RC_OK)
++    {
++      free_state (sd);
++      return 0;
++    }
++
++  if (sim_pre_argv_init (sd, argv[0]) != SIM_RC_OK)
++    {
++      free_state (sd);
++      return 0;
++    }
++
++  /* getopt will print the error message so we just have to exit if this fails.
++     FIXME: Hmmm...  in the case of gdb we need getopt to call
++     print_filtered.  */
++  if (sim_parse_args (sd, argv) != SIM_RC_OK)
++    {
++      free_state (sd);
++      return 0;
++    }
++
++  /* Check for/establish the a reference program image.  */
++  if (sim_analyze_program (sd,
++			   (STATE_PROG_ARGV (sd) != NULL
++			    ? *STATE_PROG_ARGV (sd)
++			    : NULL), abfd) != SIM_RC_OK)
++    {
++      free_state (sd);
++      return 0;
++    }
++
++  /* Configure/verify the target byte order and other runtime
++     configuration options.  */
++  if (sim_config (sd) != SIM_RC_OK)
++    {
++      sim_module_uninstall (sd);
++      return 0;
++    }
++
++  if (sim_post_argv_init (sd) != SIM_RC_OK)
++    {
++      /* Uninstall the modules to avoid memory leaks,
++	 file descriptor leaks, etc.  */
++      sim_module_uninstall (sd);
++      return 0;
++    }
++
++  if (kind == SIM_OPEN_STANDALONE)
++    issue_messages = 1;
++
++  /* CPU specific initialization.  */
++  for (i = 0; i < MAX_NR_PROCESSORS; ++i)
++    {
++      SIM_CPU *cpu = STATE_CPU (sd, i);
++      int odsize = sim_dmem_size;
++
++      CPU_REG_STORE (cpu) = pru_store_register;
++      CPU_REG_FETCH (cpu) = pru_fetch_register;
++      CPU_PC_FETCH (cpu) = pru_pc_get;
++      CPU_PC_STORE (cpu) = pru_pc_set;
++
++      set_initial_gprs (cpu);
++
++      /* Discard and reacquire memory -- start with a clean slate.  */
++      sim_size (cpu, 1);		/* small */
++      sim_size (cpu, odsize);	/* and back again */
++    }
++
++  return sd;
++}
++
++void
++sim_close (SIM_DESC sd, int quitting)
++{
++  /* Do nothing. */
++}
++
++SIM_RC
++sim_create_inferior (SIM_DESC sd, struct bfd *prog_bfd,
++		     char * const *argv, char * const *env)
++{
++  SIM_CPU *cpu = STATE_CPU (sd, 0);
++
++  CPU_PC_SET (cpu, bfd_get_start_address (prog_bfd));
++  PC_ADDR_SPACE_MARKER = bfd_get_start_address (prog_bfd) & ~IMEM_ADDR_MASK;
++
++  return SIM_RC_OK;
++}
++
++void
++sim_do_command (SIM_DESC sd, const char *cmd)
++{
++  SIM_CPU *cpu = STATE_CPU (sd, 0);
++
++  /* Nothing there yet; it's all an error.  */
++
++  if (cmd != NULL)
++    {
++      char ** simargv = buildargv (cmd);
++
++      if (strcmp (simargv[0], "dumpdmem") == 0)
++	{
++	  FILE * dumpfile;
++
++	  if (simargv[1] == NULL)
++	    fprintf (stderr, "Error: missing argument to dumpdmem cmd.\n");
++
++	  fprintf (stderr, "Writing dumpfile %s...",simargv[1]);
++
++	  dumpfile = fopen (simargv[1], "w");
++	  fwrite (CPU.dmem, CPU.dsize-1, 1, dumpfile);
++	  fclose (dumpfile);
++
++	  fprintf (stderr, "done.\n");
++	}
++      else if (strcmp (simargv[0], "clearstats") == 0)
++	{
++	  CPU.cycles = 0;
++	  CPU.insts = 0;
++	}
++      else if (strcmp (simargv[0], "verbose") == 0)
++	{
++	  issue_messages = 2;
++	}
++      else
++	{
++	  fprintf (stderr,"Error: \"%s\" is not a valid PRU simulator command.\n",
++		   cmd);
++	}
++    }
++  else
++    {
++      fprintf (stderr, "PRU sim commands: \n");
++      fprintf (stderr, "  dumpdmem <filename>\n");
++      fprintf (stderr, "  clearstats\n");
++      fprintf (stderr, "  verbose\n");
++    }
++}
++
+diff --git a/sim/pru/pru.h b/sim/pru/pru.h
+new file mode 100644
+index 0000000..c6be105
+--- /dev/null
++++ b/sim/pru/pru.h
+@@ -0,0 +1,98 @@
++#ifndef PRU_H
++#define PRU_H
++
++/* Copyright 2014 Free Software Foundation, Inc.
++
++   This file is part of the PRU simulator.
++
++   This library is free software; you can redistribute it and/or modify
++   it under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 3 of the License, or
++   (at your option) any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this program; if not, see <http://www.gnu.org/licenses/>.  */
++
++#include "config.h"
++#include "opcode/pru.h"
++
++#define IMEM_ADDR_MASK	((1u << 23) - 1)
++/* TODO - how to handle the dual address space? */
++#define MAX_DMEM_ADDR	IMEM_ADDR_MASK
++
++/* Define memory sizes to allocate for simulated target. Sizes are
++   artificially large to accommodate execution of compiler test suite.
++   Please synchronize with the linker script for prusim target. */
++#define DMEM_DEFAULT_SIZE (64 * 1024 * 1024)	  /* 64MB should be enough */
++#define IMEM_DEFAULT_SIZE (64 * 4 * 1024) /* 16-bit word addressable space */
++
++#define CPU     (cpu->pru_cpu)
++
++/* (void)0 is a guard against using RD as a left-hand side value. */
++#define RD      (void)0; rd_is_modified = 1; _RDVAL
++
++/* Various opcode fields. */
++#define RS1 extract_regval (CPU.regs[GET_INSN_FIELD (RS1, inst)], \
++			    GET_INSN_FIELD (RS1SEL, inst))
++#define RS2 extract_regval (CPU.regs[GET_INSN_FIELD (RS2, inst)], \
++			    GET_INSN_FIELD (RS2SEL, inst))
++
++#define RS2_w0 extract_regval (CPU.regs[GET_INSN_FIELD (RS2, inst)], \
++			    RSEL_15_0)
++
++#define XBBO_BASEREG (CPU.regs[GET_INSN_FIELD (RS1, inst)])
++
++#define RDSEL GET_INSN_FIELD (RDSEL, inst)
++#define RD_WIDTH regsel_width (RDSEL)
++#define RD_REGN GET_INSN_FIELD (RD, inst)
++#define IO GET_INSN_FIELD (IO, inst)
++#define IMM8 GET_INSN_FIELD (IMM8, inst)
++#define IMM16 GET_INSN_FIELD (IMM16, inst)
++#define WAKEONSTATUS GET_INSN_FIELD (WAKEONSTATUS, inst)
++#define CB GET_INSN_FIELD (CB, inst)
++#define RDB GET_INSN_FIELD (RDB, inst)
++#define XFR_WBA GET_INSN_FIELD (XFR_WBA, inst)
++#define LOOP_JMPOFFS GET_INSN_FIELD (LOOP_JMPOFFS, inst)
++#define BROFF ((uint32_t)GET_BROFF_SIGNED (inst))
++
++#define _BURSTLEN_CALCULATE(BITFIELD)					    \
++  ((BITFIELD) >= LSSBBO_BYTECOUNT_R0_BITS7_0 ?				    \
++  (CPU.regs[0] >> ((BITFIELD) - LSSBBO_BYTECOUNT_R0_BITS7_0) * 8) & 0xff    \
++  : (BITFIELD) + 1)
++
++#define BURSTLEN _BURSTLEN_CALCULATE (GET_BURSTLEN (inst))
++#define XFR_LENGTH _BURSTLEN_CALCULATE (GET_INSN_FIELD (XFR_LENGTH, inst))
++
++#define DO_XIN(wba,regn,rdb,l) pru_sim_xin (cpu, (wba), (regn), (rdb), (l))
++#define DO_XOUT(wba,regn,rdb,l) pru_sim_xout (cpu, (wba), (regn), (rdb), (l))
++
++#define DO_SYSCALL()	pru_sim_syscall(cpu)
++
++#define MAC_R25_MAC_MODE_MASK	  (1u << 0)
++#define MAC_R25_ACC_CARRY_MASK	  (1u << 1)
++
++#define CARRY	CPU.carry
++#define CTABLE	CPU.ctable
++
++#define PC_ADDR_SPACE_MARKER	CPU.pc_addr_space_marker
++
++#define LOOPTOP		  CPU.loop.looptop
++#define LOOPEND		  CPU.loop.loopend
++#define LOOP_IN_PROGRESS  CPU.loop.loop_in_progress
++#define LOOPCNT		  CPU.loop.loop_counter
++
++#define NUM_REGS 	33
++#define PCREG_NUM	32
++#define INST_SIZE 	4
++
++/* Number of cycles spent for memory access. No distinction is currently
++   made between SRAM, DRAM and generic L3 slaves. */
++#define MEM_ACCESS_CYCLES 2
++
++#endif /* PRU_H */
++
+diff --git a/sim/pru/pru.isa b/sim/pru/pru.isa
+new file mode 100644
+index 0000000..d99920d
+--- /dev/null
++++ b/sim/pru/pru.isa
+@@ -0,0 +1,240 @@
++/* Copyright 2014 Free Software Foundation, Inc.
++
++   This file is part of the PRU simulator.
++
++   This library is free software; you can redistribute it and/or modify
++   it under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 3 of the License, or
++   (at your option) any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this program; if not, see <http://www.gnu.org/licenses/>.  */
++
++/*
++ *  PRU Instruction Set Architecture
++ *
++ *  INSTRUCTION(NAME,
++ *              SEMANTICS)
++ *
++ */
++
++INSTRUCTION(add,
++	    OP2 = (IO ? IMM8 : RS2);
++	    RD = RS1 + OP2;
++	    CARRY = (((uint64_t)RS1 + (uint64_t)OP2) >> RD_WIDTH) & 1;
++	    PC++)
++
++INSTRUCTION(adc,
++	    OP2 = (IO ? IMM8 : RS2);
++	    RD = RS1 + OP2 + CARRY;
++	    CARRY = (((uint64_t)RS1 + (uint64_t)OP2 + (uint64_t)CARRY) >> RD_WIDTH) & 1;
++	    PC++)
++
++INSTRUCTION(sub,
++	    OP2 = (IO ? IMM8 : RS2);
++	    RD = RS1 - OP2;
++	    CARRY = (((uint64_t)RS1 - (uint64_t)OP2) >> RD_WIDTH) & 1;
++	    PC++)
++
++INSTRUCTION(suc,
++	    OP2 = (IO ? IMM8 : RS2);
++	    RD = RS1 - OP2 - CARRY;
++	    CARRY = (((uint64_t)RS1 - (uint64_t)OP2 - (uint64_t)CARRY) >> RD_WIDTH) & 1;
++	    PC++)
++
++INSTRUCTION(rsb,
++	    OP2 = (IO ? IMM8 : RS2);
++	    RD = OP2 - RS1;
++	    CARRY = (((uint64_t)OP2 - (uint64_t)RS1) >> RD_WIDTH) & 1;
++	    PC++)
++
++INSTRUCTION(rsc,
++	    OP2 = (IO ? IMM8 : RS2);
++	    RD = OP2 - RS1 - CARRY;
++	    CARRY = (((uint64_t)OP2 - (uint64_t)RS1 - (uint64_t)CARRY) >> RD_WIDTH) & 1;
++	    PC++)
++
++INSTRUCTION(lsl,
++	    OP2 = (IO ? IMM8 : RS2);
++	    RD = RS1 << (OP2 & 0x1f);
++	    PC++)
++
++INSTRUCTION(lsr,
++	    OP2 = (IO ? IMM8 : RS2);
++	    RD = RS1 >> (OP2 & 0x1f);
++	    PC++)
++
++INSTRUCTION(and,
++	    OP2 = (IO ? IMM8 : RS2);
++	    RD = RS1 & OP2;
++	    PC++)
++
++INSTRUCTION(or,
++	    OP2 = (IO ? IMM8 : RS2);
++	    RD = RS1 | OP2;
++	    PC++)
++
++INSTRUCTION(xor,
++	    OP2 = (IO ? IMM8 : RS2);
++	    RD = RS1 ^ OP2;
++	    PC++)
++
++INSTRUCTION(not,
++	    RD = ~RS1;
++	    PC++)
++
++INSTRUCTION(min,
++	    OP2 = (IO ? IMM8 : RS2);
++	    RD = RS1 < OP2 ? RS1 : OP2;
++	    PC++)
++
++INSTRUCTION(max,
++	    OP2 = (IO ? IMM8 : RS2);
++	    RD = RS1 > OP2 ? RS1 : OP2;
++	    PC++)
++
++INSTRUCTION(clr,
++	    OP2 = (IO ? IMM8 : RS2);
++	    RD = RS1 & ~(1u << (OP2 & 0x1f));
++	    PC++)
++
++INSTRUCTION(set,
++	    OP2 = (IO ? IMM8 : RS2);
++	    RD = RS1 | (1u << (OP2 & 0x1f));
++	    PC++)
++
++INSTRUCTION(jmp,
++	    OP2 = (IO ? IMM16 : RS2);
++	    PC = OP2)
++
++INSTRUCTION(jal,
++	    OP2 = (IO ? IMM16 : RS2);
++	    RD = PC + 1;
++	    PC = OP2)
++
++INSTRUCTION(ldi,
++	    RD = IMM16;
++	    PC++)
++
++INSTRUCTION(halt,
++	    DO_SYSCALL();
++	    PC++)
++
++INSTRUCTION(slp,
++	    if (!WAKEONSTATUS) { CPU.exception = SIGINT; } else { PC++; })
++
++INSTRUCTION(qbgt,
++	    OP2 = (IO ? IMM8 : RS2);
++	    PC = (OP2 > RS1) ? (PC + BROFF) : (PC + 1))
++
++INSTRUCTION(qbge,
++	    OP2 = (IO ? IMM8 : RS2);
++	    PC = (OP2 >= RS1) ? (PC + BROFF) : (PC + 1))
++
++INSTRUCTION(qblt,
++	    OP2 = (IO ? IMM8 : RS2);
++	    PC = (OP2 < RS1) ? (PC + BROFF) : (PC + 1))
++
++INSTRUCTION(qble,
++	    OP2 = (IO ? IMM8 : RS2);
++	    PC = (OP2 <= RS1) ? (PC + BROFF) : (PC + 1))
++
++INSTRUCTION(qbeq,
++	    OP2 = (IO ? IMM8 : RS2);
++	    PC = (OP2 == RS1) ? (PC + BROFF) : (PC + 1))
++
++INSTRUCTION(qbne,
++	    OP2 = (IO ? IMM8 : RS2);
++	    PC = (OP2 != RS1) ? (PC + BROFF) : (PC + 1))
++
++INSTRUCTION(qba,
++	    OP2 = (IO ? IMM8 : RS2);
++	    PC = PC + BROFF)
++
++INSTRUCTION(qbbs,
++	    OP2 = (IO ? IMM8 : RS2);
++	    PC = (RS1 & (1u << (OP2 & 0x1f))) ? (PC + BROFF) : (PC + 1))
++
++INSTRUCTION(qbbc,
++	    OP2 = (IO ? IMM8 : RS2);
++	    PC = !(RS1 & (1u << (OP2 & 0x1f))) ? (PC + BROFF) : (PC + 1))
++
++INSTRUCTION(lbbo,
++	    pru_dmem2reg (cpu, XBBO_BASEREG + (IO ? IMM8 : RS2),
++			  BURSTLEN, RD_REGN, RDB);
++	    PC++)
++
++INSTRUCTION(sbbo,
++	    pru_reg2dmem (cpu, XBBO_BASEREG + (IO ? IMM8 : RS2),
++			  BURSTLEN, RD_REGN, RDB);
++	    PC++)
++
++INSTRUCTION(lbco,
++	    pru_dmem2reg (cpu, CTABLE[CB] + (IO ? IMM8 : RS2),
++			  BURSTLEN, RD_REGN, RDB);
++	    PC++)
++
++INSTRUCTION(sbco,
++	    pru_reg2dmem (cpu, CTABLE[CB] + (IO ? IMM8 : RS2),
++			  BURSTLEN, RD_REGN, RDB);
++	    PC++)
++
++INSTRUCTION(xin,
++	    DO_XIN (XFR_WBA, RD_REGN, RDB, XFR_LENGTH);
++	    PC++)
++
++INSTRUCTION(xout,
++	    DO_XOUT (XFR_WBA, RD_REGN, RDB, XFR_LENGTH);
++	    PC++)
++
++INSTRUCTION(xchg,
++	    fprintf (stderr, "XCHG instruction not supported by sim\n");
++	    CPU.exception = SIGILL)
++
++INSTRUCTION(sxin,
++	    fprintf (stderr, "SXIN instruction not supported by sim\n");
++	    CPU.exception = SIGILL)
++
++INSTRUCTION(sxout,
++	    fprintf (stderr, "SXOUT instruction not supported by sim\n");
++	    CPU.exception = SIGILL)
++
++INSTRUCTION(sxchg,
++	    fprintf (stderr, "SXCHG instruction not supported by sim\n");
++	    CPU.exception = SIGILL)
++
++INSTRUCTION(loop,
++	    OP2 = (IO ? IMM8 + 1 : RS2_w0);
++	    if (OP2 == 0)
++	      {
++		PC = LOOPEND;
++	      }
++	    else
++	      {
++		LOOPTOP = PC + 1;
++		LOOPEND = PC + LOOP_JMPOFFS;
++		LOOPCNT = OP2;
++		LOOP_IN_PROGRESS = 1;
++		PC++;
++	      })
++
++INSTRUCTION(iloop,
++	    OP2 = (IO ? IMM8 + 1 : RS2_w0);
++	    if (OP2 == 0)
++	      {
++		PC = LOOPEND;
++	      }
++	    else
++	      {
++		LOOPTOP = PC + 1;
++		LOOPEND = PC + LOOP_JMPOFFS;
++		LOOPCNT = OP2;
++		LOOP_IN_PROGRESS = 1;
++		PC++;
++	      })
++
+diff --git a/sim/pru/sim-main.h b/sim/pru/sim-main.h
+new file mode 100644
+index 0000000..01f683c
+--- /dev/null
++++ b/sim/pru/sim-main.h
+@@ -0,0 +1,80 @@
++#ifndef PRU_SIM_MAIN
++#define PRU_SIM_MAIN
++
++/* Copyright 2014 Free Software Foundation, Inc.
++
++   This file is part of the PRU simulator.
++
++   This library is free software; you can redistribute it and/or modify
++   it under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 3 of the License, or
++   (at your option) any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this program; if not, see <http://www.gnu.org/licenses/>.  */
++
++#include <stdint.h>
++#include "pru.h"
++#include "sim-basics.h"
++
++#include "sim-base.h"
++
++/* The machine state.
++   This state is maintained in host byte order.  The
++   fetch/store register functions must translate between host
++   byte order and the target processor byte order.
++   Keeping this data in target byte order simplifies the register
++   read/write functions.  Keeping this data in native order improves
++   the performance of the simulator.  Simulation speed is deemed more
++   important.  */
++
++enum pru_macreg_id {
++    PRU_MACREG_MODE,
++    PRU_MACREG_PROD_L,
++    PRU_MACREG_PROD_H,
++    PRU_MAC_NREGS
++};
++
++struct pru_regset
++{
++  uint32_t        regs[32];		/* primary registers */
++  uint16_t	  pc;			/* IMEM _word_ address */
++  uint32_t	  pc_addr_space_marker; /* IMEM virtual linker offset. This
++					   is the artificial offset that
++					   we invent in order to "separate"
++					   the DMEM and IMEM memory spaces */
++  unsigned int	  carry : 1;
++  uint32_t        ctable[32];		/* constant offsets table for xBCO */
++  uint32_t	  macregs[PRU_MAC_NREGS];
++  struct {
++    uint16_t looptop;			/* LOOP top (PC of loop instr) */
++    uint16_t loopend;			/* LOOP end (PC of loop end label) */
++    int loop_in_progress;		/* whether to check for PC==loopend */
++    uint32_t loop_counter;		/* LOOP counter */
++  } loop;
++  int		  cycles;
++  int		  insts;
++  int		  exception;
++  unsigned long   dsize;
++  uint8_t	  *dmem;
++  unsigned long   isize;
++  uint8_t	  *imem;
++};
++
++struct _sim_cpu {
++  struct pru_regset pru_cpu;
++  sim_cpu_base base;
++};
++
++struct sim_state {
++  sim_cpu *cpu[MAX_NR_PROCESSORS];
++
++  sim_state_base base;
++};
++#endif /* PRU_SIM_MAIN */
++
+-- 
+2.9.3
+

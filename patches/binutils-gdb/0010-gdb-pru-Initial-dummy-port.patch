@@ -1,7 +1,7 @@
-From 46102ad41462f88cb9a308bc367f615cdcb21723 Mon Sep 17 00:00:00 2001
+From d78c8bac711a82c311535318f12a00a55be2b166 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Fri, 7 Oct 2016 22:51:06 +0300
-Subject: [PATCH 2/3] gdb: pru: Initial dummy port
+Subject: [PATCH 10/23] gdb: pru: Initial dummy port
 
 This needs a lot of work.
 
@@ -53,10 +53,10 @@ index 2c88434..061df69 100644
  	remote-sim.c \
  	dcache.c \
 diff --git a/gdb/configure.tgt b/gdb/configure.tgt
-index ef041de..58fcb25 100644
+index d428dff..d0a5c62 100644
 --- a/gdb/configure.tgt
 +++ b/gdb/configure.tgt
-@@ -465,6 +465,12 @@ powerpc*-*-*)
+@@ -471,6 +471,12 @@ powerpc*-*-*)
  	gdb_sim=../sim/ppc/libsim.a
  	;;
  

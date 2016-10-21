@@ -1,0 +1,26 @@
+From 4e7384487239be43a045a46715b260f9084b53ec Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dinuxbg@gmail.com>
+Date: Sun, 23 Oct 2016 08:30:39 +0300
+Subject: [PATCH 20/23] ld: testsuite: PRU LD does not support arbitrary .text
+ base addresses.
+
+Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+---
+ ld/testsuite/ld-elf/pr14926.d | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ld/testsuite/ld-elf/pr14926.d b/ld/testsuite/ld-elf/pr14926.d
+index 88c521c..8fc8e64 100644
+--- a/ld/testsuite/ld-elf/pr14926.d
++++ b/ld/testsuite/ld-elf/pr14926.d
+@@ -1,6 +1,6 @@
+ #ld: -Ttext=0x60
+ #readelf: -S --wide
+-#notarget: d10v-* m68hc1*-* msp*-* visium-* xgate-* xstormy*-*
++#notarget: d10v-* m68hc1*-* msp*-* visium-* xgate-* xstormy*-* pru-*-*
+ # the above targets use memory regions that don't allow 0x60 for .text
+ 
+ #...
+-- 
+2.9.3
+

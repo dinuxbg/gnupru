@@ -1,0 +1,25 @@
+From bcce49e40457e2a9acb8c17f2a3c9635e23501ea Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dinuxbg@gmail.com>
+Date: Mon, 24 Oct 2016 23:32:42 +0300
+Subject: [PATCH 08/23] elfcpp: TODO - discard?
+
+Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+---
+ elfcpp/elfcpp.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/elfcpp/elfcpp.h b/elfcpp/elfcpp.h
+index 7469bd8..1826539 100644
+--- a/elfcpp/elfcpp.h
++++ b/elfcpp/elfcpp.h
+@@ -268,6 +268,7 @@ enum EM
+   EM_UNICORE = 110,
+   EM_ALTERA_NIOS2 = 113,
+   EM_CRX = 114,
++  EM_PRU = 144,
+   EM_AARCH64 = 183,
+   EM_TILEGX = 191,
+   // The Morph MT.
+-- 
+2.9.3
+

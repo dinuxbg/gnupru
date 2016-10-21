@@ -1,0 +1,44 @@
+From a665c85368c7815631c713bfd62fb9f450fba0a2 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dinuxbg@gmail.com>
+Date: Sun, 23 Oct 2016 09:25:55 +0300
+Subject: [PATCH 21/23] ld: testsuite: Relocatable output for PRU actually
+ merges all .text.* sections
+
+Note to self: Check how AVR port's usage of different linker scripts.
+For example, "vimdiff avr5.x avr5.xr"
+
+Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+---
+ ld/testsuite/ld-elf/pr20528a.d | 2 +-
+ ld/testsuite/ld-elf/pr20528b.d | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/ld/testsuite/ld-elf/pr20528a.d b/ld/testsuite/ld-elf/pr20528a.d
+index 8ffb816..b5dc4c2 100644
+--- a/ld/testsuite/ld-elf/pr20528a.d
++++ b/ld/testsuite/ld-elf/pr20528a.d
+@@ -3,7 +3,7 @@
+ #ld: -r
+ #readelf: -S --wide
+ #xfail: d30v-*-* dlx-*-* fr30-*-* frv-*-elf ft32-*-* i860-*-* i960-*-*
+-#xfail: iq*-*-* mn10200-*-* moxie-*-* msp*-*-* mt-*-* pj*-*-*
++#xfail: iq*-*-* mn10200-*-* moxie-*-* msp*-*-* mt-*-* pj*-*-* pru-*-*
+ 
+ #...
+ [ 	]*\[.*\][ 	]+\.text.startup[ 	]+PROGBITS.*[ 	]+AX[   ]+.*
+diff --git a/ld/testsuite/ld-elf/pr20528b.d b/ld/testsuite/ld-elf/pr20528b.d
+index 80f0aa5..c0f7c25 100644
+--- a/ld/testsuite/ld-elf/pr20528b.d
++++ b/ld/testsuite/ld-elf/pr20528b.d
+@@ -3,7 +3,7 @@
+ #ld: -r
+ #readelf: -S --wide
+ #xfail: d30v-*-* dlx-*-* fr30-*-* frv-*-elf ft32-*-* i860-*-* i960-*-*
+-#xfail: iq*-*-* mn10200-*-* moxie-*-* msp*-*-* mt-*-* pj*-*-*
++#xfail: iq*-*-* mn10200-*-* moxie-*-* msp*-*-* mt-*-* pj*-*-* pru-*-*
+ 
+ #...
+ [ 	]*\[.*\][ 	]+\.text.startup[ 	]+PROGBITS.*[ 	]+AXE[   ]+.*
+-- 
+2.9.3
+

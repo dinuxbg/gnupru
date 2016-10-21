@@ -1,0 +1,66 @@
+From c31b7525a629aded02767391e96288f5018792b8 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dinuxbg@gmail.com>
+Date: Thu, 13 Oct 2016 21:32:08 +0300
+Subject: [PATCH 12/23] ld: testsuite: Mark PRU as elf target that does not
+ support shared libraries
+
+Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+---
+ binutils/testsuite/lib/binutils-common.exp | 1 +
+ ld/testsuite/ld-elf/eh-frame-hdr.d         | 2 +-
+ ld/testsuite/ld-elf/sec-to-seg.exp         | 1 +
+ ld/testsuite/lib/ld-lib.exp                | 1 +
+ 4 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/binutils/testsuite/lib/binutils-common.exp b/binutils/testsuite/lib/binutils-common.exp
+index bfe2998..6cf1daa 100644
+--- a/binutils/testsuite/lib/binutils-common.exp
++++ b/binutils/testsuite/lib/binutils-common.exp
+@@ -46,6 +46,7 @@ proc is_elf_format {} {
+ 	 && ![istarget frv-*-uclinux*]
+ 	 && ![istarget hppa*64*-*-hpux*]
+ 	 && ![istarget ia64-*-hpux*]
++	 && ![istarget pru-*-*]
+ 	 && ![istarget sh*-*-uclinux*]
+ 	 && ![istarget tic6x*-*-uclinux*] } {
+ 	return 0
+diff --git a/ld/testsuite/ld-elf/eh-frame-hdr.d b/ld/testsuite/ld-elf/eh-frame-hdr.d
+index f73d0e5..a76ac73 100644
+--- a/ld/testsuite/ld-elf/eh-frame-hdr.d
++++ b/ld/testsuite/ld-elf/eh-frame-hdr.d
+@@ -2,7 +2,7 @@
+ #ld: -e _start --eh-frame-hdr
+ #objdump: -hw
+ #target: cfi
+-#xfail: avr*-*-* or1k*-*-elf or1k*-*-rtems* visium-*-*
++#xfail: avr*-*-* or1k*-*-elf or1k*-*-rtems* pru-*-* visium-*-*
+ # These targets support CFI generation but not shared libraries.
+ #...
+   [0-9] .eh_frame_hdr 0*[12][048c] .*
+diff --git a/ld/testsuite/ld-elf/sec-to-seg.exp b/ld/testsuite/ld-elf/sec-to-seg.exp
+index 8847318..af3d604 100644
+--- a/ld/testsuite/ld-elf/sec-to-seg.exp
++++ b/ld/testsuite/ld-elf/sec-to-seg.exp
+@@ -87,6 +87,7 @@ if {    [istarget avr-*-*]
+      || [istarget moxie-*-*]
+      || [istarget msp430-*-*]
+      || [istarget mt-*-*]
++     || [istarget pru-*-*]
+      || [istarget visium-*-*]
+     } {
+     set B_test_same_seg 0
+diff --git a/ld/testsuite/lib/ld-lib.exp b/ld/testsuite/lib/ld-lib.exp
+index 49c1fb1..9468d3e 100644
+--- a/ld/testsuite/lib/ld-lib.exp
++++ b/ld/testsuite/lib/ld-lib.exp
+@@ -1759,6 +1759,7 @@ proc check_shared_lib_support { } {
+ 	 && ![istarget nds32*-*-*]
+ 	 && ![istarget or1k*-*-*]
+ 	 && ![istarget pj-*-*]
++	 && ![istarget pru-*-*]
+ 	 && ![istarget rl78-*-*]
+ 	 && ![istarget rx-*-*]
+ 	 && ![istarget spu-*-*]
+-- 
+2.9.3
+

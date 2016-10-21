@@ -1,0 +1,54 @@
+From 8b1e1f447e101fcd22596bd590004b45503afb57 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dinuxbg@gmail.com>
+Date: Mon, 24 Oct 2016 22:35:32 +0300
+Subject: [PATCH 01/23] config.sub: Recognize PRU processor
+
+Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+---
+ config.sub                  | 2 ++
+ readline/support/config.sub | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/config.sub b/config.sub
+index 2377e13..e4df780 100755
+--- a/config.sub
++++ b/config.sub
+@@ -301,6 +301,7 @@ case $basic_machine in
+ 	| open8 | or1k | or1knd | or32 \
+ 	| pdp10 | pdp11 | pj | pjl \
+ 	| powerpc | powerpc64 | powerpc64le | powerpcle \
++	| pru \
+ 	| pyramid \
+ 	| riscv32 | riscv64 \
+ 	| rl78 | rx \
+@@ -428,6 +429,7 @@ case $basic_machine in
+ 	| orion-* \
+ 	| pdp10-* | pdp11-* | pj-* | pjl-* | pn-* | power-* \
+ 	| powerpc-* | powerpc64-* | powerpc64le-* | powerpcle-* \
++	| pru-* \
+ 	| pyramid-* \
+ 	| riscv32-* | riscv64-* \
+ 	| rl78-* | romp-* | rs6000-* | rx-* \
+diff --git a/readline/support/config.sub b/readline/support/config.sub
+index d07267e..9b6f5dd 100755
+--- a/readline/support/config.sub
++++ b/readline/support/config.sub
+@@ -277,6 +277,7 @@ case $basic_machine in
+ 	| or32 \
+ 	| pdp10 | pdp11 | pj | pjl \
+ 	| powerpc | powerpc64 | powerpc64le | powerpcle | ppcbe \
++	| pru \
+ 	| pyramid \
+ 	| score \
+ 	| sh | sh[1234] | sh[24]a | sh[23]e | sh[34]eb | sheb | shbe | shle | sh[1234]le | sh3ele \
+@@ -360,6 +361,7 @@ case $basic_machine in
+ 	| orion-* \
+ 	| pdp10-* | pdp11-* | pj-* | pjl-* | pn-* | power-* \
+ 	| powerpc-* | powerpc64-* | powerpc64le-* | powerpcle-* | ppcbe-* \
++	| pru-* \
+ 	| pyramid-* \
+ 	| romp-* | rs6000-* \
+ 	| sh-* | sh[1234]-* | sh[24]a-* | sh[23]e-* | sh[34]eb-* | sheb-* | shbe-* \
+-- 
+2.9.3
+
