@@ -1,10 +1,10 @@
-From 4e9097814ef88cf3f43f5b6bc678d620c49b449b Mon Sep 17 00:00:00 2001
-From: Dimitar Dimitrov <dinuxbg@gmail.com>
+From a8ea0193577fb87f25c2217f3303e6ed8e836093 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 23 Oct 2016 08:22:18 +0300
-Subject: [PATCH 19/23] ld: testsuite: PRU assembler does not support diff
+Subject: [PATCH 16/23] ld: testsuite: PRU assembler does not support diff
  expressions mixing data and text labels.
 
-Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  ld/testsuite/ld-elf/merge.d | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
@@ -23,5 +23,5 @@ index 818959d..d46acb6 100644
  .*:     file format .*elf.*
  
 -- 
-2.9.3
+2.10.1
 

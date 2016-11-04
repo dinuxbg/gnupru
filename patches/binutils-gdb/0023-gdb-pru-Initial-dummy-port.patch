@@ -1,11 +1,11 @@
-From d78c8bac711a82c311535318f12a00a55be2b166 Mon Sep 17 00:00:00 2001
-From: Dimitar Dimitrov <dinuxbg@gmail.com>
+From 74654ae30593394dfc2ea9bd73dd566324640862 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 7 Oct 2016 22:51:06 +0300
-Subject: [PATCH 10/23] gdb: pru: Initial dummy port
+Subject: [PATCH 23/23] gdb: pru: Initial dummy port
 
 This needs a lot of work.
 
-Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  gdb/Makefile.in          |   5 +-
  gdb/configure.tgt        |   6 +
@@ -23,10 +23,10 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 gdb/pru-tdep.h
 
 diff --git a/gdb/Makefile.in b/gdb/Makefile.in
-index 2c88434..061df69 100644
+index d035d8e..b17e45a 100644
 --- a/gdb/Makefile.in
 +++ b/gdb/Makefile.in
-@@ -691,7 +691,7 @@ ALL_TARGET_OBS = \
+@@ -692,7 +692,7 @@ ALL_TARGET_OBS = \
  	nios2-tdep.o nios2-linux-tdep.o \
  	nto-tdep.o \
  	ppc-linux-tdep.o ppcfbsd-tdep.o ppcnbsd-tdep.o ppcobsd-tdep.o  \
@@ -35,7 +35,7 @@ index 2c88434..061df69 100644
  	rs6000-aix-tdep.o rs6000-tdep.o solib-aix.o ppc-ravenscar-thread.o \
  	rs6000-lynx178-tdep.o \
  	rx-tdep.o \
-@@ -966,7 +966,7 @@ dicos-tdep.h filesystem.h gcore.h gdb_wchar.h hppabsd-tdep.h \
+@@ -968,7 +968,7 @@ dicos-tdep.h filesystem.h gcore.h gdb_wchar.h hppabsd-tdep.h \
  i386-darwin-tdep.h x86-nat.h linux-record.h moxie-tdep.h nios2-tdep.h \
  ft32-tdep.h nds32-tdep.h \
  osdata.h procfs.h python/py-event.h python/py-events.h python/py-stopevent.h \
@@ -44,7 +44,7 @@ index 2c88434..061df69 100644
  record-full.h solib-aix.h \
  solib-darwin.h solib-spu.h windows-nat.h xcoffread.h \
  gnulib/import/extra/snippet/arg-nonnull.h gnulib/import/extra/snippet/c++defs.h \
-@@ -1731,6 +1731,7 @@ ALLDEPFILES = \
+@@ -1733,6 +1733,7 @@ ALLDEPFILES = \
  	ppcnbsd-nat.c ppcnbsd-tdep.c \
  	ppcobsd-nat.c ppcobsd-tdep.c \
  	procfs.c \
@@ -209,13 +209,13 @@ index 0000000..f865b67
 +</target>
 diff --git a/gdb/pru-tdep.c b/gdb/pru-tdep.c
 new file mode 100644
-index 0000000..a8cc603
+index 0000000..ad7e047e
 --- /dev/null
 +++ b/gdb/pru-tdep.c
 @@ -0,0 +1,867 @@
 +/* Target-machine dependent code for PRU, for GDB.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
++   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +   Based on the Nios 2 port.
 +
 +   This file is part of GDB.
@@ -1082,13 +1082,13 @@ index 0000000..a8cc603
 +}
 diff --git a/gdb/pru-tdep.h b/gdb/pru-tdep.h
 new file mode 100644
-index 0000000..ca7ba62
+index 0000000..6d08981
 --- /dev/null
 +++ b/gdb/pru-tdep.h
 @@ -0,0 +1,51 @@
 +/* Target-dependent header for the TI PRU architecture, for GDB.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
++   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
 +   This file is part of GDB.
 +
@@ -1138,5 +1138,5 @@ index 0000000..ca7ba62
 +
 +#endif /* PRU_TDEP_H */
 -- 
-2.9.3
+2.10.1
 

@@ -1,9 +1,9 @@
-From 8b1e1f447e101fcd22596bd590004b45503afb57 Mon Sep 17 00:00:00 2001
-From: Dimitar Dimitrov <dinuxbg@gmail.com>
+From 322d15630ef078ba7f9a01fb60fb045affe63846 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 22:35:32 +0300
 Subject: [PATCH 01/23] config.sub: Recognize PRU processor
 
-Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  config.sub                  | 2 ++
  readline/support/config.sub | 2 ++
@@ -50,5 +50,5 @@ index d07267e..9b6f5dd 100755
  	| romp-* | rs6000-* \
  	| sh-* | sh[1234]-* | sh[24]a-* | sh[23]e-* | sh[34]eb-* | sheb-* | shbe-* \
 -- 
-2.9.3
+2.10.1
 

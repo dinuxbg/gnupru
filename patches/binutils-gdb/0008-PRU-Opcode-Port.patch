@@ -1,28 +1,28 @@
-From eac3d31a9a4cadd70df0d4207692ff23f7d266c3 Mon Sep 17 00:00:00 2001
-From: Dimitar Dimitrov <dinuxbg@gmail.com>
+From 78be2bc35fb9f368a850d481ec46fea25c26e147 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 23:31:15 +0300
-Subject: [PATCH 07/23] PRU Opcode Port
+Subject: [PATCH 08/23] PRU Opcode Port
 
-Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  include/dis-asm.h     |   1 +
- include/opcode/pru.h  | 406 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/opcode/pru.h  | 403 ++++++++++++++++++++++++++++++++++++++++++++++++++
  opcodes/Makefile.am   |   2 +
  opcodes/Makefile.in   |   4 +
  opcodes/configure.ac  |   1 +
- opcodes/disassemble.c |   6 +
+ opcodes/disassemble.c |   7 +-
  opcodes/pru-dis.c     | 284 +++++++++++++++++++++++++++++++++++
- opcodes/pru-opc.c     | 230 ++++++++++++++++++++++++++++
- 8 files changed, 934 insertions(+)
+ opcodes/pru-opc.c     | 232 +++++++++++++++++++++++++++++
+ 8 files changed, 933 insertions(+), 1 deletion(-)
  create mode 100644 include/opcode/pru.h
  create mode 100644 opcodes/pru-dis.c
  create mode 100644 opcodes/pru-opc.c
 
 diff --git a/include/dis-asm.h b/include/dis-asm.h
-index 05bfa37..d9f8332 100644
+index 2cefff4..91084f0 100644
 --- a/include/dis-asm.h
 +++ b/include/dis-asm.h
-@@ -288,6 +288,7 @@ extern int print_insn_ns32k		(bfd_vma, disassemble_info *);
+@@ -289,6 +289,7 @@ extern int print_insn_ns32k		(bfd_vma, disassemble_info *);
  extern int print_insn_or1k		(bfd_vma, disassemble_info *);
  extern int print_insn_pdp11		(bfd_vma, disassemble_info *);
  extern int print_insn_pj		(bfd_vma, disassemble_info *);
@@ -32,13 +32,13 @@ index 05bfa37..d9f8332 100644
  extern int print_insn_sh		(bfd_vma, disassemble_info *);
 diff --git a/include/opcode/pru.h b/include/opcode/pru.h
 new file mode 100644
-index 0000000..6707513
+index 0000000..a056f47
 --- /dev/null
 +++ b/include/opcode/pru.h
-@@ -0,0 +1,406 @@
+@@ -0,0 +1,403 @@
 +/* TI PRU opcode list for GAS, the GNU assembler.
-+   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
++   Copyright (C) 2014-2016 Free Software Foundation, Inc.
++   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
 +   This file is part of GAS, the GNU Assembler, and GDB, the GNU disassembler.
 +
@@ -91,7 +91,7 @@ index 0000000..6707513
 +    opcode_format6
 +};
 +
-+/* Opcode ID listing. Used for indexing by the simulator. */
++/* Opcode ID listing. Used for indexing by the simulator.  */
 +enum pru_instr_type {
 +    prui_add, prui_adc, prui_sub, prui_suc, prui_lsl, prui_lsr, prui_rsb,
 +    prui_rsc, prui_and, prui_or,  prui_xor, prui_min, prui_max, prui_clr,
@@ -144,7 +144,7 @@ index 0000000..6707513
 +{
 +  const char *name;		/* The name of the instruction.  */
 +  enum pru_instr_type type;	/* Instruction type. Used for fast indexing
-+				   by the simulator. */
++				   by the simulator.  */
 +  const char *args;		/* A string describing the arguments for this
 +                                   instruction.  */
 +  unsigned long match;		/* The basic opcode for the instruction.  */
@@ -165,9 +165,9 @@ index 0000000..6707513
 +/* Associates a register name with a 5-bit index and 3-bit regsel.  */
 +struct pru_reg
 +{
-+  const char *name;		/* Name, e.g. "r10" */
-+  const unsigned int index;	/* Index, e.g. 10 */
-+  const unsigned int regsel;	/* Register field selector, .e.g RSEL_31_0 */
++  const char *name;		/* Name, e.g. "r10".  */
++  const unsigned int index;	/* Index, e.g. 10.  */
++  const unsigned int regsel;	/* Register field selector, .e.g RSEL_31_0.  */
 +};
 +
 +/* Macros for getting and setting an instruction field.  */
@@ -179,12 +179,7 @@ index 0000000..6707513
 +#define CHECK_INSN_FIELD(X, i) \
 +  (((i) & OP_MASK_##X) == OP_MATCH_##X)
 +
-+/* Masks, values, shifts and macros for accessing the various opcode fields */
-+
-+/* TODO - missing opcodes MVI, WBC,
-+
-+   TODO - add core variants (v0 through v4?)
-+ */
++/* Masks, values, shifts and macros for accessing the various opcode fields.  */
 +
 +#define OP_SH_FMT1_OP			29
 +#define OP_MASK_FMT1_OP			(0x7u << 29)
@@ -210,7 +205,7 @@ index 0000000..6707513
 +#define OP_MASK_FMT6CD_OP		(0x7u << 29)
 +#define OP_MATCH_FMT6CD_OP		(0x4u << 29)
 +
-+/* Generic fields */
++/* Generic fields.  */
 +#define OP_SH_SUBOP			25
 +#define OP_MASK_SUBOP			(0xfu << 25)
 +
@@ -244,7 +239,7 @@ index 0000000..6707513
 +#define RSEL_31_0			7u
 +#define RSEL_NUM_ITEMS			8u
 +
-+/* Format 1 specific fields */
++/* Format 1 specific fields.  */
 +#define SUBOP_ADD			0u
 +#define SUBOP_ADC			1u
 +#define SUBOP_SUB			2u
@@ -262,7 +257,7 @@ index 0000000..6707513
 +#define SUBOP_CLR			14u
 +#define SUBOP_SET			15u
 +
-+/* Format 2 specific fields */
++/* Format 2 specific fields.  */
 +#define SUBOP_JMP			0u
 +#define SUBOP_JAL			1u
 +#define SUBOP_LDI			2u
@@ -278,7 +273,7 @@ index 0000000..6707513
 +#define OP_SH_WAKEONSTATUS		23
 +#define OP_MASK_WAKEONSTATUS		(0x1u << 23)
 +
-+/* Format 2 XFR specific fields */
++/* Format 2 XFR specific fields.  */
 +#define OP_SH_SUBOP_XFR			23
 +#define OP_MASK_SUBOP_XFR		(3u << 23)
 +#define OP_SH_XFR_WBA			15
@@ -292,13 +287,13 @@ index 0000000..6707513
 +#define SUBOP_XFR_XOUT			2u
 +#define SUBOP_XFR_XCHG			3u
 +
-+/* Format 2 LOOP specific fields */
++/* Format 2 LOOP specific fields.  */
 +#define OP_SH_LOOP_INTERRUPTIBLE	15
 +#define OP_MASK_LOOP_INTERRUPTIBLE	(1u << 15)
 +#define OP_SH_LOOP_JMPOFFS		0
 +#define OP_MASK_LOOP_JMPOFFS		(0xffu << 0)
 +
-+/* Format 4 specific fields */
++/* Format 4 specific fields.  */
 +#define OP_SH_BROFF98			25
 +#define OP_MASK_BROFF98			(0x3u << 25)
 +#define OP_SH_BROFF70			0
@@ -312,14 +307,14 @@ index 0000000..6707513
 +#define OP_MASK_CMP			(OP_MASK_GT | OP_MASK_EQ | OP_MASK_LT)
 +
 +
-+/* Format 5 specific fields */
++/* Format 5 specific fields.  */
 +#define OP_SH_BS			28
 +#define OP_MASK_BS			(0x1u << 28)
 +#define OP_SH_BC			27
 +#define OP_MASK_BC			(0x1u << 27)
 +#define OP_MASK_BCMP			(OP_MASK_BS | OP_MASK_BC)
 +
-+/* Format 6 specific fields */
++/* Format 6 specific fields.  */
 +#define OP_SH_LOADSTORE			28
 +#define OP_MASK_LOADSTORE		(0x1u << 28)
 +#define OP_SH_BURSTLEN64		25
@@ -373,7 +368,8 @@ index 0000000..6707513
 +#define OP_MATCH_SXOUT	(OP_MATCH_SXFR | (SUBOP_XFR_XOUT << OP_SH_SUBOP_XFR))
 +#define OP_MATCH_SXCHG	(OP_MATCH_SXFR | (SUBOP_XFR_XCHG << OP_SH_SUBOP_XFR))
 +#define OP_MATCH_LOOP	(OP_MATCH_FMT2_OP | (SUBOP_LOOP << OP_SH_SUBOP))
-+#define OP_MATCH_ILOOP	(OP_MATCH_FMT2_OP | (SUBOP_LOOP << OP_SH_SUBOP) | OP_MASK_LOOP_INTERRUPTIBLE)
++#define OP_MATCH_ILOOP	(OP_MATCH_FMT2_OP | (SUBOP_LOOP << OP_SH_SUBOP) \
++			 | OP_MASK_LOOP_INTERRUPTIBLE)
 +
 +#define OP_MATCH_QBGT	(OP_MATCH_FMT4_OP | OP_MASK_GT)
 +#define OP_MATCH_QBGE	(OP_MATCH_FMT4_OP | OP_MASK_GT | OP_MASK_EQ)
@@ -381,7 +377,8 @@ index 0000000..6707513
 +#define OP_MATCH_QBLE	(OP_MATCH_FMT4_OP | OP_MASK_LT | OP_MASK_EQ)
 +#define OP_MATCH_QBEQ	(OP_MATCH_FMT4_OP | OP_MASK_EQ)
 +#define OP_MATCH_QBNE	(OP_MATCH_FMT4_OP | OP_MASK_GT | OP_MASK_LT)
-+#define OP_MATCH_QBA	(OP_MATCH_FMT4_OP | OP_MASK_GT | OP_MASK_LT | OP_MASK_EQ)
++#define OP_MATCH_QBA	(OP_MATCH_FMT4_OP | OP_MASK_GT | OP_MASK_LT \
++			 | OP_MASK_EQ)
 +
 +#define OP_MATCH_QBBS	(OP_MATCH_FMT5_OP | OP_MASK_BS)
 +#define OP_MATCH_QBBC	(OP_MATCH_FMT5_OP | OP_MASK_BC)
@@ -391,11 +388,11 @@ index 0000000..6707513
 +#define OP_MATCH_LBCO	(OP_MATCH_FMT6CD_OP | OP_MASK_LOADSTORE)
 +#define OP_MATCH_SBCO	(OP_MATCH_FMT6CD_OP)
 +
-+/* Some special extractions. */
++/* Some special extractions.  */
 +#define OP_MASK_BROFF		  (OP_MASK_BROFF98 | OP_MASK_BROFF70)
 +
 +#define GET_BROFF_URAW(i)	  \
-+  ( (GET_INSN_FIELD (BROFF98, i) << 8) | (GET_INSN_FIELD (BROFF70, i) << 0) )
++  ((GET_INSN_FIELD (BROFF98, i) << 8) | (GET_INSN_FIELD (BROFF70, i) << 0))
 +
 +#define GET_BROFF_SIGNED(i)	  \
 +  ((long)(GET_BROFF_URAW (i) - (!!(GET_BROFF_URAW (i) & (1 << 9)) << 10)))
@@ -418,7 +415,7 @@ index 0000000..6707513
 +      SET_INSN_FIELD (BURSTLEN0, (i), (v) >> 0);  \
 +  } while (0)
 +
-+/* Miscellaneous helpers */
++/* Miscellaneous helpers.  */
 +#define OP_MASK_XFR_OP		(OP_MASK_FMT2_OP | OP_MASK_SUBOP \
 +				 | OP_MASK_SUBOP_XFR | OP_MASK_XFR_S)
 +
@@ -478,7 +475,7 @@ index 44e5c04..932ef07 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rl78-dis.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rx-decode.Plo@am__quote@
 diff --git a/opcodes/configure.ac b/opcodes/configure.ac
-index c7f4783..9ecbece 100644
+index 3475d49..2d33309 100644
 --- a/opcodes/configure.ac
 +++ b/opcodes/configure.ac
 @@ -307,6 +307,7 @@ if test x${all_targets} = xfalse ; then
@@ -488,9 +485,9 @@ index c7f4783..9ecbece 100644
 +	bfd_pru_arch)		ta="$ta pru-dis.lo pru-opc.lo" ;;
  	bfd_pyramid_arch)	;;
  	bfd_romp_arch)		;;
- 	bfd_rs6000_arch)	ta="$ta ppc-dis.lo ppc-opc.lo" ;;
+ 	bfd_riscv_arch)         ta="$ta riscv-dis.lo riscv-opc.lo" ;;
 diff --git a/opcodes/disassemble.c b/opcodes/disassemble.c
-index 45ae34e..c7e8d5c 100644
+index e1fb65c..aeed703 100644
 --- a/opcodes/disassemble.c
 +++ b/opcodes/disassemble.c
 @@ -73,6 +73,7 @@
@@ -501,7 +498,7 @@ index 45ae34e..c7e8d5c 100644
  #define ARCH_rs6000
  #define ARCH_rl78
  #define ARCH_rx
-@@ -375,6 +376,11 @@ disassembler (bfd *abfd)
+@@ -375,10 +376,14 @@ disassembler (bfd *abfd)
  	disassemble = print_insn_little_powerpc;
        break;
  #endif
@@ -510,18 +507,22 @@ index 45ae34e..c7e8d5c 100644
 +      disassemble = print_insn_pru;
 +      break;
 +#endif
+ #ifdef ARCH_riscv
+     case bfd_arch_riscv:
+       disassemble = print_insn_riscv;
+-      break;
+ #endif
  #ifdef ARCH_rs6000
      case bfd_arch_rs6000:
-       if (bfd_get_mach (abfd) == bfd_mach_ppc_620)
 diff --git a/opcodes/pru-dis.c b/opcodes/pru-dis.c
 new file mode 100644
-index 0000000..f4fd984
+index 0000000..3de642a
 --- /dev/null
 +++ b/opcodes/pru-dis.c
 @@ -0,0 +1,284 @@
 +/* TI PRU disassemble routines
-+   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
++   Copyright (C) 2014-2016 Free Software Foundation, Inc.
++   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
 +   This file is part of the GNU opcodes library.
 +
@@ -549,7 +550,7 @@ index 0000000..f4fd984
 +
 +/* No symbol table is available when this code runs out in an embedded
 +   system as when it is used for disassembler support in a monitor.  */
-+#if !defined(EMBEDDED_ENV)
++#if !defined (EMBEDDED_ENV)
 +#define SYMTAB_AVAILABLE 1
 +#include "elf-bfd.h"
 +#include "elf/pru.h"
@@ -581,7 +582,7 @@ index 0000000..f4fd984
 +  return pseudo_op ? pseudo_op : op;
 +}
 +
-+/* There are 32 regular registers, each with 8 possible subfield selectors. */
++/* There are 32 regular registers, each with 8 possible subfield selectors.  */
 +#define NUMREGNAMES (32 * 8)
 +
 +static void
@@ -618,7 +619,7 @@ index 0000000..f4fd984
 +      break;
 +    case 'D':
 +      /* The first 4 values for RDB and RSEL are the same, so we
-+         can reuse some code */
++         can reuse some code.  */
 +      pru_print_insn_arg_reg (GET_INSN_FIELD (RD, opcode),
 +			      GET_INSN_FIELD (RDB, opcode),
 +			      info);
@@ -671,7 +672,7 @@ index 0000000..f4fd984
 +	  /* For the sake of pretty-printing, dump text addresses with
 +	     their "virtual" offset that we use for distinguishing
 +	     PMEM vs DMEM. This is needed for printing the correct text
-+	     labels. */
++	     labels.  */
 +	  bfd_vma text_offset = address & ~0x3fffff;
 +	  i = GET_INSN_FIELD (IMM16, opcode) * 4;
 +	  (*info->print_address_func) (i + text_offset, info);
@@ -782,7 +783,7 @@ index 0000000..f4fd984
 +}
 +
 +
-+/* print_insn_pru is the main disassemble function for PRU. */
++/* print_insn_pru is the main disassemble function for PRU.  */
 +int
 +print_insn_pru (bfd_vma address, disassemble_info *info)
 +{
@@ -805,13 +806,13 @@ index 0000000..f4fd984
 +}
 diff --git a/opcodes/pru-opc.c b/opcodes/pru-opc.c
 new file mode 100644
-index 0000000..7b2d57d
+index 0000000..c0cb85e
 --- /dev/null
 +++ b/opcodes/pru-opc.c
-@@ -0,0 +1,230 @@
+@@ -0,0 +1,232 @@
 +/* TI PRU opcode list.
-+   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
++   Copyright (C) 2014-2016 Free Software Foundation, Inc.
++   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
 +   This file is part of the GNU opcodes library.
 +
@@ -830,13 +831,14 @@ index 0000000..7b2d57d
 +   Free Software Foundation, 51 Franklin Street - Fifth Floor, Boston,
 +   MA 02110-1301, USA.  */
 +
-+/* Source: http://processors.wiki.ti.com/index.php/Programmable_Realtime_Unit */
++/* Source:
++   http://processors.wiki.ti.com/index.php/Programmable_Realtime_Unit  */
 +
 +#include "sysdep.h"
 +#include <stdio.h>
 +#include "opcode/pru.h"
 +
-+/* Register string table */
++/* Register string table.  */
 +
 +#define DECLARE_REG(name, index)		\
 +  { #name ".b0", (index), RSEL_7_0 },		\
@@ -852,9 +854,9 @@ index 0000000..7b2d57d
 +  /* Standard register names.  */
 +  DECLARE_REG (r0, 0),
 +  DECLARE_REG (r1, 1),
-+  DECLARE_REG (sp, 2),		/* stack pointer */
-+  DECLARE_REG (ra, 3),		/* return address */
-+  DECLARE_REG (fp, 4),		/* frame pointer */
++  DECLARE_REG (sp, 2),		/* Stack pointer.  */
++  DECLARE_REG (ra, 3),		/* Return address.  */
++  DECLARE_REG (fp, 4),		/* Frame pointer.  */
 +  DECLARE_REG (r5, 5),
 +  DECLARE_REG (r6, 6),
 +  DECLARE_REG (r7, 7),
@@ -902,24 +904,25 @@ index 0000000..7b2d57d
 +  /* { name, args,
 +       match, mask, pinfo, overflow_msg } */
 +#define DECLARE_FORMAT1_OPCODE(str, subop) \
-+  { #str, prui_ ## str, "d,s,b",\
-+   OP_MATCH_ ## subop, OP_MASK_FMT1_OP | OP_MASK_SUBOP, 0, unsigned_immed8_overflow}
++  { #str, prui_ ## str, "d,s,b", \
++    OP_MATCH_ ## subop, OP_MASK_FMT1_OP | OP_MASK_SUBOP, 0, \
++    unsigned_immed8_overflow }
 +
-+  DECLARE_FORMAT1_OPCODE(add, ADD),
-+  DECLARE_FORMAT1_OPCODE(adc, ADC),
-+  DECLARE_FORMAT1_OPCODE(sub, SUB),
-+  DECLARE_FORMAT1_OPCODE(suc, SUC),
-+  DECLARE_FORMAT1_OPCODE(lsl, LSL),
-+  DECLARE_FORMAT1_OPCODE(lsr, LSR),
-+  DECLARE_FORMAT1_OPCODE(rsb, RSB),
-+  DECLARE_FORMAT1_OPCODE(rsc, RSC),
-+  DECLARE_FORMAT1_OPCODE(and, AND),
-+  DECLARE_FORMAT1_OPCODE(or, OR),
-+  DECLARE_FORMAT1_OPCODE(xor, XOR),
-+  DECLARE_FORMAT1_OPCODE(min, MIN),
-+  DECLARE_FORMAT1_OPCODE(max, MAX),
-+  DECLARE_FORMAT1_OPCODE(clr, CLR),
-+  DECLARE_FORMAT1_OPCODE(set, SET),
++  DECLARE_FORMAT1_OPCODE (add, ADD),
++  DECLARE_FORMAT1_OPCODE (adc, ADC),
++  DECLARE_FORMAT1_OPCODE (sub, SUB),
++  DECLARE_FORMAT1_OPCODE (suc, SUC),
++  DECLARE_FORMAT1_OPCODE (lsl, LSL),
++  DECLARE_FORMAT1_OPCODE (lsr, LSR),
++  DECLARE_FORMAT1_OPCODE (rsb, RSB),
++  DECLARE_FORMAT1_OPCODE (rsc, RSC),
++  DECLARE_FORMAT1_OPCODE (and, AND),
++  DECLARE_FORMAT1_OPCODE (or, OR),
++  DECLARE_FORMAT1_OPCODE (xor, XOR),
++  DECLARE_FORMAT1_OPCODE (min, MIN),
++  DECLARE_FORMAT1_OPCODE (max, MAX),
++  DECLARE_FORMAT1_OPCODE (clr, CLR),
++  DECLARE_FORMAT1_OPCODE (set, SET),
 +
 +  { "not", prui_not, "d,s",
 +   OP_MATCH_NOT | OP_MASK_IO,
@@ -988,7 +991,7 @@ index 0000000..7b2d57d
 +   unsigned_immed8_overflow},
 +
 +  /* Fill in the default values for the real-instruction arguments.
-+     The assembler will not do it! */
++     The assembler will not do it!  */
 +  { "nop", prui_or, "",
 +   OP_MATCH_OR
 +     | (RSEL_31_0 << OP_SH_RS2SEL) | (0 << OP_SH_RS2)
@@ -1040,5 +1043,5 @@ index 0000000..7b2d57d
 +
 +#undef PRU_NUM_OPCODES
 -- 
-2.9.3
+2.10.1
 

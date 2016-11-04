@@ -1,13 +1,13 @@
-From 0a0850675dd5d7968ba2c4ccf18a1a6ff5bb76f8 Mon Sep 17 00:00:00 2001
-From: Dimitar Dimitrov <dinuxbg@gmail.com>
+From c0141fdefdc3ec40929698b51073d5a7d6905b87 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 23 Oct 2016 18:21:47 +0300
-Subject: [PATCH 22/23] ld: testsuite: Disable endsym test case
+Subject: [PATCH 19/23] ld: testsuite: Disable endsym test case
 
 PRU does not export __end symbol because it is ambiguous for it.
 Users are expected to use instead the section markers __text_end,
 __data_end, __bss_end or __noinit_end.
 
-Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  ld/testsuite/ld-elf/endsym.d | 1 +
  1 file changed, 1 insertion(+)
@@ -25,5 +25,5 @@ index eefdd43..3472154 100644
  #...
  .* end
 -- 
-2.9.3
+2.10.1
 

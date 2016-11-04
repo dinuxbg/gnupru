@@ -1,21 +1,22 @@
-From e8d48ded1e7965d3395e536e13542e3c30342316 Mon Sep 17 00:00:00 2001
-From: Dimitar Dimitrov <dinuxbg@gmail.com>
+From b8324a1de68baa8e42519023ff9da147ff6360b0 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 23:28:41 +0300
-Subject: [PATCH 05/23] PRU GAS Port
+Subject: [PATCH 06/23] PRU GAS Port
 
 Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---
  gas/Makefile.am                       |    2 +
  gas/Makefile.in                       |   17 +
+ gas/NEWS                              |    2 +
  gas/config/obj-elf.c                  |    4 +
- gas/config/tc-pru.c                   | 1850 +++++++++++++++++++++++++++++++++
+ gas/config/tc-pru.c                   | 1840 +++++++++++++++++++++++++++++++++
  gas/config/tc-pru.h                   |  157 +++
  gas/configure.tgt                     |    2 +
  gas/doc/Makefile.am                   |    1 +
  gas/doc/Makefile.in                   |    1 +
  gas/doc/all.texi                      |    1 +
  gas/doc/as.texinfo                    |   30 +
- gas/doc/c-pru.texi                    |  146 +++
+ gas/doc/c-pru.texi                    |  147 +++
  gas/testsuite/gas/pru/alu.d           |   32 +
  gas/testsuite/gas/pru/alu.s           |   30 +
  gas/testsuite/gas/pru/branch.d        |   63 ++
@@ -37,7 +38,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  gas/testsuite/gas/pru/warn_reglabel.s |    6 +
  gas/testsuite/gas/pru/xfr.d           |   44 +
  gas/testsuite/gas/pru/xfr.s           |   52 +
- 32 files changed, 2694 insertions(+)
+ 33 files changed, 2687 insertions(+)
  create mode 100644 gas/config/tc-pru.c
  create mode 100644 gas/config/tc-pru.h
  create mode 100644 gas/doc/c-pru.texi
@@ -64,7 +65,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 gas/testsuite/gas/pru/xfr.s
 
 diff --git a/gas/Makefile.am b/gas/Makefile.am
-index 6fa32ea..c26322a 100644
+index cdaf9f5..3fba6f9 100644
 --- a/gas/Makefile.am
 +++ b/gas/Makefile.am
 @@ -177,6 +177,7 @@ TARGET_CPU_CFILES = \
@@ -72,19 +73,19 @@ index 6fa32ea..c26322a 100644
  	config/tc-pj.c \
  	config/tc-ppc.c \
 +	config/tc-pru.c \
+ 	config/tc-riscv.c \
  	config/tc-rl78.c \
  	config/tc-rx.c \
- 	config/tc-s390.c \
-@@ -250,6 +251,7 @@ TARGET_CPU_HFILES = \
+@@ -251,6 +252,7 @@ TARGET_CPU_HFILES = \
  	config/tc-pdp11.h \
  	config/tc-pj.h \
  	config/tc-ppc.h \
 +	config/tc-pru.h \
+ 	config/tc-riscv.h \
  	config/tc-rl78.h \
  	config/tc-rx.h \
- 	config/tc-s390.h \
 diff --git a/gas/Makefile.in b/gas/Makefile.in
-index 5b3c223..2ddb9f2 100644
+index 84f746d..3533695 100644
 --- a/gas/Makefile.in
 +++ b/gas/Makefile.in
 @@ -472,6 +472,7 @@ TARGET_CPU_CFILES = \
@@ -92,26 +93,26 @@ index 5b3c223..2ddb9f2 100644
  	config/tc-pj.c \
  	config/tc-ppc.c \
 +	config/tc-pru.c \
+ 	config/tc-riscv.c \
  	config/tc-rl78.c \
  	config/tc-rx.c \
- 	config/tc-s390.c \
-@@ -545,6 +546,7 @@ TARGET_CPU_HFILES = \
+@@ -546,6 +547,7 @@ TARGET_CPU_HFILES = \
  	config/tc-pdp11.h \
  	config/tc-pj.h \
  	config/tc-ppc.h \
 +	config/tc-pru.h \
+ 	config/tc-riscv.h \
  	config/tc-rl78.h \
  	config/tc-rx.h \
- 	config/tc-s390.h \
-@@ -903,6 +905,7 @@ distclean-compile:
+@@ -905,6 +907,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-pdp11.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-pj.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-ppc.Po@am__quote@
 +@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-pru.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-riscv.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-rl78.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-rx.Po@am__quote@
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-s390.Po@am__quote@
-@@ -1623,6 +1626,20 @@ tc-ppc.obj: config/tc-ppc.c
+@@ -1626,6 +1629,20 @@ tc-ppc.obj: config/tc-ppc.c
  @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
  @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tc-ppc.obj `if test -f 'config/tc-ppc.c'; then $(CYGPATH_W) 'config/tc-ppc.c'; else $(CYGPATH_W) '$(srcdir)/config/tc-ppc.c'; fi`
  
@@ -129,9 +130,21 @@ index 5b3c223..2ddb9f2 100644
 +@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 +@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tc-pru.obj `if test -f 'config/tc-pru.c'; then $(CYGPATH_W) 'config/tc-pru.c'; else $(CYGPATH_W) '$(srcdir)/config/tc-pru.c'; fi`
 +
- tc-rl78.o: config/tc-rl78.c
- @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tc-rl78.o -MD -MP -MF $(DEPDIR)/tc-rl78.Tpo -c -o tc-rl78.o `test -f 'config/tc-rl78.c' || echo '$(srcdir)/'`config/tc-rl78.c
- @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tc-rl78.Tpo $(DEPDIR)/tc-rl78.Po
+ tc-riscv.o: config/tc-riscv.c
+ @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tc-riscv.o -MD -MP -MF $(DEPDIR)/tc-riscv.Tpo -c -o tc-riscv.o `test -f 'config/tc-riscv.c' || echo '$(srcdir)/'`config/tc-riscv.c
+ @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tc-riscv.Tpo $(DEPDIR)/tc-riscv.Po
+diff --git a/gas/NEWS b/gas/NEWS
+index 25ad9ab..9c8c6c4 100644
+--- a/gas/NEWS
++++ b/gas/NEWS
+@@ -1,5 +1,7 @@
+ -*- text -*-
+ 
++* Add support for the Texas Instruments PRU processor.
++
+ * Add support for the RISC-V architecture.
+ 
+ Changes in 2.27:
 diff --git a/gas/config/obj-elf.c b/gas/config/obj-elf.c
 index 8d80c77..a1b882e 100644
 --- a/gas/config/obj-elf.c
@@ -149,13 +162,13 @@ index 8d80c77..a1b882e 100644
  static void obj_elf_type (int);
 diff --git a/gas/config/tc-pru.c b/gas/config/tc-pru.c
 new file mode 100644
-index 0000000..7af3ea6
+index 0000000..4ae8135
 --- /dev/null
 +++ b/gas/config/tc-pru.c
-@@ -0,0 +1,1850 @@
+@@ -0,0 +1,1840 @@
 +/* TI PRU assembler.
-+   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
++   Copyright (C) 2014-2016 Free Software Foundation, Inc.
++   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +   Based on tc-nios2.c
 +
 +   This file is part of GAS, the GNU Assembler.
@@ -209,9 +222,9 @@ index 0000000..7af3ea6
 +/* Chars that can be used to separate mant from exp in floating point nums.  */
 +const char EXP_CHARS[] = "eE";
 +
-+/* Chars that mean this number is a floating point constant.  */
-+/* As in 0f12.456 */
-+/* or	 0d1.2345e12 */
++/* Chars that mean this number is a floating point constant.
++   As in 0f12.456
++   or	 0d1.2345e12  */
 +const char FLT_CHARS[] = "rRsSfFdDxXpP";
 +
 +/* Machine-dependent command-line options.  */
@@ -244,7 +257,7 @@ index 0000000..7af3ea6
 +typedef struct pru_insn_reloc
 +{
 +  /* Any expression in the instruction is parsed into this field,
-+     which is passed to fix_new_exp() to generate a fixup.  */
++     which is passed to fix_new_exp () to generate a fixup.  */
 +  expressionS reloc_expression;
 +
 +  /* The type of the relocation to be applied.  */
@@ -299,7 +312,7 @@ index 0000000..7af3ea6
 +/** Utility routines.  */
 +/* Function md_chars_to_number takes the sequence of
 +   bytes in buf and returns the corresponding value
-+   in an int. n must be 1, 2 or 4.  */
++   in an int.  n must be 1, 2 or 4.  */
 +static valueT
 +md_chars_to_number (char *buf, int n)
 +{
@@ -350,7 +363,7 @@ index 0000000..7af3ea6
 +}
 +
 +/* nop fill pattern for text section.  */
-+static char const nop[4] = { 0x00, 0x00, 0x00, 0xA0 };
++static char const nop[4] = { 0xe0, 0xe0, 0xe0, 0x12 };
 +
 +/* Handles all machine-dependent alignment needs.  */
 +static void
@@ -367,7 +380,7 @@ index 0000000..7af3ea6
 +  if (align > max_alignment)
 +    {
 +      align = max_alignment;
-+      as_bad (_("Alignment too large: %d. assumed"), align);
++      as_bad (_("Alignment too large: %d assumed"), align);
 +    }
 +  else if (align < 0)
 +    {
@@ -482,7 +495,7 @@ index 0000000..7af3ea6
 +  if (align > max_alignment)
 +    {
 +      align = max_alignment;
-+      as_bad (_("Alignment too large: %d. assumed"), align);
++      as_bad (_("Alignment too large: %d assumed"), align);
 +    }
 +  else if (align < 0)
 +    {
@@ -586,7 +599,6 @@ index 0000000..7af3ea6
 +};
 +
 +
-+
 +int
 +md_estimate_size_before_relax (fragS *fragp ATTRIBUTE_UNUSED,
 +			       asection *seg ATTRIBUTE_UNUSED)
@@ -607,8 +619,8 @@ index 0000000..7af3ea6
 +relaxable_section (asection *sec)
 +{
 +  return ((sec->flags & SEC_DEBUGGING) == 0
-+          && (sec->flags & SEC_CODE) != 0
-+          && (sec->flags & SEC_ALLOC) != 0);
++	  && (sec->flags & SEC_CODE) != 0
++	  && (sec->flags & SEC_ALLOC) != 0);
 +}
 +
 +/* Does whatever the xtensa port does.  */
@@ -629,15 +641,15 @@ index 0000000..7af3ea6
 +     fix is not valid.  If the segment is not "relaxable", then the fix
 +     should have been handled earlier.  */
 +  add_symbol_segment = S_GET_SEGMENT (fix->fx_addsy);
-+  if (! SEG_NORMAL (add_symbol_segment) ||
-+      ! relaxable_section (add_symbol_segment))
++  if (! SEG_NORMAL (add_symbol_segment)
++      || ! relaxable_section (add_symbol_segment))
 +    return 0;
 +
 +  sub_symbol_segment = S_GET_SEGMENT (fix->fx_subsy);
 +  return (sub_symbol_segment == add_symbol_segment);
 +}
 +
-+/* TC_FORCE_RELOCATION hook */
++/* TC_FORCE_RELOCATION hook.  */
 +
 +/* If linkrelax is turned on, and the symbol to relocate
 +   against is in a relaxable segment, don't compute the value -
@@ -656,7 +668,7 @@ index 0000000..7af3ea6
 +
 +/** Fixups and overflow checking.  */
 +
-+/* Check a fixup for overflow. */
++/* Check a fixup for overflow.  */
 +static bfd_boolean
 +pru_check_overflow (valueT fixup, reloc_howto_type *howto)
 +{
@@ -795,7 +807,7 @@ index 0000000..7af3ea6
 +		  || fixP->fx_r_type == BFD_RELOC_PRU_32_PMEM
 +		  || fixP->fx_r_type == BFD_RELOC_PRU_16_PMEM
 +		  /* Add other relocs here as we generate them.  */
-+		  ));
++	      ));
 +
 +  if (fixP->fx_r_type == BFD_RELOC_64)
 +    {
@@ -813,11 +825,11 @@ index 0000000..7af3ea6
 +      return;
 +    }
 +
-+  /* gas_assert (had_errors() || !fixP->fx_subsy); */
++  /* gas_assert (had_errors () || !fixP->fx_subsy); */
 +
 +  /* In general, fix instructions with immediate
-+     constants. But leave hi_rlz for the linker,
-+     which is prepared to remove insns. */
++     constants.  But leave hi_rlz for the linker,
++     which is prepared to remove insns.  */
 +  if (fixP->fx_addsy == (symbolS *) NULL
 +      && fixP->fx_r_type != BFD_RELOC_PRU_HI16_RLZ)
 +    fixP->fx_done = 1;
@@ -829,9 +841,10 @@ index 0000000..7af3ea6
 +      if (s == seg || s == absolute_section)
 +	{
 +	  /* Blindly copied from AVR, but I don't understand why
-+	     this is needed at all. Fail hard to catch
-+	     when this curious code snippet is utilized. */
-+          as_bad_where (fixP->fx_file, fixP->fx_line, _("unexpected PC relative expression"));
++	     this is needed in the first place.  Fail hard to catch
++	     when this curious code snippet is utilized.  */
++	  as_bad_where (fixP->fx_file, fixP->fx_line,
++			_("unexpected PC relative expression"));
 +	  value += S_GET_VALUE (fixP->fx_addsy);
 +	  fixP->fx_done = 1;
 +	}
@@ -839,49 +852,50 @@ index 0000000..7af3ea6
 +  else if (linkrelax && fixP->fx_subsy)
 +    {
 +      /* For a subtraction relocation expression, generate one
-+         of the DIFF relocs, with the value being the difference.
-+         Note that a sym1 - sym2 expression is adjusted into a
-+         section_start_sym + sym4_offset_from_section_start - sym1
-+         expression. fixP->fx_addsy holds the section start symbol,
-+         fixP->fx_offset holds sym2's offset, and fixP->fx_subsy
-+         holds sym1. Calculate the current difference and write value,
-+         but leave fx_offset as is - during relaxation,
-+         fx_offset - value gives sym1's value.  */
++	 of the DIFF relocs, with the value being the difference.
++	 Note that a sym1 - sym2 expression is adjusted into a
++	 section_start_sym + sym4_offset_from_section_start - sym1
++	 expression.  fixP->fx_addsy holds the section start symbol,
++	 fixP->fx_offset holds sym2's offset, and fixP->fx_subsy
++	 holds sym1.  Calculate the current difference and write value,
++	 but leave fx_offset as is - during relaxation,
++	 fx_offset - value gives sym1's value.  */
 +
-+      offsetT diffval;	/* valueT is unsigned, so use offsetT */
++      offsetT diffval;	/* valueT is unsigned, so use offsetT.  */
 +
-+      diffval = S_GET_VALUE (fixP->fx_addsy) +
-+		fixP->fx_offset - S_GET_VALUE (fixP->fx_subsy);
++      diffval = S_GET_VALUE (fixP->fx_addsy)
++		+ fixP->fx_offset - S_GET_VALUE (fixP->fx_subsy);
 +
-+       switch (fixP->fx_r_type)
-+         {
-+           case BFD_RELOC_8:
-+             fixP->fx_r_type = BFD_RELOC_PRU_DIFF8;
-+             break;
-+           case BFD_RELOC_16:
-+             fixP->fx_r_type = BFD_RELOC_PRU_DIFF16;
-+             break;
-+           case BFD_RELOC_32:
-+             fixP->fx_r_type = BFD_RELOC_PRU_DIFF32;
-+             break;
-+	   case BFD_RELOC_PRU_16_PMEM:
-+	     fixP->fx_r_type = BFD_RELOC_PRU_DIFF16_PMEM;
-+	     if (diffval % 4)
-+	       as_bad_where (fixP->fx_file, fixP->fx_line,
-+			     _("residual low bits in pmem diff relocation"));
-+	     diffval /= 4;
-+	     break;
-+	   case BFD_RELOC_PRU_32_PMEM:
-+	     fixP->fx_r_type = BFD_RELOC_PRU_DIFF32_PMEM;
-+	     if (diffval % 4)
-+	       as_bad_where (fixP->fx_file, fixP->fx_line,
-+			     _("residual low bits in pmem diff relocation"));
-+	     diffval /= 4;
-+	     break;
-+           default:
-+             as_bad_where (fixP->fx_file, fixP->fx_line, _("expression too complex"));
-+             break;
-+         }
++      switch (fixP->fx_r_type)
++	{
++	case BFD_RELOC_8:
++	  fixP->fx_r_type = BFD_RELOC_PRU_DIFF8;
++	  break;
++	case BFD_RELOC_16:
++	  fixP->fx_r_type = BFD_RELOC_PRU_DIFF16;
++	  break;
++	case BFD_RELOC_32:
++	  fixP->fx_r_type = BFD_RELOC_PRU_DIFF32;
++	  break;
++	case BFD_RELOC_PRU_16_PMEM:
++	  fixP->fx_r_type = BFD_RELOC_PRU_DIFF16_PMEM;
++	  if (diffval % 4)
++	    as_bad_where (fixP->fx_file, fixP->fx_line,
++			  _("residual low bits in pmem diff relocation"));
++	  diffval /= 4;
++	  break;
++	case BFD_RELOC_PRU_32_PMEM:
++	  fixP->fx_r_type = BFD_RELOC_PRU_DIFF32_PMEM;
++	  if (diffval % 4)
++	    as_bad_where (fixP->fx_file, fixP->fx_line,
++			  _("residual low bits in pmem diff relocation"));
++	  diffval /= 4;
++	  break;
++	default:
++	  as_bad_where (fixP->fx_file, fixP->fx_line,
++			_("expression too complex"));
++	  break;
++	}
 +
 +      value = *valP = diffval;
 +
@@ -956,8 +970,8 @@ index 0000000..7af3ea6
 +	      }
 +	    }
 +
-+	  /* Fix up the instruction. Non-contiguous bitfields need
-+	     special handling. */
++	  /* Fix up the instruction.  Non-contiguous bitfields need
++	     special handling.  */
 +	  if (fixP->fx_r_type == BFD_RELOC_PRU_S10_PCREL)
 +	    SET_BROFF_URAW (insn, fixup);
 +	  else
@@ -981,7 +995,7 @@ index 0000000..7af3ea6
 +
 +
 +
-+/** Instruction parsing support. */
++/** Instruction parsing support.  */
 +
 +/* Special relocation directive strings.  */
 +
@@ -993,7 +1007,7 @@ index 0000000..7af3ea6
 +};
 +
 +/* This table is sorted so that prefix strings are listed after the longer
-+   strings that include them. */
++   strings that include them.  */
 +
 +struct pru_special_relocS pru_special_reloc[] = {
 +  {"%hi_rlz", BFD_RELOC_PRU_HI16_RLZ,	  BFD_RELOC_PRU_HI16},
@@ -1003,7 +1017,7 @@ index 0000000..7af3ea6
 +};
 +
 +#define PRU_NUM_SPECIAL_RELOCS \
-+	(sizeof(pru_special_reloc)/sizeof(pru_special_reloc[0]))
++	(sizeof (pru_special_reloc) / sizeof (pru_special_reloc[0]))
 +const int pru_num_special_relocs = PRU_NUM_SPECIAL_RELOCS;
 +
 +/* Creates a new pru_insn_relocS and returns a pointer to it.  */
@@ -1025,7 +1039,7 @@ index 0000000..7af3ea6
 +  return retval;
 +}
 +
-+/* Frees up memory previously allocated by pru_insn_reloc_new().  */
++/* Frees up memory previously allocated by pru_insn_reloc_new ().  */
 +static void
 +pru_insn_reloc_destroy (pru_insn_relocS *reloc)
 +{
@@ -1062,13 +1076,13 @@ index 0000000..7af3ea6
 +
 +  /* Check for relocation operators.
 +     Change the relocation type and advance the ptr to the start of
-+     the expression proper. */
++     the expression proper.  */
 +  for (i = 0; i < pru_num_special_relocs; i++)
 +    if (strstr (exprstr, pru_special_reloc[i].string) != NULL)
 +      {
-+	reloc_type = linkrelax ?
-+		        pru_special_reloc[i].reloc_type
-+		      : pru_special_reloc[i].reloc_type_norelax;
++	reloc_type = linkrelax
++			? pru_special_reloc[i].reloc_type
++			: pru_special_reloc[i].reloc_type_norelax;
 +	exprstr += strlen (pru_special_reloc[i].string) + 1;
 +
 +	break;
@@ -1106,7 +1120,7 @@ index 0000000..7af3ea6
 +  return (unsigned long) value;
 +}
 +
-+/* Try to parse a non-relocatable expression. */
++/* Try to parse a non-relocatable expression.  */
 +static unsigned long
 +pru_assemble_noreloc_expression (const char *exprstr)
 +{
@@ -1136,10 +1150,10 @@ index 0000000..7af3ea6
 +
 +/* Argument assemble functions.
 +   All take an instruction argument string, and a pointer
-+   to an instruction opcode. Upon return the insn_opcode
++   to an instruction opcode.  Upon return the insn_opcode
 +   has the relevant fields filled in to represent the arg
 +   string.  The return value is NULL if successful, or
-+   an error message if an error was detected. */
++   an error message if an error was detected.  */
 +
 +static void
 +pru_assemble_arg_d (pru_insn_infoS *insn_info, const char *argstr)
@@ -1168,7 +1182,7 @@ index 0000000..7af3ea6
 +
 +      switch (dst->regsel)
 +	{
-+	case RSEL_31_0: rxb = 0; break;	/* whole register defaults to .b0 */
++	case RSEL_31_0: rxb = 0; break;	/* whole register defaults to .b0  */
 +	case RSEL_7_0: rxb = 0; break;
 +	case RSEL_15_8: rxb = 1; break;
 +	case RSEL_23_16: rxb = 2; break;
@@ -1217,10 +1231,9 @@ index 0000000..7af3ea6
 +  struct pru_reg *src2 = pru_reg_lookup (argstr);
 +  if (src2 == NULL)
 +    {
-+      unsigned long imm8 =
-+	pru_assemble_expression (argstr, insn_info,
-+				 insn_info->insn_reloc,
-+				 BFD_RELOC_PRU_U8, 0);
++      unsigned long imm8 = pru_assemble_expression (argstr, insn_info,
++						    insn_info->insn_reloc,
++						    BFD_RELOC_PRU_U8, 0);
 +      SET_INSN_FIELD (IMM8, insn_info->insn_code, imm8);
 +      SET_INSN_FIELD (IO, insn_info->insn_code, 1);
 +    }
@@ -1239,21 +1252,13 @@ index 0000000..7af3ea6
 +  struct pru_reg *src2 = pru_reg_lookup (argstr);
 +  if (src2 == NULL)
 +    {
-+#if 0
-+      /* TODO - can we get away without introducing yet another
-+	 relocation? Perhaps decrement addsy?  */
-+      unsigned long imm8 =
-+	pru_assemble_expression (argstr, insn_info,
-+				 insn_info->insn_reloc,
-+				 BFD_RELOC_8, 0);
-+#endif
 +      unsigned long imm8;
 +      imm8 = pru_assemble_noreloc_expression (argstr);
 +      if (!imm8 || imm8 > 0xff)
 +	as_bad (_("loop count constant %ld is out of range [1..%d]"),
 +		imm8, 0xff);
-+      /* note: HW expects the immediate loop count field
-+         to be one less than the actual loop count.  */
++      /* Note: HW expects the immediate loop count field
++	 to be one less than the actual loop count.  */
 +      SET_INSN_FIELD (IMM8, insn_info->insn_code, imm8 - 1);
 +      SET_INSN_FIELD (IO, insn_info->insn_code, 1);
 +    }
@@ -1273,10 +1278,10 @@ index 0000000..7af3ea6
 +
 +  if (src2 == NULL)
 +    {
-+      unsigned long imm16 =
-+	pru_assemble_expression (argstr, insn_info,
-+				 insn_info->insn_reloc,
-+				 BFD_RELOC_PRU_U16_PMEMIMM, 0);
++      unsigned long imm16 = pru_assemble_expression (argstr, insn_info,
++						     insn_info->insn_reloc,
++						     BFD_RELOC_PRU_U16_PMEMIMM,
++						     0);
 +      SET_INSN_FIELD (IMM16, insn_info->insn_code, imm16);
 +      SET_INSN_FIELD (IO, insn_info->insn_code, 1);
 +    }
@@ -1294,7 +1299,7 @@ index 0000000..7af3ea6
 +  unsigned long imm16 = pru_assemble_expression (argstr, insn_info,
 +						 insn_info->insn_reloc,
 +						 BFD_RELOC_PRU_U16, 0);
-+  /* QUIRK: LDI must clear IO bit high, even though it has immediate arg. */
++  /* QUIRK: LDI must clear IO bit high, even though it has immediate arg.  */
 +  SET_INSN_FIELD (IO, insn_info->insn_code, 0);
 +  SET_INSN_FIELD (IMM16, insn_info->insn_code, imm16);
 +}
@@ -1302,20 +1307,18 @@ index 0000000..7af3ea6
 +static void
 +pru_assemble_arg_o (pru_insn_infoS *insn_info, const char *argstr)
 +{
-+  unsigned long imm10 =
-+    pru_assemble_expression (argstr, insn_info,
-+			     insn_info->insn_reloc,
-+			     BFD_RELOC_PRU_S10_PCREL, 1);
++  unsigned long imm10 = pru_assemble_expression (argstr, insn_info,
++						 insn_info->insn_reloc,
++						 BFD_RELOC_PRU_S10_PCREL, 1);
 +  SET_BROFF_URAW (insn_info->insn_code, imm10);
 +}
 +
 +static void
 +pru_assemble_arg_O (pru_insn_infoS *insn_info, const char *argstr)
 +{
-+  unsigned long imm8 =
-+    pru_assemble_expression (argstr, insn_info,
-+			     insn_info->insn_reloc,
-+			     BFD_RELOC_PRU_U8_PCREL, 1);
++  unsigned long imm8 = pru_assemble_expression (argstr, insn_info,
++						insn_info->insn_reloc,
++						BFD_RELOC_PRU_U8_PCREL, 1);
 +  SET_INSN_FIELD (LOOP_JMPOFFS, insn_info->insn_code, imm8);
 +}
 +
@@ -1535,7 +1538,7 @@ index 0000000..7af3ea6
 +
 +  parsed_args[i] = NULL;
 +
-+  /* There are no instructions with optional arguments; complain. */
++  /* There are no instructions with optional arguments; complain.  */
 +  if (*parsestr != '\0')
 +    as_bad (_("missing argument"));
 +}
@@ -1567,7 +1570,7 @@ index 0000000..7af3ea6
 +/** External interfaces.  */
 +
 +/* The following functions are called by machine-independent parts of
-+   the assembler. */
++   the assembler.  */
 +int
 +md_parse_option (int c, const char *arg ATTRIBUTE_UNUSED)
 +{
@@ -1597,21 +1600,21 @@ index 0000000..7af3ea6
 +  return "elf32-pru";
 +}
 +
-+/* Machine-dependent usage message. */
++/* Machine-dependent usage message.  */
 +void
 +md_show_usage (FILE *stream)
 +{
 +  fprintf (stream,
-+       ("PRU options:\n"
-+	"  -mlink-relax     generate relocations for linker relaxation (default)\n"
-+	"  -mno-link-relax  don't generate relocations for linker relaxation.\n"
-+      ));
++    _("PRU options:\n"
++      "  -mlink-relax     generate relocations for linker relaxation (default).\n"
++      "  -mno-link-relax  don't generate relocations for linker relaxation.\n"
++    ));
 +
 +}
 +
 +/* This function is called once, at assembler startup time.
-+   It should set up all the tables, etc. that the MD part of the
-+   assembler will need. */
++   It should set up all the tables, etc.  that the MD part of the
++   assembler will need.  */
 +void
 +md_begin (void)
 +{
@@ -1697,14 +1700,14 @@ index 0000000..7af3ea6
 +
 +      if (pru_mode == PRU_MODE_TEST)
 +	{
-+	  /* Add the "expected" instruction parameter used for validation */
-+	  argsfmt = malloc (strlen(argsfmt) + 3);
++	  /* Add the "expected" instruction parameter used for validation.  */
++	  argsfmt = malloc (strlen (argsfmt) + 3);
 +	  sprintf ((char *)argsfmt, "%s,E", insn->insn_pru_opcode->args);
-+        }
++	}
 +      pru_parse_args (insn, argstr, argsfmt,
-+                      (char **) &insn->insn_tokens[1]);
++		      (char **) &insn->insn_tokens[1]);
 +
-+      for (argp = argsfmt; !had_errors() && *argp && *argtk; ++argp)
++      for (argp = argsfmt; !had_errors () && *argp && *argtk; ++argp)
 +	{
 +	  gas_assert (argtk <= &insn->insn_tokens[PRU_MAX_INSN_TOKENS]);
 +
@@ -1766,10 +1769,10 @@ index 0000000..7af3ea6
 +	    }
 +	}
 +
-+      if (*argp && !had_errors())
++      if (*argp && !had_errors ())
 +	as_bad (_("missing argument"));
 +
-+      if (!had_errors())
++      if (!had_errors ())
 +	output_insn (insn);
 +
 +      if (pru_mode == PRU_MODE_TEST)
@@ -1799,12 +1802,11 @@ index 0000000..7af3ea6
 +  if (fixp->fx_addsy == NULL)
 +    return 1;
 +
-+#ifdef OBJ_ELF
 +  /* Prevent all adjustments to global symbols.  */
 +  if (OUTPUT_FLAVOR == bfd_target_elf_flavour
 +      && (S_IS_EXTERNAL (fixp->fx_addsy) || S_IS_WEAK (fixp->fx_addsy)))
 +    return 0;
-+#endif
++
 +  if (fixp->fx_r_type == BFD_RELOC_VTABLE_INHERIT
 +      || fixp->fx_r_type == BFD_RELOC_VTABLE_ENTRY)
 +    return 0;
@@ -1854,7 +1856,8 @@ index 0000000..7af3ea6
 +void
 +md_end (void)
 +{
-+  /* FIXME - not yet implemented */
++  hash_die (pru_opcode_hash);
++  hash_die (pru_reg_hash);
 +}
 +
 +symbolS *
@@ -1890,10 +1893,10 @@ index 0000000..7af3ea6
 +  return s;
 +}
 +
-+/* Parse special CONS expression: pmem (expression). Idea from AVR.
-+ 
++/* Parse special CONS expression: pmem (expression).  Idea from AVR.
++
 +   Used to catch and mark code (program memory) in constant expression
-+   relocations. Return non-zero for program memory. */
++   relocations.  Return non-zero for program memory.  */
 +
 +int
 +pru_parse_cons_expression (expressionS *exp, int nbytes)
@@ -1978,7 +1981,8 @@ index 0000000..7af3ea6
 +void
 +pru_frame_initial_instructions (void)
 +{
-+  cfi_add_CFA_def_cfa (28, 0);
++  const unsigned fp_regno = 4;
++  cfi_add_CFA_def_cfa (fp_regno, 0);
 +}
 +
 +bfd_boolean
@@ -2002,16 +2006,15 @@ index 0000000..7af3ea6
 +     them.  */
 +  return FALSE;
 +}
-+
 diff --git a/gas/config/tc-pru.h b/gas/config/tc-pru.h
 new file mode 100644
-index 0000000..2f67634
+index 0000000..0773948
 --- /dev/null
 +++ b/gas/config/tc-pru.h
 @@ -0,0 +1,157 @@
 +/* Definitions for TI PRU assembler.
-+   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
++   Copyright (C) 2014-2016 Free Software Foundation, Inc.
++   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
 +   This file is part of GAS, the GNU Assembler.
 +
@@ -2030,28 +2033,26 @@ index 0000000..2f67634
 +   Software Foundation, 51 Franklin Street - Fifth Floor, Boston, MA
 +   02110-1301, USA.  */
 +
-+#ifndef TC_PRU
-+#define TC_PRU
++#ifndef __TC_PRU__
++#define __TC_PRU__
 +
 +#define TARGET_BYTES_BIG_ENDIAN 0
 +
 +/* Words are big enough to hold addresses.  */
 +#define WORKING_DOT_WORD	1
 +
-+#ifdef OBJ_ELF
 +extern const char *pru_target_format (void);
 +#define TARGET_FORMAT  pru_target_format ()
 +#define TARGET_ARCH    bfd_arch_pru
-+#endif
 +
 +/* A PRU instruction consists of tokens and separator characters
 +   the tokens are things like the instruction name (add, or jmp etc),
-+   the register indices ($5, $7 etc), and constant expressions. The
++   the register indices ($5, $7 etc), and constant expressions.  The
 +   separator characters are commas, brackets and space.
 +   The instruction name is always separated from other tokens by a space
 +   The maximum number of tokens in an instruction is 6 (the instruction name,
-+   4 arguments, and a 4th string representing the expected instructin opcode
-+   after assembly. The latter is only used when the assemble is running in
++   4 arguments, and a 4th string representing the expected instruction opcode
++   after assembly.  The latter is only used when the assemble is running in
 +   self test mode, otherwise its presence will generate an error.  */
 +#define PRU_MAX_INSN_TOKENS	7
 +
@@ -2066,16 +2067,16 @@ index 0000000..2f67634
 +#define tc_fix_adjustable(fixp) pru_fix_adjustable (fixp)
 +extern int pru_fix_adjustable (struct fix *);
 +
-+#define tc_frob_label(lab)	     pru_frob_label (lab)
++#define tc_frob_label(lab) pru_frob_label (lab)
 +extern void pru_frob_label (symbolS *);
 +
 +extern void md_convert_frag (bfd * headers, segT sec, fragS * fragP);
 +
 +#define DIFF_EXPR_OK
 +
-+/* Nios2 ABI doesn't have 32-bit PCREL relocation, and, as relocations for
-+   CFI information will be in section other than .text, we can't use PC-biased
-+   relocs.  */
++/* FIXME This seems appropriate, given that we intentionally prevent
++   PRU's .text from being used in a DIFF expression with symbols from
++   other sections.  Revisit once GDB is ported.  */
 +#define CFI_DIFF_EXPR_OK 0
 +
 +#define TC_PARSE_CONS_RETURN_TYPE int
@@ -2102,18 +2103,19 @@ index 0000000..2f67634
 +
 +/* If defined, this macro allows control over whether fixups for a
 +   given section will be processed when the linkrelax variable is
-+   set. Define it to zero and handle things in md_apply_fix instead.*/
++   set.  Define it to zero and handle things in md_apply_fix instead.  */
 +#define TC_LINKRELAX_FIXUP(SEG) 0
 +
-+/* If this macro returns non-zero, it guarantees that a relocation will be emitted
-+   even when the value can be resolved locally. Do that if linkrelax is turned on */
++/* If this macro returns non-zero, it guarantees that a relocation will be
++   emitted even when the value can be resolved locally.  Do that if
++   linkrelax is turned on.  */
 +#define TC_FORCE_RELOCATION(fix)	pru_force_relocation (fix)
 +#define TC_FORCE_RELOCATION_SUB_SAME(fix, seg) \
 +  (! SEG_NORMAL (seg) || pru_force_relocation (fix))
 +extern int pru_force_relocation (struct fix *);
 +
 +/* Do not use PC relative fixups and relocations for
-+   anything but real PCREAL relocations. */
++   anything but real PCREL relocations.  */
 +#define TC_FORCE_RELOCATION_SUB_LOCAL(FIX, SEG) \
 +  (((FIX)->fx_r_type != BFD_RELOC_PRU_S10_PCREL) \
 +   && ((FIX)->fx_r_type != BFD_RELOC_PRU_U8_PCREL))
@@ -2125,29 +2127,29 @@ index 0000000..2f67634
 +   We will need them in case that we want to do linker relaxation.
 +   We could in principle keep these fixups in gas when not relaxing.
 +   However, there is no serious performance penalty when making the linker
-+   make the fixup work.  Check also that fx_addsy is not NULL, in order to make
-+   sure that the fixup refers to some sort of label.  */
-+#define TC_VALIDATE_FIX(FIXP,SEG,SKIP)                       \
-+  if (   (FIXP->fx_r_type == BFD_RELOC_PRU_U8                \
-+       || FIXP->fx_r_type == BFD_RELOC_PRU_U16               \
-+       || FIXP->fx_r_type == BFD_RELOC_PRU_HI16              \
-+       || FIXP->fx_r_type == BFD_RELOC_PRU_HI16_RLZ          \
-+       || FIXP->fx_r_type == BFD_RELOC_PRU_LO16              \
-+       || FIXP->fx_r_type == BFD_RELOC_PRU_U16_PMEMIMM       \
-+       || FIXP->fx_r_type == BFD_RELOC_PRU_S10_PCREL         \
-+       || FIXP->fx_r_type == BFD_RELOC_PRU_U8_PCREL          \
-+       || FIXP->fx_r_type == BFD_RELOC_PRU_32_PMEM           \
-+       || FIXP->fx_r_type == BFD_RELOC_PRU_16_PMEM)          \
-+      && FIXP->fx_addsy != NULL				     \
-+      && FIXP->fx_subsy == NULL)			     \
-+    {							     \
-+      symbol_mark_used_in_reloc (FIXP->fx_addsy);	     \
-+      goto SKIP;					     \
++   make the fixup work.  Check also that fx_addsy is not NULL, in order to
++   make sure that the fixup refers to some sort of label.  */
++#define TC_VALIDATE_FIX(FIXP,SEG,SKIP)			      \
++  if ((FIXP->fx_r_type == BFD_RELOC_PRU_U8		      \
++       || FIXP->fx_r_type == BFD_RELOC_PRU_U16		      \
++       || FIXP->fx_r_type == BFD_RELOC_PRU_HI16		      \
++       || FIXP->fx_r_type == BFD_RELOC_PRU_HI16_RLZ	      \
++       || FIXP->fx_r_type == BFD_RELOC_PRU_LO16		      \
++       || FIXP->fx_r_type == BFD_RELOC_PRU_U16_PMEMIMM	      \
++       || FIXP->fx_r_type == BFD_RELOC_PRU_S10_PCREL	      \
++       || FIXP->fx_r_type == BFD_RELOC_PRU_U8_PCREL	      \
++       || FIXP->fx_r_type == BFD_RELOC_PRU_32_PMEM	      \
++       || FIXP->fx_r_type == BFD_RELOC_PRU_16_PMEM)	      \
++      && FIXP->fx_addsy != NULL				      \
++      && FIXP->fx_subsy == NULL)			      \
++    {							      \
++      symbol_mark_used_in_reloc (FIXP->fx_addsy);	      \
++      goto SKIP;					      \
 +    }
 +
 +/* This macro is evaluated for any fixup with a fx_subsy that
 +   fixup_segment cannot reduce to a number.  If the macro returns
-+   false an error will be reported. */
++   false an error will be reported.  */
 +#define TC_VALIDATE_FIX_SUB(fix, seg)   pru_validate_fix_sub (fix)
 +extern int pru_validate_fix_sub (struct fix *);
 +
@@ -2163,22 +2165,23 @@ index 0000000..2f67634
 +/* The difference between same-section symbols may be affected by linker
 +   relaxation, so do not resolve such expressions in the assembler.  */
 +#define md_allow_local_subtract(l,r,s) pru_allow_local_subtract (l, r, s)
-+extern bfd_boolean pru_allow_local_subtract (expressionS *, expressionS *, segT);
++extern bfd_boolean pru_allow_local_subtract (expressionS *, expressionS *,
++					     segT);
 +
-+#endif /* TC_PRU */
++#endif /* __TC_PRU__ */
 diff --git a/gas/configure.tgt b/gas/configure.tgt
-index e2df659..3b1106e 100644
+index 3e230cb..0ae0ad9 100644
 --- a/gas/configure.tgt
 +++ b/gas/configure.tgt
-@@ -391,6 +391,8 @@ case ${generic_target} in
+@@ -393,6 +393,8 @@ case ${generic_target} in
    ppc-*-kaos*)				fmt=elf ;;
    ppc-*-lynxos*)			fmt=elf em=lynx ;;
  
 +  pru-*-*)				fmt=elf ;;
 +
-   s390-*-linux-*)			fmt=elf em=linux ;;
-   s390-*-tpf*)				fmt=elf ;;
+   riscv*-*-*)			fmt=elf endian=little em=linux ;;
  
+   s390-*-linux-*)			fmt=elf em=linux ;;
 diff --git a/gas/doc/Makefile.am b/gas/doc/Makefile.am
 index 88fa602..69846d9 100644
 --- a/gas/doc/Makefile.am
@@ -2216,7 +2219,7 @@ index abbca2f..2e8bd9a 100644
  @set RX
  @set S390
 diff --git a/gas/doc/as.texinfo b/gas/doc/as.texinfo
-index 82cc72d..9b7f1b3 100644
+index b1d94d5..1874088 100644
 --- a/gas/doc/as.texinfo
 +++ b/gas/doc/as.texinfo
 @@ -493,6 +493,11 @@ gcc(1), ld(1), and the Info entries for @file{binutils} and @file{ld}.
@@ -2256,7 +2259,7 @@ index 82cc72d..9b7f1b3 100644
  @ifset M68HC11
  The following options are available when @value{AS} is configured for the
  Motorola 68HC11 or 68HC12 series.
-@@ -7570,6 +7593,9 @@ subject, see the hardware manufacturer's manual.
+@@ -7589,6 +7612,9 @@ subject, see the hardware manufacturer's manual.
  @ifset PPC
  * PPC-Dependent::               PowerPC Dependent Features
  @end ifset
@@ -2266,7 +2269,7 @@ index 82cc72d..9b7f1b3 100644
  @ifset RL78
  * RL78-Dependent::              RL78 Dependent Features
  @end ifset
-@@ -7796,6 +7822,10 @@ family.
+@@ -7815,6 +7841,10 @@ family.
  @include c-ppc.texi
  @end ifset
  
@@ -2279,10 +2282,10 @@ index 82cc72d..9b7f1b3 100644
  @end ifset
 diff --git a/gas/doc/c-pru.texi b/gas/doc/c-pru.texi
 new file mode 100644
-index 0000000..8c60f20
+index 0000000..1b1ba01
 --- /dev/null
 +++ b/gas/doc/c-pru.texi
-@@ -0,0 +1,146 @@
+@@ -0,0 +1,147 @@
 +@c Copyright (C) 2015 Free Software Foundation, Inc.
 +@c This is part of the GAS manual.
 +@c For copying conditions, see the file as.texinfo.
@@ -2313,7 +2316,7 @@ index 0000000..8c60f20
 +@cindex @code{relax} command line option, PRU
 +@item -relax
 +For LDI instructions marked with @code{%hi_rlz(expression)}, check
-+the upper 16 bits of the @var{expression}. If they are all zeros,
++the upper 16 bits of the @var{expression}.  If they are all zeros,
 +then delete the instruction.
 +
 +@cindex @code{no-relax} command line option, PRU
@@ -2361,7 +2364,7 @@ index 0000000..8c60f20
 +@item %hi_rlz(@var{expression})
 +Extract the upper 16 bits of @var{expression} and
 +mark this instruction for deletion during relaxation
-+if the extracted upper 16 bits are zero. This directive
++if the extracted upper 16 bits are zero.  This directive
 +is used mainly for implementing the LDI32 pseudo
 +instruction.
 +
@@ -2377,7 +2380,7 @@ index 0000000..8c60f20
 +@cindex @code{pmem} directive, PRU
 +@item %pmem(@var{expression})
 +Convert @var{expression} from byte-address to a
-+word-address. In other words, shift right by two.
++word-address.  In other words, shift right by two.
 +
 +These relocations are not compatible with the TI CGT tools!
 +
@@ -2428,7 +2431,8 @@ index 0000000..8c60f20
 +
 +@cindex PRU opcodes
 +@cindex opcodes for PRU
-+@code{@value{AS}} implements all the standard PRU core V3 opcodes in the original pasm assembler. Older cores are not supported by @code{@value{AS}}.
++@code{@value{AS}} implements all the standard PRU core V3 opcodes in the
++original pasm assembler.  Older cores are not supported by @code{@value{AS}}.
 diff --git a/gas/testsuite/gas/pru/alu.d b/gas/testsuite/gas/pru/alu.d
 new file mode 100644
 index 0000000..d91ad06
@@ -2842,11 +2846,11 @@ index 0000000..cfe4d88
 +	slp	0
 diff --git a/gas/testsuite/gas/pru/pru.exp b/gas/testsuite/gas/pru/pru.exp
 new file mode 100644
-index 0000000..a8b7aeb
+index 0000000..bf45e66
 --- /dev/null
 +++ b/gas/testsuite/gas/pru/pru.exp
 @@ -0,0 +1,26 @@
-+# Copyright (C) 2014 Free Software Foundation, Inc.
++# Copyright (C) 2014-2016 Free Software Foundation, Inc.
 +
 +# This program is free software; you can redistribute it and/or modify
 +# it under the terms of the GNU General Public License as published by
@@ -3039,5 +3043,5 @@ index 0000000..875e1ca
 +	sxchg	253, r10.b2, 124
 +	sxchg	85, r12.b0, 85
 -- 
-2.9.3
+2.10.1
 

@@ -1,12 +1,13 @@
-From 10d6de2ed7e8d1f7e0316745d5f6bdb6193d0993 Mon Sep 17 00:00:00 2001
-From: Dimitar Dimitrov <dinuxbg@gmail.com>
+From bfff28242fb4f8df9af28fbe4750939f683e9d3d Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 23:29:13 +0300
-Subject: [PATCH 06/23] PRU LD Port
+Subject: [PATCH 07/23] PRU LD Port
 
-Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  ld/Makefile.am                            |   6 +
  ld/Makefile.in                            |   6 +
+ ld/NEWS                                   |   2 +
  ld/configure.tgt                          |   1 +
  ld/emulparams/pruelf.sh                   |  19 +++
  ld/emultempl/pruelf.em                    |  50 +++++++
@@ -46,7 +47,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  ld/testsuite/ld-pru/u16_u8.d              |  12 ++
  ld/testsuite/ld-pru/u16_u8.s              |   5 +
  ld/testsuite/ld-pru/u16_u8_symbol.s       |   6 +
- 41 files changed, 766 insertions(+)
+ 42 files changed, 768 insertions(+)
  create mode 100644 ld/emulparams/pruelf.sh
  create mode 100644 ld/emultempl/pruelf.em
  create mode 100644 ld/scripttempl/pru.sc
@@ -87,10 +88,10 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 ld/testsuite/ld-pru/u16_u8_symbol.s
 
 diff --git a/ld/Makefile.am b/ld/Makefile.am
-index 1a7fc3f..7c0eb5b 100644
+index 9b3de72..32a2f8a 100644
 --- a/ld/Makefile.am
 +++ b/ld/Makefile.am
-@@ -1697,6 +1697,12 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
+@@ -1704,6 +1704,12 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
  eppcpe.c: $(srcdir)/emulparams/ppcpe.sh \
    $(srcdir)/emultempl/pe.em $(srcdir)/scripttempl/ppcpe.sc ${GEN_DEPENDS}
  
@@ -104,10 +105,10 @@ index 1a7fc3f..7c0eb5b 100644
    $(srcdir)/emultempl/generic.em $(srcdir)/scripttempl/aout.sc ${GEN_DEPENDS}
  
 diff --git a/ld/Makefile.in b/ld/Makefile.in
-index 3511e5f..97347ab 100644
+index f87408e..74b6744 100644
 --- a/ld/Makefile.in
 +++ b/ld/Makefile.in
-@@ -3286,6 +3286,12 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
+@@ -3295,6 +3295,12 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
  eppcpe.c: $(srcdir)/emulparams/ppcpe.sh \
    $(srcdir)/emultempl/pe.em $(srcdir)/scripttempl/ppcpe.sc ${GEN_DEPENDS}
  
@@ -120,8 +121,20 @@ index 3511e5f..97347ab 100644
  eriscix.c: $(srcdir)/emulparams/riscix.sh \
    $(srcdir)/emultempl/generic.em $(srcdir)/scripttempl/aout.sc ${GEN_DEPENDS}
  
+diff --git a/ld/NEWS b/ld/NEWS
+index 0efa411..0b88cfd 100644
+--- a/ld/NEWS
++++ b/ld/NEWS
+@@ -1,5 +1,7 @@
+ -*- text -*-
+ 
++* Add support for the Texas Instruments PRU processor.
++
+ * Add support for the RISC-V architecture.
+ 
+ * The command line option --no-eh-frame-hdr can now be used in ELF based
 diff --git a/ld/configure.tgt b/ld/configure.tgt
-index 6f3cd4f..2130758 100644
+index c196e68..15ad2d2 100644
 --- a/ld/configure.tgt
 +++ b/ld/configure.tgt
 @@ -679,6 +679,7 @@ powerpc-*-aix*)		targ_emul=aixppc ;;
@@ -129,9 +142,9 @@ index 6f3cd4f..2130758 100644
  powerpc-*-windiss*)	targ_emul=elf32ppcwindiss ;;
  powerpc-*-lynxos*)	targ_emul=ppclynx ;;
 +pru*-*-*)		targ_emul=pruelf ;;
- rs6000-*-aix[5-9]*)	targ_emul=aix5rs6 ;;
- rs6000-*-aix*)		targ_emul=aixrs6
- 			;;
+ riscv32*-*-*)		targ_emul=elf32lriscv
+ 			targ_extra_emuls="elf64lriscv"
+ 			targ_extra_libpath=$targ_extra_emuls ;;
 diff --git a/ld/emulparams/pruelf.sh b/ld/emulparams/pruelf.sh
 new file mode 100644
 index 0000000..02debba
@@ -215,7 +228,7 @@ index 0000000..dd3ec76
 +LDEMUL_BEFORE_ALLOCATION=pruelf_before_allocation
 diff --git a/ld/scripttempl/pru.sc b/ld/scripttempl/pru.sc
 new file mode 100644
-index 0000000..db2516a
+index 0000000..3ff19ae
 --- /dev/null
 +++ b/ld/scripttempl/pru.sc
 @@ -0,0 +1,213 @@
@@ -298,7 +311,7 @@ index 0000000..db2516a
 +  .rel.plt     ${RELOCATING-0} : { *(.rel.plt)		}
 +  .rela.plt    ${RELOCATING-0} : { *(.rela.plt)		}
 +
-+  /* Internal text space. */
++  /* Internal text space.  */
 +  .text ${RELOCATING-0} :
 +  {
 +    ${RELOCATING+ __text_start = . ; }
@@ -357,11 +370,11 @@ index 0000000..db2516a
 +
 +  .data        ${RELOCATING-0} :
 +  {
-+    /* optional variable that user is prepared to have NULL address */
++    /* Optional variable that user is prepared to have NULL address.  */
 +    ${RELOCATING+ *(.data.atzero*)}
 +
 +    /* CRT is prepared for constructor/destructor table to have
-+       a "valid" NULL address. */
++       a "valid" NULL address.  */
 +    ${CONSTRUCTING+ __ctors_start = . ; }
 +    ${CONSTRUCTING+ KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))}
 +    ${CONSTRUCTING+ KEEP (*(.ctors))}
@@ -371,16 +384,16 @@ index 0000000..db2516a
 +    ${CONSTRUCTING+ KEEP (*(.dtors))}
 +    ${CONSTRUCTING+ __dtors_end = . ; }
 +
-+    /* DATA memory starts at address 0. So to avoid placing a valid static
++    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
-+       section. If CRT can make some use of it - great. Otherwise skip a
-+       word. In all cases .data/.bss sections must start at non-zero. */
++       section.  If CRT can make some use of it - great.  Otherwise skip a
++       word.  In all cases .data/.bss sections must start at non-zero.  */
 +    . += (. == 0 ? 4 : 0);
 +
 +    ${RELOCATING+ PROVIDE (__data_start = .) ; }
 +    *(.data)
 +    ${RELOCATING+ *(.data*)}
-+    *(.rodata)  /* We need to include .rodata here if gcc is used */
++    *(.rodata)  /* We need to include .rodata here if gcc is used.  */
 +    ${RELOCATING+ *(.rodata*)} /* with -fdata-sections.  */
 +    *(.gnu.linkonce.d*)
 +    ${RELOCATING+. = ALIGN(4);}
@@ -410,9 +423,9 @@ index 0000000..db2516a
 +    ${RELOCATING+ PROVIDE (__noinit_end = .) ; }
 +    ${RELOCATING+ PROVIDE (__heap_start = .) ; }
 +    ${RELOCATING+ . += __HEAP_SIZE ; }
-+    /* Stack is not here really. It will be put at the end of DMEM.
++    /* Stack is not here really.  It will be put at the end of DMEM.
 +       But we take into account its size here, in order to allow
-+       for MEMORY overflow checking during link time. */
++       for MEMORY overflow checking during link time.  */
 +    ${RELOCATING+ . += __STACK_SIZE ; }
 +  } ${RELOCATING+ > dmem}
 +
@@ -1114,5 +1127,5 @@ index 0000000..2707060
 +.set byte_symbol, 123
 +
 -- 
-2.9.3
+2.10.1
 

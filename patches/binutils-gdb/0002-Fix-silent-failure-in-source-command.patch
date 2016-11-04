@@ -1,7 +1,7 @@
-From 33a84662239b9f98a98417fcef9abd54f5f8a58b Mon Sep 17 00:00:00 2001
-From: Dimitar Dimitrov <dinuxbg@gmail.com>
+From c56867af74b00200d8c1d64fb616d344bf74e044 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 15 Jun 2014 09:58:48 +0300
-Subject: [PATCH 11/23] Fix silent failure in source command
+Subject: [PATCH 02/23] Fix silent failure in source command
 
 On a debian with dash as default shell the following error is silently ignored:
 LIB_PATH='' /bin/bash ../../binutils-gdb/ld/genscripts.sh "../../binutils-gdb/ld" "/home/dinux/bin/pru-gcc/lib" "/home/dinux/bin/pru-gcc" "/home/dinux/bin/pru-gcc" x86_64-unknown-linux-gnu pru-unknown-none pru "pruelf" "/usr/local/lib /lib /usr/lib" no no pruelf "pru"
@@ -16,7 +16,7 @@ FAIL
 
 I'm still not sure why dash is involved, even though bash is explicitly called.
 
-Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  ld/genscrba.sh | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
@@ -35,5 +35,5 @@ index 030cb7d..dbbce09 100644
  }
  fragment()
 -- 
-2.9.3
+2.10.1
 

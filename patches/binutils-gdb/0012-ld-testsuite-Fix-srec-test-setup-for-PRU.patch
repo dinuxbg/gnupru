@@ -1,9 +1,9 @@
-From 89b4100625633226f0a98f108832331a8df0e77a Mon Sep 17 00:00:00 2001
-From: Dimitar Dimitrov <dinuxbg@gmail.com>
+From c23e26d7a10e241694d931764353e2affe75fb12 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 16 Oct 2016 22:27:25 +0300
-Subject: [PATCH 15/23] ld: testsuite: Fix srec test setup for PRU
+Subject: [PATCH 12/23] ld: testsuite: Fix srec test setup for PRU
 
-Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  ld/testsuite/ld-srec/srec.exp | 5 +++++
  1 file changed, 5 insertions(+)
@@ -25,5 +25,5 @@ index 9fcf07a..10b0a51 100644
  	 || ![ld_simple_link $ld tmpdir/sr2.sr "$flags --oformat srec $objs"] } {
  	fail $test
 -- 
-2.9.3
+2.10.1
 

@@ -1,28 +1,28 @@
-From c5714385dc3796c019a8d705a5297b0520f16913 Mon Sep 17 00:00:00 2001
-From: Dimitar Dimitrov <dinuxbg@gmail.com>
+From 2645da33f3b4a8887b33377afdbc9eeb581ff148 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 23:22:58 +0300
-Subject: [PATCH 03/23] PRU BFD support
+Subject: [PATCH 04/23] PRU BFD support
 
-Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  bfd/Makefile.am  |    4 +
  bfd/Makefile.in  |    6 +
  bfd/archures.c   |    4 +
- bfd/bfd-in2.h    |   36 ++
+ bfd/bfd-in2.h    |   40 ++
  bfd/config.bfd   |    6 +
  bfd/configure.ac |    1 +
  bfd/cpu-pru.c    |   43 ++
  bfd/elf-bfd.h    |    1 +
- bfd/elf32-pru.c  | 1647 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ bfd/elf32-pru.c  | 1549 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
  bfd/libbfd.h     |   15 +
- bfd/reloc.c      |   50 ++
+ bfd/reloc.c      |   54 ++
  bfd/targets.c    |    3 +
- 12 files changed, 1816 insertions(+)
+ 12 files changed, 1726 insertions(+)
  create mode 100644 bfd/cpu-pru.c
  create mode 100644 bfd/elf32-pru.c
 
 diff --git a/bfd/Makefile.am b/bfd/Makefile.am
-index e04be5a..8c0c818 100644
+index 0d5dd4a..ff02ebb 100644
 --- a/bfd/Makefile.am
 +++ b/bfd/Makefile.am
 @@ -147,6 +147,7 @@ ALL_MACHINES = \
@@ -31,17 +31,17 @@ index e04be5a..8c0c818 100644
  	cpu-powerpc.lo \
 +	cpu-pru.lo \
  	cpu-rs6000.lo \
+ 	cpu-riscv.lo \
  	cpu-rl78.lo \
- 	cpu-rx.lo \
-@@ -234,6 +235,7 @@ ALL_MACHINES_CFILES = \
+@@ -235,6 +236,7 @@ ALL_MACHINES_CFILES = \
  	cpu-pj.c \
  	cpu-plugin.c \
  	cpu-powerpc.c \
 +	cpu-pru.c \
  	cpu-rs6000.c \
+ 	cpu-riscv.c \
  	cpu-rl78.c \
- 	cpu-rx.c \
-@@ -363,6 +365,7 @@ BFD32_BACKENDS = \
+@@ -365,6 +367,7 @@ BFD32_BACKENDS = \
  	elf32-or1k.lo \
  	elf32-pj.lo \
  	elf32-ppc.lo \
@@ -49,7 +49,7 @@ index e04be5a..8c0c818 100644
  	elf32-rl78.lo \
  	elf32-rx.lo \
  	elf32-s390.lo \
-@@ -555,6 +558,7 @@ BFD32_BACKENDS_CFILES = \
+@@ -557,6 +560,7 @@ BFD32_BACKENDS_CFILES = \
  	elf32-or1k.c \
  	elf32-pj.c \
  	elf32-ppc.c \
@@ -58,7 +58,7 @@ index e04be5a..8c0c818 100644
  	elf32-rx.c \
  	elf32-s390.c \
 diff --git a/bfd/Makefile.in b/bfd/Makefile.in
-index 64658c5..0daaba6 100644
+index 661155c..7792dad 100644
 --- a/bfd/Makefile.in
 +++ b/bfd/Makefile.in
 @@ -480,6 +480,7 @@ ALL_MACHINES = \
@@ -67,17 +67,17 @@ index 64658c5..0daaba6 100644
  	cpu-powerpc.lo \
 +	cpu-pru.lo \
  	cpu-rs6000.lo \
+ 	cpu-riscv.lo \
  	cpu-rl78.lo \
- 	cpu-rx.lo \
-@@ -567,6 +568,7 @@ ALL_MACHINES_CFILES = \
+@@ -568,6 +569,7 @@ ALL_MACHINES_CFILES = \
  	cpu-pj.c \
  	cpu-plugin.c \
  	cpu-powerpc.c \
 +	cpu-pru.c \
  	cpu-rs6000.c \
+ 	cpu-riscv.c \
  	cpu-rl78.c \
- 	cpu-rx.c \
-@@ -697,6 +699,7 @@ BFD32_BACKENDS = \
+@@ -699,6 +701,7 @@ BFD32_BACKENDS = \
  	elf32-or1k.lo \
  	elf32-pj.lo \
  	elf32-ppc.lo \
@@ -85,7 +85,7 @@ index 64658c5..0daaba6 100644
  	elf32-rl78.lo \
  	elf32-rx.lo \
  	elf32-s390.lo \
-@@ -889,6 +892,7 @@ BFD32_BACKENDS_CFILES = \
+@@ -891,6 +894,7 @@ BFD32_BACKENDS_CFILES = \
  	elf32-or1k.c \
  	elf32-pj.c \
  	elf32-ppc.c \
@@ -93,27 +93,27 @@ index 64658c5..0daaba6 100644
  	elf32-rl78.c \
  	elf32-rx.c \
  	elf32-s390.c \
-@@ -1412,6 +1416,7 @@ distclean-compile:
+@@ -1420,6 +1424,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-pj.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-plugin.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-powerpc.Plo@am__quote@
 +@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-pru.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-riscv.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-rl78.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-rs6000.Plo@am__quote@
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cpu-rx.Plo@am__quote@
-@@ -1501,6 +1506,7 @@ distclean-compile:
+@@ -1510,6 +1515,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-or1k.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-pj.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-ppc.Plo@am__quote@
 +@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-pru.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-riscv.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-rl78.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-rx.Plo@am__quote@
- @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elf32-s390.Plo@am__quote@
 diff --git a/bfd/archures.c b/bfd/archures.c
-index af70b18..a5f5d2e 100644
+index e503492..1b1e9ce 100644
 --- a/bfd/archures.c
 +++ b/bfd/archures.c
-@@ -525,6 +525,8 @@ DESCRIPTION
+@@ -528,6 +528,8 @@ DESCRIPTION
  .#define bfd_mach_nios2r2	2
  .  bfd_arch_visium,	{* Visium *}
  .#define bfd_mach_visium	1
@@ -122,27 +122,27 @@ index af70b18..a5f5d2e 100644
  .  bfd_arch_last
  .  };
  */
-@@ -628,6 +630,7 @@ extern const bfd_arch_info_type bfd_pj_arch;
+@@ -631,6 +633,7 @@ extern const bfd_arch_info_type bfd_pj_arch;
  extern const bfd_arch_info_type bfd_plugin_arch;
  extern const bfd_arch_info_type bfd_powerpc_archs[];
  #define bfd_powerpc_arch bfd_powerpc_archs[0]
 +extern const bfd_arch_info_type bfd_pru_arch;
+ extern const bfd_arch_info_type bfd_riscv_arch;
  extern const bfd_arch_info_type bfd_rs6000_arch;
  extern const bfd_arch_info_type bfd_rl78_arch;
- extern const bfd_arch_info_type bfd_rx_arch;
-@@ -717,6 +720,7 @@ static const bfd_arch_info_type * const bfd_archures_list[] =
+@@ -721,6 +724,7 @@ static const bfd_arch_info_type * const bfd_archures_list[] =
      &bfd_or1k_arch,
      &bfd_pdp11_arch,
      &bfd_powerpc_arch,
 +    &bfd_pru_arch,
-     &bfd_rs6000_arch,
+     &bfd_riscv_arch,
      &bfd_rl78_arch,
-     &bfd_rx_arch,
+     &bfd_rs6000_arch,
 diff --git a/bfd/bfd-in2.h b/bfd/bfd-in2.h
-index 3c0ff9d..2a36563 100644
+index fdb7878..72543d8 100644
 --- a/bfd/bfd-in2.h
 +++ b/bfd/bfd-in2.h
-@@ -2363,6 +2363,8 @@ enum bfd_architecture
+@@ -2366,6 +2366,8 @@ enum bfd_architecture
  #define bfd_mach_nios2r2       2
    bfd_arch_visium,     /* Visium */
  #define bfd_mach_visium        1
@@ -151,14 +151,18 @@ index 3c0ff9d..2a36563 100644
    bfd_arch_last
    };
  
-@@ -5506,6 +5508,40 @@ a matching LO8XG part.  */
+@@ -5549,6 +5551,44 @@ a matching LO8XG part.  */
    BFD_RELOC_NIOS2_R2_T1X1I6,
    BFD_RELOC_NIOS2_R2_T1X1I6_2,
  
-+/* PRU OP2 8-bit unsigned relocation  */
++/* PRU OP2 8-bit unsigned relocation.  */
 +  BFD_RELOC_PRU_U8,
 +
-+/* PRU LDI 16-bit unsigned relocations.  */
++/* PRU LDI 16-bit unsigned relocations.  Included are variants for getting
++the higher or lower 16 bits of a 32-bit value, handling program memory
++addresses (which need to be converted from byte to word addressing).
++The PRU_HI16_RLZ is a variant of PRU_HI16 that is removed if the higher
++16 bits are zeros, enabling GAS to implement a relaxable LDI32 macro.  */
 +  BFD_RELOC_PRU_U16,
 +  BFD_RELOC_PRU_HI16,
 +  BFD_RELOC_PRU_HI16_RLZ,
@@ -171,7 +175,7 @@ index 3c0ff9d..2a36563 100644
 +/* PRU 8-bit unsigned relocation used for the LOOP instruction.  */
 +  BFD_RELOC_PRU_U8_PCREL,
 +
-+/* PRU Program Memory relocations. Used to convert from byte addressing to
++/* PRU Program Memory relocations.  Used to convert from byte addressing to
 +32-bit word addressing.  */
 +  BFD_RELOC_PRU_32_PMEM,
 +  BFD_RELOC_PRU_16_PMEM,
@@ -193,7 +197,7 @@ index 3c0ff9d..2a36563 100644
    BFD_RELOC_IQ2000_OFFSET_16,
    BFD_RELOC_IQ2000_OFFSET_21,
 diff --git a/bfd/config.bfd b/bfd/config.bfd
-index 6400722..4eb5160 100644
+index 98663fd..b1afb7c 100644
 --- a/bfd/config.bfd
 +++ b/bfd/config.bfd
 @@ -122,6 +122,7 @@ or1k*|or1knd*)	 targ_archs=bfd_or1k_arch ;;
@@ -201,10 +205,10 @@ index 6400722..4eb5160 100644
  pj*)		 targ_archs="bfd_pj_arch bfd_i386_arch";;
  powerpc*)	 targ_archs="bfd_rs6000_arch bfd_powerpc_arch" ;;
 +pru*)            targ_archs=bfd_pru_arch ;;
+ riscv*)		 targ_archs=bfd_riscv_arch ;;
  rs6000)		 targ_archs="bfd_rs6000_arch bfd_powerpc_arch" ;;
  s390*)		 targ_archs=bfd_s390_arch ;;
- sh*)		 targ_archs=bfd_sh_arch ;;
-@@ -1359,6 +1360,11 @@ case "${targ}" in
+@@ -1360,6 +1361,11 @@ case "${targ}" in
      targ_selvecs="powerpc_pei_le_vec powerpc_pei_vec powerpc_pe_le_vec powerpc_pe_vec"
      ;;
  
@@ -213,11 +217,11 @@ index 6400722..4eb5160 100644
 +    targ_underscore=yes
 +    ;;
 +
-   rl78-*-elf)
-     targ_defvec=rl78_elf32_vec
-     ;;
+ #ifdef BFD64
+   riscv32-*-*)
+     targ_defvec=riscv_elf32_vec
 diff --git a/bfd/configure.ac b/bfd/configure.ac
-index 669cff7..58b5feb 100644
+index 6f11d29..7fd5e4b 100644
 --- a/bfd/configure.ac
 +++ b/bfd/configure.ac
 @@ -606,6 +606,7 @@ do
@@ -225,18 +229,18 @@ index 669cff7..58b5feb 100644
      powerpc_pei_le_vec)		 tb="$tb pei-ppc.lo peigen.lo $coff" ;;
      powerpc_xcoff_vec)		 tb="$tb coff-rs6000.lo $xcoff" ;;
 +    pru_elf32_vec)         	 tb="$tb elf32-pru.lo elf32.lo $elf" ;;
+     riscv_elf32_vec)		 tb="$tb elf32-riscv.lo elfxx-riscv.lo elf32.lo $elf" ;;
+     riscv_elf64_vec)		 tb="$tb elf64-riscv.lo elf64.lo elfxx-riscv.lo elf32.lo $elf"; target_size=64 ;;
      rl78_elf32_vec)		 tb="$tb elf32-rl78.lo elf32.lo $elf" ;;
-     rs6000_xcoff64_vec)		 tb="$tb coff64-rs6000.lo aix5ppc-core.lo $xcoff"; target_size=64 ;;
-     rs6000_xcoff64_aix_vec)	 tb="$tb coff64-rs6000.lo aix5ppc-core.lo $xcoff"; target_size=64 ;;
 diff --git a/bfd/cpu-pru.c b/bfd/cpu-pru.c
 new file mode 100644
-index 0000000..9a558c3
+index 0000000..75d5d5a
 --- /dev/null
 +++ b/bfd/cpu-pru.c
 @@ -0,0 +1,43 @@
 +/* BFD support for the TI PRU microprocessor.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
++   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
 +   This file is part of BFD, the Binary File Descriptor library.
 +
@@ -278,7 +282,7 @@ index 0000000..9a558c3
 +
 +const bfd_arch_info_type bfd_pru_arch = N (32, 32, 0, "pru", TRUE, NULL);
 diff --git a/bfd/elf-bfd.h b/bfd/elf-bfd.h
-index af2af2c..4f2f1a4 100644
+index 50151cb..41a07d2 100644
 --- a/bfd/elf-bfd.h
 +++ b/bfd/elf-bfd.h
 @@ -467,6 +467,7 @@ enum elf_target_id
@@ -291,13 +295,13 @@ index af2af2c..4f2f1a4 100644
    SPARC_ELF_DATA,
 diff --git a/bfd/elf32-pru.c b/bfd/elf32-pru.c
 new file mode 100644
-index 0000000..504b985
+index 0000000..30d4f2e
 --- /dev/null
 +++ b/bfd/elf32-pru.c
-@@ -0,0 +1,1647 @@
+@@ -0,0 +1,1549 @@
 +/* 32-bit ELF support for TI PRU.
-+   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Dimitar Dimitrov <dinuxbg@gmail.com>
++   Copyright (C) 2014-2016 Free Software Foundation, Inc.
++   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +   Based on elf32-nios2.c
 +
 +   This file is part of BFD, the Binary File Descriptor library.
@@ -373,9 +377,9 @@ index 0000000..504b985
 +	 3,			/* bitsize */
 +	 FALSE,			/* pc_relative */
 +	 0,			/* bitpos */
-+	 complain_overflow_dont,	/* complain_on_overflow */
++	 complain_overflow_dont,/* complain_on_overflow */
 +	 bfd_elf_generic_reloc,	/* special_function */
-+	 "R_PRU_NONE",	/* name */
++	 "R_PRU_NONE",		/* name */
 +	 FALSE,			/* partial_inplace */
 +	 0,			/* src_mask */
 +	 0,			/* dst_mask */
@@ -388,7 +392,7 @@ index 0000000..504b985
 +	 8,			/* bitsize */
 +	 FALSE,			/* pc_relative */
 +	 16,			/* bitpos */
-+	 complain_overflow_unsigned,	/* complain on overflow */
++	 complain_overflow_unsigned,/* complain on overflow */
 +	 bfd_elf_generic_reloc,	/* special function */
 +	 "R_PRU_U8",		/* name */
 +	 FALSE,			/* partial_inplace */
@@ -425,10 +429,6 @@ index 0000000..504b985
 +	 0x00ffff00,
 +	 FALSE),
 +
-+  /* Like PRU_HI16, but this relocation allows the
-+     insn to be removed during relaxation if upper
-+     16 bits of symbol are zeros. Used by GAS
-+     for implementing the LDI32 macro. */
 +  HOWTO (R_PRU_HI16_RLZ,
 +	 0,
 +	 2,
@@ -528,74 +528,74 @@ index 0000000..504b985
 +	 FALSE),
 +
 +  HOWTO (R_PRU_DIFF8,		/* type */
-+	 0,             	/* rightshift */
++	 0,			/* rightshift */
 +	 0, 			/* size (0 = byte, 1 = short, 2 = long) */
 +	 8, 			/* bitsize */
-+	 FALSE,         	/* pc_relative */
-+	 0,             	/* bitpos */
++	 FALSE,			/* pc_relative */
++	 0,			/* bitpos */
 +	 complain_overflow_bitfield, /* complain_on_overflow */
 +	 bfd_elf_pru_diff_relocate, /* special_function */
 +	 "R_PRU_DIFF8",     	/* name */
-+	 FALSE,         	/* partial_inplace */
-+	 0,             	/* src_mask */
-+	 0xff,          	/* dst_mask */
-+	 FALSE),        	/* pcrel_offset */
++	 FALSE,			/* partial_inplace */
++	 0,			/* src_mask */
++	 0xff,			/* dst_mask */
++	 FALSE),		/* pcrel_offset */
 +
 +  HOWTO (R_PRU_DIFF16,  	/* type */
-+	 0,             	/* rightshift */
++	 0,			/* rightshift */
 +	 1,			/* size (0 = byte, 1 = short, 2 = long) */
 +	 16,			/* bitsize */
-+	 FALSE,         	/* pc_relative */
-+	 0,             	/* bitpos */
++	 FALSE,			/* pc_relative */
++	 0,			/* bitpos */
 +	 complain_overflow_bitfield, /* complain_on_overflow */
 +	 bfd_elf_pru_diff_relocate,/* special_function */
 +	 "R_PRU_DIFF16",     	/* name */
-+	 FALSE,         	/* partial_inplace */
-+	 0,             	/* src_mask */
-+	 0xffff,        	/* dst_mask */
-+	 FALSE),        	/* pcrel_offset */
++	 FALSE,			/* partial_inplace */
++	 0,			/* src_mask */
++	 0xffff,		/* dst_mask */
++	 FALSE),		/* pcrel_offset */
 +
 +  HOWTO (R_PRU_DIFF32,  	/* type */
-+	 0,             	/* rightshift */
-+	 2,         		/* size (0 = byte, 1 = short, 2 = long) */
-+	 32,        		/* bitsize */
-+	 FALSE,         	/* pc_relative */
-+	 0,             	/* bitpos */
++	 0,			/* rightshift */
++	 2,			/* size (0 = byte, 1 = short, 2 = long) */
++	 32,			/* bitsize */
++	 FALSE,			/* pc_relative */
++	 0,			/* bitpos */
 +	 complain_overflow_bitfield, /* complain_on_overflow */
 +	 bfd_elf_pru_diff_relocate,/* special_function */
 +	 "R_PRU_DIFF32",     	/* name */
-+	 FALSE,         	/* partial_inplace */
-+	 0,             	/* src_mask */
++	 FALSE,			/* partial_inplace */
++	 0,			/* src_mask */
 +	 0xffffffff,    	/* dst_mask */
-+	 FALSE),        	/* pcrel_offset */
++	 FALSE),		/* pcrel_offset */
 +
 +  HOWTO (R_PRU_DIFF16_PMEM,  	/* type */
-+	 0,             	/* rightshift */
++	 0,			/* rightshift */
 +	 1,			/* size (0 = byte, 1 = short, 2 = long) */
 +	 16,			/* bitsize */
-+	 FALSE,         	/* pc_relative */
-+	 0,             	/* bitpos */
++	 FALSE,			/* pc_relative */
++	 0,			/* bitpos */
 +	 complain_overflow_bitfield, /* complain_on_overflow */
 +	 bfd_elf_pru_diff_relocate,/* special_function */
 +	 "R_PRU_DIFF16_PMEM",   /* name */
-+	 FALSE,         	/* partial_inplace */
-+	 0,             	/* src_mask */
-+	 0xffff,        	/* dst_mask */
-+	 FALSE),        	/* pcrel_offset */
++	 FALSE,			/* partial_inplace */
++	 0,			/* src_mask */
++	 0xffff,		/* dst_mask */
++	 FALSE),		/* pcrel_offset */
 +
 +  HOWTO (R_PRU_DIFF32_PMEM,  	/* type */
-+	 0,             	/* rightshift */
-+	 2,         		/* size (0 = byte, 1 = short, 2 = long) */
-+	 32,        		/* bitsize */
-+	 FALSE,         	/* pc_relative */
-+	 0,             	/* bitpos */
++	 0,			/* rightshift */
++	 2,			/* size (0 = byte, 1 = short, 2 = long) */
++	 32,			/* bitsize */
++	 FALSE,			/* pc_relative */
++	 0,			/* bitpos */
 +	 complain_overflow_bitfield, /* complain_on_overflow */
 +	 bfd_elf_pru_diff_relocate,/* special_function */
 +	 "R_PRU_DIFF32_PMEM",   /* name */
-+	 FALSE,         	/* partial_inplace */
-+	 0,             	/* src_mask */
-+	 0xffffffff,    	/* dst_mask */
-+	 FALSE),        	/* pcrel_offset */
++	 FALSE,			/* partial_inplace */
++	 0,			/* src_mask */
++	 0xffffffff,		/* dst_mask */
++	 FALSE),		/* pcrel_offset */
 +
 +  HOWTO (R_PRU_BFD_RELOC_32,
 +	 0,
@@ -780,7 +780,7 @@ index 0000000..504b985
 +   Given a ELF32 relocation, fill in a arelent structure.  */
 +static void
 +pru_elf32_info_to_howto (bfd *abfd ATTRIBUTE_UNUSED, arelent *cache_ptr,
-+			   Elf_Internal_Rela *dst)
++			 Elf_Internal_Rela *dst)
 +{
 +  unsigned int r_type;
 +
@@ -792,9 +792,9 @@ index 0000000..504b985
 +/* Do the relocations that require special handling.  */
 +static bfd_reloc_status_type
 +pru_elf32_do_hi16_relocate (bfd *abfd, reloc_howto_type *howto,
-+			      asection *input_section,
-+			      bfd_byte *data, bfd_vma offset,
-+			      bfd_vma symbol_value, bfd_vma addend)
++			    asection *input_section,
++			    bfd_byte *data, bfd_vma offset,
++			    bfd_vma symbol_value, bfd_vma addend)
 +{
 +  symbol_value = symbol_value + addend;
 +  addend = 0;
@@ -805,9 +805,9 @@ index 0000000..504b985
 +
 +static bfd_reloc_status_type
 +pru_elf32_do_lo16_relocate (bfd *abfd, reloc_howto_type *howto,
-+			      asection *input_section,
-+			      bfd_byte *data, bfd_vma offset,
-+			      bfd_vma symbol_value, bfd_vma addend)
++			    asection *input_section,
++			    bfd_byte *data, bfd_vma offset,
++			    bfd_vma symbol_value, bfd_vma addend)
 +{
 +  symbol_value = symbol_value + addend;
 +  addend = 0;
@@ -816,8 +816,8 @@ index 0000000..504b985
 +				   data, offset, symbol_value, addend);
 +}
 +
-+/* Produce a word address for program memory. Linker scripts will put .text
-+   at a high offset in order to differentiate it from .data. So here we also
++/* Produce a word address for program memory.  Linker scripts will put .text
++   at a high offset in order to differentiate it from .data.  So here we also
 +   mask the high bits of PMEM address.
 +
 +   But why 1MB when internal Program Memory much smaller? We want to catch
@@ -825,15 +825,15 @@ index 0000000..504b985
 +
 +   Why not use (1<<31) as an offset and a mask? Sitara DDRAM usually resides
 +   there, and users might want to put some shared carveout memory region in
-+   their linker scripts. So 0x80000000 might be a valid .data address.
++   their linker scripts.  So 0x80000000 might be a valid .data address.
 +
-+   Note that we still keep and pass down the original howto. This way we
-+   can reuse this function for several different relocations. */
++   Note that we still keep and pass down the original howto.  This way we
++   can reuse this function for several different relocations.  */
 +static bfd_reloc_status_type
 +pru_elf32_do_pmem_relocate (bfd *abfd, reloc_howto_type *howto,
-+			      asection *input_section,
-+			      bfd_byte *data, bfd_vma offset,
-+			      bfd_vma symbol_value, bfd_vma addend)
++			    asection *input_section,
++			    bfd_byte *data, bfd_vma offset,
++			    bfd_vma symbol_value, bfd_vma addend)
 +{
 +  symbol_value = symbol_value + addend;
 +  addend = 0;
@@ -843,13 +843,13 @@ index 0000000..504b985
 +}
 +
 +/* Direct copy of _bfd_final_link_relocate, but with special
-+   "fill-in". This copy-paste mumbo jumbo is only needed because BFD
-+   cannot deal coorectly with non-contiguous bit fields. */
++   "fill-in".  This copy-paste mumbo jumbo is only needed because BFD
++   cannot deal correctly with non-contiguous bit fields.  */
 +static bfd_reloc_status_type
 +pru_elf32_do_s10_pcrel_relocate (bfd *input_bfd, reloc_howto_type *howto,
-+				    asection *input_section,
-+				    bfd_byte *contents, bfd_vma address,
-+				    bfd_vma relocation, bfd_vma addend)
++				 asection *input_section,
++				 bfd_byte *contents, bfd_vma address,
++				 bfd_vma relocation, bfd_vma addend)
 +{
 +  bfd_byte *location;
 +  bfd_vma x = 0;
@@ -880,7 +880,7 @@ index 0000000..504b985
 +  if (relocation > 2047 && relocation < (bfd_vma)-2048l)
 +    flag = bfd_reloc_overflow;
 +
-+  /* Check that target address is word-aligned. */
++  /* Check that target address is word-aligned.  */
 +  if (relocation & ((1 << howto->rightshift) - 1))
 +    flag = bfd_reloc_outofrange;
 +
@@ -896,9 +896,9 @@ index 0000000..504b985
 +
 +static bfd_reloc_status_type
 +pru_elf32_do_u8_pcrel_relocate (bfd *abfd, reloc_howto_type *howto,
-+			      asection *input_section,
-+			      bfd_byte *data, bfd_vma offset,
-+			      bfd_vma symbol_value, bfd_vma addend)
++				asection *input_section,
++				bfd_byte *data, bfd_vma offset,
++				bfd_vma symbol_value, bfd_vma addend)
 +{
 +  bfd_vma relocation;
 +
@@ -909,7 +909,7 @@ index 0000000..504b985
 +		+ input_section->output_offset) - offset;
 +  relocation >>= howto->rightshift;
 +
-+  /* 0 and 1 are invalid target labels for LOOP. We cannot
++  /* 0 and 1 are invalid target labels for LOOP.  We cannot
 +     encode this info in HOWTO, so catch such cases here.  */
 +  if (relocation < 2)
 +      return bfd_reloc_outofrange;
@@ -922,152 +922,124 @@ index 0000000..504b985
 +
 +static bfd_reloc_status_type
 +pru_elf32_hi16_relocate (bfd *abfd, arelent *reloc_entry, asymbol *symbol,
-+			   void *data, asection *input_section,
-+			   bfd *output_bfd,
-+			   char **error_message ATTRIBUTE_UNUSED)
++			 void *data, asection *input_section,
++			 bfd *output_bfd,
++			 char **error_message)
 +{
-+  /* This part is from bfd_elf_generic_reloc.  */
-+  if (output_bfd != NULL
-+      && (symbol->flags & BSF_SECTION_SYM) == 0
-+      && (!reloc_entry->howto->partial_inplace || reloc_entry->addend == 0))
-+    {
-+      reloc_entry->address += input_section->output_offset;
-+      return bfd_reloc_ok;
-+    }
-+
++  /* If this is a relocatable link (output_bfd test tells us), just
++     call the generic function.  Any adjustment will be done at final
++     link time.  */
 +  if (output_bfd != NULL)
-+    /* FIXME: See bfd_perform_relocation.  Is this right?  */
-+    return bfd_reloc_continue;
++    return bfd_elf_generic_reloc (abfd, reloc_entry, symbol, data,
++				  input_section, output_bfd, error_message);
 +
 +  return pru_elf32_do_hi16_relocate (abfd, reloc_entry->howto,
-+				       input_section,
-+				       data, reloc_entry->address,
-+				       (symbol->value
-+					+ symbol->section->output_section->vma
-+					+ symbol->section->output_offset),
-+				       reloc_entry->addend);
++				     input_section,
++				     data, reloc_entry->address,
++				     (symbol->value
++				      + symbol->section->output_section->vma
++				      + symbol->section->output_offset),
++				     reloc_entry->addend);
 +}
 +
 +static bfd_reloc_status_type
 +pru_elf32_lo16_relocate (bfd *abfd, arelent *reloc_entry, asymbol *symbol,
 +			   void *data, asection *input_section,
 +			   bfd *output_bfd,
-+			   char **error_message ATTRIBUTE_UNUSED)
++			   char **error_message)
 +{
-+  /* This part is from bfd_elf_generic_reloc.  */
-+  if (output_bfd != NULL
-+      && (symbol->flags & BSF_SECTION_SYM) == 0
-+      && (!reloc_entry->howto->partial_inplace || reloc_entry->addend == 0))
-+    {
-+      reloc_entry->address += input_section->output_offset;
-+      return bfd_reloc_ok;
-+    }
-+
++  /* If this is a relocatable link (output_bfd test tells us), just
++     call the generic function.  Any adjustment will be done at final
++     link time.  */
 +  if (output_bfd != NULL)
-+    /* FIXME: See bfd_perform_relocation.  Is this right?  */
-+    return bfd_reloc_continue;
++    return bfd_elf_generic_reloc (abfd, reloc_entry, symbol, data,
++				  input_section, output_bfd, error_message);
 +
 +  return pru_elf32_do_lo16_relocate (abfd, reloc_entry->howto,
-+				       input_section,
-+				       data, reloc_entry->address,
-+				       (symbol->value
-+					+ symbol->section->output_section->vma
-+					+ symbol->section->output_offset),
-+				       reloc_entry->addend);
++				     input_section,
++				     data, reloc_entry->address,
++				     (symbol->value
++				      + symbol->section->output_section->vma
++				      + symbol->section->output_offset),
++				     reloc_entry->addend);
 +}
 +
 +static bfd_reloc_status_type
 +pru_elf32_pmem_relocate (bfd *abfd, arelent *reloc_entry,
-+			    asymbol *symbol, void *data,
-+			    asection *input_section, bfd *output_bfd,
-+			   char **error_message ATTRIBUTE_UNUSED)
++			 asymbol *symbol, void *data,
++			 asection *input_section, bfd *output_bfd,
++			 char **error_message)
 +{
-+  /* This part is from bfd_elf_generic_reloc.  */
-+  if (output_bfd != NULL
-+      && (symbol->flags & BSF_SECTION_SYM) == 0
-+      && (!reloc_entry->howto->partial_inplace || reloc_entry->addend == 0))
-+    {
-+      reloc_entry->address += input_section->output_offset;
-+      return bfd_reloc_ok;
-+    }
-+
++  /* If this is a relocatable link (output_bfd test tells us), just
++     call the generic function.  Any adjustment will be done at final
++     link time.  */
 +  if (output_bfd != NULL)
-+    /* FIXME: See bfd_perform_relocation.  Is this right?  */
-+    return bfd_reloc_continue;
++    return bfd_elf_generic_reloc (abfd, reloc_entry, symbol, data,
++				  input_section, output_bfd, error_message);
 +
 +  return pru_elf32_do_pmem_relocate (abfd, reloc_entry->howto,
-+				       input_section,
-+				       data, reloc_entry->address,
-+				       (symbol->value
-+					+ symbol->section->output_section->vma
-+					+ symbol->section->output_offset),
-+				       reloc_entry->addend);
++				     input_section,
++				     data, reloc_entry->address,
++				     (symbol->value
++				      + symbol->section->output_section->vma
++				      + symbol->section->output_offset),
++				     reloc_entry->addend);
 +}
 +
 +static bfd_reloc_status_type
 +pru_elf32_s10_pcrel_relocate (bfd *abfd, arelent *reloc_entry,
 +				 asymbol *symbol, void *data,
 +				 asection *input_section, bfd *output_bfd,
-+				 char **error_message ATTRIBUTE_UNUSED)
++				 char **error_message)
 +{
-+  /* This part is from bfd_elf_generic_reloc.  */
-+  if (output_bfd != NULL
-+      && (symbol->flags & BSF_SECTION_SYM) == 0
-+      && (!reloc_entry->howto->partial_inplace || reloc_entry->addend == 0))
-+    {
-+      reloc_entry->address += input_section->output_offset;
-+      return bfd_reloc_ok;
-+    }
-+
++  /* If this is a relocatable link (output_bfd test tells us), just
++     call the generic function.  Any adjustment will be done at final
++     link time.  */
 +  if (output_bfd != NULL)
-+    /* FIXME: See bfd_perform_relocation.  Is this right?  */
-+    return bfd_reloc_continue;
++    return bfd_elf_generic_reloc (abfd, reloc_entry, symbol, data,
++				  input_section, output_bfd, error_message);
 +
-+  return pru_elf32_do_s10_pcrel_relocate (
-+    abfd, reloc_entry->howto, input_section, data, reloc_entry->address,
-+    (symbol->value + symbol->section->output_section->vma
-+     + symbol->section->output_offset),
-+    reloc_entry->addend);
++  return pru_elf32_do_s10_pcrel_relocate (abfd, reloc_entry->howto,
++					  input_section, data,
++					  reloc_entry->address,
++					  (symbol->value
++					   + symbol->section->output_section->vma
++					   + symbol->section->output_offset),
++					  reloc_entry->addend);
 +}
 +
 +static bfd_reloc_status_type
 +pru_elf32_u8_pcrel_relocate (bfd *abfd, arelent *reloc_entry, asymbol *symbol,
-+			   void *data, asection *input_section,
-+			   bfd *output_bfd,
-+			   char **error_message ATTRIBUTE_UNUSED)
++			     void *data, asection *input_section,
++			     bfd *output_bfd,
++			     char **error_message)
 +{
-+  /* This part is from bfd_elf_generic_reloc.  */
-+  if (output_bfd != NULL
-+      && (symbol->flags & BSF_SECTION_SYM) == 0
-+      && (!reloc_entry->howto->partial_inplace || reloc_entry->addend == 0))
-+    {
-+      reloc_entry->address += input_section->output_offset;
-+      return bfd_reloc_ok;
-+    }
-+
++  /* If this is a relocatable link (output_bfd test tells us), just
++     call the generic function.  Any adjustment will be done at final
++     link time.  */
 +  if (output_bfd != NULL)
-+    /* FIXME: See bfd_perform_relocation.  Is this right?  */
-+    return bfd_reloc_continue;
++    return bfd_elf_generic_reloc (abfd, reloc_entry, symbol, data,
++				  input_section, output_bfd, error_message);
 +
 +  return pru_elf32_do_u8_pcrel_relocate (abfd, reloc_entry->howto,
-+				       input_section,
-+				       data, reloc_entry->address,
-+				       (symbol->value
-+					+ symbol->section->output_section->vma
-+					+ symbol->section->output_offset),
-+				       reloc_entry->addend);
++					 input_section,
++					 data, reloc_entry->address,
++					 (symbol->value
++					  + symbol->section->output_section->vma
++					  + symbol->section->output_offset),
++					 reloc_entry->addend);
 +}
 +
 +/* Implement elf_backend_relocate_section.  */
 +static bfd_boolean
 +pru_elf32_relocate_section (bfd *output_bfd,
-+			      struct bfd_link_info *info,
-+			      bfd *input_bfd,
-+			      asection *input_section,
-+			      bfd_byte *contents,
-+			      Elf_Internal_Rela *relocs,
-+			      Elf_Internal_Sym *local_syms,
-+			      asection **local_sections)
++			    struct bfd_link_info *info,
++			    bfd *input_bfd,
++			    asection *input_section,
++			    bfd_byte *contents,
++			    Elf_Internal_Rela *relocs,
++			    Elf_Internal_Sym *local_syms,
++			    asection **local_sections)
 +{
 +  Elf_Internal_Shdr *symtab_hdr;
 +  struct elf_link_hash_entry **sym_hashes;
@@ -1174,7 +1146,8 @@ index 0000000..504b985
 +	    case R_PRU_DIFF32:
 +	    case R_PRU_DIFF16_PMEM:
 +	    case R_PRU_DIFF32_PMEM:
-+	      /* Nothing to do here, as contents already contains the diff value. */
++	      /* Nothing to do here, as contents already contain the
++		 diff value.  */
 +	      r = bfd_reloc_ok;
 +	      break;
 +
@@ -1249,102 +1222,33 @@ index 0000000..504b985
 +  return TRUE;
 +}
 +
-+/* Implement elf_backend_check_relocs:
-+   Look through the relocs for a section during the first phase.  */
-+static bfd_boolean
-+pru_elf32_check_relocs (bfd *abfd, struct bfd_link_info *info,
-+			  asection *sec, const Elf_Internal_Rela *relocs)
-+{
-+  Elf_Internal_Shdr *symtab_hdr;
-+  struct elf_link_hash_entry **sym_hashes, **sym_hashes_end;
-+  const Elf_Internal_Rela *rel;
-+  const Elf_Internal_Rela *rel_end;
-+
-+  if (bfd_link_relocatable (info))
-+    return TRUE;
-+
-+  symtab_hdr = &elf_tdata (abfd)->symtab_hdr;
-+  sym_hashes = elf_sym_hashes (abfd);
-+  sym_hashes_end = (sym_hashes
-+		    + symtab_hdr->sh_size / sizeof (Elf32_External_Sym));
-+  if (!elf_bad_symtab (abfd))
-+    sym_hashes_end -= symtab_hdr->sh_info;
-+
-+  rel_end = relocs + sec->reloc_count;
-+  for (rel = relocs; rel < rel_end; rel++)
-+    {
-+      unsigned int r_type;
-+      struct elf_link_hash_entry *h;
-+      unsigned long r_symndx;
-+
-+      r_symndx = ELF32_R_SYM (rel->r_info);
-+      if (r_symndx < symtab_hdr->sh_info)
-+	h = NULL;
-+      else
-+	{
-+	  h = sym_hashes[r_symndx - symtab_hdr->sh_info];
-+	  while (h->root.type == bfd_link_hash_indirect
-+		 || h->root.type == bfd_link_hash_warning)
-+	    h = (struct elf_link_hash_entry *) h->root.u.i.link;
-+
-+	  /* PR15323, ref flags aren't set for references in the same
-+	     object.  */
-+	  h->root.non_ir_ref = 1;
-+	}
-+
-+      r_type = ELF32_R_TYPE (rel->r_info);
-+
-+      switch (r_type)
-+	{
-+
-+#if 0
-+	  /* This relocation describes the C++ object vtable hierarchy.
-+	     Reconstruct it for later use during GC.  */
-+	case R_PRU_GNU_VTINHERIT:
-+	  if (!bfd_elf_gc_record_vtinherit (abfd, sec, h, rel->r_offset))
-+	    return FALSE;
-+	  break;
-+
-+	  /* This relocation describes which C++ vtable entries are actually
-+	     used.  Record for later use during GC.  */
-+	case R_PRU_GNU_VTENTRY:
-+	  if (!bfd_elf_gc_record_vtentry (abfd, sec, h, rel->r_addend))
-+	    return FALSE;
-+	  break;
-+#endif
-+	}
-+    }
-+
-+  return TRUE;
-+}
-+
 +
-+/* Perform a diff relocation. Nothing to do, as the difference value is already
-+   written into the section's contents. */
++/* Perform a diff relocation.  Nothing to do, as the difference value is
++   already written into the section's contents.  */
 +
 +static bfd_reloc_status_type
 +bfd_elf_pru_diff_relocate (bfd *abfd ATTRIBUTE_UNUSED,
-+		      arelent *reloc_entry ATTRIBUTE_UNUSED,
-+              asymbol *symbol ATTRIBUTE_UNUSED,
-+              void *data ATTRIBUTE_UNUSED,
-+              asection *input_section ATTRIBUTE_UNUSED,
-+              bfd *output_bfd ATTRIBUTE_UNUSED,
-+              char **error_message ATTRIBUTE_UNUSED)
++			   arelent *reloc_entry ATTRIBUTE_UNUSED,
++			   asymbol *symbol ATTRIBUTE_UNUSED,
++			   void *data ATTRIBUTE_UNUSED,
++			   asection *input_section ATTRIBUTE_UNUSED,
++			   bfd *output_bfd ATTRIBUTE_UNUSED,
++			   char **error_message ATTRIBUTE_UNUSED)
 +{
 +  return bfd_reloc_ok;
 +}
 +
 +
-+/* Returns whether the relocation type passed is a diff reloc. */
++/* Returns whether the relocation type passed is a diff reloc.  */
 +
 +static bfd_boolean
 +elf32_pru_is_diff_reloc (Elf_Internal_Rela *irel)
 +{
 +  return (ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF8
-+          || ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF16
-+          || ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF32
-+          || ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF16_PMEM
-+          || ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF32_PMEM);
++	  || ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF16
++	  || ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF32
++	  || ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF16_PMEM
++	  || ELF32_R_TYPE (irel->r_info) == R_PRU_DIFF32_PMEM);
 +}
 +
 +/* Reduce the diff value written in the section by count if the shrinked
@@ -1353,11 +1257,11 @@ index 0000000..504b985
 +
 +static void
 +elf32_pru_adjust_diff_reloc_value (bfd *abfd,
-+                                   struct bfd_section *isec,
-+                                   Elf_Internal_Rela *irel,
-+                                   bfd_vma symval,
-+                                   bfd_vma shrinked_insn_address,
-+                                   int count)
++				   struct bfd_section *isec,
++				   Elf_Internal_Rela *irel,
++				   bfd_vma symval,
++				   bfd_vma shrinked_insn_address,
++				   int count)
 +{
 +  unsigned char *reloc_contents = NULL;
 +  unsigned char *isec_contents = elf_section_data (isec)->this_hdr.contents;
@@ -1371,7 +1275,7 @@ index 0000000..504b985
 +
 +  reloc_contents = isec_contents + irel->r_offset;
 +
-+  /* Read value written in object file. */
++  /* Read value written in object file.  */
 +  bfd_signed_vma x = 0;
 +  switch (ELF32_R_TYPE (irel->r_info))
 +  {
@@ -1402,14 +1306,14 @@ index 0000000..504b985
 +    }
 +  default:
 +    {
-+      BFD_FAIL();
++      BFD_FAIL ();
 +    }
 +  }
 +
 +  /* For a diff reloc sym1 - sym2 the diff at assembly time (x) is written
-+     into the object file at the reloc offset. sym2's logical value is
-+     symval (<start_of_section>) + reloc addend. Compute the start and end
-+     addresses and check if the shrinked insn falls between sym1 and sym2. */
++     into the object file at the reloc offset.  sym2's logical value is
++     symval (<start_of_section>) + reloc addend.  Compute the start and end
++     addresses and check if the shrinked insn falls between sym1 and sym2.  */
 +
 +  bfd_vma end_address = symval + irel->r_addend;
 +  bfd_vma start_address = end_address - x;
@@ -1419,7 +1323,7 @@ index 0000000..504b985
 +  if (x < 0)
 +    {
 +      x += count;
-+      /* In case the signed x is negative, restore order. */
++      /* In case the signed x is negative, restore order.  */
 +      SWAP_VALS (end_address, start_address);
 +    }
 +  else
@@ -1428,7 +1332,7 @@ index 0000000..504b985
 +    }
 +
 +  /* Reduce the diff value by count bytes and write it back into section
-+    contents. */
++    contents.  */
 +
 +  if (shrinked_insn_address >= start_address
 +      && shrinked_insn_address <= end_address)
@@ -1437,18 +1341,18 @@ index 0000000..504b985
 +    {
 +    case R_PRU_DIFF8:
 +      {
-+        bfd_put_signed_8 (abfd, x & 0xFFFF, reloc_contents);
-+        break;
++	bfd_put_signed_8 (abfd, x & 0xFF, reloc_contents);
++	break;
 +      }
 +    case R_PRU_DIFF16:
 +      {
-+        bfd_put_signed_16 (abfd, x & 0xFFFF, reloc_contents);
-+        break;
++	bfd_put_signed_16 (abfd, x & 0xFFFF, reloc_contents);
++	break;
 +      }
 +    case R_PRU_DIFF32:
 +      {
-+        bfd_put_signed_32 (abfd, x & 0xFFFFFFFF, reloc_contents);
-+        break;
++	bfd_put_signed_32 (abfd, x & 0xFFFFFFFF, reloc_contents);
++	break;
 +      }
 +    case R_PRU_DIFF16_PMEM:
 +      {
@@ -1462,7 +1366,7 @@ index 0000000..504b985
 +      }
 +    default:
 +      {
-+        BFD_FAIL();
++	BFD_FAIL ();
 +      }
 +    }
 +
@@ -1472,13 +1376,15 @@ index 0000000..504b985
 +/* Delete some bytes from a section while changing the size of an instruction.
 +   The parameter "addr" denotes the section-relative offset pointing just
 +   behind the shrinked instruction. "addr+count" point at the first
-+   byte just behind the original unshrinked instruction.  */
++   byte just behind the original unshrinked instruction.
++
++   Idea copied from the AVR port.  */
 +
 +static bfd_boolean
 +pru_elf_relax_delete_bytes (bfd *abfd,
-+                              asection *sec,
-+                              bfd_vma addr,
-+                              int count)
++			    asection *sec,
++			    bfd_vma addr,
++			    int count)
 +{
 +  Elf_Internal_Shdr *symtab_hdr;
 +  unsigned int sec_shndx;
@@ -1503,7 +1409,7 @@ index 0000000..504b985
 +  /* Actually delete the bytes.  */
 +  if (toaddr - addr - count > 0)
 +    memmove (contents + addr, contents + addr + count,
-+             (size_t) (toaddr - addr - count));
++	     (size_t) (toaddr - addr - count));
 +  sec->size -= count;
 +
 +  /* Adjust all the reloc addresses.  */
@@ -1512,28 +1418,28 @@ index 0000000..504b985
 +      bfd_vma old_reloc_address;
 +
 +      old_reloc_address = (sec->output_section->vma
-+                           + sec->output_offset + irel->r_offset);
++			   + sec->output_offset + irel->r_offset);
 +
 +      /* Get the new reloc address.  */
 +      if ((irel->r_offset > addr
-+           && irel->r_offset < toaddr))
-+        {
-+          if (debug_relax)
-+            printf ("Relocation at address 0x%x needs to be moved.\n"
-+                    "Old section offset: 0x%x, New section offset: 0x%x \n",
-+                    (unsigned int) old_reloc_address,
-+                    (unsigned int) irel->r_offset,
-+                    (unsigned int) ((irel->r_offset) - count));
++	   && irel->r_offset < toaddr))
++	{
++	  if (debug_relax)
++	    printf ("Relocation at address 0x%x needs to be moved.\n"
++		    "Old section offset: 0x%x, New section offset: 0x%x \n",
++		    (unsigned int) old_reloc_address,
++		    (unsigned int) irel->r_offset,
++		    (unsigned int) ((irel->r_offset) - count));
 +
-+          irel->r_offset -= count;
-+        }
++	  irel->r_offset -= count;
++	}
 +
 +    }
 +
-+   /* The reloc's own addresses are now ok. However, we need to readjust
++   /* The reloc's own addresses are now ok.  However, we need to readjust
 +      the reloc's addend, i.e. the reloc's value if two conditions are met:
 +      1.) the reloc is relative to a symbol in this section that
-+          is located in front of the shrinked instruction
++	  is located in front of the shrinked instruction
 +      2.) symbol plus addend end up behind the shrinked instruction.
 +
 +      The most common case where this happens are relocs relative to
@@ -1553,57 +1459,57 @@ index 0000000..504b985
 +	 continue;
 +
 +       shrinked_insn_address = (sec->output_section->vma
-+                                + sec->output_offset + addr - count);
++				+ sec->output_offset + addr - count);
 +
 +       irel = elf_section_data (isec)->relocs;
 +       /* PR 12161: Read in the relocs for this section if necessary.  */
 +       if (irel == NULL)
-+         irel = _bfd_elf_link_read_relocs (abfd, isec, NULL, NULL, TRUE);
++	 irel = _bfd_elf_link_read_relocs (abfd, isec, NULL, NULL, TRUE);
 +
 +       for (irelend = irel + isec->reloc_count;
-+            irel < irelend;
-+            irel++)
-+         {
-+           /* Read this BFD's local symbols if we haven't done
-+              so already.  */
-+           if (isymbuf == NULL && symtab_hdr->sh_info != 0)
-+             {
-+               isymbuf = (Elf_Internal_Sym *) symtab_hdr->contents;
-+               if (isymbuf == NULL)
-+                 isymbuf = bfd_elf_get_elf_syms (abfd, symtab_hdr,
-+                                                 symtab_hdr->sh_info, 0,
-+                                                 NULL, NULL, NULL);
-+               if (isymbuf == NULL)
-+                 return FALSE;
-+             }
++	    irel < irelend;
++	    irel++)
++	 {
++	   /* Read this BFD's local symbols if we haven't done
++	      so already.  */
++	   if (isymbuf == NULL && symtab_hdr->sh_info != 0)
++	     {
++	       isymbuf = (Elf_Internal_Sym *) symtab_hdr->contents;
++	       if (isymbuf == NULL)
++		 isymbuf = bfd_elf_get_elf_syms (abfd, symtab_hdr,
++						 symtab_hdr->sh_info, 0,
++						 NULL, NULL, NULL);
++	       if (isymbuf == NULL)
++		 return FALSE;
++	     }
 +
-+           /* Get the value of the symbol referred to by the reloc.  */
-+           if (ELF32_R_SYM (irel->r_info) < symtab_hdr->sh_info)
-+             {
-+               /* A local symbol.  */
-+               asection *sym_sec;
++	   /* Get the value of the symbol referred to by the reloc.  */
++	   if (ELF32_R_SYM (irel->r_info) < symtab_hdr->sh_info)
++	     {
++	       /* A local symbol.  */
++	       asection *sym_sec;
 +
-+               isym = isymbuf + ELF32_R_SYM (irel->r_info);
-+               sym_sec = bfd_section_from_elf_index (abfd, isym->st_shndx);
-+               symval = isym->st_value;
-+               /* If the reloc is absolute, it will not have
-+                  a symbol or section associated with it.  */
-+               if (sym_sec == sec)
-+                 {
-+                   symval += sym_sec->output_section->vma
-+                             + sym_sec->output_offset;
++	       isym = isymbuf + ELF32_R_SYM (irel->r_info);
++	       sym_sec = bfd_section_from_elf_index (abfd, isym->st_shndx);
++	       symval = isym->st_value;
++	       /* If the reloc is absolute, it will not have
++		  a symbol or section associated with it.  */
++	       if (sym_sec == sec)
++		 {
++		   symval += sym_sec->output_section->vma
++		     + sym_sec->output_offset;
 +
-+                   if (debug_relax)
-+                     printf ("Checking if the relocation's "
-+                             "addend needs corrections.\n"
-+                             "Address of anchor symbol: 0x%x \n"
-+                             "Address of relocation target: 0x%x \n"
-+                             "Address of relaxed insn: 0x%x \n",
-+                             (unsigned int) symval,
-+                             (unsigned int) (symval + irel->r_addend),
-+                             (unsigned int) shrinked_insn_address);
++		   if (debug_relax)
++		     printf ("Checking if the relocation's "
++			     "addend needs corrections.\n"
++			     "Address of anchor symbol: 0x%x \n"
++			     "Address of relocation target: 0x%x \n"
++			     "Address of relaxed insn: 0x%x \n",
++			     (unsigned int) symval,
++			     (unsigned int) (symval + irel->r_addend),
++			     (unsigned int) shrinked_insn_address);
 +
-+		   /* shrink the special DIFF relocations */
++		   /* Shrink the special DIFF relocations.  */
 +		   if (elf32_pru_is_diff_reloc (irel))
 +		     {
 +		       elf32_pru_adjust_diff_reloc_value (abfd, isec, irel,
@@ -1612,18 +1518,19 @@ index 0000000..504b985
 +							  count);
 +		     }
 +
-+		   /* fix the addend, if it is affected */
-+                   if (symval <= shrinked_insn_address
-+                       && (symval + irel->r_addend) > shrinked_insn_address)
-+                     {
++		   /* Fix the addend, if it is affected.  */
++		   if (symval <= shrinked_insn_address
++		       && (symval + irel->r_addend) > shrinked_insn_address)
++		     {
 +
-+                       irel->r_addend -= count;
++		       irel->r_addend -= count;
 +
-+                       if (debug_relax)
-+                         printf ("Relocation's addend needed to be fixed \n");
-+                     }
-+                 }
-+	       /* else...Reference symbol is absolute.  No adjustment needed.  */
++		       if (debug_relax)
++			 printf ("Relocation's addend needed to be fixed \n");
++		     }
++		 }
++	       /* else...Reference symbol is absolute.
++		  No adjustment needed.  */
 +	     }
 +	   /* else...Reference symbol is extern.  No need for adjusting
 +	      the addend.  */
@@ -1642,51 +1549,51 @@ index 0000000..504b985
 +      for (; isym < isymend; isym++)
 +	{
 +	  if (isym->st_shndx == sec_shndx)
-+            {
++	    {
 +	      if (isym->st_value > addr
-+                  && isym->st_value <= toaddr)
-+                isym->st_value -= count;
++		  && isym->st_value <= toaddr)
++		isym->st_value -= count;
 +
-+              if (isym->st_value <= addr
-+                  && isym->st_value + isym->st_size > addr)
-+                {
-+                  /* If this assert fires then we have a symbol that ends
-+                     part way through an instruction.  Does that make
-+                     sense?  */
-+                  BFD_ASSERT (isym->st_value + isym->st_size >= addr + count);
-+                  isym->st_size -= count;
-+                }
-+            }
++	      if (isym->st_value <= addr
++		  && isym->st_value + isym->st_size > addr)
++		{
++		  /* If this assert fires then we have a symbol that ends
++		     part way through an instruction.  Does that make
++		     sense?  */
++		  BFD_ASSERT (isym->st_value + isym->st_size >= addr + count);
++		  isym->st_size -= count;
++		}
++	    }
 +	}
 +    }
 +
 +  /* Now adjust the global symbols defined in this section.  */
 +  symcount = (symtab_hdr->sh_size / sizeof (Elf32_External_Sym)
-+              - symtab_hdr->sh_info);
++	      - symtab_hdr->sh_info);
 +  sym_hashes = elf_sym_hashes (abfd);
 +  end_hashes = sym_hashes + symcount;
 +  for (; sym_hashes < end_hashes; sym_hashes++)
 +    {
 +      struct elf_link_hash_entry *sym_hash = *sym_hashes;
 +      if ((sym_hash->root.type == bfd_link_hash_defined
-+           || sym_hash->root.type == bfd_link_hash_defweak)
-+          && sym_hash->root.u.def.section == sec)
-+        {
-+          if (sym_hash->root.u.def.value > addr
-+              && sym_hash->root.u.def.value <= toaddr)
-+            sym_hash->root.u.def.value -= count;
++	   || sym_hash->root.type == bfd_link_hash_defweak)
++	  && sym_hash->root.u.def.section == sec)
++	{
++	  if (sym_hash->root.u.def.value > addr
++	      && sym_hash->root.u.def.value <= toaddr)
++	    sym_hash->root.u.def.value -= count;
 +
-+          if (sym_hash->root.u.def.value <= addr
-+              && (sym_hash->root.u.def.value + sym_hash->size > addr))
-+            {
-+              /* If this assert fires then we have a symbol that ends
-+                 part way through an instruction.  Does that make
-+                 sense?  */
-+              BFD_ASSERT (sym_hash->root.u.def.value + sym_hash->size
-+                          >= addr + count);
-+              sym_hash->size -= count;
-+            }
-+        }
++	  if (sym_hash->root.u.def.value <= addr
++	      && (sym_hash->root.u.def.value + sym_hash->size > addr))
++	    {
++	      /* If this assert fires then we have a symbol that ends
++		 part way through an instruction.  Does that make
++		 sense?  */
++	      BFD_ASSERT (sym_hash->root.u.def.value + sym_hash->size
++			  >= addr + count);
++	      sym_hash->size -= count;
++	    }
++	}
 +    }
 +
 +  return TRUE;
@@ -1701,7 +1608,7 @@ index 0000000..504b985
 +  Elf_Internal_Rela * internal_relocs;
 +  Elf_Internal_Rela * irel;
 +  Elf_Internal_Rela * irelend;
-+  bfd_byte *          contents = NULL;
++  bfd_byte *	      contents = NULL;
 +  Elf_Internal_Sym *  isymbuf = NULL;
 +
 +  /* Assume nothing changes.  */
@@ -1718,120 +1625,120 @@ index 0000000..504b985
 +  symtab_hdr = & elf_tdata (abfd)->symtab_hdr;
 +
 +  /* Get a copy of the native relocations.  */
-+  internal_relocs =
-+    _bfd_elf_link_read_relocs (abfd, sec, NULL, NULL, link_info->keep_memory);
++  internal_relocs = _bfd_elf_link_read_relocs (abfd, sec, NULL, NULL,
++					       link_info->keep_memory);
 +  if (internal_relocs == NULL)
 +    goto error_return;
 +
 +  /* Walk through them looking for relaxing opportunities.  */
 +  irelend = internal_relocs + sec->reloc_count;
 +
-+    for (irel = internal_relocs; irel < irelend; irel++)
-+      {
-+	bfd_vma symval;
++  for (irel = internal_relocs; irel < irelend; irel++)
++    {
++      bfd_vma symval;
 +
-+	/* Get the section contents if we haven't done so already.  */
-+	if (contents == NULL)
-+	  {
-+	    /* Get cached copy if it exists.  */
-+	    if (elf_section_data (sec)->this_hdr.contents != NULL)
-+	      contents = elf_section_data (sec)->this_hdr.contents;
-+	    else if (! bfd_malloc_and_get_section (abfd, sec, &contents))
-+	      goto error_return;
-+	  }
++      /* Get the section contents if we haven't done so already.  */
++      if (contents == NULL)
++	{
++	  /* Get cached copy if it exists.  */
++	  if (elf_section_data (sec)->this_hdr.contents != NULL)
++	    contents = elf_section_data (sec)->this_hdr.contents;
++	  else if (! bfd_malloc_and_get_section (abfd, sec, &contents))
++	    goto error_return;
++	}
 +
-+	/* Read this BFD's local symbols if we haven't done so already.  */
-+	if (isymbuf == NULL && symtab_hdr->sh_info != 0)
-+	  {
-+	    isymbuf = (Elf_Internal_Sym *) symtab_hdr->contents;
-+	    if (isymbuf == NULL)
-+	      isymbuf = bfd_elf_get_elf_syms (abfd, symtab_hdr,
-+					      symtab_hdr->sh_info, 0,
-+					      NULL, NULL, NULL);
-+	    if (isymbuf == NULL)
-+	      goto error_return;
-+	  }
++      /* Read this BFD's local symbols if we haven't done so already.  */
++      if (isymbuf == NULL && symtab_hdr->sh_info != 0)
++	{
++	  isymbuf = (Elf_Internal_Sym *) symtab_hdr->contents;
++	  if (isymbuf == NULL)
++	    isymbuf = bfd_elf_get_elf_syms (abfd, symtab_hdr,
++					    symtab_hdr->sh_info, 0,
++					    NULL, NULL, NULL);
++	  if (isymbuf == NULL)
++	    goto error_return;
++	}
 +
-+	/* Get the value of the symbol referred to by the reloc.  */
-+	if (ELF32_R_SYM (irel->r_info) < symtab_hdr->sh_info)
-+	  {
-+	    /* A local symbol.  */
-+	    Elf_Internal_Sym *isym;
-+	    asection *sym_sec;
++      /* Get the value of the symbol referred to by the reloc.  */
++      if (ELF32_R_SYM (irel->r_info) < symtab_hdr->sh_info)
++	{
++	  /* A local symbol.  */
++	  Elf_Internal_Sym *isym;
++	  asection *sym_sec;
 +
-+	    isym = isymbuf + ELF32_R_SYM (irel->r_info);
-+	    if (isym->st_shndx == SHN_UNDEF)
-+	      sym_sec = bfd_und_section_ptr;
-+	    else if (isym->st_shndx == SHN_ABS)
-+	      sym_sec = bfd_abs_section_ptr;
-+	    else if (isym->st_shndx == SHN_COMMON)
-+	      sym_sec = bfd_com_section_ptr;
-+	    else
-+	      sym_sec = bfd_section_from_elf_index (abfd, isym->st_shndx);
-+	    symval = (isym->st_value
-+		      + sym_sec->output_section->vma + sym_sec->output_offset);
-+	  }
-+	else
-+	  {
-+	    unsigned long indx;
-+	    struct elf_link_hash_entry *h;
++	  isym = isymbuf + ELF32_R_SYM (irel->r_info);
++	  if (isym->st_shndx == SHN_UNDEF)
++	    sym_sec = bfd_und_section_ptr;
++	  else if (isym->st_shndx == SHN_ABS)
++	    sym_sec = bfd_abs_section_ptr;
++	  else if (isym->st_shndx == SHN_COMMON)
++	    sym_sec = bfd_com_section_ptr;
++	  else
++	    sym_sec = bfd_section_from_elf_index (abfd, isym->st_shndx);
++	  symval = (isym->st_value
++		    + sym_sec->output_section->vma + sym_sec->output_offset);
++	}
++      else
++	{
++	  unsigned long indx;
++	  struct elf_link_hash_entry *h;
 +
-+	    /* An external symbol.  */
-+	    indx = ELF32_R_SYM (irel->r_info) - symtab_hdr->sh_info;
-+	    h = elf_sym_hashes (abfd)[indx];
-+	    BFD_ASSERT (h != NULL);
++	  /* An external symbol.  */
++	  indx = ELF32_R_SYM (irel->r_info) - symtab_hdr->sh_info;
++	  h = elf_sym_hashes (abfd)[indx];
++	  BFD_ASSERT (h != NULL);
 +
-+	    if (h->root.type != bfd_link_hash_defined
-+		&& h->root.type != bfd_link_hash_defweak)
-+	      /* This appears to be a reference to an undefined
-+		 symbol.  Just ignore it--it will be caught by the
-+		 regular reloc processing.  */
-+	      continue;
++	  if (h->root.type != bfd_link_hash_defined
++	      && h->root.type != bfd_link_hash_defweak)
++	    /* This appears to be a reference to an undefined
++	       symbol.  Just ignore it--it will be caught by the
++	       regular reloc processing.  */
++	    continue;
 +
-+	    symval = (h->root.u.def.value
-+		      + h->root.u.def.section->output_section->vma
-+		      + h->root.u.def.section->output_offset);
-+	  }
++	  symval = (h->root.u.def.value
++		    + h->root.u.def.section->output_section->vma
++		    + h->root.u.def.section->output_offset);
++	}
 +
-+	/* For simplicity of coding, we are going to modify the section
-+	   contents, the section relocs, and the BFD symbol table.  We
-+	   must tell the rest of the code not to free up this
-+	   information.  It would be possible to instead create a table
-+	   of changes which have to be made, as is done in coff-mips.c;
-+	   that would be more work, but would require less memory when
-+	   the linker is run.  */
++      /* For simplicity of coding, we are going to modify the section
++	 contents, the section relocs, and the BFD symbol table.  We
++	 must tell the rest of the code not to free up this
++	 information.  It would be possible to instead create a table
++	 of changes which have to be made, as is done in coff-mips.c;
++	 that would be more work, but would require less memory when
++	 the linker is run.  */
 +
-+	/* Check if we can remove an LDI instruction with HI16_RLZ and
-+	   a zero immediate operand.  */
-+	if (ELF32_R_TYPE (irel->r_info) == (int) R_PRU_HI16_RLZ)
-+	  {
-+	    bfd_vma value = symval + irel->r_addend;
++      /* Check if we can remove an LDI instruction with HI16_RLZ and
++	 a zero immediate operand.  */
++      if (ELF32_R_TYPE (irel->r_info) == (int) R_PRU_HI16_RLZ)
++	{
++	  bfd_vma value = symval + irel->r_addend;
 +
-+	    if (debug_relax)
-+	      printf ("R_PRU_HI16_RLZ with value=0x%lx\n", (long) value);
++	  if (debug_relax)
++	    printf ("R_PRU_HI16_RLZ with value=0x%lx\n", (long) value);
 +
-+	    if ((long) value >> 16 == 0)
-+	      {
-+		/* Note that we've changed the relocs, section contents, etc.  */
-+		elf_section_data (sec)->relocs = internal_relocs;
-+		elf_section_data (sec)->this_hdr.contents = contents;
-+		symtab_hdr->contents = (unsigned char *) isymbuf;
++	  if ((long) value >> 16 == 0)
++	    {
++	      /* Note that we've changed the relocs, section contents.  */
++	      elf_section_data (sec)->relocs = internal_relocs;
++	      elf_section_data (sec)->this_hdr.contents = contents;
++	      symtab_hdr->contents = (unsigned char *) isymbuf;
 +
-+		/* Delete bytes. */
-+		if (!pru_elf_relax_delete_bytes (abfd, sec, irel->r_offset, 4))
-+		  goto error_return;
++	      /* Delete bytes.  */
++	      if (!pru_elf_relax_delete_bytes (abfd, sec, irel->r_offset, 4))
++		goto error_return;
 +
-+		/* We're done with deletion. Set a benign relocation
-+		 * type in order to prevent further byte removals. */
-+		irel->r_info = ELF32_R_INFO (ELF32_R_SYM (irel->r_info),
-+					       R_PRU_NONE);
++	      /* We're done with deletion.  Set a benign relocation
++	       * type in order to prevent further byte removals.  */
++	      irel->r_info = ELF32_R_INFO (ELF32_R_SYM (irel->r_info),
++					   R_PRU_NONE);
 +
-+		/* That will change things, so, we should relax again.
-+		   Note that this is not required, and it may be slow.  */
-+		*again = TRUE;
-+	      }
-+	  }
-+      }
++	      /* That will change things, so, we should relax again.
++		 Note that this is not required, and it may be slow.  */
++	      *again = TRUE;
++	    }
++	}
++    }
 +
 +  if (isymbuf != NULL && symtab_hdr->contents != (unsigned char *) isymbuf)
 +    {
@@ -1924,7 +1831,7 @@ index 0000000..504b985
 +
 +/* elf_info_to_howto (using RELA relocations).  */
 +
-+#define elf_info_to_howto		 pru_elf32_info_to_howto
++#define elf_info_to_howto		pru_elf32_info_to_howto
 +
 +/* elf backend functions.  */
 +
@@ -1932,9 +1839,8 @@ index 0000000..504b985
 +#define elf_backend_can_refcount	1
 +#define elf_backend_rela_normal		1
 +
-+#define elf_backend_relocate_section	    pru_elf32_relocate_section
-+#define elf_backend_check_relocs	    pru_elf32_check_relocs
-+#define bfd_elf32_bfd_relax_section	    pru_elf32_relax_section
++#define elf_backend_relocate_section	pru_elf32_relocate_section
++#define bfd_elf32_bfd_relax_section	pru_elf32_relax_section
 +
 +#define elf_symbol_leading_char		'_'
 +
@@ -1943,10 +1849,10 @@ index 0000000..504b985
 +
 +#include "elf32-target.h"
 diff --git a/bfd/libbfd.h b/bfd/libbfd.h
-index 83ffc6a..6a21484 100644
+index 5ec3993..44962e7 100644
 --- a/bfd/libbfd.h
 +++ b/bfd/libbfd.h
-@@ -2698,6 +2698,21 @@ static const char *const bfd_reloc_code_real_names[] = { "@@uninitialized@@",
+@@ -2736,6 +2736,21 @@ static const char *const bfd_reloc_code_real_names[] = { "@@uninitialized@@",
    "BFD_RELOC_NIOS2_R2_L5I4X1",
    "BFD_RELOC_NIOS2_R2_T1X1I6",
    "BFD_RELOC_NIOS2_R2_T1X1I6_2",
@@ -1969,16 +1875,16 @@ index 83ffc6a..6a21484 100644
    "BFD_RELOC_IQ2000_OFFSET_21",
    "BFD_RELOC_IQ2000_UHI16",
 diff --git a/bfd/reloc.c b/bfd/reloc.c
-index 6ee3a4e..2e3b52e 100644
+index 56cd79b..475d9c3 100644
 --- a/bfd/reloc.c
 +++ b/bfd/reloc.c
-@@ -6419,6 +6419,56 @@ ENUMDOC
+@@ -6499,6 +6499,60 @@ ENUMDOC
    Relocations used by the Altera Nios II core.
  
  ENUM
 +  BFD_RELOC_PRU_U8
 +ENUMDOC
-+  PRU OP2 8-bit unsigned relocation
++  PRU OP2 8-bit unsigned relocation.
 +ENUM
 +  BFD_RELOC_PRU_U16
 +ENUMX
@@ -1990,7 +1896,11 @@ index 6ee3a4e..2e3b52e 100644
 +ENUMX
 +  BFD_RELOC_PRU_U16_PMEMIMM
 +ENUMDOC
-+  PRU LDI 16-bit unsigned relocations.
++  PRU LDI 16-bit unsigned relocations.  Included are variants for getting
++  the higher or lower 16 bits of a 32-bit value, handling program memory
++  addresses (which need to be converted from byte to word addressing).
++  The PRU_HI16_RLZ is a variant of PRU_HI16 that is removed if the higher
++  16 bits are zeros, enabling GAS to implement a relaxable LDI32 macro.
 +ENUM
 +  BFD_RELOC_PRU_S10_PCREL
 +ENUMDOC
@@ -2004,7 +1914,7 @@ index 6ee3a4e..2e3b52e 100644
 +ENUMX
 +  BFD_RELOC_PRU_16_PMEM
 +ENUMDOC
-+  PRU Program Memory relocations. Used to convert from byte addressing to
++  PRU Program Memory relocations.  Used to convert from byte addressing to
 +  32-bit word addressing.
 +ENUM
 +  BFD_RELOC_PRU_DIFF8
@@ -2030,7 +1940,7 @@ index 6ee3a4e..2e3b52e 100644
  ENUMX
    BFD_RELOC_IQ2000_OFFSET_21
 diff --git a/bfd/targets.c b/bfd/targets.c
-index a0fd7df..d95feaa 100644
+index bc61c02..75f37f6 100644
 --- a/bfd/targets.c
 +++ b/bfd/targets.c
 @@ -799,6 +799,7 @@ extern const bfd_target powerpc_pe_le_vec;
@@ -2038,18 +1948,18 @@ index a0fd7df..d95feaa 100644
  extern const bfd_target powerpc_pei_le_vec;
  extern const bfd_target powerpc_xcoff_vec;
 +extern const bfd_target pru_elf32_vec;
+ extern const bfd_target riscv_elf32_vec;
+ extern const bfd_target riscv_elf64_vec;
  extern const bfd_target rl78_elf32_vec;
- extern const bfd_target rs6000_xcoff64_vec;
- extern const bfd_target rs6000_xcoff64_aix_vec;
-@@ -1303,6 +1304,8 @@ static const bfd_target * const _bfd_target_vector[] =
+@@ -1305,6 +1306,8 @@ static const bfd_target * const _bfd_target_vector[] =
  	&powerpc_xcoff_vec,
  #endif
  
 +	&pru_elf32_vec,
 +
- 	&rl78_elf32_vec,
- 
+ 	&riscv_elf32_vec,
  #ifdef BFD64
+ 	&riscv_elf64_vec,
 -- 
-2.9.3
+2.10.1
 

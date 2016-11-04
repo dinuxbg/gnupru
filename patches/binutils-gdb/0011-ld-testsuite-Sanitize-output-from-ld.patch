@@ -1,7 +1,7 @@
-From 59729bbcff38583d471ce3918be847e680a3514e Mon Sep 17 00:00:00 2001
-From: Dimitar Dimitrov <dinuxbg@gmail.com>
+From 7cc4072a82d3c111a18b437a434c8207f62284f7 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 16 Oct 2016 21:50:12 +0300
-Subject: [PATCH 14/23] ld: testsuite: Sanitize output from ld
+Subject: [PATCH 11/23] ld: testsuite: Sanitize output from ld
 
 Apparently the leading dashes from an LD error message confuse DejaGnu.
 
@@ -25,7 +25,7 @@ This patch fixes the following DejaGnu error:
       invoked from within
   "catch "uplevel #0 source $test_file_name""
 
-Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  ld/testsuite/lib/ld-lib.exp | 1 +
  1 file changed, 1 insertion(+)
@@ -43,5 +43,5 @@ index 9468d3e..4659243 100644
  	    set exitstat "succeeded"
  	    if { $cmdret != 0 } { set exitstat "failed" }
 -- 
-2.9.3
+2.10.1
 

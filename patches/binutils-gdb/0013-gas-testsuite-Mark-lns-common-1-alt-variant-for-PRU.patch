@@ -1,9 +1,9 @@
-From 53542be1d691a25b76e20ab01ede4b84ab0dcad4 Mon Sep 17 00:00:00 2001
-From: Dimitar Dimitrov <dinuxbg@gmail.com>
+From 5114e4bdb162a7e09ad578cd4dceb8e30b51ad8f Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 13 Oct 2016 23:07:10 +0300
-Subject: [PATCH 16/23] gas: testsuite: Mark lns-common-1-alt variant for PRU
+Subject: [PATCH 13/23] gas: testsuite: Mark lns-common-1-alt variant for PRU
 
-Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  gas/testsuite/gas/lns/lns.exp | 1 +
  1 file changed, 1 insertion(+)
@@ -21,5 +21,5 @@ index 81e0396..acf9947 100644
  	 || [istarget xtensa*-*-*] } {
        run_dump_test "lns-common-1-alt"
 -- 
-2.9.3
+2.10.1
 

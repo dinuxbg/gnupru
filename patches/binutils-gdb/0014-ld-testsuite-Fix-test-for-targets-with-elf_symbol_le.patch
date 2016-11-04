@@ -1,12 +1,12 @@
-From 4b0bc04928439fe88cd9a3666cf803a259007ed9 Mon Sep 17 00:00:00 2001
-From: Dimitar Dimitrov <dinuxbg@gmail.com>
+From dedf3cb1b1ba84713273b29f15b2ddcdd1268050 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 20 Oct 2016 22:50:21 +0300
-Subject: [PATCH 17/23] ld: testsuite: Fix test for targets with
+Subject: [PATCH 14/23] ld: testsuite: Fix test for targets with
  elf_symbol_leading_char
 
 Either that, or make ld/plugin.c:get_symbols() to print symbol names using %T instead of %s.
 
-Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  ld/testsuite/ld-plugin/plugin-12.d | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
@@ -27,5 +27,5 @@ index 10d7725..83873f9 100644
 +.*: symbol `_?func3' definition: 0, visibility: 3, resolution: 3
  #pass
 -- 
-2.9.3
+2.10.1
 
