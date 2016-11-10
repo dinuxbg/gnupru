@@ -1,7 +1,22 @@
-From 2645da33f3b4a8887b33377afdbc9eeb581ff148 Mon Sep 17 00:00:00 2001
+From 40666933e2e4ed4c3d1d6afb063d00c2b06d65f1 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 23:22:58 +0300
 Subject: [PATCH 04/23] PRU BFD support
+
+2016-10-24  Dimitar Dimitrov <dimitar@dinux.eu>
+
+	* bfd/Makefile.am: Add PRU target.
+	* bfd/Makefile.in: Ditto.
+	* bfd/config.bfd: Ditto.
+	* bfd/archures.c: Ditto.
+	* bfd/configure.ac: Ditto.
+	* bfd/elf-bfd.h: Ditto.
+	* bfd/targets.c: Ditto.
+	* bfd/bfd-in2.h: Add PRU relocations.
+	* bfd/reloc.c: Ditto.
+	* bfd/libbfd.h: Ditto.
+	* bfd/cpu-pru.c: New file.
+	* bfd/elf32-pru.c: New file.
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -197,10 +212,10 @@ index fdb7878..72543d8 100644
    BFD_RELOC_IQ2000_OFFSET_16,
    BFD_RELOC_IQ2000_OFFSET_21,
 diff --git a/bfd/config.bfd b/bfd/config.bfd
-index 98663fd..b1afb7c 100644
+index b692f0a..1632976 100644
 --- a/bfd/config.bfd
 +++ b/bfd/config.bfd
-@@ -122,6 +122,7 @@ or1k*|or1knd*)	 targ_archs=bfd_or1k_arch ;;
+@@ -189,6 +189,7 @@ or1k*|or1knd*)	 targ_archs=bfd_or1k_arch ;;
  pdp11*)		 targ_archs=bfd_pdp11_arch ;;
  pj*)		 targ_archs="bfd_pj_arch bfd_i386_arch";;
  powerpc*)	 targ_archs="bfd_rs6000_arch bfd_powerpc_arch" ;;
@@ -208,7 +223,7 @@ index 98663fd..b1afb7c 100644
  riscv*)		 targ_archs=bfd_riscv_arch ;;
  rs6000)		 targ_archs="bfd_rs6000_arch bfd_powerpc_arch" ;;
  s390*)		 targ_archs=bfd_s390_arch ;;
-@@ -1360,6 +1361,11 @@ case "${targ}" in
+@@ -1427,6 +1428,11 @@ case "${targ}" in
      targ_selvecs="powerpc_pei_le_vec powerpc_pei_vec powerpc_pe_le_vec powerpc_pe_vec"
      ;;
  
@@ -1940,7 +1955,7 @@ index 56cd79b..475d9c3 100644
  ENUMX
    BFD_RELOC_IQ2000_OFFSET_21
 diff --git a/bfd/targets.c b/bfd/targets.c
-index bc61c02..75f37f6 100644
+index 8e6158e..7ae8eb4 100644
 --- a/bfd/targets.c
 +++ b/bfd/targets.c
 @@ -799,6 +799,7 @@ extern const bfd_target powerpc_pe_le_vec;
@@ -1957,9 +1972,9 @@ index bc61c02..75f37f6 100644
  
 +	&pru_elf32_vec,
 +
- 	&riscv_elf32_vec,
  #ifdef BFD64
+ 	&riscv_elf32_vec,
  	&riscv_elf64_vec,
 -- 
-2.10.1
+2.10.2
 

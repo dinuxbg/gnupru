@@ -1,4 +1,4 @@
-From ae4c3db81e7d3b4aad1db2aca6fffbfe63027ebe Mon Sep 17 00:00:00 2001
+From 7e2692d7475f9e664810fbc25577389b7141889c Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 23 Oct 2016 09:25:55 +0300
 Subject: [PATCH 18/23] ld: testsuite: Relocatable output for PRU actually
@@ -6,6 +6,11 @@ Subject: [PATCH 18/23] ld: testsuite: Relocatable output for PRU actually
 
 Note to self: Check how AVR port's usage of different linker scripts.
 For example, "vimdiff avr5.x avr5.xr"
+
+2016-10-23  Dimitar Dimitrov <dimitar@dinux.eu>
+
+	* ld/testsuite/ld-elf/pr20528a.d: Disable for PRU.
+	* ld/testsuite/ld-elf/pr20528b.d: Ditto.
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -40,5 +45,5 @@ index 80f0aa5..c0f7c25 100644
  #...
  [ 	]*\[.*\][ 	]+\.text.startup[ 	]+PROGBITS.*[ 	]+AXE[   ]+.*
 -- 
-2.10.1
+2.10.2
 

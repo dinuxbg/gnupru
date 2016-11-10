@@ -1,4 +1,4 @@
-From 1edfd922e0d450067fabc156c7d9c4e8554efcb5 Mon Sep 17 00:00:00 2001
+From fb5e1fe4d29049ec36ec71d9ca3d1013c7110333 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sun, 11 Oct 2015 11:52:38 +0300
 Subject: [PATCH 2/2] Add TI remoteproc headers
@@ -1128,5 +1128,5 @@ index 0000000..755ab60
 +
 +#endif /* _RSC_TYPES_H_ */
 -- 
-2.9.3
+2.10.2
 

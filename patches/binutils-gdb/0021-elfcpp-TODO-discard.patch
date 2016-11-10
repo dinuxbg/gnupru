@@ -1,4 +1,4 @@
-From 6fb405eedc14d96f0eb9cfb21a132cc1a05e9284 Mon Sep 17 00:00:00 2001
+From a38efefb962b92ba4cdde8e061451883c0888224 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 23:32:42 +0300
 Subject: [PATCH 21/23] elfcpp: TODO - discard?
@@ -21,5 +21,5 @@ index 7469bd8..1826539 100644
    EM_TILEGX = 191,
    // The Morph MT.
 -- 
-2.10.1
+2.10.2
 

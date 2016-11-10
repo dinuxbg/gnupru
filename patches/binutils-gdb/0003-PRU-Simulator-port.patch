@@ -1,7 +1,19 @@
-From b10ba42ec81431ce91ef29801c1e3601590f6ea9 Mon Sep 17 00:00:00 2001
+From f3efd5aca6053e4e9ad6451eb80b430fedaf6fd9 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 22:37:01 +0300
 Subject: [PATCH 03/23] PRU Simulator port
+
+2016-10-24  Dimitar Dimitrov <dimitar@dinux.eu>
+
+	* sim/configure.tgt: Add PRU.
+	* sim/pru/Makefile.in: New file.
+	* sim/pru/aclocal.m4: New file.
+	* sim/pru/config.in: New file.
+	* sim/pru/configure.ac: New file.
+	* sim/pru/interp.c: New file.
+	* sim/pru/pru.h: New file.
+	* sim/pru/pru.isa: New file.
+	* sim/pru/sim-main.h: New file.
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -1683,5 +1695,5 @@ index 0000000..d092cb1
 +#endif /* PRU_SIM_MAIN */
 +
 -- 
-2.10.1
+2.10.2
 

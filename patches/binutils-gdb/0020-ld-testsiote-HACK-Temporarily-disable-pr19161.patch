@@ -1,4 +1,4 @@
-From 678b0f13538e78b23d64b79b6effc8fd92f77b84 Mon Sep 17 00:00:00 2001
+From 6682c613b593d8d313e2db5e04c4aa7da2b70c84 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sat, 22 Oct 2016 23:42:09 +0300
 Subject: [PATCH 20/23] ld: testsiote: HACK: Temporarily disable pr19161
@@ -7,6 +7,10 @@ The proper fix would be to augment _bfd_elf_is_start_stop() to
 handle bfd_get_symbol_leading_char(). The __start_XXX creator
 lang_insert_orphan() and the test case already take care of
 leading char.
+
+2016-10-22  Dimitar Dimitrov <dimitar@dinux.eu>
+
+	* ld/testsuite/ld-gc/pr19161.d: HACK: Temporarily disable pr19161.
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -26,5 +30,5 @@ index c36e663..690338e 100644
  #...
  0*[1-9a-f]+[0-9a-f]*[ 	](D)[ 	]_*__start_my_section
 -- 
-2.10.1
+2.10.2
 

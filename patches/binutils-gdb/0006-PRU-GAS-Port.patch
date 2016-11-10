@@ -1,9 +1,45 @@
-From b8324a1de68baa8e42519023ff9da147ff6360b0 Mon Sep 17 00:00:00 2001
+From 7fe8b277ef87c36b72c6571f4c1e8b09714bd19f Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 23:28:41 +0300
 Subject: [PATCH 06/23] PRU GAS Port
 
-Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
+2016-10-24  Dimitar Dimitrov <dimitar@dinux.eu>
+
+	* gas/NEWS: Mention new PRU target.
+	* gas/Makefile.am: Add PRU target.
+	* gas/Makefile.in: Ditto.
+	* gas/config/obj-elf.c: Ditto.
+	* gas/configure.tgt: Ditto.
+	* gas/doc/Makefile.am: Ditto.
+	* gas/doc/Makefile.in: Ditto.
+	* gas/doc/all.texi, Ditto.
+	* gas/doc/as.texinfo: Ditto.
+	* gas/config/tc-pru.c: New file.
+	* gas/config/tc-pru.h: New file.
+	* gas/doc/c-pru.texi: Document PRU GAS options.
+	* gas/testsuite/gas/pru/alu.d: New file for PRU GAS testsuite.
+	* gas/testsuite/gas/pru/alu.s: Ditto.
+	* gas/testsuite/gas/pru/branch.d: Ditto.
+	* gas/testsuite/gas/pru/branch.s: Ditto.
+	* gas/testsuite/gas/pru/illegal.l: Ditto.
+	* gas/testsuite/gas/pru/illegal.s: Ditto.
+	* gas/testsuite/gas/pru/ldi.d: Ditto.
+	* gas/testsuite/gas/pru/ldi.s: Ditto.
+	* gas/testsuite/gas/pru/ldst.d: Ditto.
+	* gas/testsuite/gas/pru/ldst.s: Ditto.
+	* gas/testsuite/gas/pru/loop.d: Ditto.
+	* gas/testsuite/gas/pru/loop.s: Ditto.
+	* gas/testsuite/gas/pru/misc.d: Ditto.
+	* gas/testsuite/gas/pru/misc.s: Ditto.
+	* gas/testsuite/gas/pru/pru.exp: Ditto.
+	* gas/testsuite/gas/pru/pseudo.d: Ditto.
+	* gas/testsuite/gas/pru/pseudo.s: Ditto.
+	* gas/testsuite/gas/pru/warn_reglabel.l: Ditto.
+	* gas/testsuite/gas/pru/warn_reglabel.s: Ditto.
+	* gas/testsuite/gas/pru/xfr.d: Ditto.
+	* gas/testsuite/gas/pru/xfr.s: Ditto.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  gas/Makefile.am                       |    2 +
  gas/Makefile.in                       |   17 +
@@ -134,7 +170,7 @@ index 84f746d..3533695 100644
  @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tc-riscv.o -MD -MP -MF $(DEPDIR)/tc-riscv.Tpo -c -o tc-riscv.o `test -f 'config/tc-riscv.c' || echo '$(srcdir)/'`config/tc-riscv.c
  @am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tc-riscv.Tpo $(DEPDIR)/tc-riscv.Po
 diff --git a/gas/NEWS b/gas/NEWS
-index 25ad9ab..9c8c6c4 100644
+index 48cfa9b..014d40a 100644
 --- a/gas/NEWS
 +++ b/gas/NEWS
 @@ -1,5 +1,7 @@
@@ -144,7 +180,7 @@ index 25ad9ab..9c8c6c4 100644
 +
  * Add support for the RISC-V architecture.
  
- Changes in 2.27:
+ * Add support for the ARM Cortex-M23 and Cortex-M33 processors.
 diff --git a/gas/config/obj-elf.c b/gas/config/obj-elf.c
 index 8d80c77..a1b882e 100644
 --- a/gas/config/obj-elf.c
@@ -2183,7 +2219,7 @@ index 3e230cb..0ae0ad9 100644
  
    s390-*-linux-*)			fmt=elf em=linux ;;
 diff --git a/gas/doc/Makefile.am b/gas/doc/Makefile.am
-index 88fa602..69846d9 100644
+index 54d7ef1..c604a29 100644
 --- a/gas/doc/Makefile.am
 +++ b/gas/doc/Makefile.am
 @@ -80,6 +80,7 @@ CPU_DOCS = \
@@ -2192,10 +2228,10 @@ index 88fa602..69846d9 100644
  	c-ppc.texi \
 +	c-pru.texi \
  	c-rl78.texi \
+ 	c-riscv.texi \
  	c-rx.texi \
- 	c-s390.texi \
 diff --git a/gas/doc/Makefile.in b/gas/doc/Makefile.in
-index 5f09b6c..7946e67 100644
+index 474bd48..86d4dfc 100644
 --- a/gas/doc/Makefile.in
 +++ b/gas/doc/Makefile.in
 @@ -354,6 +354,7 @@ CPU_DOCS = \
@@ -2204,10 +2240,10 @@ index 5f09b6c..7946e67 100644
  	c-ppc.texi \
 +	c-pru.texi \
  	c-rl78.texi \
+ 	c-riscv.texi \
  	c-rx.texi \
- 	c-s390.texi \
 diff --git a/gas/doc/all.texi b/gas/doc/all.texi
-index abbca2f..2e8bd9a 100644
+index 3c25d39..79fcaba 100644
 --- a/gas/doc/all.texi
 +++ b/gas/doc/all.texi
 @@ -62,6 +62,7 @@
@@ -2216,10 +2252,10 @@ index abbca2f..2e8bd9a 100644
  @set PPC
 +@set PRU
  @set RL78
+ @set RISCV
  @set RX
- @set S390
 diff --git a/gas/doc/as.texinfo b/gas/doc/as.texinfo
-index b1d94d5..1874088 100644
+index 2b00acc..88bc267 100644
 --- a/gas/doc/as.texinfo
 +++ b/gas/doc/as.texinfo
 @@ -493,6 +493,11 @@ gcc(1), ld(1), and the Info entries for @file{binutils} and @file{ld}.
@@ -2234,7 +2270,7 @@ index b1d94d5..1874088 100644
  @ifset RL78
  
  @emph{Target RL78 options:}
-@@ -1226,6 +1231,24 @@ Generate ``little endian'' format output.
+@@ -1233,6 +1238,24 @@ Generate ``little endian'' format output.
  @end table
  @end ifset
  
@@ -2259,7 +2295,7 @@ index b1d94d5..1874088 100644
  @ifset M68HC11
  The following options are available when @value{AS} is configured for the
  Motorola 68HC11 or 68HC12 series.
-@@ -7589,6 +7612,9 @@ subject, see the hardware manufacturer's manual.
+@@ -7596,6 +7619,9 @@ subject, see the hardware manufacturer's manual.
  @ifset PPC
  * PPC-Dependent::               PowerPC Dependent Features
  @end ifset
@@ -2269,7 +2305,7 @@ index b1d94d5..1874088 100644
  @ifset RL78
  * RL78-Dependent::              RL78 Dependent Features
  @end ifset
-@@ -7815,6 +7841,10 @@ family.
+@@ -7825,6 +7851,10 @@ family.
  @include c-ppc.texi
  @end ifset
  
@@ -3043,5 +3079,5 @@ index 0000000..875e1ca
 +	sxchg	253, r10.b2, 124
 +	sxchg	85, r12.b0, 85
 -- 
-2.10.1
+2.10.2
 

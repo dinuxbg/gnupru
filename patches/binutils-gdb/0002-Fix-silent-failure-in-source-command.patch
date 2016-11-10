@@ -1,4 +1,4 @@
-From c56867af74b00200d8c1d64fb616d344bf74e044 Mon Sep 17 00:00:00 2001
+From 8a7815d1f3d354c2559542122211545739e2dd4b Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 15 Jun 2014 09:58:48 +0300
 Subject: [PATCH 02/23] Fix silent failure in source command
@@ -15,6 +15,11 @@ $ /bin/dash -c '. nonexistent ; A=b'  || echo FAIL
 FAIL
 
 I'm still not sure why dash is involved, even though bash is explicitly called.
+
+==============
+2014-06-15  Dimitar Dimitrov <dimitar@dinux.eu>
+
+	* ld/genscrba.sh: Fix silent failure in source command.
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -35,5 +40,5 @@ index 030cb7d..dbbce09 100644
  }
  fragment()
 -- 
-2.10.1
+2.10.2
 

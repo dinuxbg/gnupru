@@ -1,7 +1,52 @@
-From bfff28242fb4f8df9af28fbe4750939f683e9d3d Mon Sep 17 00:00:00 2001
+From 71c49409608443d1bc7852c463ca2d0f3c75e6a7 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 23:29:13 +0300
 Subject: [PATCH 07/23] PRU LD Port
+
+2016-10-24  Dimitar Dimitrov <dimitar@dinux.eu>
+
+	* ld/NEWS: Mention new PRU target.
+	* ld/Makefile.am: Add PRU target.
+	* ld/Makefile.in: Ditto.
+	* ld/configure.tgt: Ditto.
+	* ld/emulparams/pruelf.sh: New file.
+	* ld/emultempl/pruelf.em: New file.
+	* ld/scripttempl/pru.sc: New file.
+	* ld/testsuite/ld-pru/emit-relocs-1.d: New PRU testcase file.
+	* ld/testsuite/ld-pru/emit-relocs-1.ld: Ditto.
+	* ld/testsuite/ld-pru/emit-relocs-1a.s: Ditto.
+	* ld/testsuite/ld-pru/emit-relocs-1b.s
+	* ld/testsuite/ld-pru/hilo16.d: Ditto.
+	* ld/testsuite/ld-pru/hilo16.s: Ditto.
+	* ld/testsuite/ld-pru/hilo16_symbol.s: Ditto.
+	* ld/testsuite/ld-pru/norelax_hi_rlz-data.d: Ditto.
+	* ld/testsuite/ld-pru/norelax_hi_rlz-dis.d: Ditto.
+	* ld/testsuite/ld-pru/pcrel_s10.d: Ditto.
+	* ld/testsuite/ld-pru/pcrel_s10.s: Ditto.
+	* ld/testsuite/ld-pru/pcrel_s10_label.s: Ditto.
+	* ld/testsuite/ld-pru/pcrel_u8-illegal.d: Ditto.
+	* ld/testsuite/ld-pru/pcrel_u8-illegal.s: Ditto.
+	* ld/testsuite/ld-pru/pcrel_u8-illegal2.d: Ditto.
+	* ld/testsuite/ld-pru/pcrel_u8-illegal2.s: Ditto.
+	* ld/testsuite/ld-pru/pcrel_u8-illegal3.d: Ditto.
+	* ld/testsuite/ld-pru/pcrel_u8-illegal3.s: Ditto.
+	* ld/testsuite/ld-pru/pcrel_u8.d: Ditto.
+	* ld/testsuite/ld-pru/pcrel_u8.s: Ditto.
+	* ld/testsuite/ld-pru/pcrel_u8_label.s: Ditto.
+	* ld/testsuite/ld-pru/pmem.d: Ditto.
+	* ld/testsuite/ld-pru/pmem.s: Ditto.
+	* ld/testsuite/ld-pru/pmem_symbol.s: Ditto.
+	* ld/testsuite/ld-pru/pru.exp: Ditto.
+	* ld/testsuite/ld-pru/relax_hi_rlz-data.d: Ditto.
+	* ld/testsuite/ld-pru/relax_hi_rlz-dis.d: Ditto.
+	* ld/testsuite/ld-pru/relax_hi_rlz.s: Ditto.
+	* ld/testsuite/ld-pru/relax_hi_rlz_symbol.s: Ditto.
+	* ld/testsuite/ld-pru/reloc.d: Ditto.
+	* ld/testsuite/ld-pru/reloc.s: Ditto.
+	* ld/testsuite/ld-pru/reloc_symbol.s: Ditto.
+	* ld/testsuite/ld-pru/u16_u8.d: Ditto.
+	* ld/testsuite/ld-pru/u16_u8.s: Ditto.
+	* ld/testsuite/ld-pru/u16_u8_symbol.s: Ditto.
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -122,7 +167,7 @@ index f87408e..74b6744 100644
    $(srcdir)/emultempl/generic.em $(srcdir)/scripttempl/aout.sc ${GEN_DEPENDS}
  
 diff --git a/ld/NEWS b/ld/NEWS
-index 0efa411..0b88cfd 100644
+index f8bf58d..2a73c6f 100644
 --- a/ld/NEWS
 +++ b/ld/NEWS
 @@ -1,5 +1,7 @@
@@ -130,9 +175,9 @@ index 0efa411..0b88cfd 100644
  
 +* Add support for the Texas Instruments PRU processor.
 +
- * Add support for the RISC-V architecture.
- 
- * The command line option --no-eh-frame-hdr can now be used in ELF based
+ * The EXCLUDE_FILE linker script construct can now be applied outside of the
+   section list in order for the exclusions to apply over all input sections in
+   the list.
 diff --git a/ld/configure.tgt b/ld/configure.tgt
 index c196e68..15ad2d2 100644
 --- a/ld/configure.tgt
@@ -1127,5 +1172,5 @@ index 0000000..2707060
 +.set byte_symbol, 123
 +
 -- 
-2.10.1
+2.10.2
 

@@ -1,4 +1,4 @@
-From 74654ae30593394dfc2ea9bd73dd566324640862 Mon Sep 17 00:00:00 2001
+From 0f415dd3af6231d68721534e922fc4a1da0d34e0 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 7 Oct 2016 22:51:06 +0300
 Subject: [PATCH 23/23] gdb: pru: Initial dummy port
@@ -23,7 +23,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 gdb/pru-tdep.h
 
 diff --git a/gdb/Makefile.in b/gdb/Makefile.in
-index d035d8e..b17e45a 100644
+index 3876cd9..6280d20 100644
 --- a/gdb/Makefile.in
 +++ b/gdb/Makefile.in
 @@ -692,7 +692,7 @@ ALL_TARGET_OBS = \
@@ -53,7 +53,7 @@ index d035d8e..b17e45a 100644
  	remote-sim.c \
  	dcache.c \
 diff --git a/gdb/configure.tgt b/gdb/configure.tgt
-index d428dff..d0a5c62 100644
+index 79473c9..e19721a 100644
 --- a/gdb/configure.tgt
 +++ b/gdb/configure.tgt
 @@ -471,6 +471,12 @@ powerpc*-*-*)
@@ -209,7 +209,7 @@ index 0000000..f865b67
 +</target>
 diff --git a/gdb/pru-tdep.c b/gdb/pru-tdep.c
 new file mode 100644
-index 0000000..ad7e047e
+index 0000000..61bc308
 --- /dev/null
 +++ b/gdb/pru-tdep.c
 @@ -0,0 +1,867 @@
@@ -936,16 +936,16 @@ index 0000000..ad7e047e
 +
 +/* Implement the software_single_step gdbarch method.  */
 +
-+static int
++static VEC (CORE_ADDR) *
 +pru_software_single_step (struct frame_info *frame)
 +{
 +  struct gdbarch *gdbarch = get_frame_arch (frame);
-+  struct address_space *aspace = get_frame_address_space (frame);
 +  CORE_ADDR next_pc = get_frame_pc (frame) + PRU_OPCODE_SIZE;
++  VEC (CORE_ADDR) *next_pcs = NULL;
 +
-+  insert_single_step_breakpoint (gdbarch, aspace, next_pc);
++  VEC_safe_push (CORE_ADDR, next_pcs, next_pc);
 +
-+  return 1;
++  return next_pcs;
 +}
 +
 +/* Initialize the PRU gdbarch.  */
@@ -1138,5 +1138,5 @@ index 0000000..6d08981
 +
 +#endif /* PRU_TDEP_H */
 -- 
-2.10.1
+2.10.2
 

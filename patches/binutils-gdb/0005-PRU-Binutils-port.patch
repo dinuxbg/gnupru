@@ -1,7 +1,13 @@
-From 9822fb159e74cfbf0997d314aed7fd8cab52bd5d Mon Sep 17 00:00:00 2001
+From 192d0b9e3769a7aabd3ae52e52022e3846072e16 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 23:26:30 +0300
 Subject: [PATCH 05/23] PRU Binutils port
+
+2016-10-24  Dimitar Dimitrov <dimitar@dinux.eu>
+
+	* binutils/readelf.c: Add PRU ELF and relocations.
+	* include/elf/common.h: Add PRU ELF.
+	* include/elf/pru.h: New file.
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -12,7 +18,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 include/elf/pru.h
 
 diff --git a/binutils/readelf.c b/binutils/readelf.c
-index 114486c..ca90904 100644
+index e782e95..85d5e02 100644
 --- a/binutils/readelf.c
 +++ b/binutils/readelf.c
 @@ -137,6 +137,7 @@
@@ -177,5 +183,5 @@ index 0000000..e814fe4
 +
 +#endif /* _ELF_PRU_H */
 -- 
-2.10.1
+2.10.2
 
