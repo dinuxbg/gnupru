@@ -20,7 +20,7 @@ To run the tests go to the binutils build directory and do:
 ## GCC
 First, newlib must be recompiled in "full" mode. Note that a lot of standard features are stripped by default, in order to save valuable space on the constrained PRU. But for checking compliance, we need them all. Here is an example newlib configuration:
 
-	../newlib/configure --target=pru --prefix=$HOME/bin/pru-gcc -enable-newlib-io-long-long --enable-newlib-io-long-double
+	../newlib/configure --target=pru --prefix=$HOME/bin/pru-gcc -enable-newlib-io-long-long --enable-newlib-io-long-double --enable-newlib-io-c99-formats
 
 To execute the GCC C test suite go to the GCC build directory and run:
 
