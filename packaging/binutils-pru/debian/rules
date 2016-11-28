@@ -18,6 +18,7 @@ CONFARGS = --prefix=/usr \
            --target=$(TARGET) \
            --with-gnu-ld \
            --with-gnu-as \
+           --disable-gdb \
            --enable-install-libbfd \
 	   --with-bugurl="https://github.com/dinuxbg/gnupru/issues" \
            $(shell dpkg-buildflags --export=configure) 

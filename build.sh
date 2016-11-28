@@ -15,7 +15,7 @@ die()
 build_binutils()
 {
   cd $BUILD/binutils-gdb
-  $SRC/binutils-gdb/configure --target=pru --prefix=$PREFIX --disable-nls --with-bugurl="https://github.com/dinuxbg/gnupru/issues" || die Could not configure Binutils
+  $SRC/binutils-gdb/configure --target=pru --prefix=$PREFIX --disable-nls --with-bugurl="https://github.com/dinuxbg/gnupru/issues" --disable-gdb || die Could not configure Binutils
   make -j4 || die Could not build Binutils
   make install || die Could not install Binutils
 }
