@@ -1,4 +1,4 @@
-From c1d49ca34b03ae5f10066dff1d69780699f66711 Mon Sep 17 00:00:00 2001
+From 262c90f269ebb9a53551bcff8cfbc8183116a6ae Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 13 Oct 2016 23:07:10 +0300
 Subject: [PATCH 13/23] gas: testsuite: Mark lns-common-1-alt variant for PRU

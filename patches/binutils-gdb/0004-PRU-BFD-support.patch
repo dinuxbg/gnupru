@@ -1,4 +1,4 @@
-From 40666933e2e4ed4c3d1d6afb063d00c2b06d65f1 Mon Sep 17 00:00:00 2001
+From 8e98171d95cea0650843e0cee4df53c9afd8e445 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 23:22:58 +0300
 Subject: [PATCH 04/23] PRU BFD support
@@ -236,7 +236,7 @@ index b692f0a..1632976 100644
    riscv32-*-*)
      targ_defvec=riscv_elf32_vec
 diff --git a/bfd/configure.ac b/bfd/configure.ac
-index 6f11d29..7fd5e4b 100644
+index 3254dae..5086678 100644
 --- a/bfd/configure.ac
 +++ b/bfd/configure.ac
 @@ -606,6 +606,7 @@ do
@@ -297,7 +297,7 @@ index 0000000..75d5d5a
 +
 +const bfd_arch_info_type bfd_pru_arch = N (32, 32, 0, "pru", TRUE, NULL);
 diff --git a/bfd/elf-bfd.h b/bfd/elf-bfd.h
-index 50151cb..41a07d2 100644
+index 06bd800..70f66ed 100644
 --- a/bfd/elf-bfd.h
 +++ b/bfd/elf-bfd.h
 @@ -467,6 +467,7 @@ enum elf_target_id

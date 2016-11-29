@@ -1,4 +1,4 @@
-From 8ddf69f820d4e246fee59010e52193467b504d55 Mon Sep 17 00:00:00 2001
+From 13e86329d9520606a45ba826e2a565d451689715 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 23 Oct 2016 08:30:39 +0300
 Subject: [PATCH 17/23] ld: testsuite: PRU LD does not support arbitrary .text

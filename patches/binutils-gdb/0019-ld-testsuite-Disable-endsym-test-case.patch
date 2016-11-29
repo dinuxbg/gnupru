@@ -1,4 +1,4 @@
-From 80d0b19f0db4fef9ebf2e794e7c1baaa620b852d Mon Sep 17 00:00:00 2001
+From 82c40ea38cd6a76eb313452abb48864b38ce3a83 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 23 Oct 2016 18:21:47 +0300
 Subject: [PATCH 19/23] ld: testsuite: Disable endsym test case

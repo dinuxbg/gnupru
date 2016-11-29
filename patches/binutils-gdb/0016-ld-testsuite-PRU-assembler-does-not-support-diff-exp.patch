@@ -1,4 +1,4 @@
-From 4b99cca5ddeb2096ed963754adfe5b596e95e27e Mon Sep 17 00:00:00 2001
+From 2b50611467843d4b6b1ab56e9b8f74ccf38c3dc0 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 23 Oct 2016 08:22:18 +0300
 Subject: [PATCH 16/23] ld: testsuite: PRU assembler does not support diff

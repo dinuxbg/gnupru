@@ -1,4 +1,4 @@
-From a38efefb962b92ba4cdde8e061451883c0888224 Mon Sep 17 00:00:00 2001
+From a0f373f64a681bda911aa49c70272d237af1a276 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 23:32:42 +0300
 Subject: [PATCH 21/23] elfcpp: TODO - discard?

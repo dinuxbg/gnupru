@@ -1,4 +1,4 @@
-From f0553c669561f9ad4e8fc132a040c7f881a23947 Mon Sep 17 00:00:00 2001
+From 684b090be0376256295041f50d43ab9dfdaf2b8b Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 13 Oct 2016 21:32:08 +0300
 Subject: [PATCH 09/23] ld: testsuite: Mark PRU as elf target that does not

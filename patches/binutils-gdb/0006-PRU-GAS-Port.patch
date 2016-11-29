@@ -1,4 +1,4 @@
-From 7fe8b277ef87c36b72c6571f4c1e8b09714bd19f Mon Sep 17 00:00:00 2001
+From ec6adeb18281eaa222d5a76b3dfcf9d8ba3fed6e Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 23:28:41 +0300
 Subject: [PATCH 06/23] PRU GAS Port
@@ -45,7 +45,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  gas/Makefile.in                       |   17 +
  gas/NEWS                              |    2 +
  gas/config/obj-elf.c                  |    4 +
- gas/config/tc-pru.c                   | 1840 +++++++++++++++++++++++++++++++++
+ gas/config/tc-pru.c                   | 1846 +++++++++++++++++++++++++++++++++
  gas/config/tc-pru.h                   |  157 +++
  gas/configure.tgt                     |    2 +
  gas/doc/Makefile.am                   |    1 +
@@ -74,7 +74,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  gas/testsuite/gas/pru/warn_reglabel.s |    6 +
  gas/testsuite/gas/pru/xfr.d           |   44 +
  gas/testsuite/gas/pru/xfr.s           |   52 +
- 33 files changed, 2687 insertions(+)
+ 33 files changed, 2693 insertions(+)
  create mode 100644 gas/config/tc-pru.c
  create mode 100644 gas/config/tc-pru.h
  create mode 100644 gas/doc/c-pru.texi
@@ -101,7 +101,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 gas/testsuite/gas/pru/xfr.s
 
 diff --git a/gas/Makefile.am b/gas/Makefile.am
-index cdaf9f5..3fba6f9 100644
+index cac7c7f..3bfab34 100644
 --- a/gas/Makefile.am
 +++ b/gas/Makefile.am
 @@ -177,6 +177,7 @@ TARGET_CPU_CFILES = \
@@ -121,10 +121,10 @@ index cdaf9f5..3fba6f9 100644
  	config/tc-rl78.h \
  	config/tc-rx.h \
 diff --git a/gas/Makefile.in b/gas/Makefile.in
-index 84f746d..3533695 100644
+index 70578ad..a3962da 100644
 --- a/gas/Makefile.in
 +++ b/gas/Makefile.in
-@@ -472,6 +472,7 @@ TARGET_CPU_CFILES = \
+@@ -473,6 +473,7 @@ TARGET_CPU_CFILES = \
  	config/tc-pdp11.c \
  	config/tc-pj.c \
  	config/tc-ppc.c \
@@ -132,7 +132,7 @@ index 84f746d..3533695 100644
  	config/tc-riscv.c \
  	config/tc-rl78.c \
  	config/tc-rx.c \
-@@ -546,6 +547,7 @@ TARGET_CPU_HFILES = \
+@@ -547,6 +548,7 @@ TARGET_CPU_HFILES = \
  	config/tc-pdp11.h \
  	config/tc-pj.h \
  	config/tc-ppc.h \
@@ -140,7 +140,7 @@ index 84f746d..3533695 100644
  	config/tc-riscv.h \
  	config/tc-rl78.h \
  	config/tc-rx.h \
-@@ -905,6 +907,7 @@ distclean-compile:
+@@ -906,6 +908,7 @@ distclean-compile:
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-pdp11.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-pj.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-ppc.Po@am__quote@
@@ -148,7 +148,7 @@ index 84f746d..3533695 100644
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-riscv.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-rl78.Po@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tc-rx.Po@am__quote@
-@@ -1626,6 +1629,20 @@ tc-ppc.obj: config/tc-ppc.c
+@@ -1627,6 +1630,20 @@ tc-ppc.obj: config/tc-ppc.c
  @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
  @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tc-ppc.obj `if test -f 'config/tc-ppc.c'; then $(CYGPATH_W) 'config/tc-ppc.c'; else $(CYGPATH_W) '$(srcdir)/config/tc-ppc.c'; fi`
  
@@ -198,10 +198,10 @@ index 8d80c77..a1b882e 100644
  static void obj_elf_type (int);
 diff --git a/gas/config/tc-pru.c b/gas/config/tc-pru.c
 new file mode 100644
-index 0000000..4ae8135
+index 0000000..6c72d7f
 --- /dev/null
 +++ b/gas/config/tc-pru.c
-@@ -0,0 +1,1840 @@
+@@ -0,0 +1,1846 @@
 +/* TI PRU assembler.
 +   Copyright (C) 2014-2016 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -1208,7 +1208,13 @@ index 0000000..4ae8135
 +static void
 +pru_assemble_arg_D (pru_insn_infoS *insn_info, const char *argstr)
 +{
-+  struct pru_reg *dst = pru_reg_lookup (argstr);
++  struct pru_reg *dst;
++
++  /* The leading & before an address register is optional.  */
++  if (*argstr == '&')
++    argstr++;
++
++  dst = pru_reg_lookup (argstr);
 +
 +  if (dst == NULL)
 +    as_bad (_("unknown register %s"), argstr);
@@ -2231,10 +2237,10 @@ index 54d7ef1..c604a29 100644
  	c-riscv.texi \
  	c-rx.texi \
 diff --git a/gas/doc/Makefile.in b/gas/doc/Makefile.in
-index 474bd48..86d4dfc 100644
+index 7110192..58b0e36 100644
 --- a/gas/doc/Makefile.in
 +++ b/gas/doc/Makefile.in
-@@ -354,6 +354,7 @@ CPU_DOCS = \
+@@ -355,6 +355,7 @@ CPU_DOCS = \
  	c-pdp11.texi \
  	c-pj.texi \
  	c-ppc.texi \
@@ -2772,7 +2778,7 @@ index 0000000..7e44b6d
 +0+0060 <[^>]*> 81057f8a 	sbco	r10.b0, 31, 5, 8
 diff --git a/gas/testsuite/gas/pru/ldst.s b/gas/testsuite/gas/pru/ldst.s
 new file mode 100644
-index 0000000..96fdd15
+index 0000000..e8ad3a2
 --- /dev/null
 +++ b/gas/testsuite/gas/pru/ldst.s
 @@ -0,0 +1,37 @@
@@ -2785,20 +2791,20 @@ index 0000000..96fdd15
 +	ldi	r16, 511
 +
 +	# load
-+	lbbo	r0.b1, r30, r1.b3, 1
++	lbbo	&r0.b1, r30, r1.b3, 1
 +	lbbo	r0.b2, r30, r1.b2, 124
 +	lbbo	r0.b3, r30, 255, 1
-+	lbbo	r0, r30, 1, 2
++	lbbo	&r0, r30, 1, 2
 +	lbbo	r0, r30, 0, 0x55
 +	lbbo	r18, r25, r1.w1, r0.b0
 +	lbbo	r18, r25, 101, r0.b1
 +	lbbo	r18, r25, r1, r0.b3
 +
 +	# store
-+	sbbo	r0.b1, r30, r1.b3, 1
++	sbbo	&r0.b1, r30, r1.b3, 1
 +	sbbo	r0.b2, r30, r1.b2, 124
 +	sbbo	r0.b3, r30, 255, 1
-+	sbbo	r0, r30, 1, 2
++	sbbo	&r0, r30, 1, 2
 +	sbbo	r0, r30, 0, 0x55
 +	sbbo	r18, r25, r1, r0.b0
 +	sbbo	r18, r25, 101, r0.b1

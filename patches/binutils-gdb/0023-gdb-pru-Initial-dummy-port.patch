@@ -1,4 +1,4 @@
-From 0f415dd3af6231d68721534e922fc4a1da0d34e0 Mon Sep 17 00:00:00 2001
+From 4415ffeda330c80902558f9845d2b0426415d7d1 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 7 Oct 2016 22:51:06 +0300
 Subject: [PATCH 23/23] gdb: pru: Initial dummy port
@@ -7,7 +7,7 @@ This needs a lot of work.
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
- gdb/Makefile.in          |   5 +-
+ gdb/Makefile.in          |   3 +
  gdb/configure.tgt        |   6 +
  gdb/features/Makefile    |   1 +
  gdb/features/pru-cpu.xml |  43 +++
@@ -15,7 +15,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  gdb/features/pru.xml     |  12 +
  gdb/pru-tdep.c           | 867 +++++++++++++++++++++++++++++++++++++++++++++++
  gdb/pru-tdep.h           |  51 +++
- 8 files changed, 1036 insertions(+), 2 deletions(-)
+ 8 files changed, 1036 insertions(+)
  create mode 100644 gdb/features/pru-cpu.xml
  create mode 100644 gdb/features/pru.c
  create mode 100644 gdb/features/pru.xml
@@ -23,37 +23,35 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 gdb/pru-tdep.h
 
 diff --git a/gdb/Makefile.in b/gdb/Makefile.in
-index 3876cd9..6280d20 100644
+index 415cca3..ebd6aa8 100644
 --- a/gdb/Makefile.in
 +++ b/gdb/Makefile.in
-@@ -692,7 +692,7 @@ ALL_TARGET_OBS = \
- 	nios2-tdep.o nios2-linux-tdep.o \
- 	nto-tdep.o \
- 	ppc-linux-tdep.o ppcfbsd-tdep.o ppcnbsd-tdep.o ppcobsd-tdep.o  \
--	ppc-sysv-tdep.o ppc64-tdep.o rl78-tdep.o \
-+	ppc-sysv-tdep.o ppc64-tdep.o pru-tdep.o rl78-tdep.o \
- 	rs6000-aix-tdep.o rs6000-tdep.o solib-aix.o ppc-ravenscar-thread.o \
- 	rs6000-lynx178-tdep.o \
- 	rx-tdep.o \
-@@ -968,7 +968,7 @@ dicos-tdep.h filesystem.h gcore.h gdb_wchar.h hppabsd-tdep.h \
- i386-darwin-tdep.h x86-nat.h linux-record.h moxie-tdep.h nios2-tdep.h \
- ft32-tdep.h nds32-tdep.h \
- osdata.h procfs.h python/py-event.h python/py-events.h python/py-stopevent.h \
--python/python-internal.h python/python.h ravenscar-thread.h record.h \
-+python/python-internal.h python/python.h pru-tdep.h ravenscar-thread.h record.h \
- record-full.h solib-aix.h \
- solib-darwin.h solib-spu.h windows-nat.h xcoffread.h \
- gnulib/import/extra/snippet/arg-nonnull.h gnulib/import/extra/snippet/c++defs.h \
-@@ -1733,6 +1733,7 @@ ALLDEPFILES = \
- 	ppcnbsd-nat.c ppcnbsd-tdep.c \
- 	ppcobsd-nat.c ppcobsd-tdep.c \
+@@ -839,6 +839,7 @@ ALL_TARGET_OBS = \
+ 	ppc-ravenscar-thread.o \
+ 	ppc-sysv-tdep.o \
+ 	ppc64-tdep.o \
++	pru-tdep.o \
+ 	ravenscar-thread.o \
+ 	rl78-tdep.o \
+ 	rs6000-aix-tdep.o \
+@@ -1382,6 +1383,7 @@ HFILES_NO_SRCDIR = \
+ 	procfs.h \
+ 	progspace.h \
+ 	prologue-value.h \
++	pru-tdep.h \
+ 	psympriv.h \
+ 	psymtab.h \
+ 	ravenscar-thread.h \
+@@ -2570,6 +2572,7 @@ ALLDEPFILES = \
+ 	ppc-sysv-tdep.c \
+ 	ppc64-tdep.c \
  	procfs.c \
 +	pru-tdep.c \
  	ravenscar-thread.c \
  	remote-sim.c \
- 	dcache.c \
+ 	rl78-tdep.c \
 diff --git a/gdb/configure.tgt b/gdb/configure.tgt
-index 79473c9..e19721a 100644
+index 3a1ea6f..76eb457 100644
 --- a/gdb/configure.tgt
 +++ b/gdb/configure.tgt
 @@ -471,6 +471,12 @@ powerpc*-*-*)

@@ -1,4 +1,4 @@
-From 192d0b9e3769a7aabd3ae52e52022e3846072e16 Mon Sep 17 00:00:00 2001
+From d4a1f2f2e779236fc010480220c6f509f8bb303a Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 23:26:30 +0300
 Subject: [PATCH 05/23] PRU Binutils port
@@ -18,7 +18,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 include/elf/pru.h
 
 diff --git a/binutils/readelf.c b/binutils/readelf.c
-index e782e95..85d5e02 100644
+index ee55852..38aeace 100644
 --- a/binutils/readelf.c
 +++ b/binutils/readelf.c
 @@ -137,6 +137,7 @@
@@ -56,7 +56,7 @@ index e782e95..85d5e02 100644
      default:
        snprintf (buff, sizeof (buff), _("<unknown>: 0x%x"), e_machine);
        return buff;
-@@ -11631,6 +11638,18 @@ target_specific_reloc_handling (Elf_Internal_Rela * reloc,
+@@ -11660,6 +11667,18 @@ target_specific_reloc_handling (Elf_Internal_Rela * reloc,
  	break;
        }
  
@@ -75,7 +75,7 @@ index e782e95..85d5e02 100644
      case EM_RL78:
        {
  	static bfd_vma saved_sym1 = 0;
-@@ -11801,6 +11820,8 @@ is_32bit_abs_reloc (unsigned int reloc_type)
+@@ -11830,6 +11849,8 @@ is_32bit_abs_reloc (unsigned int reloc_type)
        return reloc_type == 1; /* R_PPC64_ADDR32.  */
      case EM_PPC:
        return reloc_type == 1; /* R_PPC_ADDR32.  */
@@ -84,7 +84,7 @@ index e782e95..85d5e02 100644
      case EM_RISCV:
        return reloc_type == 1; /* R_RISCV_32.  */
      case EM_RL78:
-@@ -12083,6 +12104,8 @@ is_16bit_abs_reloc (unsigned int reloc_type)
+@@ -12112,6 +12133,8 @@ is_16bit_abs_reloc (unsigned int reloc_type)
        return reloc_type == 9; /* R_NIOS_16.  */
      case EM_OR1K:
        return reloc_type == 2; /* R_OR1K_16.  */
@@ -93,7 +93,7 @@ index e782e95..85d5e02 100644
      case EM_TI_C6000:
        return reloc_type == 2; /* R_C6000_ABS16.  */
      case EM_VISIUM:
-@@ -12129,6 +12152,7 @@ is_none_reloc (unsigned int reloc_type)
+@@ -12158,6 +12181,7 @@ is_none_reloc (unsigned int reloc_type)
      case EM_PARISC:  /* R_PARISC_NONE.  */
      case EM_PPC64:   /* R_PPC64_NONE.  */
      case EM_PPC:     /* R_PPC_NONE.  */

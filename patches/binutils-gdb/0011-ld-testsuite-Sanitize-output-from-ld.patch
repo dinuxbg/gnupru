@@ -1,4 +1,4 @@
-From d2882c523e31b8924a65126f8076afd16054dbb8 Mon Sep 17 00:00:00 2001
+From cae1f106f2277fc44b07546a022eff9973ab8278 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 16 Oct 2016 21:50:12 +0300
 Subject: [PATCH 11/23] ld: testsuite: Sanitize output from ld

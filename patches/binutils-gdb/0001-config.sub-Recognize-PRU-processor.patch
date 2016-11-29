@@ -1,4 +1,4 @@
-From ac61209e55ac377cf5418b6b369f33a41f4ffa8c Mon Sep 17 00:00:00 2001
+From d6b626a7cd4d98802f4a96a5bba08c8333a0764c Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 22:35:32 +0300
 Subject: [PATCH 01/23] config.sub: Recognize PRU processor
