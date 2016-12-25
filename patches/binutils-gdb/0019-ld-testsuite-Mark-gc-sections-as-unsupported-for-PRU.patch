@@ -1,0 +1,108 @@
+From 858a4783fe0e244b3a7d039f5b9f99193ba78cb4 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Thu, 15 Dec 2016 23:15:18 +0200
+Subject: [PATCH 19/25] ld: testsuite: Mark --gc-sections as unsupported for
+ PRU
+
+2016-12-26  Dimitar Dimitrov <dimitar@dinux.eu>
+
+ld/
+
+	testsuite/ld-elf/group8a.d: Disable for PRU.
+	testsuite/ld-elf/group8b.d: Disable for PRU.
+	testsuite/ld-elf/group9a.d: Disable for PRU.
+	testsuite/ld-elf/group9b.d: Disable for PRU.
+	testsuite/ld-elf/pr12851.d: Disable for PRU.
+	testsuite/lib/ld-lib.exp (check_gc_sections_available): Mark PRU
+	as not supporting --gc-sections.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ ld/testsuite/ld-elf/group8a.d | 2 +-
+ ld/testsuite/ld-elf/group8b.d | 2 +-
+ ld/testsuite/ld-elf/group9a.d | 2 +-
+ ld/testsuite/ld-elf/group9b.d | 2 +-
+ ld/testsuite/ld-elf/pr12851.d | 2 +-
+ ld/testsuite/lib/ld-lib.exp   | 1 +
+ 6 files changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/ld/testsuite/ld-elf/group8a.d b/ld/testsuite/ld-elf/group8a.d
+index 45955ba390..52112e9208 100644
+--- a/ld/testsuite/ld-elf/group8a.d
++++ b/ld/testsuite/ld-elf/group8a.d
+@@ -1,7 +1,7 @@
+ #source: group8.s
+ #ld: -r --gc-sections --entry foo
+ #readelf: -g --wide
+-#notarget: d30v-*-* dlx-*-* i960-*-* pj*-*-*
++#notarget: d30v-*-* dlx-*-* i960-*-* pj*-*-* pru-*-*
+ #notarget: hppa64-*-* i370-*-* i860-*-* ia64-*-* mep-*-* mn10200-*-*
+ #xfail: cr16-*-* crx-*-*
+ # generic linker targets don't support --gc-sections, nor do a bunch of others
+diff --git a/ld/testsuite/ld-elf/group8b.d b/ld/testsuite/ld-elf/group8b.d
+index 0175c7fac9..879cd1305d 100644
+--- a/ld/testsuite/ld-elf/group8b.d
++++ b/ld/testsuite/ld-elf/group8b.d
+@@ -1,7 +1,7 @@
+ #source: group8.s
+ #ld: -r --gc-sections --entry bar
+ #readelf: -g --wide
+-#notarget: d30v-*-* dlx-*-* i960-*-* pj*-*-*
++#notarget: d30v-*-* dlx-*-* i960-*-* pj*-*-* pru-*-*
+ #notarget: hppa64-*-* i370-*-* i860-*-* ia64-*-* mep-*-* mn10200-*-*
+ #xfail: cr16-*-* crx-*-*
+ # generic linker targets don't support --gc-sections, nor do a bunch of others
+diff --git a/ld/testsuite/ld-elf/group9a.d b/ld/testsuite/ld-elf/group9a.d
+index 44fe606b36..346254b13f 100644
+--- a/ld/testsuite/ld-elf/group9a.d
++++ b/ld/testsuite/ld-elf/group9a.d
+@@ -1,7 +1,7 @@
+ #source: group9.s
+ #ld: -r --gc-sections --entry foo
+ #readelf: -g --wide
+-#notarget: d30v-*-* dlx-*-* i960-*-* pj*-*-*
++#notarget: d30v-*-* dlx-*-* i960-*-* pj*-*-* pru-*-*
+ #notarget: alpha-*-* hppa64-*-* i370-*-* i860-*-* ia64-*-* mep-*-* mn10200-*-*
+ #xfail: cr16-*-* crx-*-*
+ # generic linker targets don't support --gc-sections, nor do a bunch of others
+diff --git a/ld/testsuite/ld-elf/group9b.d b/ld/testsuite/ld-elf/group9b.d
+index 4ab2ba6922..3005f8f4b7 100644
+--- a/ld/testsuite/ld-elf/group9b.d
++++ b/ld/testsuite/ld-elf/group9b.d
+@@ -1,7 +1,7 @@
+ #source: group9.s
+ #ld: -r --gc-sections --entry bar
+ #readelf: -g --wide
+-#notarget: d30v-*-* dlx-*-* i960-*-* pj*-*-*
++#notarget: d30v-*-* dlx-*-* i960-*-* pj*-*-* pru-*-*
+ #notarget: alpha-*-* hppa64-*-* i370-*-* i860-*-* ia64-*-* mep-*-* mn10200-*-*
+ #xfail: cr16-*-* crx-*-*
+ # generic linker targets don't support --gc-sections, nor do a bunch of others
+diff --git a/ld/testsuite/ld-elf/pr12851.d b/ld/testsuite/ld-elf/pr12851.d
+index 48ecb09012..61c224d47d 100644
+--- a/ld/testsuite/ld-elf/pr12851.d
++++ b/ld/testsuite/ld-elf/pr12851.d
+@@ -2,7 +2,7 @@
+ #source: start.s
+ #ld: --gc-sections
+ #readelf: -s --wide
+-#notarget: d30v-*-* dlx-*-* i960-*-* pj*-*-*
++#notarget: d30v-*-* dlx-*-* i960-*-* pj*-*-* pru-*-*
+ #notarget: hppa64-*-* i370-*-* i860-*-* ia64-*-* mep-*-* mn10200-*-*
+ # generic linker targets don't support --gc-sections, nor do a bunch of others
+ 
+diff --git a/ld/testsuite/lib/ld-lib.exp b/ld/testsuite/lib/ld-lib.exp
+index 30aea19e71..5049b12903 100644
+--- a/ld/testsuite/lib/ld-lib.exp
++++ b/ld/testsuite/lib/ld-lib.exp
+@@ -1705,6 +1705,7 @@ proc check_gc_sections_available { } {
+ 	    || [istarget dlx-*-*]
+ 	    || [istarget i960-*-*]
+ 	    || [istarget pj*-*-*]
++	    || [istarget pru*-*-*]
+ 	    || [istarget alpha-*-*]
+ 	    || [istarget hppa*64-*-*]
+ 	    || [istarget i370-*-*]
+-- 
+2.11.0
+

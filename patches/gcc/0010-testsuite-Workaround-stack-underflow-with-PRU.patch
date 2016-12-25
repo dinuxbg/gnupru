@@ -1,0 +1,25 @@
+From bd9bca0d5a12e05633cf281c10f820631d8acee8 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Thu, 10 Nov 2016 22:03:45 +0200
+Subject: [PATCH 10/14] testsuite: Workaround stack underflow with PRU
+
+TODO - should we rely on the DejaGNu workaround that moves the stack?
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ gcc/testsuite/gcc.c-torture/execute/pr47237.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gcc/testsuite/gcc.c-torture/execute/pr47237.c b/gcc/testsuite/gcc.c-torture/execute/pr47237.c
+index 08025313389..bfd6c183f3c 100644
+--- a/gcc/testsuite/gcc.c-torture/execute/pr47237.c
++++ b/gcc/testsuite/gcc.c-torture/execute/pr47237.c
+@@ -1,4 +1,4 @@
+-/* { dg-xfail-if "can cause stack underflow" { nios2-*-* } "*" "" } */
++/* { dg-xfail-if "can cause stack underflow" { nios2-*-* pru*-*-*"} "*" "" } */
+ /* { dg-require-effective-target untyped_assembly } */
+ #define INTEGER_ARG  5
+ 
+-- 
+2.11.0
+

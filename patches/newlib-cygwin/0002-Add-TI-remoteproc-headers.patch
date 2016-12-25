@@ -1,4 +1,4 @@
-From fb5e1fe4d29049ec36ec71d9ca3d1013c7110333 Mon Sep 17 00:00:00 2001
+From 40122a1ca0abe97e3537465839d81fd998a86995 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sun, 11 Oct 2015 11:52:38 +0300
 Subject: [PATCH 2/2] Add TI remoteproc headers
@@ -21,7 +21,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 
 diff --git a/libgloss/pru/include/pru_rpmsg.h b/libgloss/pru/include/pru_rpmsg.h
 new file mode 100644
-index 0000000..d5ed79c
+index 000000000..d5ed79c3e
 --- /dev/null
 +++ b/libgloss/pru/include/pru_rpmsg.h
 @@ -0,0 +1,223 @@
@@ -250,7 +250,7 @@ index 0000000..d5ed79c
 +#endif /* _PRU_RPMSG_H_ */
 diff --git a/libgloss/pru/include/pru_types.h b/libgloss/pru/include/pru_types.h
 new file mode 100644
-index 0000000..5fa62a4
+index 000000000..5fa62a4f4
 --- /dev/null
 +++ b/libgloss/pru/include/pru_types.h
 @@ -0,0 +1,83 @@
@@ -339,7 +339,7 @@ index 0000000..5fa62a4
 +#endif /* _PRU_TYPES_H_ */
 diff --git a/libgloss/pru/include/pru_virtio_ids.h b/libgloss/pru/include/pru_virtio_ids.h
 new file mode 100644
-index 0000000..a7630d0
+index 000000000..a7630d040
 --- /dev/null
 +++ b/libgloss/pru/include/pru_virtio_ids.h
 @@ -0,0 +1,42 @@
@@ -387,7 +387,7 @@ index 0000000..a7630d0
 +#endif /* _LINUX_VIRTIO_IDS_H */
 diff --git a/libgloss/pru/include/pru_virtio_ring.h b/libgloss/pru/include/pru_virtio_ring.h
 new file mode 100644
-index 0000000..6cbb32f
+index 000000000..6cbb32f79
 --- /dev/null
 +++ b/libgloss/pru/include/pru_virtio_ring.h
 @@ -0,0 +1,159 @@
@@ -552,7 +552,7 @@ index 0000000..6cbb32f
 +}
 diff --git a/libgloss/pru/include/pru_virtqueue.h b/libgloss/pru/include/pru_virtqueue.h
 new file mode 100644
-index 0000000..b687bb7
+index 000000000..b687bb7f8
 --- /dev/null
 +++ b/libgloss/pru/include/pru_virtqueue.h
 @@ -0,0 +1,218 @@
@@ -776,7 +776,7 @@ index 0000000..b687bb7
 +#endif /* _PRU_VIRTQUEUE_H_ */
 diff --git a/libgloss/pru/include/rsc_types.h b/libgloss/pru/include/rsc_types.h
 new file mode 100644
-index 0000000..755ab60
+index 000000000..755ab601b
 --- /dev/null
 +++ b/libgloss/pru/include/rsc_types.h
 @@ -0,0 +1,347 @@
@@ -1128,5 +1128,5 @@ index 0000000..755ab60
 +
 +#endif /* _RSC_TYPES_H_ */
 -- 
-2.10.2
+2.11.0
 

@@ -1,0 +1,63 @@
+From 84745cbab30d639dea39f8d72d71ef6f7d105c01 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Mon, 5 Dec 2016 19:51:42 +0200
+Subject: [PATCH 01/25] Sync config.sub with upstream
+
+Latest config.sub from upstream is needed to recognize the PRU core.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ config.sub | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/config.sub b/config.sub
+index 70a4180eaf..a2a01128b5 100755
+--- a/config.sub
++++ b/config.sub
+@@ -2,7 +2,7 @@
+ # Configuration validation subroutine script.
+ #   Copyright 1992-2016 Free Software Foundation, Inc.
+ 
+-timestamp='2016-11-03'
++timestamp='2016-11-19'
+ 
+ # This file is free software; you can redistribute it and/or modify it
+ # under the terms of the GNU General Public License as published by
+@@ -301,6 +301,7 @@ case $basic_machine in
+ 	| open8 | or1k | or1knd | or32 \
+ 	| pdp10 | pdp11 | pj | pjl \
+ 	| powerpc | powerpc64 | powerpc64le | powerpcle \
++	| pru \
+ 	| pyramid \
+ 	| riscv32 | riscv64 \
+ 	| rl78 | rx \
+@@ -428,6 +429,7 @@ case $basic_machine in
+ 	| orion-* \
+ 	| pdp10-* | pdp11-* | pj-* | pjl-* | pn-* | power-* \
+ 	| powerpc-* | powerpc64-* | powerpc64le-* | powerpcle-* \
++	| pru-* \
+ 	| pyramid-* \
+ 	| riscv32-* | riscv64-* \
+ 	| rl78-* | romp-* | rs6000-* | rx-* \
+@@ -1395,7 +1397,7 @@ case $os in
+ 	      | -bosx* | -nextstep* | -cxux* | -aout* | -elf* | -oabi* \
+ 	      | -ptx* | -coff* | -ecoff* | -winnt* | -domain* | -vsta* \
+ 	      | -udi* | -eabi* | -lites* | -ieee* | -go32* | -aux* \
+-	      | -chorusos* | -chorusrdb* | -cegcc* \
++	      | -chorusos* | -chorusrdb* | -cegcc* | -glidix* \
+ 	      | -cygwin* | -msys* | -pe* | -psos* | -moss* | -proelf* | -rtems* \
+ 	      | -midipix* | -mingw32* | -mingw64* | -linux-gnu* | -linux-android* \
+ 	      | -linux-newlib* | -linux-musl* | -linux-uclibc* \
+@@ -1636,6 +1638,9 @@ case $basic_machine in
+ 	sparc-* | *-sun)
+ 		os=-sunos4.1.1
+ 		;;
++	pru-*)
++		os=-elf
++		;;
+ 	*-be)
+ 		os=-beos
+ 		;;
+-- 
+2.11.0
+

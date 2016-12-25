@@ -1,7 +1,7 @@
-From 4415ffeda330c80902558f9845d2b0426415d7d1 Mon Sep 17 00:00:00 2001
+From 044c7f11efddbbdcba2ed4a2b3952511372838d9 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 7 Oct 2016 22:51:06 +0300
-Subject: [PATCH 23/23] gdb: pru: Initial dummy port
+Subject: [PATCH 23/25] gdb: pru: Initial dummy port
 
 This needs a lot of work.
 
@@ -23,7 +23,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 gdb/pru-tdep.h
 
 diff --git a/gdb/Makefile.in b/gdb/Makefile.in
-index 415cca3..ebd6aa8 100644
+index 946d4400a9..093efe51f2 100644
 --- a/gdb/Makefile.in
 +++ b/gdb/Makefile.in
 @@ -839,6 +839,7 @@ ALL_TARGET_OBS = \
@@ -34,7 +34,7 @@ index 415cca3..ebd6aa8 100644
  	ravenscar-thread.o \
  	rl78-tdep.o \
  	rs6000-aix-tdep.o \
-@@ -1382,6 +1383,7 @@ HFILES_NO_SRCDIR = \
+@@ -1381,6 +1382,7 @@ HFILES_NO_SRCDIR = \
  	procfs.h \
  	progspace.h \
  	prologue-value.h \
@@ -42,7 +42,7 @@ index 415cca3..ebd6aa8 100644
  	psympriv.h \
  	psymtab.h \
  	ravenscar-thread.h \
-@@ -2570,6 +2572,7 @@ ALLDEPFILES = \
+@@ -2569,6 +2571,7 @@ ALLDEPFILES = \
  	ppc-sysv-tdep.c \
  	ppc64-tdep.c \
  	procfs.c \
@@ -51,7 +51,7 @@ index 415cca3..ebd6aa8 100644
  	remote-sim.c \
  	rl78-tdep.c \
 diff --git a/gdb/configure.tgt b/gdb/configure.tgt
-index 3a1ea6f..76eb457 100644
+index 3f2603ddb7..02aab4cdc4 100644
 --- a/gdb/configure.tgt
 +++ b/gdb/configure.tgt
 @@ -471,6 +471,12 @@ powerpc*-*-*)
@@ -68,7 +68,7 @@ index 3a1ea6f..76eb457 100644
  	# Target: S390 running Linux
  	gdb_target_obs="s390-linux-tdep.o solib-svr4.o linux-tdep.o \
 diff --git a/gdb/features/Makefile b/gdb/features/Makefile
-index 30eed5d..d4d8350 100644
+index 30eed5db67..d4d8350359 100644
 --- a/gdb/features/Makefile
 +++ b/gdb/features/Makefile
 @@ -173,6 +173,7 @@ XMLTOC = \
@@ -81,7 +81,7 @@ index 30eed5d..d4d8350 100644
  	rs6000/powerpc-403.xml \
 diff --git a/gdb/features/pru-cpu.xml b/gdb/features/pru-cpu.xml
 new file mode 100644
-index 0000000..ddfc1d2
+index 0000000000..ddfc1d254c
 --- /dev/null
 +++ b/gdb/features/pru-cpu.xml
 @@ -0,0 +1,43 @@
@@ -130,7 +130,7 @@ index 0000000..ddfc1d2
 +</feature>
 diff --git a/gdb/features/pru.c b/gdb/features/pru.c
 new file mode 100644
-index 0000000..fe27044
+index 0000000000..fe270443e6
 --- /dev/null
 +++ b/gdb/features/pru.c
 @@ -0,0 +1,53 @@
@@ -189,7 +189,7 @@ index 0000000..fe27044
 +}
 diff --git a/gdb/features/pru.xml b/gdb/features/pru.xml
 new file mode 100644
-index 0000000..f865b67
+index 0000000000..f865b67752
 --- /dev/null
 +++ b/gdb/features/pru.xml
 @@ -0,0 +1,12 @@
@@ -207,7 +207,7 @@ index 0000000..f865b67
 +</target>
 diff --git a/gdb/pru-tdep.c b/gdb/pru-tdep.c
 new file mode 100644
-index 0000000..61bc308
+index 0000000000..61bc30816b
 --- /dev/null
 +++ b/gdb/pru-tdep.c
 @@ -0,0 +1,867 @@
@@ -1080,7 +1080,7 @@ index 0000000..61bc308
 +}
 diff --git a/gdb/pru-tdep.h b/gdb/pru-tdep.h
 new file mode 100644
-index 0000000..6d08981
+index 0000000000..6d089813bb
 --- /dev/null
 +++ b/gdb/pru-tdep.h
 @@ -0,0 +1,51 @@
@@ -1136,5 +1136,5 @@ index 0000000..6d08981
 +
 +#endif /* PRU_TDEP_H */
 -- 
-2.10.2
+2.11.0
 

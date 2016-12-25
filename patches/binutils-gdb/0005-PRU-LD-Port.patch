@@ -1,0 +1,1135 @@
+From 3ea41662bbd9cbfeffea6a95f26b3f7cb115464d Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Mon, 24 Oct 2016 23:29:13 +0300
+Subject: [PATCH 05/25] PRU LD Port
+
+2016-12-26  Dimitar Dimitrov <dimitar@dinux.eu>
+
+ld/
+
+	* Makefile.in: Regenerate.
+	* NEWS: Mention new PRU target.
+	* Makefile.am: Add PRU target.
+	* configure.tgt: Ditto.
+	* emulparams/pruelf.sh: New file.
+	* emultempl/pruelf.em: New file.
+	* scripttempl/pru.sc: New file.
+	* testsuite/ld-pru/emit-relocs-1.d: New PRU testcase file.
+	* testsuite/ld-pru/emit-relocs-1.ld: Ditto.
+	* testsuite/ld-pru/emit-relocs-1a.s: Ditto.
+	* testsuite/ld-pru/emit-relocs-1b.s
+	* testsuite/ld-pru/ldi32.d: Ditto.
+	* testsuite/ld-pru/ldi32.s: Ditto.
+	* testsuite/ld-pru/ldi32_symbol.s: Ditto.
+	* testsuite/ld-pru/norelax_ldi32-data.d: Ditto.
+	* testsuite/ld-pru/norelax_ldi32-dis.d: Ditto.
+	* testsuite/ld-pru/pcrel_s10.d: Ditto.
+	* testsuite/ld-pru/pcrel_s10.s: Ditto.
+	* testsuite/ld-pru/pcrel_s10_label.s: Ditto.
+	* testsuite/ld-pru/pcrel_u8-illegal.d: Ditto.
+	* testsuite/ld-pru/pcrel_u8-illegal.s: Ditto.
+	* testsuite/ld-pru/pcrel_u8-illegal2.d: Ditto.
+	* testsuite/ld-pru/pcrel_u8-illegal2.s: Ditto.
+	* testsuite/ld-pru/pcrel_u8-illegal3.d: Ditto.
+	* testsuite/ld-pru/pcrel_u8-illegal3.s: Ditto.
+	* testsuite/ld-pru/pcrel_u8.d: Ditto.
+	* testsuite/ld-pru/pcrel_u8.s: Ditto.
+	* testsuite/ld-pru/pcrel_u8_label.s: Ditto.
+	* testsuite/ld-pru/pmem.d: Ditto.
+	* testsuite/ld-pru/pmem.s: Ditto.
+	* testsuite/ld-pru/pmem_symbol.s: Ditto.
+	* testsuite/ld-pru/pru.exp: Ditto.
+	* testsuite/ld-pru/relax_ldi32-data.d: Ditto.
+	* testsuite/ld-pru/relax_ldi32-dis.d: Ditto.
+	* testsuite/ld-pru/relax_ldi32.s: Ditto.
+	* testsuite/ld-pru/relax_ldi32_symbol.s: Ditto.
+	* testsuite/ld-pru/reloc.d: Ditto.
+	* testsuite/ld-pru/reloc.s: Ditto.
+	* testsuite/ld-pru/reloc_symbol.s: Ditto.
+	* testsuite/ld-pru/u16.d: Ditto.
+	* testsuite/ld-pru/u16.s: Ditto.
+	* testsuite/ld-pru/u16_symbol.s: Ditto.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ ld/Makefile.am                           |   6 ++
+ ld/NEWS                                  |   2 +
+ ld/configure.tgt                         |   1 +
+ ld/emulparams/pruelf.sh                  |  19 ++++
+ ld/emultempl/pruelf.em                   |  50 +++++++++
+ ld/scripttempl/pru.sc                    | 179 +++++++++++++++++++++++++++++++
+ ld/testsuite/ld-pru/emit-relocs-1.d      |  37 +++++++
+ ld/testsuite/ld-pru/emit-relocs-1.ld     |  20 ++++
+ ld/testsuite/ld-pru/emit-relocs-1a.s     |  24 +++++
+ ld/testsuite/ld-pru/emit-relocs-1b.s     |  18 ++++
+ ld/testsuite/ld-pru/ldi32.d              |  12 +++
+ ld/testsuite/ld-pru/ldi32.s              |   6 ++
+ ld/testsuite/ld-pru/ldi32_symbol.s       |   3 +
+ ld/testsuite/ld-pru/norelax_ldi32-data.d |  20 ++++
+ ld/testsuite/ld-pru/norelax_ldi32-dis.d  |  29 +++++
+ ld/testsuite/ld-pru/pcrel_s10.d          |  18 ++++
+ ld/testsuite/ld-pru/pcrel_s10.s          |   8 ++
+ ld/testsuite/ld-pru/pcrel_s10_label.s    |   9 ++
+ ld/testsuite/ld-pru/pcrel_u8-illegal.d   |   7 ++
+ ld/testsuite/ld-pru/pcrel_u8-illegal.s   |  10 ++
+ ld/testsuite/ld-pru/pcrel_u8-illegal2.d  |   7 ++
+ ld/testsuite/ld-pru/pcrel_u8-illegal2.s  |   7 ++
+ ld/testsuite/ld-pru/pcrel_u8-illegal3.d  |   7 ++
+ ld/testsuite/ld-pru/pcrel_u8-illegal3.s  |   7 ++
+ ld/testsuite/ld-pru/pcrel_u8.d           |  15 +++
+ ld/testsuite/ld-pru/pcrel_u8.s           |  10 ++
+ ld/testsuite/ld-pru/pcrel_u8_label.s     |   4 +
+ ld/testsuite/ld-pru/pmem.d               |  15 +++
+ ld/testsuite/ld-pru/pmem.s               |  15 +++
+ ld/testsuite/ld-pru/pmem_symbol.s        |  15 +++
+ ld/testsuite/ld-pru/pru.exp              |   9 ++
+ ld/testsuite/ld-pru/relax_ldi32-data.d   |  19 ++++
+ ld/testsuite/ld-pru/relax_ldi32-dis.d    |  27 +++++
+ ld/testsuite/ld-pru/relax_ldi32.s        |  30 ++++++
+ ld/testsuite/ld-pru/relax_ldi32_symbol.s |   6 ++
+ ld/testsuite/ld-pru/reloc.d              |  14 +++
+ ld/testsuite/ld-pru/reloc.s              |   9 ++
+ ld/testsuite/ld-pru/reloc_symbol.s       |  25 +++++
+ ld/testsuite/ld-pru/u16.d                |  11 ++
+ ld/testsuite/ld-pru/u16.s                |   4 +
+ ld/testsuite/ld-pru/u16_symbol.s         |   3 +
+ 41 files changed, 737 insertions(+)
+ create mode 100644 ld/emulparams/pruelf.sh
+ create mode 100644 ld/emultempl/pruelf.em
+ create mode 100644 ld/scripttempl/pru.sc
+ create mode 100644 ld/testsuite/ld-pru/emit-relocs-1.d
+ create mode 100644 ld/testsuite/ld-pru/emit-relocs-1.ld
+ create mode 100644 ld/testsuite/ld-pru/emit-relocs-1a.s
+ create mode 100644 ld/testsuite/ld-pru/emit-relocs-1b.s
+ create mode 100644 ld/testsuite/ld-pru/ldi32.d
+ create mode 100644 ld/testsuite/ld-pru/ldi32.s
+ create mode 100644 ld/testsuite/ld-pru/ldi32_symbol.s
+ create mode 100644 ld/testsuite/ld-pru/norelax_ldi32-data.d
+ create mode 100644 ld/testsuite/ld-pru/norelax_ldi32-dis.d
+ create mode 100644 ld/testsuite/ld-pru/pcrel_s10.d
+ create mode 100644 ld/testsuite/ld-pru/pcrel_s10.s
+ create mode 100644 ld/testsuite/ld-pru/pcrel_s10_label.s
+ create mode 100644 ld/testsuite/ld-pru/pcrel_u8-illegal.d
+ create mode 100644 ld/testsuite/ld-pru/pcrel_u8-illegal.s
+ create mode 100644 ld/testsuite/ld-pru/pcrel_u8-illegal2.d
+ create mode 100644 ld/testsuite/ld-pru/pcrel_u8-illegal2.s
+ create mode 100644 ld/testsuite/ld-pru/pcrel_u8-illegal3.d
+ create mode 100644 ld/testsuite/ld-pru/pcrel_u8-illegal3.s
+ create mode 100644 ld/testsuite/ld-pru/pcrel_u8.d
+ create mode 100644 ld/testsuite/ld-pru/pcrel_u8.s
+ create mode 100644 ld/testsuite/ld-pru/pcrel_u8_label.s
+ create mode 100644 ld/testsuite/ld-pru/pmem.d
+ create mode 100644 ld/testsuite/ld-pru/pmem.s
+ create mode 100644 ld/testsuite/ld-pru/pmem_symbol.s
+ create mode 100644 ld/testsuite/ld-pru/pru.exp
+ create mode 100644 ld/testsuite/ld-pru/relax_ldi32-data.d
+ create mode 100644 ld/testsuite/ld-pru/relax_ldi32-dis.d
+ create mode 100644 ld/testsuite/ld-pru/relax_ldi32.s
+ create mode 100644 ld/testsuite/ld-pru/relax_ldi32_symbol.s
+ create mode 100644 ld/testsuite/ld-pru/reloc.d
+ create mode 100644 ld/testsuite/ld-pru/reloc.s
+ create mode 100644 ld/testsuite/ld-pru/reloc_symbol.s
+ create mode 100644 ld/testsuite/ld-pru/u16.d
+ create mode 100644 ld/testsuite/ld-pru/u16.s
+ create mode 100644 ld/testsuite/ld-pru/u16_symbol.s
+
+diff --git a/ld/Makefile.am b/ld/Makefile.am
+index ac908bce85..524be3e097 100644
+--- a/ld/Makefile.am
++++ b/ld/Makefile.am
+@@ -1714,6 +1714,12 @@ eppcnw.c:	$(srcdir)/emulparams/ppcnw.sh \
+ eppcpe.c: $(srcdir)/emulparams/ppcpe.sh \
+   $(srcdir)/emultempl/pe.em $(srcdir)/scripttempl/ppcpe.sc ${GEN_DEPENDS}
+ 
++epruelf.c: $(srcdir)/emulparams/pruelf.sh \
++  $(srcdir)/emultempl/elf32.em \
++  $(ELF_DEPS) $(srcdir)/scripttempl/pru.sc \
++  $(srcdir)/emultempl/pruelf.em ${GEN_DEPENDS}
++	${GENSCRIPTS} pruelf "$(tdir_pruelf)"
++
+ eriscix.c: $(srcdir)/emulparams/riscix.sh \
+   $(srcdir)/emultempl/generic.em $(srcdir)/scripttempl/aout.sc ${GEN_DEPENDS}
+ 
+diff --git a/ld/NEWS b/ld/NEWS
+index 583d50a3b2..0a455505d1 100644
+--- a/ld/NEWS
++++ b/ld/NEWS
+@@ -1,5 +1,7 @@
+ -*- text -*-
+ 
++* Add support for the Texas Instruments PRU processor.
++
+ Changes in 2.28:
+ 
+ * The EXCLUDE_FILE linker script construct can now be applied outside of the
+diff --git a/ld/configure.tgt b/ld/configure.tgt
+index b9f4782b4d..5e0447e6b1 100644
+--- a/ld/configure.tgt
++++ b/ld/configure.tgt
+@@ -684,6 +684,7 @@ powerpc-*-aix*)		targ_emul=aixppc ;;
+ powerpc-*-beos*)	targ_emul=aixppc ;;
+ powerpc-*-windiss*)	targ_emul=elf32ppcwindiss ;;
+ powerpc-*-lynxos*)	targ_emul=ppclynx ;;
++pru*-*-*)		targ_emul=pruelf ;;
+ riscv32*-*-*)		targ_emul=elf32lriscv
+ 			targ_extra_emuls="elf64lriscv"
+ 			targ_extra_libpath=$targ_extra_emuls ;;
+diff --git a/ld/emulparams/pruelf.sh b/ld/emulparams/pruelf.sh
+new file mode 100644
+index 0000000000..02debba764
+--- /dev/null
++++ b/ld/emulparams/pruelf.sh
+@@ -0,0 +1,19 @@
++SCRIPT_NAME=elf
++TEMPLATE_NAME=elf32
++OUTPUT_FORMAT="elf32-pru"
++LITTLE_OUTPUT_FORMAT="elf32-pru"
++SCRIPT_NAME=pru
++
++ARCH=pru
++MACHINE=
++MAXPAGESIZE="CONSTANT (MAXPAGESIZE)"
++COMMONPAGESIZE="CONSTANT (COMMONPAGESIZE)"
++EMBEDDED=yes
++
++TEXT_ORIGIN=0x20000000
++TEXT_LENGTH=8K
++DATA_ORIGIN=0x0
++DATA_LENGTH=8K
++
++ENTRY=_start
++EXTRA_EM_FILE=pruelf
+diff --git a/ld/emultempl/pruelf.em b/ld/emultempl/pruelf.em
+new file mode 100644
+index 0000000000..dd3ec7669f
+--- /dev/null
++++ b/ld/emultempl/pruelf.em
+@@ -0,0 +1,50 @@
++# This shell script emits a C file. -*- C -*-
++#   Copyright (C) 2016 Free Software Foundation, Inc.
++#
++# This file is part of the GNU Binutils.
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write to the Free Software
++# Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
++# MA 02110-1301, USA.
++#
++
++# This file is sourced from elf32.em, and defines extra pru-elf
++# specific routines.
++#
++fragment <<EOF
++
++#include "ldctor.h"
++
++/* This is called after the sections have been attached to output
++   sections, but before any sizes or addresses have been set.  */
++
++static void
++pruelf_before_allocation (void)
++{
++  /* Call the default first.  */
++  gld${EMULATION_NAME}_before_allocation ();
++
++  /* Enable relaxation by default if the "--no-relax" option was not
++     specified.  This is done here instead of in the before_parse hook
++     because there is a check in main() to prohibit use of --relax and
++     -r together.  */
++  if (RELAXATION_DISABLED_BY_DEFAULT)
++    ENABLE_RELAXATION;
++}
++
++EOF
++
++# Put these extra pru-elf routines in ld_${EMULATION_NAME}_emulation
++#
++LDEMUL_BEFORE_ALLOCATION=pruelf_before_allocation
+diff --git a/ld/scripttempl/pru.sc b/ld/scripttempl/pru.sc
+new file mode 100644
+index 0000000000..4096cce315
+--- /dev/null
++++ b/ld/scripttempl/pru.sc
+@@ -0,0 +1,179 @@
++cat <<EOF
++OUTPUT_FORMAT("${OUTPUT_FORMAT}","${OUTPUT_FORMAT}","${OUTPUT_FORMAT}")
++OUTPUT_ARCH(${ARCH})
++
++MEMORY
++{
++  imem   (x)   : ORIGIN = $TEXT_ORIGIN, LENGTH = $TEXT_LENGTH
++  dmem   (rw!x) : ORIGIN = $DATA_ORIGIN, LENGTH = $DATA_LENGTH
++}
++
++__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32;
++__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512;
++
++${RELOCATING+ PROVIDE (__stack_top = ORIGIN(dmem) + LENGTH(dmem)) ; }
++
++${RELOCATING+ENTRY (__start)}
++
++SECTIONS
++{
++  /* Read-only sections, merged into text segment: */
++  ${TEXT_DYNAMIC+${DYNAMIC}}
++  .hash        ${RELOCATING-0} : { *(.hash)		}
++  .dynsym      ${RELOCATING-0} : { *(.dynsym)		}
++  .dynstr      ${RELOCATING-0} : { *(.dynstr)		}
++  .gnu.version ${RELOCATING-0} : { *(.gnu.version)	}
++  .gnu.version_d ${RELOCATING-0} : { *(.gnu.version_d)	}
++  .gnu.version_r ${RELOCATING-0} : { *(.gnu.version_r)	}
++
++  .rel.init    ${RELOCATING-0} : { *(.rel.init)		}
++  .rela.init   ${RELOCATING-0} : { *(.rela.init)	}
++  .rel.text    ${RELOCATING-0} :
++    {
++      *(.rel.text)
++      ${RELOCATING+*(.rel.text.*)}
++      ${RELOCATING+*(.rel.gnu.linkonce.t*)}
++    }
++  .rela.text   ${RELOCATING-0} :
++    {
++      *(.rela.text)
++      ${RELOCATING+*(.rela.text.*)}
++      ${RELOCATING+*(.rela.gnu.linkonce.t*)}
++    }
++  .rel.fini    ${RELOCATING-0} : { *(.rel.fini)		}
++  .rela.fini   ${RELOCATING-0} : { *(.rela.fini)	}
++  .rel.rodata  ${RELOCATING-0} :
++    {
++      *(.rel.rodata)
++      ${RELOCATING+*(.rel.rodata.*)}
++      ${RELOCATING+*(.rel.gnu.linkonce.r*)}
++    }
++  .rela.rodata ${RELOCATING-0} :
++    {
++      *(.rela.rodata)
++      ${RELOCATING+*(.rela.rodata.*)}
++      ${RELOCATING+*(.rela.gnu.linkonce.r*)}
++    }
++  .rel.data    ${RELOCATING-0} :
++    {
++      *(.rel.data)
++      ${RELOCATING+*(.rel.data.*)}
++      ${RELOCATING+*(.rel.gnu.linkonce.d*)}
++    }
++  .rela.data   ${RELOCATING-0} :
++    {
++      *(.rela.data)
++      ${RELOCATING+*(.rela.data.*)}
++      ${RELOCATING+*(.rela.gnu.linkonce.d*)}
++    }
++  .rel.ctors   ${RELOCATING-0} : { *(.rel.ctors)	}
++  .rela.ctors  ${RELOCATING-0} : { *(.rela.ctors)	}
++  .rel.dtors   ${RELOCATING-0} : { *(.rel.dtors)	}
++  .rela.dtors  ${RELOCATING-0} : { *(.rela.dtors)	}
++  .rel.got     ${RELOCATING-0} : { *(.rel.got)		}
++  .rela.got    ${RELOCATING-0} : { *(.rela.got)		}
++  .rel.bss     ${RELOCATING-0} : { *(.rel.bss)		}
++  .rela.bss    ${RELOCATING-0} : { *(.rela.bss)		}
++  .rel.plt     ${RELOCATING-0} : { *(.rel.plt)		}
++  .rela.plt    ${RELOCATING-0} : { *(.rela.plt)		}
++
++  /* Internal text space.  */
++  .text ${RELOCATING-0} :
++  {
++    ${RELOCATING+ __text_start = . ; }
++
++    ${RELOCATING+. = ALIGN(4);}
++
++    ${RELOCATING+*(.init0)  /* Start here after reset.  */}
++    ${RELOCATING+KEEP (*(.init0))}
++
++    ${RELOCATING+. = ALIGN(4);}
++    *(.text)
++    ${RELOCATING+. = ALIGN(4);}
++    ${RELOCATING+*(.text.*)}
++    ${RELOCATING+. = ALIGN(4);}
++    ${RELOCATING+*(.gnu.linkonce.t*)}
++    ${RELOCATING+. = ALIGN(4);}
++
++    ${RELOCATING+ __text_end = . ; }
++  } ${RELOCATING+ > imem}
++
++  .data        ${RELOCATING-0} :
++  {
++    /* Optional variable that user is prepared to have NULL address.  */
++    ${RELOCATING+ *(.data.atzero*)}
++
++    /* CRT is prepared for constructor/destructor table to have
++       a "valid" NULL address.  */
++    ${CONSTRUCTING+ __ctors_start = . ; }
++    ${CONSTRUCTING+ KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))}
++    ${CONSTRUCTING+ KEEP (*(.ctors))}
++    ${CONSTRUCTING+ __ctors_end = . ; }
++    ${CONSTRUCTING+ __dtors_start = . ; }
++    ${CONSTRUCTING+ KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))}
++    ${CONSTRUCTING+ KEEP (*(.dtors))}
++    ${CONSTRUCTING+ __dtors_end = . ; }
++
++    /* DATA memory starts at address 0.  So to avoid placing a valid static
++       variable at the invalid NULL address, we introduce the .data.atzero
++       section.  If CRT can make some use of it - great.  Otherwise skip a
++       word.  In all cases .data/.bss sections must start at non-zero.  */
++    . += (. == 0 ? 4 : 0);
++
++    ${RELOCATING+ PROVIDE (__data_start = .) ; }
++    *(.data)
++    ${RELOCATING+ *(.data*)}
++    ${RELOCATING+ *(.rodata)  /* We need to include .rodata here if gcc is used.  */}
++    ${RELOCATING+ *(.rodata.*) /* with -fdata-sections.  */}
++    ${RELOCATING+*(.gnu.linkonce.d*)}
++    ${RELOCATING+*(.gnu.linkonce.r*)}
++    ${RELOCATING+. = ALIGN(4);}
++    ${RELOCATING+ PROVIDE (__data_end = .) ; }
++  } ${RELOCATING+ > dmem }
++
++  .resource_table ${RELOCATING-0} :
++  {
++    *(.resource_table)
++    KEEP (*(.resource_table))
++  }  > dmem
++
++  .bss ${RELOCATING-0} :
++  {
++    ${RELOCATING+ PROVIDE (__bss_start = .) ; }
++    *(.bss)
++    ${RELOCATING+ *(.bss.*)}
++    ${RELOCATING+*(.gnu.linkonce.b*)}
++    *(COMMON)
++    ${RELOCATING+ PROVIDE (__bss_end = .) ; }
++  } ${RELOCATING+ > dmem}
++
++  /* Global data not cleared after reset.  */
++  .noinit ${RELOCATING-0}:
++  {
++    ${RELOCATING+ PROVIDE (__noinit_start = .) ; }
++    *(.noinit)
++    ${RELOCATING+ PROVIDE (__noinit_end = .) ; }
++    ${RELOCATING+ PROVIDE (__heap_start = .) ; }
++    ${RELOCATING+ . += __HEAP_SIZE ; }
++    /* Stack is not here really.  It will be put at the end of DMEM.
++       But we take into account its size here, in order to allow
++       for MEMORY overflow checking during link time.  */
++    ${RELOCATING+ . += __STACK_SIZE ; }
++  } ${RELOCATING+ > dmem}
++
++  /* Stabs debugging sections.  */
++  .stab 0 : { *(.stab) }
++  .stabstr 0 : { *(.stabstr) }
++  .stab.excl 0 : { *(.stab.excl) }
++  .stab.exclstr 0 : { *(.stab.exclstr) }
++  .stab.index 0 : { *(.stab.index) }
++  .stab.indexstr 0 : { *(.stab.indexstr) }
++  .comment 0 : { *(.comment) }
++  .note.gnu.build-id : { *(.note.gnu.build-id) }
++EOF
++
++. $srcdir/scripttempl/DWARF.sc
++
++cat <<EOF
++}
++EOF
+diff --git a/ld/testsuite/ld-pru/emit-relocs-1.d b/ld/testsuite/ld-pru/emit-relocs-1.d
+new file mode 100644
+index 0000000000..414234f94d
+--- /dev/null
++++ b/ld/testsuite/ld-pru/emit-relocs-1.d
+@@ -0,0 +1,37 @@
++#name: Emit relocs 1
++#source: emit-relocs-1a.s
++#source: emit-relocs-1b.s
++#ld: -q -T emit-relocs-1.ld
++#objdump: -sr
++
++.*:     file format .*
++
++RELOCATION RECORDS FOR \[\.data\]:
++OFFSET   TYPE              VALUE *
++00000000 R_PRU_BFD_RELOC32  \.data
++00000004 R_PRU_BFD_RELOC32  \.data\+0x00001000
++00000008 R_PRU_BFD_RELOC32  \.merge1\+0x00000002
++0000000c R_PRU_BFD_RELOC32  \.merge2
++00000010 R_PRU_BFD_RELOC32  \.merge3
++00000014 R_PRU_BFD_RELOC32  \.merge3\+0x00000004
++00000020 R_PRU_BFD_RELOC32  \.data\+0x00000020
++00000024 R_PRU_BFD_RELOC32  \.data\+0x00001020
++00000028 R_PRU_BFD_RELOC32  \.merge1
++0000002c R_PRU_BFD_RELOC32  \.merge2\+0x00000002
++00000030 R_PRU_BFD_RELOC32  \.merge3\+0x00000008
++00000034 R_PRU_BFD_RELOC32  \.merge3\+0x00000004
++
++
++Contents of section \.text:
++ 80000 e0e0e012 00000000 00000000 00000000  .*
++Contents of section \.merge1:
++ 80400 666c7574 74657200                    flutter.*
++Contents of section \.merge2:
++ 80800 74617374 696e6700                    tasting.*
++Contents of section \.merge3:
++ 80c00 00010000 00020000 00030000           .*
++Contents of section \.data:
++ 81000 00100800 00200800 02040800 00080800  .*
++ 81010 000c0800 040c0800 00000000 00000000  .*
++ 81020 20100800 20200800 00040800 02080800  .*
++ 81030 080c0800 040c0800 .*
+diff --git a/ld/testsuite/ld-pru/emit-relocs-1.ld b/ld/testsuite/ld-pru/emit-relocs-1.ld
+new file mode 100644
+index 0000000000..574030b04f
+--- /dev/null
++++ b/ld/testsuite/ld-pru/emit-relocs-1.ld
+@@ -0,0 +1,20 @@
++ENTRY(__start)
++SECTIONS
++{
++  . = 0x80000;
++  .text : { *(.text) }
++
++  . = ALIGN (0x400);
++  .merge1 : { *(.merge1) }
++
++  . = ALIGN (0x400);
++  .merge2 : { *(.merge2) }
++
++  . = ALIGN (0x400);
++  .merge3 : { *(.merge3) }
++
++  . = ALIGN (0x400);
++  .data : { *(.data) }
++
++  /DISCARD/ : { *(*) }
++}
+diff --git a/ld/testsuite/ld-pru/emit-relocs-1a.s b/ld/testsuite/ld-pru/emit-relocs-1a.s
+new file mode 100644
+index 0000000000..89bbf99993
+--- /dev/null
++++ b/ld/testsuite/ld-pru/emit-relocs-1a.s
+@@ -0,0 +1,24 @@
++	.text
++	.align	4
++	.globl	__start
++__start:
++	nop
++
++	.section .merge1,"aMS",@progbits,1
++A:	.string	"utter"
++
++	.section .merge2,"aMS",@progbits,1
++B:	.string "tasting"
++
++	.section .merge3,"aM",@progbits,4
++C:	.4byte	0x100
++D:	.4byte	0x200
++
++	.data
++	.align	4
++E:	.4byte	E
++	.4byte	E + 0x1000
++	.4byte	A
++	.4byte	B
++	.4byte	C
++	.4byte	D
+diff --git a/ld/testsuite/ld-pru/emit-relocs-1b.s b/ld/testsuite/ld-pru/emit-relocs-1b.s
+new file mode 100644
+index 0000000000..82229c1495
+--- /dev/null
++++ b/ld/testsuite/ld-pru/emit-relocs-1b.s
+@@ -0,0 +1,18 @@
++	.section .merge1,"aMS",@progbits,1
++A:	.string	"flutter"
++
++	.section .merge2,"aMS",@progbits,1
++B:	.string "sting"
++
++	.section .merge3,"aM",@progbits,4
++C:	.4byte	0x300
++D:	.4byte	0x200
++
++	.data
++	.align	4
++E:	.4byte	E
++	.4byte	E + 0x1000
++	.4byte	A
++	.4byte	B
++	.4byte	C
++	.4byte	D
+diff --git a/ld/testsuite/ld-pru/ldi32.d b/ld/testsuite/ld-pru/ldi32.d
+new file mode 100644
+index 0000000000..123ead310f
+--- /dev/null
++++ b/ld/testsuite/ld-pru/ldi32.d
+@@ -0,0 +1,12 @@
++#name: PRU R_PRU_LDI32
++#source: ldi32.s
++#source: ldi32_symbol.s
++#ld:
++#objdump: -dr --prefix-addresses
++
++# Test the ldi32 relocation
++.*: +file format elf32-pru
++
++Disassembly of section .text:
++[0-9a-f]+ <[^>]*> ldi	r16, 48879
++[0-9a-f]+ <[^>]*> ldi	r16.w2, 57005
+diff --git a/ld/testsuite/ld-pru/ldi32.s b/ld/testsuite/ld-pru/ldi32.s
+new file mode 100644
+index 0000000000..65775ecb74
+--- /dev/null
++++ b/ld/testsuite/ld-pru/ldi32.s
+@@ -0,0 +1,6 @@
++# Test the ldi32 relocation
++
++.text
++.global __start
++__start:
++	ldi32	r16, long_symbol
+diff --git a/ld/testsuite/ld-pru/ldi32_symbol.s b/ld/testsuite/ld-pru/ldi32_symbol.s
+new file mode 100644
+index 0000000000..88fdddccae
+--- /dev/null
++++ b/ld/testsuite/ld-pru/ldi32_symbol.s
+@@ -0,0 +1,3 @@
++.global long_symbol
++.set long_symbol, 0xDEADBEEF
++
+diff --git a/ld/testsuite/ld-pru/norelax_ldi32-data.d b/ld/testsuite/ld-pru/norelax_ldi32-data.d
+new file mode 100644
+index 0000000000..988e24f067
+--- /dev/null
++++ b/ld/testsuite/ld-pru/norelax_ldi32-data.d
+@@ -0,0 +1,20 @@
++#name: PRU LDI32 disabled-relaxation data
++#source: relax_ldi32.s
++#source: relax_ldi32_symbol.s
++#as: --mlink-relax
++#ld: --no-relax
++#objdump: -s
++
++# Note: default linker script should put a guard at DRAM address 0
++
++.*: +file format elf32-pru
++
++Contents of section .text:
++ [0-9a-f]+ f0efbe24 d0adde24 0f00f630 f0efbe24  ................
++ [0-9a-f]+ d0adde24 f0cace24 d0000024 e0cace24  ................
++ [0-9a-f]+ f0cace24 d0010024 f0efbe24 d0acde24  ................
++ [0-9a-f]+ f0785624 d0341224 f0785624 d0000024  ................
++ [0-9a-f]+ f0120024 f100007e ........ ........  ................
++Contents of section .data:
++ 0000 00000000 48000020 40000000 12004000  ................
++ 0010 10000000 f0ffffff 100040aa           ................
+diff --git a/ld/testsuite/ld-pru/norelax_ldi32-dis.d b/ld/testsuite/ld-pru/norelax_ldi32-dis.d
+new file mode 100644
+index 0000000000..072de5fbd4
+--- /dev/null
++++ b/ld/testsuite/ld-pru/norelax_ldi32-dis.d
+@@ -0,0 +1,29 @@
++#name: PRU LDI32 disabled-relaxation
++#source: relax_ldi32.s
++#source: relax_ldi32_symbol.s
++#as: --mlink-relax
++#ld: --no-relax
++#objdump: -dr --prefix-addresses
++
++# Test the LDI32 relaxation
++.*: +file format elf32-pru
++
++Disassembly of section .text:
++..000000 <[^>]*> ldi	r16, 48879
++..000004 <[^>]*> ldi	r16.w2, 57005
++..000008 <[^>]*> loop	..000044 <__end_loop>, r22
++..00000c <[^>]*> ldi	r16, 48879
++..000010 <[^>]*> ldi	r16.w2, 57005
++..000014 <[^>]*> ldi	r16, 52938
++..000018 <[^>]*> ldi	r16.w2, 0
++..00001c <[^>]*> ldi	r0, 52938
++..000020 <[^>]*> ldi	r16, 52938
++..000024 <[^>]*> ldi	r16.w2, 1
++..000028 <[^>]*> ldi	r16, 48879
++..00002c <[^>]*> ldi	r16.w2, 57004
++..000030 <[^>]*> ldi	r16, 22136
++..000034 <[^>]*> ldi	r16.w2, 4660
++..000038 <[^>]*> ldi	r16, 22136
++..00003c <[^>]*> ldi	r16.w2, 0
++..000040 <[^>]*> ldi	r16, 18
++..000044 <[^>]*> qba	..000008 <__intermediate>
+diff --git a/ld/testsuite/ld-pru/pcrel_s10.d b/ld/testsuite/ld-pru/pcrel_s10.d
+new file mode 100644
+index 0000000000..95602c586b
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_s10.d
+@@ -0,0 +1,18 @@
++#name: PRU R_PRU_S10_PCREL
++#source: pcrel_s10.s
++#source: pcrel_s10_label.s
++#ld:
++#objdump: -dr --prefix-addresses
++
++# Test the relative quick branch relocations.
++.*: +file format elf32-pru
++
++Disassembly of section .text:
++[0-9a-f]+ <[^>]*> qba	[0-9a-f]+ <ext_label>
++[0-9a-f]+ <[^>]*> qba	[0-9a-f]+ <ext_label\+0x10>
++[0-9a-f]+ <[^>]*> nop
++[0-9a-f]+ <[^>]*> nop
++[0-9a-f]+ <[^>]*> nop
++[0-9a-f]+ <[^>]*> nop
++[0-9a-f]+ <[^>]*> nop
++[0-9a-f]+ <[^>]*> nop
+diff --git a/ld/testsuite/ld-pru/pcrel_s10.s b/ld/testsuite/ld-pru/pcrel_s10.s
+new file mode 100644
+index 0000000000..07352f807e
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_s10.s
+@@ -0,0 +1,8 @@
++# Test for pc-relative relocations
++.text
++.section .init0, "x"
++.global __start
++__start:
++	qba ext_label
++	qba ext_label + 16
++
+diff --git a/ld/testsuite/ld-pru/pcrel_s10_label.s b/ld/testsuite/ld-pru/pcrel_s10_label.s
+new file mode 100644
+index 0000000000..3aea34e2ba
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_s10_label.s
+@@ -0,0 +1,9 @@
++.text
++ext_label:
++	nop
++	nop
++	nop
++	nop
++	nop
++	nop
++.global ext_label
+diff --git a/ld/testsuite/ld-pru/pcrel_u8-illegal.d b/ld/testsuite/ld-pru/pcrel_u8-illegal.d
+new file mode 100644
+index 0000000000..a88523747f
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_u8-illegal.d
+@@ -0,0 +1,7 @@
++#name: PRU R_PRU_U8_PCREL illegal
++#source: pcrel_u8-illegal.s
++#source: pcrel_u8_label.s
++#ld:
++#error: [^\n]*: relocation truncated to fit: R_PRU_U8_PCREL against `.init0'
++
++# Check that LOOP cannot reference "prior" labels.
+diff --git a/ld/testsuite/ld-pru/pcrel_u8-illegal.s b/ld/testsuite/ld-pru/pcrel_u8-illegal.s
+new file mode 100644
+index 0000000000..13d310b46e
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_u8-illegal.s
+@@ -0,0 +1,10 @@
++# Test for illegal pc-relative relocations
++.text
++.section .init0, "x"
++.global __start
++__start:
++foo:
++# Negative loop termination point
++        nop
++        loop foo, r20
++
+diff --git a/ld/testsuite/ld-pru/pcrel_u8-illegal2.d b/ld/testsuite/ld-pru/pcrel_u8-illegal2.d
+new file mode 100644
+index 0000000000..604ea9838d
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_u8-illegal2.d
+@@ -0,0 +1,7 @@
++#name: PRU R_PRU_U8_PCREL illegal offset 0
++#source: pcrel_u8-illegal2.s
++#source: pcrel_u8_label.s
++#ld:
++#error: [^\n]*: relocation out of range
++
++# Check that LOOP cannot reference "prior" labels.
+diff --git a/ld/testsuite/ld-pru/pcrel_u8-illegal2.s b/ld/testsuite/ld-pru/pcrel_u8-illegal2.s
+new file mode 100644
+index 0000000000..56daa750fd
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_u8-illegal2.s
+@@ -0,0 +1,7 @@
++# Test for illegal pc-relative relocations
++.text
++.section .init0, "x"
++.global __start
++__start:
++L0:
++	loop L0, r0
+diff --git a/ld/testsuite/ld-pru/pcrel_u8-illegal3.d b/ld/testsuite/ld-pru/pcrel_u8-illegal3.d
+new file mode 100644
+index 0000000000..604ea9838d
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_u8-illegal3.d
+@@ -0,0 +1,7 @@
++#name: PRU R_PRU_U8_PCREL illegal offset 0
++#source: pcrel_u8-illegal2.s
++#source: pcrel_u8_label.s
++#ld:
++#error: [^\n]*: relocation out of range
++
++# Check that LOOP cannot reference "prior" labels.
+diff --git a/ld/testsuite/ld-pru/pcrel_u8-illegal3.s b/ld/testsuite/ld-pru/pcrel_u8-illegal3.s
+new file mode 100644
+index 0000000000..89bb89e02e
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_u8-illegal3.s
+@@ -0,0 +1,7 @@
++# Test for illegal pc-relative relocations
++.text
++.section .init0, "x"
++.global __start
++__start:
++	loop L1, r0
++L1:
+diff --git a/ld/testsuite/ld-pru/pcrel_u8.d b/ld/testsuite/ld-pru/pcrel_u8.d
+new file mode 100644
+index 0000000000..60ff05883c
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_u8.d
+@@ -0,0 +1,15 @@
++#name: PRU R_PRU_U8_PCREL
++#source: pcrel_u8.s
++#source: pcrel_u8_label.s
++#ld:
++#objdump: -dr --prefix-addresses
++
++# Test the relative quick branch relocations.
++.*: +file format elf32-pru
++
++Disassembly of section .text:
++[0-9a-f]+ <[^>]*> loop	[0-9a-f]+ <end_loop>, 5
++[0-9a-f]+ <[^>]*> nop
++[0-9a-f]+ <[^>]*> nop
++[0-9a-f]+ <[^>]*> nop
++[0-9a-f]+ <[^>]*> nop
+diff --git a/ld/testsuite/ld-pru/pcrel_u8.s b/ld/testsuite/ld-pru/pcrel_u8.s
+new file mode 100644
+index 0000000000..2562030c5b
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_u8.s
+@@ -0,0 +1,10 @@
++# Test for pc-relative relocations
++.text
++.section .init0, "x"
++.global __start
++__start:
++	loop end_loop, 5
++	nop
++	nop
++	nop
++
+diff --git a/ld/testsuite/ld-pru/pcrel_u8_label.s b/ld/testsuite/ld-pru/pcrel_u8_label.s
+new file mode 100644
+index 0000000000..b716ce5323
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pcrel_u8_label.s
+@@ -0,0 +1,4 @@
++.text
++end_loop:
++	nop
++.global end_loop
+diff --git a/ld/testsuite/ld-pru/pmem.d b/ld/testsuite/ld-pru/pmem.d
+new file mode 100644
+index 0000000000..2bb7c16733
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pmem.d
+@@ -0,0 +1,15 @@
++#name: PRU R_PRU_BFD_*_PMEM
++#source: pmem.s
++#source: pmem_symbol.s
++#ld:
++#objdump: -s
++
++# Note: default linker script should put a guard at DRAM address 0
++
++.*: +file format elf32-pru
++
++Contents of section .text:
++ [0-9a-f]+ e0050024 e0070024 05000000 05000600  ................
++ [0-9a-f]+ e0e0e012 e0e0e012                    ........        
++Contents of section .data:
++ 0000 00000000                             ....            
+diff --git a/ld/testsuite/ld-pru/pmem.s b/ld/testsuite/ld-pru/pmem.s
+new file mode 100644
+index 0000000000..8c9f3d4fae
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pmem.s
+@@ -0,0 +1,15 @@
++# Test for PRU pmem relocations
++
++.global byte_sym
++.global short_sym
++.global long_sym
++
++.set byte_sym, 0xFA
++.set short_sym, 0xFACE
++.set long_sym, 0xDEADBEEF
++
++.text
++.global _text_label
++	nop
++_text_label:
++	nop
+diff --git a/ld/testsuite/ld-pru/pmem_symbol.s b/ld/testsuite/ld-pru/pmem_symbol.s
+new file mode 100644
+index 0000000000..5c92dc3741
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pmem_symbol.s
+@@ -0,0 +1,15 @@
++.text
++.section .init0, "x"
++.global __start
++__start:
++
++	# U16_PMEMIMM
++	ldi r0, %pmem(_text_label)
++	ldi r0, %pmem(_text_label + 8)
++
++# Try 32/16_PMEM
++.4byte %pmem(_text_label)
++.2byte %pmem(_text_label)
++.2byte %pmem(_text_label + 4)
++
++
+diff --git a/ld/testsuite/ld-pru/pru.exp b/ld/testsuite/ld-pru/pru.exp
+new file mode 100644
+index 0000000000..39161e8d42
+--- /dev/null
++++ b/ld/testsuite/ld-pru/pru.exp
+@@ -0,0 +1,9 @@
++if { ! [istarget pru-*-*] } {
++    return 
++}
++
++foreach test [lsort [glob -nocomplain $srcdir/$subdir/*.d]] {
++    verbose [file rootname $test]
++    run_dump_test [file rootname $test]
++}
++
+diff --git a/ld/testsuite/ld-pru/relax_ldi32-data.d b/ld/testsuite/ld-pru/relax_ldi32-data.d
+new file mode 100644
+index 0000000000..c59a105958
+--- /dev/null
++++ b/ld/testsuite/ld-pru/relax_ldi32-data.d
+@@ -0,0 +1,19 @@
++#name: PRU LDI32 relaxation data
++#source: relax_ldi32.s
++#source: relax_ldi32_symbol.s
++#as: --mlink-relax
++#ld: --relax
++#objdump: -s
++
++# Note: default linker script should put a guard at DRAM address 0
++
++.*: +file format elf32-pru
++
++Contents of section .text:
++ [0-9a-f]+ f0efbe24 d0adde24 0d00f630 f0efbe24  ................
++ [0-9a-f]+ d0adde24 f0cace24 e0cace24 f0cace24  ................
++ [0-9a-f]+ d0010024 f0efbe24 d0acde24 f0785624  ................
++ [0-9a-f]+ d0341224 f0785624 f0100024 f300007e  ................
++Contents of section .data:
++ 0000 00000000 40000020 38000000 10003800  ................
++ 0010 0e000000 f2ffffff 0e0038aa           ................
+diff --git a/ld/testsuite/ld-pru/relax_ldi32-dis.d b/ld/testsuite/ld-pru/relax_ldi32-dis.d
+new file mode 100644
+index 0000000000..1371f1c644
+--- /dev/null
++++ b/ld/testsuite/ld-pru/relax_ldi32-dis.d
+@@ -0,0 +1,27 @@
++#name: PRU LDI32 relaxation
++#source: relax_ldi32.s
++#source: relax_ldi32_symbol.s
++#as: --mlink-relax
++#ld: --relax
++#objdump: -dr --prefix-addresses
++
++# Test the LDI32 relaxation
++.*: +file format elf32-pru
++
++Disassembly of section .text:
++..000000 <[^>]*> ldi	r16, 48879
++..000004 <[^>]*> ldi	r16.w2, 57005
++..000008 <[^>]*> loop	..00003c <__end_loop>, r22
++..00000c <[^>]*> ldi	r16, 48879
++..000010 <[^>]*> ldi	r16.w2, 57005
++..000014 <[^>]*> ldi	r16, 52938
++..000018 <[^>]*> ldi	r0, 52938
++..00001c <[^>]*> ldi	r16, 52938
++..000020 <[^>]*> ldi	r16.w2, 1
++..000024 <[^>]*> ldi	r16, 48879
++..000028 <[^>]*> ldi	r16.w2, 57004
++..00002c <[^>]*> ldi	r16, 22136
++..000030 <[^>]*> ldi	r16.w2, 4660
++..000034 <[^>]*> ldi	r16, 22136
++..000038 <[^>]*> ldi	r16, 16
++..00003c <[^>]*> qba	..000008 <__intermediate>
+diff --git a/ld/testsuite/ld-pru/relax_ldi32.s b/ld/testsuite/ld-pru/relax_ldi32.s
+new file mode 100644
+index 0000000000..ae668417a0
+--- /dev/null
++++ b/ld/testsuite/ld-pru/relax_ldi32.s
+@@ -0,0 +1,30 @@
++# Test LDI32 relaxation
++
++.text
++.global __start
++__start:
++	ldi32	r16, long_symbol
++__intermediate:
++	loop	__end_loop, r22
++	ldi32	r16, long_symbol
++	ldi32	r16, short_symbol
++	ldi	r0, short_symbol
++	ldi32	r16, short_symbol + 0x10000
++	ldi32	r16, long_symbol - 0x10000
++	ldi32	r16, 0x12345678
++	ldi32	r16, 0x5678
++	ldi	r16, %pmem(__end)
++__end_loop:
++	qba	__intermediate
++__end:
++
++.data
++	.4byte	__end
++	.4byte	(__end - __intermediate)
++	.2byte	%pmem(__end)
++	.2byte	(__end - __intermediate)
++	.4byte	%pmem(__end - __intermediate)
++	.4byte	%pmem(__intermediate - __end)
++	.2byte	%pmem(__end - __intermediate)
++	.byte	(__end - __intermediate)
++	.byte	0xaa
+diff --git a/ld/testsuite/ld-pru/relax_ldi32_symbol.s b/ld/testsuite/ld-pru/relax_ldi32_symbol.s
+new file mode 100644
+index 0000000000..a34f6e1537
+--- /dev/null
++++ b/ld/testsuite/ld-pru/relax_ldi32_symbol.s
+@@ -0,0 +1,6 @@
++.global long_symbol
++.global short_symbol
++
++.set long_symbol, 0xDEADBEEF
++.set short_symbol, 0xceca
++
+diff --git a/ld/testsuite/ld-pru/reloc.d b/ld/testsuite/ld-pru/reloc.d
+new file mode 100644
+index 0000000000..a494e0cc4a
+--- /dev/null
++++ b/ld/testsuite/ld-pru/reloc.d
+@@ -0,0 +1,14 @@
++#name: PRU R_PRU_BFD_RELOC_XX
++#source: reloc.s
++#source: reloc_symbol.s
++#ld:
++#objdump: -s
++
++# Note: default linker script should put a guard at DRAM address 0
++
++.*: +file format elf32-pru
++
++Contents of section .text:
++ [0-9a-f]+ fa00cefa efbeadde facefaef beadde00  ................
++Contents of section .data:
++ 0000 00000000                             ....            
+diff --git a/ld/testsuite/ld-pru/reloc.s b/ld/testsuite/ld-pru/reloc.s
+new file mode 100644
+index 0000000000..4bf79bfcee
+--- /dev/null
++++ b/ld/testsuite/ld-pru/reloc.s
+@@ -0,0 +1,9 @@
++# Test for PRU 32-bit, 16 and 8-bit relocations
++
++.global byte_sym
++.global short_sym
++.global long_sym
++
++.set byte_sym, 0xFA
++.set short_sym, 0xFACE
++.set long_sym, 0xDEADBEEF
+diff --git a/ld/testsuite/ld-pru/reloc_symbol.s b/ld/testsuite/ld-pru/reloc_symbol.s
+new file mode 100644
+index 0000000000..a1d6e9cdb9
+--- /dev/null
++++ b/ld/testsuite/ld-pru/reloc_symbol.s
+@@ -0,0 +1,25 @@
++.text
++.section .init0, "x"
++.global __start
++__start:
++
++# byte aligned
++.align 0
++.byte byte_sym
++
++# short aligned
++.align 1
++.short short_sym
++
++# word aligned
++.align 2
++.long  long_sym
++
++# now lets try some unaligned words and halfwords
++.byte byte_sym
++.2byte short_sym
++.4byte  long_sym
++
++#.align 2
++#nop
++
+diff --git a/ld/testsuite/ld-pru/u16.d b/ld/testsuite/ld-pru/u16.d
+new file mode 100644
+index 0000000000..9cc6482f9a
+--- /dev/null
++++ b/ld/testsuite/ld-pru/u16.d
+@@ -0,0 +1,11 @@
++#name: PRU R_PRU_U16
++#source: u16.s
++#source: u16_symbol.s
++#ld:
++#objdump: -dr --prefix-addresses
++
++# Test the regulard LDI relocation
++.*: +file format elf32-pru
++
++Disassembly of section .text:
++[0-9a-f]+ <[^>]*> ldi	r16, 54321
+diff --git a/ld/testsuite/ld-pru/u16.s b/ld/testsuite/ld-pru/u16.s
+new file mode 100644
+index 0000000000..74757ed37f
+--- /dev/null
++++ b/ld/testsuite/ld-pru/u16.s
+@@ -0,0 +1,4 @@
++.text
++.global __start
++__start:
++	ldi	r16, short_symbol
+diff --git a/ld/testsuite/ld-pru/u16_symbol.s b/ld/testsuite/ld-pru/u16_symbol.s
+new file mode 100644
+index 0000000000..b4a39c663c
+--- /dev/null
++++ b/ld/testsuite/ld-pru/u16_symbol.s
+@@ -0,0 +1,3 @@
++.global short_symbol
++.set short_symbol, 54321
++
+-- 
+2.11.0
+

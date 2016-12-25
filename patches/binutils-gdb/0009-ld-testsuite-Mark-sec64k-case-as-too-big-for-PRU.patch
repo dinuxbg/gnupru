@@ -1,0 +1,33 @@
+From 30933ff7536ae14956475c14817fdfaa8808ed2c Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Sat, 22 Oct 2016 00:35:07 +0300
+Subject: [PATCH 09/25] ld: testsuite: Mark sec64k case as too big for PRU
+
+2016-12-26  Dimitar Dimitrov <dimitar@dinux.eu>
+
+ld/
+
+	* testsuite/ld-elf/sec64k.exp: Mark sec64k case as too big for PRU.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ ld/testsuite/ld-elf/sec64k.exp | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/ld/testsuite/ld-elf/sec64k.exp b/ld/testsuite/ld-elf/sec64k.exp
+index 7f7a9f3554..283d7798af 100644
+--- a/ld/testsuite/ld-elf/sec64k.exp
++++ b/ld/testsuite/ld-elf/sec64k.exp
+@@ -170,7 +170,8 @@ if { ![istarget "d10v-*-*"]
+      && ![istarget "avr-*-*"]
+      && ![istarget "msp*-*-*"]
+      && ![istarget "fr30-*-*"] 
+-     && ![istarget "iq2000-*-*"] } {
++     && ![istarget "iq2000-*-*"]
++     && ![istarget "pru-*-*"] } {
+     foreach sfile $sfiles { puts $ofd "#source: $sfile" }
+     if { [istarget spu*-*-*] } {
+ 	puts $ofd "#ld: --local-store 0:0"
+-- 
+2.11.0
+

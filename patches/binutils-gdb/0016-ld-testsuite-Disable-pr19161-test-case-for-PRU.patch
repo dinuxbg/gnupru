@@ -1,0 +1,36 @@
+From 4c1a871cf684d6771a8245f9b130b99b179803a0 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Sat, 22 Oct 2016 23:42:09 +0300
+Subject: [PATCH 16/25] ld: testsuite: Disable pr19161 test case for PRU
+
+The proper fix would be to augment _bfd_elf_is_start_stop() to
+handle bfd_get_symbol_leading_char(). The __start_XXX creator
+lang_insert_orphan() and the test case already take care of
+leading char.
+
+2016-12-26  Dimitar Dimitrov <dimitar@dinux.eu>
+
+ld/
+
+	* testsuite/ld-gc/pr19161.d: Disable pr19161 for PRU.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ ld/testsuite/ld-gc/pr19161.d | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/ld/testsuite/ld-gc/pr19161.d b/ld/testsuite/ld-gc/pr19161.d
+index c36e6638cd..690338ec37 100644
+--- a/ld/testsuite/ld-gc/pr19161.d
++++ b/ld/testsuite/ld-gc/pr19161.d
+@@ -4,6 +4,7 @@
+ #nm: --format=bsd
+ #xfail: epiphany-*-* frv-*-* hppa-*-* iq2000-*-* lm32-*-* m32c-*-*
+ #xfail: mips64vr-*-* msp430-*-* powerpc*-*-eabivle rl78-*-* rx-*-* sh*-*-*
++#xfail: pru-*-*
+ 
+ #...
+ 0*[1-9a-f]+[0-9a-f]*[ 	](D)[ 	]_*__start_my_section
+-- 
+2.11.0
+

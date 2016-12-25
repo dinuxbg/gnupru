@@ -1,0 +1,40 @@
+From cf3d31d2254ba24629f41dcffda406cf07718f85 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Thu, 20 Oct 2016 22:50:21 +0300
+Subject: [PATCH 18/25] ld: testsuite: Fix test for targets with
+ elf_symbol_leading_char
+
+Either that, or make ld/plugin.c:get_symbols() to print symbol names using %T instead of %s.
+
+ ==========
+
+2016-12-26  Dimitar Dimitrov <dimitar@dinux.eu>
+
+ld/
+
+	* testsuite/ld-plugin/plugin-12.d: Fix test for
+	targets with elf_symbol_leading_char.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ ld/testsuite/ld-plugin/plugin-12.d | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/ld/testsuite/ld-plugin/plugin-12.d b/ld/testsuite/ld-plugin/plugin-12.d
+index 10d772553d..83873f9214 100644
+--- a/ld/testsuite/ld-plugin/plugin-12.d
++++ b/ld/testsuite/ld-plugin/plugin-12.d
+@@ -1,6 +1,6 @@
+ #...
+-.*: symbol `func' definition: 0, visibility: 0, resolution: 2
+-.*: symbol `func1' definition: 0, visibility: 1, resolution: 3
+-.*: symbol `func2' definition: 0, visibility: 2, resolution: 3
+-.*: symbol `func3' definition: 0, visibility: 3, resolution: 3
++.*: symbol `_?func' definition: 0, visibility: 0, resolution: 2
++.*: symbol `_?func1' definition: 0, visibility: 1, resolution: 3
++.*: symbol `_?func2' definition: 0, visibility: 2, resolution: 3
++.*: symbol `_?func3' definition: 0, visibility: 3, resolution: 3
+ #pass
+-- 
+2.11.0
+

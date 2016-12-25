@@ -1,0 +1,35 @@
+From 63d5281ac41f466695b032c56a373d6021352606 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Sun, 23 Oct 2016 18:21:47 +0300
+Subject: [PATCH 15/25] ld: testsuite: Disable endsym test case
+
+PRU does not export __end symbol because it is ambiguous for it.
+Users are expected to use instead the section markers __text_end,
+__data_end, __bss_end or __noinit_end.
+
+2016-12-26  Dimitar Dimitrov <dimitar@dinux.eu>
+
+ld/
+
+	* testsuite/ld-elf/endsym.d: Disable for PRU.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ ld/testsuite/ld-elf/endsym.d | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/ld/testsuite/ld-elf/endsym.d b/ld/testsuite/ld-elf/endsym.d
+index eefdd43912..3472154e18 100644
+--- a/ld/testsuite/ld-elf/endsym.d
++++ b/ld/testsuite/ld-elf/endsym.d
+@@ -4,6 +4,7 @@
+ #nm: -n
+ #notarget: hppa*-*-hpux*
+ #xfail: m68hc1*-* xgate-* cr16-*-* crx-*-* dlx-*-* nds32*-*-* visium-*-*
++#xfail: pru-*-*
+ 
+ #...
+ .* end
+-- 
+2.11.0
+

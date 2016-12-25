@@ -1,4 +1,4 @@
-From 9a7f1261b04e2bdc7504a783224aac779453a295 Mon Sep 17 00:00:00 2001
+From d00857521379354fc53e7888de31404af9a16d98 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Thu, 1 May 2014 16:43:07 +0300
 Subject: [PATCH 1/2] Initial PRU port
@@ -15,7 +15,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgloss/pru/close.c                              |   25 +
  libgloss/pru/configure                            | 3791 ++++++++++++++++
  libgloss/pru/configure.in                         |   66 +
- libgloss/pru/crt0.S                               |   64 +
+ libgloss/pru/crt0.S                               |   61 +
  libgloss/pru/device-specs/am335x.pru0             |    5 +
  libgloss/pru/device-specs/am335x.pru1             |    5 +
  libgloss/pru/device-specs/am437x.icss0.pru0       |    5 +
@@ -24,36 +24,32 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgloss/pru/device-specs/am437x.icss1.pru1       |    5 +
  libgloss/pru/device-specs/sim                     |    5 +
  libgloss/pru/do_global_dtors.c                    |   35 +
- libgloss/pru/exit.c                               |   31 +
  libgloss/pru/fstat.c                              |   30 +
  libgloss/pru/getpid.c                             |   25 +
  libgloss/pru/gettimeofday.c                       |   31 +
+ libgloss/pru/inbyte.c                             |   40 +
  libgloss/pru/include/pru/am335x.h                 |  772 ++++
  libgloss/pru/include/pru/io.h                     |  124 +
  libgloss/pru/isatty.c                             |   27 +
  libgloss/pru/kill.c                               |   28 +
  libgloss/pru/ldscripts/gen-ld-scripts.sh          |   61 +
- libgloss/pru/ldscripts/pruelf-am335x.pru0.x       |  223 +
- libgloss/pru/ldscripts/pruelf-am335x.pru1.x       |  223 +
- libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x |  223 +
- libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x |  223 +
- libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x |  223 +
- libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x |  223 +
- libgloss/pru/ldscripts/pruelf-sim.x               |  223 +
+ libgloss/pru/ldscripts/pruelf-am335x.pru0.x       |  190 +
+ libgloss/pru/ldscripts/pruelf-am335x.pru1.x       |  190 +
+ libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x |  190 +
+ libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x |  190 +
+ libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x |  190 +
+ libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x |  190 +
+ libgloss/pru/ldscripts/pruelf-sim.x               |  190 +
  libgloss/pru/lseek.c                              |   34 +
  libgloss/pru/open.c                               |   33 +
- libgloss/pru/print.c                              |   27 +
+ libgloss/pru/outbyte.c                            |   25 +
+ libgloss/pru/print.c                              |   26 +
  libgloss/pru/putnum.c                             |   41 +
  libgloss/pru/raise.c                              |   22 +
- libgloss/pru/read.c                               |   39 +
- libgloss/pru/rpmsg-inbyte.c                       |   26 +
- libgloss/pru/rpmsg-outbyte.c                      |   24 +
  libgloss/pru/sbrk.c                               |   44 +
  libgloss/pru/stat.c                               |   33 +
- libgloss/pru/syscall.S                            |   31 +
- libgloss/pru/syscall.h                            |   21 +
+ libgloss/pru/syscalls.S                           |   32 +
  libgloss/pru/unlink.c                             |   31 +
- libgloss/pru/write.c                              |   36 +
  newlib/configure.host                             |   13 +-
  newlib/libc/include/machine/ieeefp.h              |    4 +
  newlib/libc/include/machine/setjmp.h              |    5 +
@@ -65,7 +61,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  newlib/libc/machine/pru/configure                 | 4748 +++++++++++++++++++++
  newlib/libc/machine/pru/configure.in              |   14 +
  newlib/libc/machine/pru/setjmp.s                  |   46 +
- 60 files changed, 13960 insertions(+), 1 deletion(-)
+ 56 files changed, 13614 insertions(+), 1 deletion(-)
  create mode 100644 libgloss/pru/Makefile.in
  create mode 100644 libgloss/pru/aclocal.m4
  create mode 100644 libgloss/pru/close.c
@@ -80,10 +76,10 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 libgloss/pru/device-specs/am437x.icss1.pru1
  create mode 100644 libgloss/pru/device-specs/sim
  create mode 100644 libgloss/pru/do_global_dtors.c
- create mode 100644 libgloss/pru/exit.c
  create mode 100644 libgloss/pru/fstat.c
  create mode 100644 libgloss/pru/getpid.c
  create mode 100644 libgloss/pru/gettimeofday.c
+ create mode 100644 libgloss/pru/inbyte.c
  create mode 100644 libgloss/pru/include/pru/am335x.h
  create mode 100644 libgloss/pru/include/pru/io.h
  create mode 100644 libgloss/pru/isatty.c
@@ -98,18 +94,14 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 libgloss/pru/ldscripts/pruelf-sim.x
  create mode 100644 libgloss/pru/lseek.c
  create mode 100644 libgloss/pru/open.c
+ create mode 100644 libgloss/pru/outbyte.c
  create mode 100644 libgloss/pru/print.c
  create mode 100644 libgloss/pru/putnum.c
  create mode 100644 libgloss/pru/raise.c
- create mode 100644 libgloss/pru/read.c
- create mode 100644 libgloss/pru/rpmsg-inbyte.c
- create mode 100644 libgloss/pru/rpmsg-outbyte.c
  create mode 100644 libgloss/pru/sbrk.c
  create mode 100644 libgloss/pru/stat.c
- create mode 100644 libgloss/pru/syscall.S
- create mode 100644 libgloss/pru/syscall.h
+ create mode 100644 libgloss/pru/syscalls.S
  create mode 100644 libgloss/pru/unlink.c
- create mode 100644 libgloss/pru/write.c
  create mode 100644 newlib/libc/machine/pru/Makefile.am
  create mode 100644 newlib/libc/machine/pru/Makefile.in
  create mode 100644 newlib/libc/machine/pru/aclocal.m4
@@ -118,7 +110,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 newlib/libc/machine/pru/setjmp.s
 
 diff --git a/config.sub b/config.sub
-index 6d86a1e..5248c5f 100755
+index 6d86a1e2f..5248c5fde 100755
 --- a/config.sub
 +++ b/config.sub
 @@ -301,6 +301,7 @@ case $basic_machine in
@@ -138,7 +130,7 @@ index 6d86a1e..5248c5f 100755
  	| riscv32-* | riscv64-* \
  	| rl78-* | romp-* | rs6000-* | rx-* \
 diff --git a/configure b/configure
-index 2d0963b..efeaf65 100755
+index 2d0963bbe..efeaf65a5 100755
 --- a/configure
 +++ b/configure
 @@ -3361,6 +3361,10 @@ case "${target}" in
@@ -153,7 +145,7 @@ index 2d0963b..efeaf65 100755
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
 diff --git a/configure.ac b/configure.ac
-index 3cb95d6..021d364 100644
+index 3cb95d69d..021d3645a 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -697,6 +697,10 @@ case "${target}" in
@@ -168,7 +160,7 @@ index 3cb95d6..021d364 100644
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
 diff --git a/libgloss/configure b/libgloss/configure
-index 90a0522..fa4c69c 100755
+index 90a05222a..fa4c69cd6 100755
 --- a/libgloss/configure
 +++ b/libgloss/configure
 @@ -709,6 +709,7 @@ spu
@@ -191,7 +183,7 @@ index 90a0522..fa4c69c 100755
  
  
 diff --git a/libgloss/configure.in b/libgloss/configure.in
-index d1b3b34..a47c7c2 100644
+index d1b3b3469..a47c7c260 100644
 --- a/libgloss/configure.in
 +++ b/libgloss/configure.in
 @@ -172,6 +172,8 @@ case "${target}" in
@@ -205,7 +197,7 @@ index d1b3b34..a47c7c2 100644
  
 diff --git a/libgloss/pru/Makefile.in b/libgloss/pru/Makefile.in
 new file mode 100644
-index 0000000..d629258
+index 000000000..4d08a9061
 --- /dev/null
 +++ b/libgloss/pru/Makefile.in
 @@ -0,0 +1,151 @@
@@ -267,10 +259,10 @@ index 0000000..d629258
 +
 +# object files needed
 +OBJS = \
-+	close.o do_global_dtors.o exit.o fstat.o getpid.o gettimeofday.o \
-+	isatty.o kill.o lseek.o open.o print.o putnum.o raise.o read.o \
-+	rpmsg-inbyte.o rpmsg-outbyte.o sbrk.o stat.o syscall.o unlink.o \
-+	write.o do_global_dtors.o
++	close.o do_global_dtors.o fstat.o getpid.o gettimeofday.o \
++	isatty.o kill.o lseek.o open.o putnum.o raise.o \
++	inbyte.o outbyte.o sbrk.o stat.o syscalls.o unlink.o \
++	do_global_dtors.o
 +
 +# Object files specific to particular targets.
 +EVALOBJS = ${OBJS}
@@ -362,7 +354,7 @@ index 0000000..d629258
 +	$(SHELL) config.status --recheck
 diff --git a/libgloss/pru/aclocal.m4 b/libgloss/pru/aclocal.m4
 new file mode 100644
-index 0000000..b6cdfae
+index 000000000..b6cdfaeb8
 --- /dev/null
 +++ b/libgloss/pru/aclocal.m4
 @@ -0,0 +1,344 @@
@@ -712,7 +704,7 @@ index 0000000..b6cdfae
 +m4_include([../acinclude.m4])
 diff --git a/libgloss/pru/close.c b/libgloss/pru/close.c
 new file mode 100644
-index 0000000..b94cb60
+index 000000000..b94cb602a
 --- /dev/null
 +++ b/libgloss/pru/close.c
 @@ -0,0 +1,25 @@
@@ -743,7 +735,7 @@ index 0000000..b94cb60
 +}
 diff --git a/libgloss/pru/configure b/libgloss/pru/configure
 new file mode 100755
-index 0000000..1174688
+index 000000000..117468823
 --- /dev/null
 +++ b/libgloss/pru/configure
 @@ -0,0 +1,3791 @@
@@ -4540,7 +4532,7 @@ index 0000000..1174688
 +
 diff --git a/libgloss/pru/configure.in b/libgloss/pru/configure.in
 new file mode 100644
-index 0000000..2a4c946
+index 000000000..2a4c946e8
 --- /dev/null
 +++ b/libgloss/pru/configure.in
 @@ -0,0 +1,66 @@
@@ -4612,10 +4604,10 @@ index 0000000..2a4c946
 +AC_OUTPUT
 diff --git a/libgloss/pru/crt0.S b/libgloss/pru/crt0.S
 new file mode 100644
-index 0000000..06c4848
+index 000000000..bab6694e6
 --- /dev/null
 +++ b/libgloss/pru/crt0.S
-@@ -0,0 +1,64 @@
+@@ -0,0 +1,61 @@
 +/* crt0.S -- PRU startup code
 + *
 + * Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -4640,8 +4632,7 @@ index 0000000..06c4848
 +	.global	__start
 +__start:
 +	/* Initialize stack pointer. */
-+	ldi	sp, %lo(__stack_top)
-+	ldi	sp.w2, %hi_rlz(__stack_top)
++	ldi32	sp, __stack_top
 +
 +	/* DATA and BSS are handled by the loader, so nothing to do here. */
 +
@@ -4652,10 +4643,8 @@ index 0000000..06c4848
 +	call	_atexit
 +
 +	/* Call constructors. Use non-call-clobbered registers. */
-+	ldi	r5, %lo(__ctors_start)
-+	ldi	r5.w2, %hi_rlz(__ctors_start)
-+	ldi	r6, %lo(__ctors_end)
-+	ldi	r6.w2, %hi_rlz(__ctors_end)
++	ldi	r5, __ctors_start
++	ldi	r6, __ctors_end
 +ctors_loop:
 +	qbeq	ctors_done, r5, r6
 +	lbbo	r7, r5, 0, 4		/* IMEM pointers are 32bits for now */
@@ -4682,7 +4671,7 @@ index 0000000..06c4848
 +	jmp	__crt_exit
 diff --git a/libgloss/pru/device-specs/am335x.pru0 b/libgloss/pru/device-specs/am335x.pru0
 new file mode 100644
-index 0000000..076fd82
+index 000000000..076fd82a9
 --- /dev/null
 +++ b/libgloss/pru/device-specs/am335x.pru0
 @@ -0,0 +1,5 @@
@@ -4693,7 +4682,7 @@ index 0000000..076fd82
 +-Tpruelf-am335x.pru0.x
 diff --git a/libgloss/pru/device-specs/am335x.pru1 b/libgloss/pru/device-specs/am335x.pru1
 new file mode 100644
-index 0000000..b82a984
+index 000000000..b82a984d2
 --- /dev/null
 +++ b/libgloss/pru/device-specs/am335x.pru1
 @@ -0,0 +1,5 @@
@@ -4704,7 +4693,7 @@ index 0000000..b82a984
 +-Tpruelf-am335x.pru1.x
 diff --git a/libgloss/pru/device-specs/am437x.icss0.pru0 b/libgloss/pru/device-specs/am437x.icss0.pru0
 new file mode 100644
-index 0000000..65da861
+index 000000000..65da8611f
 --- /dev/null
 +++ b/libgloss/pru/device-specs/am437x.icss0.pru0
 @@ -0,0 +1,5 @@
@@ -4715,7 +4704,7 @@ index 0000000..65da861
 +-Tpruelf-am437x.icss0.pru0.x
 diff --git a/libgloss/pru/device-specs/am437x.icss0.pru1 b/libgloss/pru/device-specs/am437x.icss0.pru1
 new file mode 100644
-index 0000000..5d865e3
+index 000000000..5d865e36c
 --- /dev/null
 +++ b/libgloss/pru/device-specs/am437x.icss0.pru1
 @@ -0,0 +1,5 @@
@@ -4726,7 +4715,7 @@ index 0000000..5d865e3
 +-Tpruelf-am437x.icss0.pru1.x
 diff --git a/libgloss/pru/device-specs/am437x.icss1.pru0 b/libgloss/pru/device-specs/am437x.icss1.pru0
 new file mode 100644
-index 0000000..1155ac7
+index 000000000..1155ac718
 --- /dev/null
 +++ b/libgloss/pru/device-specs/am437x.icss1.pru0
 @@ -0,0 +1,5 @@
@@ -4737,7 +4726,7 @@ index 0000000..1155ac7
 +-Tpruelf-am437x.icss1.pru0.x
 diff --git a/libgloss/pru/device-specs/am437x.icss1.pru1 b/libgloss/pru/device-specs/am437x.icss1.pru1
 new file mode 100644
-index 0000000..b8e2add
+index 000000000..b8e2add49
 --- /dev/null
 +++ b/libgloss/pru/device-specs/am437x.icss1.pru1
 @@ -0,0 +1,5 @@
@@ -4748,7 +4737,7 @@ index 0000000..b8e2add
 +-Tpruelf-am437x.icss1.pru1.x
 diff --git a/libgloss/pru/device-specs/sim b/libgloss/pru/device-specs/sim
 new file mode 100644
-index 0000000..1dddcbe
+index 000000000..1dddcbec2
 --- /dev/null
 +++ b/libgloss/pru/device-specs/sim
 @@ -0,0 +1,5 @@
@@ -4759,7 +4748,7 @@ index 0000000..1dddcbe
 +-Tpruelf-sim.x
 diff --git a/libgloss/pru/do_global_dtors.c b/libgloss/pru/do_global_dtors.c
 new file mode 100644
-index 0000000..07b996b
+index 000000000..07b996bf0
 --- /dev/null
 +++ b/libgloss/pru/do_global_dtors.c
 @@ -0,0 +1,35 @@
@@ -4798,46 +4787,9 @@ index 0000000..07b996b
 +	(*dtor) ();
 +    }
 +}
-diff --git a/libgloss/pru/exit.c b/libgloss/pru/exit.c
-new file mode 100644
-index 0000000..cc93cbe
---- /dev/null
-+++ b/libgloss/pru/exit.c
-@@ -0,0 +1,31 @@
-+/* exit.c -- exit trap binding.
-+ *
-+ * Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
-+ *
-+ * The authors hereby grant permission to use, copy, modify, distribute,
-+ * and license this software and its documentation for any purpose, provided
-+ * that existing copyright notices are retained in all copies and that this
-+ * notice is included verbatim in any distributions. No written agreement,
-+ * license, or royalty fee is required for any of the authorized uses.
-+ * Modifications to this software may be copyrighted by their authors
-+ * and need not follow the licensing terms described here, provided that
-+ * the new terms are clearly indicated on the first page of each file where
-+ * they apply.
-+ */
-+#include <stdint.h>
-+#include <_ansi.h>
-+#include "syscall.h"
-+
-+/*
-+ * _exit --  Halt, so remoteproc can see we exited.
-+ */
-+void
-+_DEFUN (_exit, (val),
-+       int val)
-+{
-+    while (1) {
-+	/* Even without rpmsg, the "halt" instruction from the syscall
-+	   function will stop PRU. */
-+	syscall1 (SYS_EXIT, val);
-+    }
-+}
 diff --git a/libgloss/pru/fstat.c b/libgloss/pru/fstat.c
 new file mode 100644
-index 0000000..0205464
+index 000000000..02054641b
 --- /dev/null
 +++ b/libgloss/pru/fstat.c
 @@ -0,0 +1,30 @@
@@ -4873,7 +4825,7 @@ index 0000000..0205464
 +}
 diff --git a/libgloss/pru/getpid.c b/libgloss/pru/getpid.c
 new file mode 100644
-index 0000000..eee2ac0
+index 000000000..eee2ac030
 --- /dev/null
 +++ b/libgloss/pru/getpid.c
 @@ -0,0 +1,25 @@
@@ -4904,7 +4856,7 @@ index 0000000..eee2ac0
 +}
 diff --git a/libgloss/pru/gettimeofday.c b/libgloss/pru/gettimeofday.c
 new file mode 100644
-index 0000000..7bc01dc
+index 000000000..7bc01dcce
 --- /dev/null
 +++ b/libgloss/pru/gettimeofday.c
 @@ -0,0 +1,31 @@
@@ -4939,9 +4891,55 @@ index 0000000..7bc01dc
 +    errno = ENOSYS;
 +    return -1;
 +}
+diff --git a/libgloss/pru/inbyte.c b/libgloss/pru/inbyte.c
+new file mode 100644
+index 000000000..b2bdff0d8
+--- /dev/null
++++ b/libgloss/pru/inbyte.c
+@@ -0,0 +1,40 @@
++/* inbyte.c -- inbyte function for remoteproc
++ *
++ * Copyright (c) 2014-2016 Dimitar Dimitrov <dimitar@dinux.eu>
++ *
++ * The authors hereby grant permission to use, copy, modify, distribute,
++ * and license this software and its documentation for any purpose, provided
++ * that existing copyright notices are retained in all copies and that this
++ * notice is included verbatim in any distributions. No written agreement,
++ * license, or royalty fee is required for any of the authorized uses.
++ * Modifications to this software may be copyrighted by their authors
++ * and need not follow the licensing terms described here, provided that
++ * the new terms are clearly indicated on the first page of each file where
++ * they apply.
++ */
++#include <errno.h>
++#include <_ansi.h>
++#include <stdio.h>
++#include <unistd.h>
++#include "glue.h"
++
++extern ssize_t _read(int fd, void *b, size_t count);
++
++int
++_DEFUN (inbyte, (),
++	_NOARGS)
++
++{
++  ssize_t n;
++  char c;
++
++  /* PRU has no interrupts, so it is inherently thread-safe. */
++  n = _read(STDIN_FILENO, &c, 1);
++  if (n < 0)
++    return n;
++  else if (n == 0)
++    return -ENODATA;
++  else
++    return 1;
++}
++
 diff --git a/libgloss/pru/include/pru/am335x.h b/libgloss/pru/include/pru/am335x.h
 new file mode 100644
-index 0000000..b57f8f0
+index 000000000..b57f8f0c9
 --- /dev/null
 +++ b/libgloss/pru/include/pru/am335x.h
 @@ -0,0 +1,772 @@
@@ -5719,7 +5717,7 @@ index 0000000..b57f8f0
 +#endif
 diff --git a/libgloss/pru/include/pru/io.h b/libgloss/pru/include/pru/io.h
 new file mode 100644
-index 0000000..945ff06
+index 000000000..945ff06f3
 --- /dev/null
 +++ b/libgloss/pru/include/pru/io.h
 @@ -0,0 +1,124 @@
@@ -5849,7 +5847,7 @@ index 0000000..945ff06
 +#endif
 diff --git a/libgloss/pru/isatty.c b/libgloss/pru/isatty.c
 new file mode 100644
-index 0000000..e3c3205
+index 000000000..e3c32051a
 --- /dev/null
 +++ b/libgloss/pru/isatty.c
 @@ -0,0 +1,27 @@
@@ -5882,7 +5880,7 @@ index 0000000..e3c3205
 +}
 diff --git a/libgloss/pru/kill.c b/libgloss/pru/kill.c
 new file mode 100644
-index 0000000..43a3597
+index 000000000..43a359760
 --- /dev/null
 +++ b/libgloss/pru/kill.c
 @@ -0,0 +1,28 @@
@@ -5916,7 +5914,7 @@ index 0000000..43a3597
 +}
 diff --git a/libgloss/pru/ldscripts/gen-ld-scripts.sh b/libgloss/pru/ldscripts/gen-ld-scripts.sh
 new file mode 100755
-index 0000000..575a309
+index 000000000..575a30970
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/gen-ld-scripts.sh
 @@ -0,0 +1,61 @@
@@ -5983,10 +5981,10 @@ index 0000000..575a309
 +dump_modified 8K   8K     "32"         "512"       | tee pruelf-am437x.icss1.pru1.x
 diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru0.x b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
 new file mode 100644
-index 0000000..ef122be
+index 000000000..c04f518e5
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
-@@ -0,0 +1,223 @@
+@@ -0,0 +1,190 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -6062,64 +6060,28 @@ index 0000000..ef122be
 +  .rela.bss      : { *(.rela.bss)		}
 +  .rel.plt       : { *(.rel.plt)		}
 +  .rela.plt      : { *(.rela.plt)		}
-+  /* Internal text space. */
++  /* Internal text space.  */
 +  .text   :
 +  {
 +     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
-+    *(.init1)
-+    KEEP (*(.init1))
-+    *(.init2)
-+    KEEP (*(.init2))
-+    *(.init3)
-+    KEEP (*(.init3))
-+    *(.init4)
-+    KEEP (*(.init4))
-+    *(.init5)
-+    KEEP (*(.init5))
-+    *(.init6)  /* C++ constructors.  */
-+    KEEP (*(.init6))
-+    *(.init7)
-+    KEEP (*(.init7))
-+    *(.init8)
-+    KEEP (*(.init8))
-+    *(.init9)
-+    KEEP (*(.init9))
 +    . = ALIGN(4);
 +    *(.text)
 +    . = ALIGN(4);
 +    *(.text.*)
 +    . = ALIGN(4);
-+    *(.fini9)
-+    KEEP (*(.fini9))
-+    *(.fini8)
-+    KEEP (*(.fini8))
-+    *(.fini7)
-+    KEEP (*(.fini7))
-+    *(.fini6)  /* C++ destructors.  */
-+    KEEP (*(.fini6))
-+    *(.fini5)
-+    KEEP (*(.fini5))
-+    *(.fini4)
-+    KEEP (*(.fini4))
-+    *(.fini3)
-+    KEEP (*(.fini3))
-+    *(.fini2)
-+    KEEP (*(.fini2))
-+    *(.fini1)
-+    KEEP (*(.fini1))
-+    *(.fini0)  /* Infinite loop after program termination.  */
-+    KEEP (*(.fini0))
++    *(.gnu.linkonce.t*)
++    . = ALIGN(4);
 +     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
-+    /* optional variable that user is prepared to have NULL address */
++    /* Optional variable that user is prepared to have NULL address.  */
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
-+       a "valid" NULL address. */
++       a "valid" NULL address.  */
 +     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
 +     KEEP (*(.ctors))
@@ -6128,17 +6090,18 @@ index 0000000..ef122be
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
 +     KEEP (*(.dtors))
 +     __dtors_end = . ;
-+    /* DATA memory starts at address 0. So to avoid placing a valid static
++    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
-+       section. If CRT can make some use of it - great. Otherwise skip a
-+       word. In all cases .data/.bss sections must start at non-zero. */
++       section.  If CRT can make some use of it - great.  Otherwise skip a
++       word.  In all cases .data/.bss sections must start at non-zero.  */
 +    . += (. == 0 ? 4 : 0);
 +     PROVIDE (__data_start = .) ;
 +    *(.data)
 +     *(.data*)
-+    *(.rodata)  /* We need to include .rodata here if gcc is used */
-+     *(.rodata*) /* with -fdata-sections.  */
++     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
++     *(.rodata.*) /* with -fdata-sections.  */
 +    *(.gnu.linkonce.d*)
++    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
 +     PROVIDE (__data_end = .) ;
 +  }  > dmem
@@ -6151,7 +6114,8 @@ index 0000000..ef122be
 +  {
 +     PROVIDE (__bss_start = .) ;
 +    *(.bss)
-+     *(.bss*)
++     *(.bss.*)
++    *(.gnu.linkonce.b*)
 +    *(COMMON)
 +     PROVIDE (__bss_end = .) ;
 +  }  > dmem
@@ -6159,13 +6123,13 @@ index 0000000..ef122be
 +  .noinit  :
 +  {
 +     PROVIDE (__noinit_start = .) ;
-+    *(.noinit*)
++    *(.noinit)
 +     PROVIDE (__noinit_end = .) ;
 +     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
-+    /* Stack is not here really. It will be put at the end of DMEM.
++    /* Stack is not here really.  It will be put at the end of DMEM.
 +       But we take into account its size here, in order to allow
-+       for MEMORY overflow checking during link time. */
++       for MEMORY overflow checking during link time.  */
 +     . += __STACK_SIZE ;
 +  }  > dmem
 +  /* Stabs debugging sections.  */
@@ -6207,15 +6171,16 @@ index 0000000..ef122be
 +  .debug_ranges   0 : { *(.debug_ranges) }
 +  /* DWARF Extension.  */
 +  .debug_macro    0 : { *(.debug_macro) }
++  .debug_addr     0 : { *(.debug_addr) }
 +}
 +
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru1.x b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
 new file mode 100644
-index 0000000..ef122be
+index 000000000..c04f518e5
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
-@@ -0,0 +1,223 @@
+@@ -0,0 +1,190 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -6291,64 +6256,28 @@ index 0000000..ef122be
 +  .rela.bss      : { *(.rela.bss)		}
 +  .rel.plt       : { *(.rel.plt)		}
 +  .rela.plt      : { *(.rela.plt)		}
-+  /* Internal text space. */
++  /* Internal text space.  */
 +  .text   :
 +  {
 +     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
-+    *(.init1)
-+    KEEP (*(.init1))
-+    *(.init2)
-+    KEEP (*(.init2))
-+    *(.init3)
-+    KEEP (*(.init3))
-+    *(.init4)
-+    KEEP (*(.init4))
-+    *(.init5)
-+    KEEP (*(.init5))
-+    *(.init6)  /* C++ constructors.  */
-+    KEEP (*(.init6))
-+    *(.init7)
-+    KEEP (*(.init7))
-+    *(.init8)
-+    KEEP (*(.init8))
-+    *(.init9)
-+    KEEP (*(.init9))
 +    . = ALIGN(4);
 +    *(.text)
 +    . = ALIGN(4);
 +    *(.text.*)
 +    . = ALIGN(4);
-+    *(.fini9)
-+    KEEP (*(.fini9))
-+    *(.fini8)
-+    KEEP (*(.fini8))
-+    *(.fini7)
-+    KEEP (*(.fini7))
-+    *(.fini6)  /* C++ destructors.  */
-+    KEEP (*(.fini6))
-+    *(.fini5)
-+    KEEP (*(.fini5))
-+    *(.fini4)
-+    KEEP (*(.fini4))
-+    *(.fini3)
-+    KEEP (*(.fini3))
-+    *(.fini2)
-+    KEEP (*(.fini2))
-+    *(.fini1)
-+    KEEP (*(.fini1))
-+    *(.fini0)  /* Infinite loop after program termination.  */
-+    KEEP (*(.fini0))
++    *(.gnu.linkonce.t*)
++    . = ALIGN(4);
 +     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
-+    /* optional variable that user is prepared to have NULL address */
++    /* Optional variable that user is prepared to have NULL address.  */
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
-+       a "valid" NULL address. */
++       a "valid" NULL address.  */
 +     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
 +     KEEP (*(.ctors))
@@ -6357,17 +6286,18 @@ index 0000000..ef122be
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
 +     KEEP (*(.dtors))
 +     __dtors_end = . ;
-+    /* DATA memory starts at address 0. So to avoid placing a valid static
++    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
-+       section. If CRT can make some use of it - great. Otherwise skip a
-+       word. In all cases .data/.bss sections must start at non-zero. */
++       section.  If CRT can make some use of it - great.  Otherwise skip a
++       word.  In all cases .data/.bss sections must start at non-zero.  */
 +    . += (. == 0 ? 4 : 0);
 +     PROVIDE (__data_start = .) ;
 +    *(.data)
 +     *(.data*)
-+    *(.rodata)  /* We need to include .rodata here if gcc is used */
-+     *(.rodata*) /* with -fdata-sections.  */
++     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
++     *(.rodata.*) /* with -fdata-sections.  */
 +    *(.gnu.linkonce.d*)
++    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
 +     PROVIDE (__data_end = .) ;
 +  }  > dmem
@@ -6380,7 +6310,8 @@ index 0000000..ef122be
 +  {
 +     PROVIDE (__bss_start = .) ;
 +    *(.bss)
-+     *(.bss*)
++     *(.bss.*)
++    *(.gnu.linkonce.b*)
 +    *(COMMON)
 +     PROVIDE (__bss_end = .) ;
 +  }  > dmem
@@ -6388,13 +6319,13 @@ index 0000000..ef122be
 +  .noinit  :
 +  {
 +     PROVIDE (__noinit_start = .) ;
-+    *(.noinit*)
++    *(.noinit)
 +     PROVIDE (__noinit_end = .) ;
 +     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
-+    /* Stack is not here really. It will be put at the end of DMEM.
++    /* Stack is not here really.  It will be put at the end of DMEM.
 +       But we take into account its size here, in order to allow
-+       for MEMORY overflow checking during link time. */
++       for MEMORY overflow checking during link time.  */
 +     . += __STACK_SIZE ;
 +  }  > dmem
 +  /* Stabs debugging sections.  */
@@ -6436,15 +6367,16 @@ index 0000000..ef122be
 +  .debug_ranges   0 : { *(.debug_ranges) }
 +  /* DWARF Extension.  */
 +  .debug_macro    0 : { *(.debug_macro) }
++  .debug_addr     0 : { *(.debug_addr) }
 +}
 +
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
 new file mode 100644
-index 0000000..4450ca5
+index 000000000..77a925797
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
-@@ -0,0 +1,223 @@
+@@ -0,0 +1,190 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -6520,64 +6452,28 @@ index 0000000..4450ca5
 +  .rela.bss      : { *(.rela.bss)		}
 +  .rel.plt       : { *(.rel.plt)		}
 +  .rela.plt      : { *(.rela.plt)		}
-+  /* Internal text space. */
++  /* Internal text space.  */
 +  .text   :
 +  {
 +     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
-+    *(.init1)
-+    KEEP (*(.init1))
-+    *(.init2)
-+    KEEP (*(.init2))
-+    *(.init3)
-+    KEEP (*(.init3))
-+    *(.init4)
-+    KEEP (*(.init4))
-+    *(.init5)
-+    KEEP (*(.init5))
-+    *(.init6)  /* C++ constructors.  */
-+    KEEP (*(.init6))
-+    *(.init7)
-+    KEEP (*(.init7))
-+    *(.init8)
-+    KEEP (*(.init8))
-+    *(.init9)
-+    KEEP (*(.init9))
 +    . = ALIGN(4);
 +    *(.text)
 +    . = ALIGN(4);
 +    *(.text.*)
 +    . = ALIGN(4);
-+    *(.fini9)
-+    KEEP (*(.fini9))
-+    *(.fini8)
-+    KEEP (*(.fini8))
-+    *(.fini7)
-+    KEEP (*(.fini7))
-+    *(.fini6)  /* C++ destructors.  */
-+    KEEP (*(.fini6))
-+    *(.fini5)
-+    KEEP (*(.fini5))
-+    *(.fini4)
-+    KEEP (*(.fini4))
-+    *(.fini3)
-+    KEEP (*(.fini3))
-+    *(.fini2)
-+    KEEP (*(.fini2))
-+    *(.fini1)
-+    KEEP (*(.fini1))
-+    *(.fini0)  /* Infinite loop after program termination.  */
-+    KEEP (*(.fini0))
++    *(.gnu.linkonce.t*)
++    . = ALIGN(4);
 +     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
-+    /* optional variable that user is prepared to have NULL address */
++    /* Optional variable that user is prepared to have NULL address.  */
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
-+       a "valid" NULL address. */
++       a "valid" NULL address.  */
 +     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
 +     KEEP (*(.ctors))
@@ -6586,17 +6482,18 @@ index 0000000..4450ca5
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
 +     KEEP (*(.dtors))
 +     __dtors_end = . ;
-+    /* DATA memory starts at address 0. So to avoid placing a valid static
++    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
-+       section. If CRT can make some use of it - great. Otherwise skip a
-+       word. In all cases .data/.bss sections must start at non-zero. */
++       section.  If CRT can make some use of it - great.  Otherwise skip a
++       word.  In all cases .data/.bss sections must start at non-zero.  */
 +    . += (. == 0 ? 4 : 0);
 +     PROVIDE (__data_start = .) ;
 +    *(.data)
 +     *(.data*)
-+    *(.rodata)  /* We need to include .rodata here if gcc is used */
-+     *(.rodata*) /* with -fdata-sections.  */
++     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
++     *(.rodata.*) /* with -fdata-sections.  */
 +    *(.gnu.linkonce.d*)
++    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
 +     PROVIDE (__data_end = .) ;
 +  }  > dmem
@@ -6609,7 +6506,8 @@ index 0000000..4450ca5
 +  {
 +     PROVIDE (__bss_start = .) ;
 +    *(.bss)
-+     *(.bss*)
++     *(.bss.*)
++    *(.gnu.linkonce.b*)
 +    *(COMMON)
 +     PROVIDE (__bss_end = .) ;
 +  }  > dmem
@@ -6617,13 +6515,13 @@ index 0000000..4450ca5
 +  .noinit  :
 +  {
 +     PROVIDE (__noinit_start = .) ;
-+    *(.noinit*)
++    *(.noinit)
 +     PROVIDE (__noinit_end = .) ;
 +     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
-+    /* Stack is not here really. It will be put at the end of DMEM.
++    /* Stack is not here really.  It will be put at the end of DMEM.
 +       But we take into account its size here, in order to allow
-+       for MEMORY overflow checking during link time. */
++       for MEMORY overflow checking during link time.  */
 +     . += __STACK_SIZE ;
 +  }  > dmem
 +  /* Stabs debugging sections.  */
@@ -6665,15 +6563,16 @@ index 0000000..4450ca5
 +  .debug_ranges   0 : { *(.debug_ranges) }
 +  /* DWARF Extension.  */
 +  .debug_macro    0 : { *(.debug_macro) }
++  .debug_addr     0 : { *(.debug_addr) }
 +}
 +
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
 new file mode 100644
-index 0000000..4450ca5
+index 000000000..77a925797
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
-@@ -0,0 +1,223 @@
+@@ -0,0 +1,190 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -6749,64 +6648,28 @@ index 0000000..4450ca5
 +  .rela.bss      : { *(.rela.bss)		}
 +  .rel.plt       : { *(.rel.plt)		}
 +  .rela.plt      : { *(.rela.plt)		}
-+  /* Internal text space. */
++  /* Internal text space.  */
 +  .text   :
 +  {
 +     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
-+    *(.init1)
-+    KEEP (*(.init1))
-+    *(.init2)
-+    KEEP (*(.init2))
-+    *(.init3)
-+    KEEP (*(.init3))
-+    *(.init4)
-+    KEEP (*(.init4))
-+    *(.init5)
-+    KEEP (*(.init5))
-+    *(.init6)  /* C++ constructors.  */
-+    KEEP (*(.init6))
-+    *(.init7)
-+    KEEP (*(.init7))
-+    *(.init8)
-+    KEEP (*(.init8))
-+    *(.init9)
-+    KEEP (*(.init9))
 +    . = ALIGN(4);
 +    *(.text)
 +    . = ALIGN(4);
 +    *(.text.*)
 +    . = ALIGN(4);
-+    *(.fini9)
-+    KEEP (*(.fini9))
-+    *(.fini8)
-+    KEEP (*(.fini8))
-+    *(.fini7)
-+    KEEP (*(.fini7))
-+    *(.fini6)  /* C++ destructors.  */
-+    KEEP (*(.fini6))
-+    *(.fini5)
-+    KEEP (*(.fini5))
-+    *(.fini4)
-+    KEEP (*(.fini4))
-+    *(.fini3)
-+    KEEP (*(.fini3))
-+    *(.fini2)
-+    KEEP (*(.fini2))
-+    *(.fini1)
-+    KEEP (*(.fini1))
-+    *(.fini0)  /* Infinite loop after program termination.  */
-+    KEEP (*(.fini0))
++    *(.gnu.linkonce.t*)
++    . = ALIGN(4);
 +     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
-+    /* optional variable that user is prepared to have NULL address */
++    /* Optional variable that user is prepared to have NULL address.  */
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
-+       a "valid" NULL address. */
++       a "valid" NULL address.  */
 +     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
 +     KEEP (*(.ctors))
@@ -6815,17 +6678,18 @@ index 0000000..4450ca5
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
 +     KEEP (*(.dtors))
 +     __dtors_end = . ;
-+    /* DATA memory starts at address 0. So to avoid placing a valid static
++    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
-+       section. If CRT can make some use of it - great. Otherwise skip a
-+       word. In all cases .data/.bss sections must start at non-zero. */
++       section.  If CRT can make some use of it - great.  Otherwise skip a
++       word.  In all cases .data/.bss sections must start at non-zero.  */
 +    . += (. == 0 ? 4 : 0);
 +     PROVIDE (__data_start = .) ;
 +    *(.data)
 +     *(.data*)
-+    *(.rodata)  /* We need to include .rodata here if gcc is used */
-+     *(.rodata*) /* with -fdata-sections.  */
++     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
++     *(.rodata.*) /* with -fdata-sections.  */
 +    *(.gnu.linkonce.d*)
++    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
 +     PROVIDE (__data_end = .) ;
 +  }  > dmem
@@ -6838,7 +6702,8 @@ index 0000000..4450ca5
 +  {
 +     PROVIDE (__bss_start = .) ;
 +    *(.bss)
-+     *(.bss*)
++     *(.bss.*)
++    *(.gnu.linkonce.b*)
 +    *(COMMON)
 +     PROVIDE (__bss_end = .) ;
 +  }  > dmem
@@ -6846,13 +6711,13 @@ index 0000000..4450ca5
 +  .noinit  :
 +  {
 +     PROVIDE (__noinit_start = .) ;
-+    *(.noinit*)
++    *(.noinit)
 +     PROVIDE (__noinit_end = .) ;
 +     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
-+    /* Stack is not here really. It will be put at the end of DMEM.
++    /* Stack is not here really.  It will be put at the end of DMEM.
 +       But we take into account its size here, in order to allow
-+       for MEMORY overflow checking during link time. */
++       for MEMORY overflow checking during link time.  */
 +     . += __STACK_SIZE ;
 +  }  > dmem
 +  /* Stabs debugging sections.  */
@@ -6894,15 +6759,16 @@ index 0000000..4450ca5
 +  .debug_ranges   0 : { *(.debug_ranges) }
 +  /* DWARF Extension.  */
 +  .debug_macro    0 : { *(.debug_macro) }
++  .debug_addr     0 : { *(.debug_addr) }
 +}
 +
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
 new file mode 100644
-index 0000000..ef122be
+index 000000000..c04f518e5
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
-@@ -0,0 +1,223 @@
+@@ -0,0 +1,190 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -6978,64 +6844,28 @@ index 0000000..ef122be
 +  .rela.bss      : { *(.rela.bss)		}
 +  .rel.plt       : { *(.rel.plt)		}
 +  .rela.plt      : { *(.rela.plt)		}
-+  /* Internal text space. */
++  /* Internal text space.  */
 +  .text   :
 +  {
 +     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
-+    *(.init1)
-+    KEEP (*(.init1))
-+    *(.init2)
-+    KEEP (*(.init2))
-+    *(.init3)
-+    KEEP (*(.init3))
-+    *(.init4)
-+    KEEP (*(.init4))
-+    *(.init5)
-+    KEEP (*(.init5))
-+    *(.init6)  /* C++ constructors.  */
-+    KEEP (*(.init6))
-+    *(.init7)
-+    KEEP (*(.init7))
-+    *(.init8)
-+    KEEP (*(.init8))
-+    *(.init9)
-+    KEEP (*(.init9))
 +    . = ALIGN(4);
 +    *(.text)
 +    . = ALIGN(4);
 +    *(.text.*)
 +    . = ALIGN(4);
-+    *(.fini9)
-+    KEEP (*(.fini9))
-+    *(.fini8)
-+    KEEP (*(.fini8))
-+    *(.fini7)
-+    KEEP (*(.fini7))
-+    *(.fini6)  /* C++ destructors.  */
-+    KEEP (*(.fini6))
-+    *(.fini5)
-+    KEEP (*(.fini5))
-+    *(.fini4)
-+    KEEP (*(.fini4))
-+    *(.fini3)
-+    KEEP (*(.fini3))
-+    *(.fini2)
-+    KEEP (*(.fini2))
-+    *(.fini1)
-+    KEEP (*(.fini1))
-+    *(.fini0)  /* Infinite loop after program termination.  */
-+    KEEP (*(.fini0))
++    *(.gnu.linkonce.t*)
++    . = ALIGN(4);
 +     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
-+    /* optional variable that user is prepared to have NULL address */
++    /* Optional variable that user is prepared to have NULL address.  */
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
-+       a "valid" NULL address. */
++       a "valid" NULL address.  */
 +     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
 +     KEEP (*(.ctors))
@@ -7044,17 +6874,18 @@ index 0000000..ef122be
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
 +     KEEP (*(.dtors))
 +     __dtors_end = . ;
-+    /* DATA memory starts at address 0. So to avoid placing a valid static
++    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
-+       section. If CRT can make some use of it - great. Otherwise skip a
-+       word. In all cases .data/.bss sections must start at non-zero. */
++       section.  If CRT can make some use of it - great.  Otherwise skip a
++       word.  In all cases .data/.bss sections must start at non-zero.  */
 +    . += (. == 0 ? 4 : 0);
 +     PROVIDE (__data_start = .) ;
 +    *(.data)
 +     *(.data*)
-+    *(.rodata)  /* We need to include .rodata here if gcc is used */
-+     *(.rodata*) /* with -fdata-sections.  */
++     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
++     *(.rodata.*) /* with -fdata-sections.  */
 +    *(.gnu.linkonce.d*)
++    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
 +     PROVIDE (__data_end = .) ;
 +  }  > dmem
@@ -7067,7 +6898,8 @@ index 0000000..ef122be
 +  {
 +     PROVIDE (__bss_start = .) ;
 +    *(.bss)
-+     *(.bss*)
++     *(.bss.*)
++    *(.gnu.linkonce.b*)
 +    *(COMMON)
 +     PROVIDE (__bss_end = .) ;
 +  }  > dmem
@@ -7075,13 +6907,13 @@ index 0000000..ef122be
 +  .noinit  :
 +  {
 +     PROVIDE (__noinit_start = .) ;
-+    *(.noinit*)
++    *(.noinit)
 +     PROVIDE (__noinit_end = .) ;
 +     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
-+    /* Stack is not here really. It will be put at the end of DMEM.
++    /* Stack is not here really.  It will be put at the end of DMEM.
 +       But we take into account its size here, in order to allow
-+       for MEMORY overflow checking during link time. */
++       for MEMORY overflow checking during link time.  */
 +     . += __STACK_SIZE ;
 +  }  > dmem
 +  /* Stabs debugging sections.  */
@@ -7123,15 +6955,16 @@ index 0000000..ef122be
 +  .debug_ranges   0 : { *(.debug_ranges) }
 +  /* DWARF Extension.  */
 +  .debug_macro    0 : { *(.debug_macro) }
++  .debug_addr     0 : { *(.debug_addr) }
 +}
 +
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
 new file mode 100644
-index 0000000..ef122be
+index 000000000..c04f518e5
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
-@@ -0,0 +1,223 @@
+@@ -0,0 +1,190 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -7207,64 +7040,28 @@ index 0000000..ef122be
 +  .rela.bss      : { *(.rela.bss)		}
 +  .rel.plt       : { *(.rel.plt)		}
 +  .rela.plt      : { *(.rela.plt)		}
-+  /* Internal text space. */
++  /* Internal text space.  */
 +  .text   :
 +  {
 +     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
-+    *(.init1)
-+    KEEP (*(.init1))
-+    *(.init2)
-+    KEEP (*(.init2))
-+    *(.init3)
-+    KEEP (*(.init3))
-+    *(.init4)
-+    KEEP (*(.init4))
-+    *(.init5)
-+    KEEP (*(.init5))
-+    *(.init6)  /* C++ constructors.  */
-+    KEEP (*(.init6))
-+    *(.init7)
-+    KEEP (*(.init7))
-+    *(.init8)
-+    KEEP (*(.init8))
-+    *(.init9)
-+    KEEP (*(.init9))
 +    . = ALIGN(4);
 +    *(.text)
 +    . = ALIGN(4);
 +    *(.text.*)
 +    . = ALIGN(4);
-+    *(.fini9)
-+    KEEP (*(.fini9))
-+    *(.fini8)
-+    KEEP (*(.fini8))
-+    *(.fini7)
-+    KEEP (*(.fini7))
-+    *(.fini6)  /* C++ destructors.  */
-+    KEEP (*(.fini6))
-+    *(.fini5)
-+    KEEP (*(.fini5))
-+    *(.fini4)
-+    KEEP (*(.fini4))
-+    *(.fini3)
-+    KEEP (*(.fini3))
-+    *(.fini2)
-+    KEEP (*(.fini2))
-+    *(.fini1)
-+    KEEP (*(.fini1))
-+    *(.fini0)  /* Infinite loop after program termination.  */
-+    KEEP (*(.fini0))
++    *(.gnu.linkonce.t*)
++    . = ALIGN(4);
 +     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
-+    /* optional variable that user is prepared to have NULL address */
++    /* Optional variable that user is prepared to have NULL address.  */
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
-+       a "valid" NULL address. */
++       a "valid" NULL address.  */
 +     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
 +     KEEP (*(.ctors))
@@ -7273,17 +7070,18 @@ index 0000000..ef122be
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
 +     KEEP (*(.dtors))
 +     __dtors_end = . ;
-+    /* DATA memory starts at address 0. So to avoid placing a valid static
++    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
-+       section. If CRT can make some use of it - great. Otherwise skip a
-+       word. In all cases .data/.bss sections must start at non-zero. */
++       section.  If CRT can make some use of it - great.  Otherwise skip a
++       word.  In all cases .data/.bss sections must start at non-zero.  */
 +    . += (. == 0 ? 4 : 0);
 +     PROVIDE (__data_start = .) ;
 +    *(.data)
 +     *(.data*)
-+    *(.rodata)  /* We need to include .rodata here if gcc is used */
-+     *(.rodata*) /* with -fdata-sections.  */
++     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
++     *(.rodata.*) /* with -fdata-sections.  */
 +    *(.gnu.linkonce.d*)
++    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
 +     PROVIDE (__data_end = .) ;
 +  }  > dmem
@@ -7296,7 +7094,8 @@ index 0000000..ef122be
 +  {
 +     PROVIDE (__bss_start = .) ;
 +    *(.bss)
-+     *(.bss*)
++     *(.bss.*)
++    *(.gnu.linkonce.b*)
 +    *(COMMON)
 +     PROVIDE (__bss_end = .) ;
 +  }  > dmem
@@ -7304,13 +7103,13 @@ index 0000000..ef122be
 +  .noinit  :
 +  {
 +     PROVIDE (__noinit_start = .) ;
-+    *(.noinit*)
++    *(.noinit)
 +     PROVIDE (__noinit_end = .) ;
 +     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
-+    /* Stack is not here really. It will be put at the end of DMEM.
++    /* Stack is not here really.  It will be put at the end of DMEM.
 +       But we take into account its size here, in order to allow
-+       for MEMORY overflow checking during link time. */
++       for MEMORY overflow checking during link time.  */
 +     . += __STACK_SIZE ;
 +  }  > dmem
 +  /* Stabs debugging sections.  */
@@ -7352,15 +7151,16 @@ index 0000000..ef122be
 +  .debug_ranges   0 : { *(.debug_ranges) }
 +  /* DWARF Extension.  */
 +  .debug_macro    0 : { *(.debug_macro) }
++  .debug_addr     0 : { *(.debug_addr) }
 +}
 +
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-sim.x b/libgloss/pru/ldscripts/pruelf-sim.x
 new file mode 100644
-index 0000000..efe9ed9
+index 000000000..92dec9d09
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-sim.x
-@@ -0,0 +1,223 @@
+@@ -0,0 +1,190 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -7436,64 +7236,28 @@ index 0000000..efe9ed9
 +  .rela.bss      : { *(.rela.bss)		}
 +  .rel.plt       : { *(.rel.plt)		}
 +  .rela.plt      : { *(.rela.plt)		}
-+  /* Internal text space. */
++  /* Internal text space.  */
 +  .text   :
 +  {
 +     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
-+    *(.init1)
-+    KEEP (*(.init1))
-+    *(.init2)
-+    KEEP (*(.init2))
-+    *(.init3)
-+    KEEP (*(.init3))
-+    *(.init4)
-+    KEEP (*(.init4))
-+    *(.init5)
-+    KEEP (*(.init5))
-+    *(.init6)  /* C++ constructors.  */
-+    KEEP (*(.init6))
-+    *(.init7)
-+    KEEP (*(.init7))
-+    *(.init8)
-+    KEEP (*(.init8))
-+    *(.init9)
-+    KEEP (*(.init9))
 +    . = ALIGN(4);
 +    *(.text)
 +    . = ALIGN(4);
 +    *(.text.*)
 +    . = ALIGN(4);
-+    *(.fini9)
-+    KEEP (*(.fini9))
-+    *(.fini8)
-+    KEEP (*(.fini8))
-+    *(.fini7)
-+    KEEP (*(.fini7))
-+    *(.fini6)  /* C++ destructors.  */
-+    KEEP (*(.fini6))
-+    *(.fini5)
-+    KEEP (*(.fini5))
-+    *(.fini4)
-+    KEEP (*(.fini4))
-+    *(.fini3)
-+    KEEP (*(.fini3))
-+    *(.fini2)
-+    KEEP (*(.fini2))
-+    *(.fini1)
-+    KEEP (*(.fini1))
-+    *(.fini0)  /* Infinite loop after program termination.  */
-+    KEEP (*(.fini0))
++    *(.gnu.linkonce.t*)
++    . = ALIGN(4);
 +     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
-+    /* optional variable that user is prepared to have NULL address */
++    /* Optional variable that user is prepared to have NULL address.  */
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
-+       a "valid" NULL address. */
++       a "valid" NULL address.  */
 +     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
 +     KEEP (*(.ctors))
@@ -7502,17 +7266,18 @@ index 0000000..efe9ed9
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
 +     KEEP (*(.dtors))
 +     __dtors_end = . ;
-+    /* DATA memory starts at address 0. So to avoid placing a valid static
++    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
-+       section. If CRT can make some use of it - great. Otherwise skip a
-+       word. In all cases .data/.bss sections must start at non-zero. */
++       section.  If CRT can make some use of it - great.  Otherwise skip a
++       word.  In all cases .data/.bss sections must start at non-zero.  */
 +    . += (. == 0 ? 4 : 0);
 +     PROVIDE (__data_start = .) ;
 +    *(.data)
 +     *(.data*)
-+    *(.rodata)  /* We need to include .rodata here if gcc is used */
-+     *(.rodata*) /* with -fdata-sections.  */
++     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
++     *(.rodata.*) /* with -fdata-sections.  */
 +    *(.gnu.linkonce.d*)
++    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
 +     PROVIDE (__data_end = .) ;
 +  }  > dmem
@@ -7525,7 +7290,8 @@ index 0000000..efe9ed9
 +  {
 +     PROVIDE (__bss_start = .) ;
 +    *(.bss)
-+     *(.bss*)
++     *(.bss.*)
++    *(.gnu.linkonce.b*)
 +    *(COMMON)
 +     PROVIDE (__bss_end = .) ;
 +  }  > dmem
@@ -7533,13 +7299,13 @@ index 0000000..efe9ed9
 +  .noinit  :
 +  {
 +     PROVIDE (__noinit_start = .) ;
-+    *(.noinit*)
++    *(.noinit)
 +     PROVIDE (__noinit_end = .) ;
 +     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
-+    /* Stack is not here really. It will be put at the end of DMEM.
++    /* Stack is not here really.  It will be put at the end of DMEM.
 +       But we take into account its size here, in order to allow
-+       for MEMORY overflow checking during link time. */
++       for MEMORY overflow checking during link time.  */
 +     . += __STACK_SIZE ;
 +  }  > dmem
 +  /* Stabs debugging sections.  */
@@ -7581,12 +7347,13 @@ index 0000000..efe9ed9
 +  .debug_ranges   0 : { *(.debug_ranges) }
 +  /* DWARF Extension.  */
 +  .debug_macro    0 : { *(.debug_macro) }
++  .debug_addr     0 : { *(.debug_addr) }
 +}
 +
 +
 diff --git a/libgloss/pru/lseek.c b/libgloss/pru/lseek.c
 new file mode 100644
-index 0000000..c0b296c
+index 000000000..c0b296c93
 --- /dev/null
 +++ b/libgloss/pru/lseek.c
 @@ -0,0 +1,34 @@
@@ -7626,7 +7393,7 @@ index 0000000..c0b296c
 +
 diff --git a/libgloss/pru/open.c b/libgloss/pru/open.c
 new file mode 100644
-index 0000000..2e85f37
+index 000000000..2e85f37b5
 --- /dev/null
 +++ b/libgloss/pru/open.c
 @@ -0,0 +1,33 @@
@@ -7663,12 +7430,43 @@ index 0000000..2e85f37
 +  errno = EIO;
 +  return (-1);
 +}
+diff --git a/libgloss/pru/outbyte.c b/libgloss/pru/outbyte.c
+new file mode 100644
+index 000000000..ec0f70d99
+--- /dev/null
++++ b/libgloss/pru/outbyte.c
+@@ -0,0 +1,25 @@
++/* outbyte.c -- outbyte function for simulator
++ *
++ * Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
++ *
++ * The authors hereby grant permission to use, copy, modify, distribute,
++ * and license this software and its documentation for any purpose, provided
++ * that existing copyright notices are retained in all copies and that this
++ * notice is included verbatim in any distributions. No written agreement,
++ * license, or royalty fee is required for any of the authorized uses.
++ * Modifications to this software may be copyrighted by their authors
++ * and need not follow the licensing terms described here, provided that
++ * the new terms are clearly indicated on the first page of each file where
++ * they apply.
++ */
++#include <unistd.h>
++#include <_ansi.h>
++
++extern ssize_t _write(int fd, const void *b, size_t count);
++
++void
++_DEFUN (outbyte, (ch),
++	char ch)
++{
++  _write(STDOUT_FILENO, &ch, 1);
++}
 diff --git a/libgloss/pru/print.c b/libgloss/pru/print.c
 new file mode 100644
-index 0000000..4b0b214
+index 000000000..6d66cfa3f
 --- /dev/null
 +++ b/libgloss/pru/print.c
-@@ -0,0 +1,27 @@
+@@ -0,0 +1,26 @@
 +/* print.c -- print a string on the output device.
 + *
 + * Copyright (c) 1995, 1999 Cygnus Support
@@ -7683,22 +7481,21 @@ index 0000000..4b0b214
 + * the new terms are clearly indicated on the first page of each file where
 + * they apply.
 + */
-+#include <stdint.h>
++#include <unistd.h>
 +#include "glue.h"
-+#include "syscall.h"
 +
 +/*
 + * print -- do a raw print of a string
-+ */ 
++ */
 +void
 +_DEFUN (_print, (ptr),
 +char *ptr)
 +{
-+  syscall1 (SYS_PUTS, (uint32_t) ptr);
++  _write(STDOUT_FILENO, ptr, strlen(ptr));
 +}
 diff --git a/libgloss/pru/putnum.c b/libgloss/pru/putnum.c
 new file mode 100644
-index 0000000..2e37c09
+index 000000000..2e37c0993
 --- /dev/null
 +++ b/libgloss/pru/putnum.c
 @@ -0,0 +1,41 @@
@@ -7745,7 +7542,7 @@ index 0000000..2e37c09
 +}
 diff --git a/libgloss/pru/raise.c b/libgloss/pru/raise.c
 new file mode 100644
-index 0000000..6657aa6
+index 000000000..6657aa649
 --- /dev/null
 +++ b/libgloss/pru/raise.c
 @@ -0,0 +1,22 @@
@@ -7771,116 +7568,9 @@ index 0000000..6657aa6
 +{
 +  return _kill (_getpid (), sig);
 +}
-diff --git a/libgloss/pru/read.c b/libgloss/pru/read.c
-new file mode 100644
-index 0000000..009718a
---- /dev/null
-+++ b/libgloss/pru/read.c
-@@ -0,0 +1,39 @@
-+/* read.c -- read bytes from a input device.
-+ * 
-+ * Copyright (c) 1995, 1999 Cygnus Support
-+ *
-+ * The authors hereby grant permission to use, copy, modify, distribute,
-+ * and license this software and its documentation for any purpose, provided
-+ * that existing copyright notices are retained in all copies and that this
-+ * notice is included verbatim in any distributions. No written agreement,
-+ * license, or royalty fee is required for any of the authorized uses.
-+ * Modifications to this software may be copyrighted by their authors
-+ * and need not follow the licensing terms described here, provided that
-+ * the new terms are clearly indicated on the first page of each file where
-+ * they apply.
-+ */
-+#include "glue.h"
-+
-+extern char _DEFUN_VOID (inbyte);
-+
-+/*
-+ * read  -- read bytes from the input stream. Ignore fd, since
-+ *          we only have stdin.
-+ */
-+int
-+_DEFUN (_read, (fd, buf, nbytes),
-+       int fd _AND
-+       char *buf _AND
-+       int nbytes)
-+{
-+  int i = 0;
-+
-+  for (i = 0; i < nbytes; i++) {
-+    *(buf + i) = inbyte();
-+    if ((*(buf + i) == '\n') || (*(buf + i) == '\r')) {
-+      (*(buf + i + 1)) = 0;
-+      break;
-+    }
-+  }
-+  return (i);
-+}
-diff --git a/libgloss/pru/rpmsg-inbyte.c b/libgloss/pru/rpmsg-inbyte.c
-new file mode 100644
-index 0000000..b30e42b
---- /dev/null
-+++ b/libgloss/pru/rpmsg-inbyte.c
-@@ -0,0 +1,26 @@
-+/* inbyte.c -- inbyte function for remoteproc
-+ *
-+ * Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
-+ *
-+ * The authors hereby grant permission to use, copy, modify, distribute,
-+ * and license this software and its documentation for any purpose, provided
-+ * that existing copyright notices are retained in all copies and that this
-+ * notice is included verbatim in any distributions. No written agreement,
-+ * license, or royalty fee is required for any of the authorized uses.
-+ * Modifications to this software may be copyrighted by their authors
-+ * and need not follow the licensing terms described here, provided that
-+ * the new terms are clearly indicated on the first page of each file where
-+ * they apply.
-+ */
-+#include <_ansi.h>
-+
-+int
-+_DEFUN (inbyte, (),
-+	_NOARGS)
-+
-+{
-+    /* TODO - implement me! */
-+	/* TODO - see https://github.com/abhishek-kakkar/BeagleLogic/beaglelogic-firmware/pru_syscalls.h */
-+    return -1;
-+}
-+
-diff --git a/libgloss/pru/rpmsg-outbyte.c b/libgloss/pru/rpmsg-outbyte.c
-new file mode 100644
-index 0000000..892d8bc
---- /dev/null
-+++ b/libgloss/pru/rpmsg-outbyte.c
-@@ -0,0 +1,24 @@
-+/* rpmsg-outbyte.c -- outbyte function for AM33xx PRU remoteproc
-+ *
-+ * Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
-+ *
-+ * The authors hereby grant permission to use, copy, modify, distribute,
-+ * and license this software and its documentation for any purpose, provided
-+ * that existing copyright notices are retained in all copies and that this
-+ * notice is included verbatim in any distributions. No written agreement,
-+ * license, or royalty fee is required for any of the authorized uses.
-+ * Modifications to this software may be copyrighted by their authors
-+ * and need not follow the licensing terms described here, provided that
-+ * the new terms are clearly indicated on the first page of each file where
-+ * they apply.
-+ */
-+#include <stdint.h>
-+#include <_ansi.h>
-+#include "syscall.h"
-+
-+void
-+_DEFUN (outbyte, (ch),
-+	char ch)
-+{
-+  syscall1 (SYS_PUTC, ch);
-+}
 diff --git a/libgloss/pru/sbrk.c b/libgloss/pru/sbrk.c
 new file mode 100644
-index 0000000..5e63e7c
+index 000000000..5e63e7c4a
 --- /dev/null
 +++ b/libgloss/pru/sbrk.c
 @@ -0,0 +1,44 @@
@@ -7930,7 +7620,7 @@ index 0000000..5e63e7c
 +}
 diff --git a/libgloss/pru/stat.c b/libgloss/pru/stat.c
 new file mode 100644
-index 0000000..d37554d
+index 000000000..d37554de3
 --- /dev/null
 +++ b/libgloss/pru/stat.c
 @@ -0,0 +1,33 @@
@@ -7967,15 +7657,15 @@ index 0000000..d37554d
 +  return (-1);
 +}
 +
-diff --git a/libgloss/pru/syscall.S b/libgloss/pru/syscall.S
+diff --git a/libgloss/pru/syscalls.S b/libgloss/pru/syscalls.S
 new file mode 100644
-index 0000000..544deb9
+index 000000000..fbc94914c
 --- /dev/null
-+++ b/libgloss/pru/syscall.S
-@@ -0,0 +1,31 @@
-+/* crt0.S -- PRU startup code
++++ b/libgloss/pru/syscalls.S
+@@ -0,0 +1,32 @@
++/* syscalls.S -- PRU system calls code
 + *
-+ * Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
++ * Copyright (c) 2014-2016 Dimitar Dimitrov <dimitar@dinux.eu>
 + *
 + * The authors hereby grant permission to use, copy, modify, distribute,
 + * and license this software and its documentation for any purpose, provided
@@ -7989,51 +7679,25 @@ index 0000000..544deb9
 + */
 +#include "newlib.h"
 +
-+#define SYSCALL_VALUE	35  /* (1 << 5) | (19 - 16) = 35 */
++#include "syscall.h"
 +
-+
-+	/* Due to ABI, all syscalls with up tp 15 arguments contain
-+	   the same insturction sequences. So we squash them to save space. */
-+	.text
-+	.global	_syscall
-+	.global	_syscall1
-+	.global	_syscall2
-+_syscall:
-+_syscall1:
-+_syscall2:
-+	ldi	r31, SYSCALL_VALUE
++.macro	SC	fname, id
++	.global	\fname
++        .type        \fname,@function
++\fname:
++	ldi	r1, \id
 +	halt
 +	ret
-diff --git a/libgloss/pru/syscall.h b/libgloss/pru/syscall.h
-new file mode 100644
-index 0000000..7854857
---- /dev/null
-+++ b/libgloss/pru/syscall.h
-@@ -0,0 +1,21 @@
++.endm
 +
-+#ifndef LIBGLOSS_SYSCALL_H
-+#define LIBGLOSS_SYSCALL_H
++	.text
 +
-+/* Definitions taken from:
-+   https://github.com/abhishek-kakkar/BeagleLogic/beaglelogic-firmware/pru_syscalls.h
-+ */
-+#define SYS_HALT	    0
-+#define SYS_PUTC	    1
-+#define SYS_EXIT	    2
-+#define SYS_PUTS	    3
-+
-+#define SYS_DOWNCALL_READY   254
-+#define SYS_DOWNCALL_DONE    255
-+
-+extern int syscall (uint32_t sysn);
-+extern int syscall1 (uint32_t sysn, uint32_t arg1);
-+extern int syscall2 (uint32_t sysn, uint32_t arg1, uint32_t arg2);
-+
-+#endif	/* LIBGLOSS_SYSCALL_H */
-+
++	SC	__exit, SYS_exit
++	SC	__write, SYS_write
++	SC	__read, SYS_read
 diff --git a/libgloss/pru/unlink.c b/libgloss/pru/unlink.c
 new file mode 100644
-index 0000000..5ff0eef
+index 000000000..5ff0eef5b
 --- /dev/null
 +++ b/libgloss/pru/unlink.c
 @@ -0,0 +1,31 @@
@@ -8068,50 +7732,8 @@ index 0000000..5ff0eef
 +  errno = EIO;
 +  return (-1);
 +}
-diff --git a/libgloss/pru/write.c b/libgloss/pru/write.c
-new file mode 100644
-index 0000000..5bc5596
---- /dev/null
-+++ b/libgloss/pru/write.c
-@@ -0,0 +1,36 @@
-+/* write.c -- write bytes to an output device.
-+ *
-+ * Copyright (c) 1995, 1999 Cygnus Support
-+ *
-+ * The authors hereby grant permission to use, copy, modify, distribute,
-+ * and license this software and its documentation for any purpose, provided
-+ * that existing copyright notices are retained in all copies and that this
-+ * notice is included verbatim in any distributions. No written agreement,
-+ * license, or royalty fee is required for any of the authorized uses.
-+ * Modifications to this software may be copyrighted by their authors
-+ * and need not follow the licensing terms described here, provided that
-+ * the new terms are clearly indicated on the first page of each file where
-+ * they apply.
-+ */
-+#include "glue.h"
-+
-+extern int  _EXFUN (outbyte, (char x));
-+
-+/*
-+ * write -- write bytes to the serial port. Ignore fd, since
-+ *          stdout and stderr are the same. Since we have no filesystem,
-+ *          open will only return an error.
-+ */
-+int
-+_DEFUN (_write, (fd, buf, nbytes),
-+       int fd _AND
-+       char *buf _AND
-+       int nbytes)
-+{
-+  int i;
-+
-+  for (i = 0; i < nbytes; i++) {
-+    outbyte (*(buf + i));
-+  }
-+  return (nbytes);
-+}
 diff --git a/newlib/configure.host b/newlib/configure.host
-index d471200..596e07d 100644
+index d47120089..596e07d5f 100644
 --- a/newlib/configure.host
 +++ b/newlib/configure.host
 @@ -80,7 +80,7 @@ case "${target_optspace}:${host}" in
@@ -8149,7 +7771,7 @@ index d471200..596e07d 100644
  	default_newlib_io_long_long="yes"
  	syscall_dir=syscalls
 diff --git a/newlib/libc/include/machine/ieeefp.h b/newlib/libc/include/machine/ieeefp.h
-index 11ef0dd..b9cd236 100644
+index 11ef0dd03..b9cd23619 100644
 --- a/newlib/libc/include/machine/ieeefp.h
 +++ b/newlib/libc/include/machine/ieeefp.h
 @@ -380,6 +380,10 @@
@@ -8164,7 +7786,7 @@ index 11ef0dd..b9cd236 100644
  #define __IEEE_LITTLE_ENDIAN
  #define __SMALL_BITFIELDS	/* 16 Bit INT */
 diff --git a/newlib/libc/include/machine/setjmp.h b/newlib/libc/include/machine/setjmp.h
-index 2b4dd8b..23860a8 100644
+index 2b4dd8b91..23860a8f4 100644
 --- a/newlib/libc/include/machine/setjmp.h
 +++ b/newlib/libc/include/machine/setjmp.h
 @@ -349,6 +349,11 @@ _BEGIN_STD_C
@@ -8180,7 +7802,7 @@ index 2b4dd8b..23860a8 100644
  #define _JBLEN 0x44
  #endif
 diff --git a/newlib/libc/machine/configure b/newlib/libc/machine/configure
-index 769546a..dd1f6b0 100755
+index 35535a751..857917334 100755
 --- a/newlib/libc/machine/configure
 +++ b/newlib/libc/machine/configure
 @@ -823,6 +823,7 @@ necv70
@@ -8201,7 +7823,7 @@ index 769546a..dd1f6b0 100755
   ;;
  	rx) subdirs="$subdirs rx"
 diff --git a/newlib/libc/machine/configure.in b/newlib/libc/machine/configure.in
-index 25dedba..200eb84 100644
+index 25dedbaf5..200eb8474 100644
 --- a/newlib/libc/machine/configure.in
 +++ b/newlib/libc/machine/configure.in
 @@ -62,6 +62,7 @@ if test -n "${machine_dir}"; then
@@ -8214,7 +7836,7 @@ index 25dedba..200eb84 100644
  	sh) AC_CONFIG_SUBDIRS(sh) ;;
 diff --git a/newlib/libc/machine/pru/Makefile.am b/newlib/libc/machine/pru/Makefile.am
 new file mode 100644
-index 0000000..6088512
+index 000000000..60885128d
 --- /dev/null
 +++ b/newlib/libc/machine/pru/Makefile.am
 @@ -0,0 +1,16 @@
@@ -8236,7 +7858,7 @@ index 0000000..6088512
 +CONFIG_STATUS_DEPENDENCIES = $(newlib_basedir)/configure.host
 diff --git a/newlib/libc/machine/pru/Makefile.in b/newlib/libc/machine/pru/Makefile.in
 new file mode 100644
-index 0000000..c1a13e8
+index 000000000..c1a13e857
 --- /dev/null
 +++ b/newlib/libc/machine/pru/Makefile.in
 @@ -0,0 +1,439 @@
@@ -8681,7 +8303,7 @@ index 0000000..c1a13e8
 +.NOEXPORT:
 diff --git a/newlib/libc/machine/pru/aclocal.m4 b/newlib/libc/machine/pru/aclocal.m4
 new file mode 100644
-index 0000000..18dab02
+index 000000000..18dab02aa
 --- /dev/null
 +++ b/newlib/libc/machine/pru/aclocal.m4
 @@ -0,0 +1,1012 @@
@@ -9699,7 +9321,7 @@ index 0000000..18dab02
 +m4_include([../../../acinclude.m4])
 diff --git a/newlib/libc/machine/pru/configure b/newlib/libc/machine/pru/configure
 new file mode 100755
-index 0000000..be45d2a
+index 000000000..be45d2a53
 --- /dev/null
 +++ b/newlib/libc/machine/pru/configure
 @@ -0,0 +1,4748 @@
@@ -14453,7 +14075,7 @@ index 0000000..be45d2a
 +
 diff --git a/newlib/libc/machine/pru/configure.in b/newlib/libc/machine/pru/configure.in
 new file mode 100644
-index 0000000..65d2a74
+index 000000000..65d2a74ba
 --- /dev/null
 +++ b/newlib/libc/machine/pru/configure.in
 @@ -0,0 +1,14 @@
@@ -14473,7 +14095,7 @@ index 0000000..65d2a74
 +AC_OUTPUT
 diff --git a/newlib/libc/machine/pru/setjmp.s b/newlib/libc/machine/pru/setjmp.s
 new file mode 100644
-index 0000000..cc22975
+index 000000000..cc22975f1
 --- /dev/null
 +++ b/newlib/libc/machine/pru/setjmp.s
 @@ -0,0 +1,46 @@
@@ -14524,5 +14146,5 @@ index 0000000..cc22975
 +1:
 +	ret
 -- 
-2.10.2
+2.11.0
 
