@@ -1,7 +1,7 @@
-From 94b6378705a2b1e8038a359e76e1776cadbff86d Mon Sep 17 00:00:00 2001
+From 03c571d499f54324080a000b0cdfed967f9f0185 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 23:22:58 +0300
-Subject: [PATCH 02/25] PRU BFD support
+Subject: [PATCH 02/22] PRU BFD support
 
 2016-12-26  Dimitar Dimitrov <dimitar@dinux.eu>
 
@@ -30,10 +30,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  bfd/configure.ac |    1 +
  bfd/cpu-pru.c    |   43 ++
  bfd/elf-bfd.h    |    1 +
- bfd/elf32-pru.c  | 1471 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ bfd/elf32-pru.c  | 1469 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
  bfd/reloc.c      |   48 ++
  bfd/targets.c    |    3 +
- 9 files changed, 1581 insertions(+)
+ 9 files changed, 1579 insertions(+)
  create mode 100644 bfd/cpu-pru.c
  create mode 100644 bfd/elf32-pru.c
 
@@ -188,7 +188,7 @@ index 0000000000..75d5d5aec7
 +
 +const bfd_arch_info_type bfd_pru_arch = N (32, 32, 0, "pru", TRUE, NULL);
 diff --git a/bfd/elf-bfd.h b/bfd/elf-bfd.h
-index 06bd800b4c..70f66ed850 100644
+index 1c634d8dd1..3dcc245e85 100644
 --- a/bfd/elf-bfd.h
 +++ b/bfd/elf-bfd.h
 @@ -467,6 +467,7 @@ enum elf_target_id
@@ -201,10 +201,10 @@ index 06bd800b4c..70f66ed850 100644
    SPARC_ELF_DATA,
 diff --git a/bfd/elf32-pru.c b/bfd/elf32-pru.c
 new file mode 100644
-index 0000000000..dbe9040f7f
+index 0000000000..244b01d046
 --- /dev/null
 +++ b/bfd/elf32-pru.c
-@@ -0,0 +1,1471 @@
+@@ -0,0 +1,1469 @@
 +/* 32-bit ELF support for TI PRU.
 +   Copyright (C) 2014-2016 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -1669,8 +1669,6 @@ index 0000000000..dbe9040f7f
 +
 +#define elf_backend_relocate_section	pru_elf32_relocate_section
 +#define bfd_elf32_bfd_relax_section	pru_elf32_relax_section
-+
-+#define elf_symbol_leading_char		'_'
 +
 +#define TARGET_LITTLE_SYM		pru_elf32_vec
 +#define TARGET_LITTLE_NAME		"elf32-pru"

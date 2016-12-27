@@ -1,7 +1,7 @@
-From dd9104a09a8f40d463730365c491a192484555b5 Mon Sep 17 00:00:00 2001
+From 315febfa93ce17b150c1e30d5591ee27803d71bf Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 13 Oct 2016 21:32:08 +0300
-Subject: [PATCH 08/25] ld: testsuite: Mark PRU as elf target that does not
+Subject: [PATCH 08/22] ld: testsuite: Mark PRU as elf target that does not
  support shared libraries
 
 2016-12-26  Dimitar Dimitrov <dimitar@dinux.eu>

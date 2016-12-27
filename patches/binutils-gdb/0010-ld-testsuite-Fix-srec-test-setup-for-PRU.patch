@@ -1,7 +1,7 @@
-From 167eb951f38d31c13cc2a53997538eb7f687426f Mon Sep 17 00:00:00 2001
+From b981e2b2cce8d9c320ab4cbcf9d2a8b65f67ea7c Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 16 Oct 2016 22:27:25 +0300
-Subject: [PATCH 10/25] ld: testsuite: Fix srec test setup for PRU
+Subject: [PATCH 10/22] ld: testsuite: Fix srec test setup for PRU
 
 2016-12-26  Dimitar Dimitrov <dimitar@dinux.eu>
 

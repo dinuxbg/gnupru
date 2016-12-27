@@ -1,7 +1,7 @@
-From d00d4038d9a1ad5a920bb8c86781b9e0850f4dae Mon Sep 17 00:00:00 2001
+From 3eb675e0053ea33f2bddbd29ccb58ccfed178471 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 23:31:15 +0300
-Subject: [PATCH 06/25] PRU Opcode Port
+Subject: [PATCH 06/22] PRU Opcode Port
 
 2016-12-26  Dimitar Dimitrov <dimitar@dinux.eu>
 

@@ -1,7 +1,7 @@
 From d7ee4a7be34be224d4486dbb89141add7fda797a Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 22:00:47 +0200
-Subject: [PATCH 09/14] testsuite: Define PRU stack usage
+Subject: [PATCH 09/15] testsuite: Define PRU stack usage
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---

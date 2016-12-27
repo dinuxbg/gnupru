@@ -1,7 +1,7 @@
-From a227159a2910f775f4943136b29522b2835a2e9d Mon Sep 17 00:00:00 2001
+From 81808f01a848dfc6fcd278fc9f1f36fea1e09979 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 23:26:30 +0300
-Subject: [PATCH 03/25] PRU Binutils port
+Subject: [PATCH 03/22] PRU Binutils port
 
 2016-12-26  Dimitar Dimitrov <dimitar@dinux.eu>
 

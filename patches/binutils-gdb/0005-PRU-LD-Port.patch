@@ -1,7 +1,7 @@
-From 3ea41662bbd9cbfeffea6a95f26b3f7cb115464d Mon Sep 17 00:00:00 2001
+From 881c14bf67d29afdf4aad7910b248bc98b444cb1 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 23:29:13 +0300
-Subject: [PATCH 05/25] PRU LD Port
+Subject: [PATCH 05/22] PRU LD Port
 
 2016-12-26  Dimitar Dimitrov <dimitar@dinux.eu>
 
@@ -257,7 +257,7 @@ index 0000000000..dd3ec7669f
 +LDEMUL_BEFORE_ALLOCATION=pruelf_before_allocation
 diff --git a/ld/scripttempl/pru.sc b/ld/scripttempl/pru.sc
 new file mode 100644
-index 0000000000..4096cce315
+index 0000000000..88fe06cb63
 --- /dev/null
 +++ b/ld/scripttempl/pru.sc
 @@ -0,0 +1,179 @@
@@ -274,9 +274,9 @@ index 0000000000..4096cce315
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512;
 +
-+${RELOCATING+ PROVIDE (__stack_top = ORIGIN(dmem) + LENGTH(dmem)) ; }
++${RELOCATING+ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ; }
 +
-+${RELOCATING+ENTRY (__start)}
++${RELOCATING+ENTRY (_start)}
 +
 +SECTIONS
 +{
@@ -343,7 +343,7 @@ index 0000000000..4096cce315
 +  /* Internal text space.  */
 +  .text ${RELOCATING-0} :
 +  {
-+    ${RELOCATING+ __text_start = . ; }
++    ${RELOCATING+ _text_start = . ; }
 +
 +    ${RELOCATING+. = ALIGN(4);}
 +
@@ -358,7 +358,7 @@ index 0000000000..4096cce315
 +    ${RELOCATING+*(.gnu.linkonce.t*)}
 +    ${RELOCATING+. = ALIGN(4);}
 +
-+    ${RELOCATING+ __text_end = . ; }
++    ${RELOCATING+ _text_end = . ; }
 +  } ${RELOCATING+ > imem}
 +
 +  .data        ${RELOCATING-0} :
@@ -368,14 +368,14 @@ index 0000000000..4096cce315
 +
 +    /* CRT is prepared for constructor/destructor table to have
 +       a "valid" NULL address.  */
-+    ${CONSTRUCTING+ __ctors_start = . ; }
++    ${CONSTRUCTING+ _ctors_start = . ; }
 +    ${CONSTRUCTING+ KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))}
 +    ${CONSTRUCTING+ KEEP (*(.ctors))}
-+    ${CONSTRUCTING+ __ctors_end = . ; }
-+    ${CONSTRUCTING+ __dtors_start = . ; }
++    ${CONSTRUCTING+ _ctors_end = . ; }
++    ${CONSTRUCTING+ _dtors_start = . ; }
 +    ${CONSTRUCTING+ KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))}
 +    ${CONSTRUCTING+ KEEP (*(.dtors))}
-+    ${CONSTRUCTING+ __dtors_end = . ; }
++    ${CONSTRUCTING+ _dtors_end = . ; }
 +
 +    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
@@ -383,7 +383,7 @@ index 0000000000..4096cce315
 +       word.  In all cases .data/.bss sections must start at non-zero.  */
 +    . += (. == 0 ? 4 : 0);
 +
-+    ${RELOCATING+ PROVIDE (__data_start = .) ; }
++    ${RELOCATING+ PROVIDE (_data_start = .) ; }
 +    *(.data)
 +    ${RELOCATING+ *(.data*)}
 +    ${RELOCATING+ *(.rodata)  /* We need to include .rodata here if gcc is used.  */}
@@ -391,7 +391,7 @@ index 0000000000..4096cce315
 +    ${RELOCATING+*(.gnu.linkonce.d*)}
 +    ${RELOCATING+*(.gnu.linkonce.r*)}
 +    ${RELOCATING+. = ALIGN(4);}
-+    ${RELOCATING+ PROVIDE (__data_end = .) ; }
++    ${RELOCATING+ PROVIDE (_data_end = .) ; }
 +  } ${RELOCATING+ > dmem }
 +
 +  .resource_table ${RELOCATING-0} :
@@ -402,21 +402,21 @@ index 0000000000..4096cce315
 +
 +  .bss ${RELOCATING-0} :
 +  {
-+    ${RELOCATING+ PROVIDE (__bss_start = .) ; }
++    ${RELOCATING+ PROVIDE (_bss_start = .) ; }
 +    *(.bss)
 +    ${RELOCATING+ *(.bss.*)}
 +    ${RELOCATING+*(.gnu.linkonce.b*)}
 +    *(COMMON)
-+    ${RELOCATING+ PROVIDE (__bss_end = .) ; }
++    ${RELOCATING+ PROVIDE (_bss_end = .) ; }
 +  } ${RELOCATING+ > dmem}
 +
 +  /* Global data not cleared after reset.  */
 +  .noinit ${RELOCATING-0}:
 +  {
-+    ${RELOCATING+ PROVIDE (__noinit_start = .) ; }
++    ${RELOCATING+ PROVIDE (_noinit_start = .) ; }
 +    *(.noinit)
-+    ${RELOCATING+ PROVIDE (__noinit_end = .) ; }
-+    ${RELOCATING+ PROVIDE (__heap_start = .) ; }
++    ${RELOCATING+ PROVIDE (_noinit_end = .) ; }
++    ${RELOCATING+ PROVIDE (_heap_start = .) ; }
 +    ${RELOCATING+ . += __HEAP_SIZE ; }
 +    /* Stack is not here really.  It will be put at the end of DMEM.
 +       But we take into account its size here, in order to allow
@@ -485,11 +485,11 @@ index 0000000000..414234f94d
 + 81030 080c0800 040c0800 .*
 diff --git a/ld/testsuite/ld-pru/emit-relocs-1.ld b/ld/testsuite/ld-pru/emit-relocs-1.ld
 new file mode 100644
-index 0000000000..574030b04f
+index 0000000000..1879ef4cbe
 --- /dev/null
 +++ b/ld/testsuite/ld-pru/emit-relocs-1.ld
 @@ -0,0 +1,20 @@
-+ENTRY(__start)
++ENTRY(_start)
 +SECTIONS
 +{
 +  . = 0x80000;
@@ -511,14 +511,14 @@ index 0000000000..574030b04f
 +}
 diff --git a/ld/testsuite/ld-pru/emit-relocs-1a.s b/ld/testsuite/ld-pru/emit-relocs-1a.s
 new file mode 100644
-index 0000000000..89bbf99993
+index 0000000000..bf0a8a1689
 --- /dev/null
 +++ b/ld/testsuite/ld-pru/emit-relocs-1a.s
 @@ -0,0 +1,24 @@
 +	.text
 +	.align	4
-+	.globl	__start
-+__start:
++	.globl	_start
++_start:
 +	nop
 +
 +	.section .merge1,"aMS",@progbits,1
@@ -583,15 +583,15 @@ index 0000000000..123ead310f
 +[0-9a-f]+ <[^>]*> ldi	r16.w2, 57005
 diff --git a/ld/testsuite/ld-pru/ldi32.s b/ld/testsuite/ld-pru/ldi32.s
 new file mode 100644
-index 0000000000..65775ecb74
+index 0000000000..629db5a15b
 --- /dev/null
 +++ b/ld/testsuite/ld-pru/ldi32.s
 @@ -0,0 +1,6 @@
 +# Test the ldi32 relocation
 +
 +.text
-+.global __start
-+__start:
++.global _start
++_start:
 +	ldi32	r16, long_symbol
 diff --git a/ld/testsuite/ld-pru/ldi32_symbol.s b/ld/testsuite/ld-pru/ldi32_symbol.s
 new file mode 100644
@@ -689,15 +689,15 @@ index 0000000000..95602c586b
 +[0-9a-f]+ <[^>]*> nop
 diff --git a/ld/testsuite/ld-pru/pcrel_s10.s b/ld/testsuite/ld-pru/pcrel_s10.s
 new file mode 100644
-index 0000000000..07352f807e
+index 0000000000..fbec19a584
 --- /dev/null
 +++ b/ld/testsuite/ld-pru/pcrel_s10.s
 @@ -0,0 +1,8 @@
 +# Test for pc-relative relocations
 +.text
 +.section .init0, "x"
-+.global __start
-+__start:
++.global _start
++_start:
 +	qba ext_label
 +	qba ext_label + 16
 +
@@ -731,15 +731,15 @@ index 0000000000..a88523747f
 +# Check that LOOP cannot reference "prior" labels.
 diff --git a/ld/testsuite/ld-pru/pcrel_u8-illegal.s b/ld/testsuite/ld-pru/pcrel_u8-illegal.s
 new file mode 100644
-index 0000000000..13d310b46e
+index 0000000000..f592040abc
 --- /dev/null
 +++ b/ld/testsuite/ld-pru/pcrel_u8-illegal.s
 @@ -0,0 +1,10 @@
 +# Test for illegal pc-relative relocations
 +.text
 +.section .init0, "x"
-+.global __start
-+__start:
++.global _start
++_start:
 +foo:
 +# Negative loop termination point
 +        nop
@@ -760,15 +760,15 @@ index 0000000000..604ea9838d
 +# Check that LOOP cannot reference "prior" labels.
 diff --git a/ld/testsuite/ld-pru/pcrel_u8-illegal2.s b/ld/testsuite/ld-pru/pcrel_u8-illegal2.s
 new file mode 100644
-index 0000000000..56daa750fd
+index 0000000000..afd40d666d
 --- /dev/null
 +++ b/ld/testsuite/ld-pru/pcrel_u8-illegal2.s
 @@ -0,0 +1,7 @@
 +# Test for illegal pc-relative relocations
 +.text
 +.section .init0, "x"
-+.global __start
-+__start:
++.global _start
++_start:
 +L0:
 +	loop L0, r0
 diff --git a/ld/testsuite/ld-pru/pcrel_u8-illegal3.d b/ld/testsuite/ld-pru/pcrel_u8-illegal3.d
@@ -786,15 +786,15 @@ index 0000000000..604ea9838d
 +# Check that LOOP cannot reference "prior" labels.
 diff --git a/ld/testsuite/ld-pru/pcrel_u8-illegal3.s b/ld/testsuite/ld-pru/pcrel_u8-illegal3.s
 new file mode 100644
-index 0000000000..89bb89e02e
+index 0000000000..b90131eb7e
 --- /dev/null
 +++ b/ld/testsuite/ld-pru/pcrel_u8-illegal3.s
 @@ -0,0 +1,7 @@
 +# Test for illegal pc-relative relocations
 +.text
 +.section .init0, "x"
-+.global __start
-+__start:
++.global _start
++_start:
 +	loop L1, r0
 +L1:
 diff --git a/ld/testsuite/ld-pru/pcrel_u8.d b/ld/testsuite/ld-pru/pcrel_u8.d
@@ -820,15 +820,15 @@ index 0000000000..60ff05883c
 +[0-9a-f]+ <[^>]*> nop
 diff --git a/ld/testsuite/ld-pru/pcrel_u8.s b/ld/testsuite/ld-pru/pcrel_u8.s
 new file mode 100644
-index 0000000000..2562030c5b
+index 0000000000..c22a216e4e
 --- /dev/null
 +++ b/ld/testsuite/ld-pru/pcrel_u8.s
 @@ -0,0 +1,10 @@
 +# Test for pc-relative relocations
 +.text
 +.section .init0, "x"
-+.global __start
-+__start:
++.global _start
++_start:
 +	loop end_loop, 5
 +	nop
 +	nop
@@ -888,14 +888,14 @@ index 0000000000..8c9f3d4fae
 +	nop
 diff --git a/ld/testsuite/ld-pru/pmem_symbol.s b/ld/testsuite/ld-pru/pmem_symbol.s
 new file mode 100644
-index 0000000000..5c92dc3741
+index 0000000000..642ca437d5
 --- /dev/null
 +++ b/ld/testsuite/ld-pru/pmem_symbol.s
 @@ -0,0 +1,15 @@
 +.text
 +.section .init0, "x"
-+.global __start
-+__start:
++.global _start
++_start:
 +
 +	# U16_PMEMIMM
 +	ldi r0, %pmem(_text_label)
@@ -982,15 +982,15 @@ index 0000000000..1371f1c644
 +..00003c <[^>]*> qba	..000008 <__intermediate>
 diff --git a/ld/testsuite/ld-pru/relax_ldi32.s b/ld/testsuite/ld-pru/relax_ldi32.s
 new file mode 100644
-index 0000000000..ae668417a0
+index 0000000000..7c2473c30c
 --- /dev/null
 +++ b/ld/testsuite/ld-pru/relax_ldi32.s
 @@ -0,0 +1,30 @@
 +# Test LDI32 relaxation
 +
 +.text
-+.global __start
-+__start:
++.global _start
++_start:
 +	ldi32	r16, long_symbol
 +__intermediate:
 +	loop	__end_loop, r22
@@ -1065,14 +1065,14 @@ index 0000000000..4bf79bfcee
 +.set long_sym, 0xDEADBEEF
 diff --git a/ld/testsuite/ld-pru/reloc_symbol.s b/ld/testsuite/ld-pru/reloc_symbol.s
 new file mode 100644
-index 0000000000..a1d6e9cdb9
+index 0000000000..a72214c122
 --- /dev/null
 +++ b/ld/testsuite/ld-pru/reloc_symbol.s
 @@ -0,0 +1,25 @@
 +.text
 +.section .init0, "x"
-+.global __start
-+__start:
++.global _start
++_start:
 +
 +# byte aligned
 +.align 0
@@ -1113,13 +1113,13 @@ index 0000000000..9cc6482f9a
 +[0-9a-f]+ <[^>]*> ldi	r16, 54321
 diff --git a/ld/testsuite/ld-pru/u16.s b/ld/testsuite/ld-pru/u16.s
 new file mode 100644
-index 0000000000..74757ed37f
+index 0000000000..a4c2adeab1
 --- /dev/null
 +++ b/ld/testsuite/ld-pru/u16.s
 @@ -0,0 +1,4 @@
 +.text
-+.global __start
-+__start:
++.global _start
++_start:
 +	ldi	r16, short_symbol
 diff --git a/ld/testsuite/ld-pru/u16_symbol.s b/ld/testsuite/ld-pru/u16_symbol.s
 new file mode 100644

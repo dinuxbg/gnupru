@@ -1,0 +1,74 @@
+From 9343ba04b6110da7d3985984256bf43c7ee465a1 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Sun, 16 Oct 2016 21:50:12 +0300
+Subject: [PATCH 15/22] ld: testsuite: Sanitize output from ld
+
+Apparently the leading dashes from an LD error message confuse DejaGnu.
+
+This patch fixes the following DejaGnu error:
+
+  --defsym:1: undefined symbol `foo2' referenced in expression
+  failed with: <--defsym:1: undefined symbol `foo2' referenced in expression>, no expected output
+  ERROR: tcl error sourcing /home/dinux/projects/misc/binutils-gdb/ld/testsuite/ld-gc/gc.exp.
+  ERROR: usage: send [args] string
+      while executing
+  "send_log "$comp_output\n""
+      (procedure "run_dump_test" line 376)
+      invoked from within
+  "run_dump_test "pr13683""
+      (file "/home/dinux/projects/misc/binutils-gdb/ld/testsuite/ld-gc/gc.exp" line 136)
+      invoked from within
+  "source /home/dinux/projects/misc/binutils-gdb/ld/testsuite/ld-gc/gc.exp"
+      ("uplevel" body line 1)
+      invoked from within
+  "uplevel #0 source /home/dinux/projects/misc/binutils-gdb/ld/testsuite/ld-gc/gc.exp"
+      invoked from within
+  "catch "uplevel #0 source $test_file_name""
+
+ ==============
+2016-12-26  Dimitar Dimitrov <dimitar@dinux.eu>
+
+ld/
+
+	* testsuite/lib/ld-lib.exp (run_dump_test): Sanitize output from
+	ld.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ ld/testsuite/lib/ld-lib.exp | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/ld/testsuite/lib/ld-lib.exp b/ld/testsuite/lib/ld-lib.exp
+index 74dc998f14..30aea19e71 100644
+--- a/ld/testsuite/lib/ld-lib.exp
++++ b/ld/testsuite/lib/ld-lib.exp
+@@ -857,7 +857,7 @@ proc run_dump_test { name {extra_options {}} } {
+ 	remote_file build delete "ld.tmp"
+ 
+ 	if { [lindex $cmdret 0] != 0 || ![string match "" $comp_output] } then {
+-	    send_log "$comp_output\n"
++	    send_log -- "$comp_output\n"
+ 	    verbose "$comp_output" 3
+ 
+ 	    set exitstat "succeeded"
+@@ -880,7 +880,7 @@ proc run_dump_test { name {extra_options {}} } {
+ 
+ 	    if { [lindex $cmdret 0] != 0 \
+ 		  || ![string match "" $comp_output] } {
+-		send_log "$comp_output\n"
++		send_log -- "$comp_output\n"
+ 		verbose "$comp_output" 3
+ 
+ 		set exitstat "succeeded"
+@@ -996,7 +996,7 @@ proc run_dump_test { name {extra_options {}} } {
+             } else {
+                 verbose -log "$exitstat with: <$comp_output>, no expected output"
+             }
+-	    send_log "$comp_output\n"
++	    send_log -- "$comp_output\n"
+ 	    verbose "$comp_output" 3
+ 
+ 	    if { (($check_ld(source) == "") == ($comp_output == "")) \
+-- 
+2.11.0
+

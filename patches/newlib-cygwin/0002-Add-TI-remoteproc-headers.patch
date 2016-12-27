@@ -1,4 +1,4 @@
-From 40122a1ca0abe97e3537465839d81fd998a86995 Mon Sep 17 00:00:00 2001
+From 99212e5adc229886cbcc7e953942a9fd7d075703 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sun, 11 Oct 2015 11:52:38 +0300
 Subject: [PATCH 2/2] Add TI remoteproc headers

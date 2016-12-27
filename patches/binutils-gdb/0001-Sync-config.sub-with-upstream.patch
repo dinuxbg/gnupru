@@ -1,7 +1,7 @@
-From 84745cbab30d639dea39f8d72d71ef6f7d105c01 Mon Sep 17 00:00:00 2001
+From 4ba7cefd707b19f512b467f5fa7b9a2d89545a30 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 5 Dec 2016 19:51:42 +0200
-Subject: [PATCH 01/25] Sync config.sub with upstream
+Subject: [PATCH 01/22] Sync config.sub with upstream
 
 Latest config.sub from upstream is needed to recognize the PRU core.
 

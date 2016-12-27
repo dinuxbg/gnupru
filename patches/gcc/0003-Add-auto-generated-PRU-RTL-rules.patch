@@ -1,7 +1,7 @@
 From 6503a22c461bf5449f1607dc94e83204332506df Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sat, 12 Nov 2016 19:29:55 +0200
-Subject: [PATCH 03/14] Add auto-generated PRU RTL rules
+Subject: [PATCH 03/15] Add auto-generated PRU RTL rules
 
 Commands used to generate the files:
   ./alu-zext.sh
