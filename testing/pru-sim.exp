@@ -49,7 +49,7 @@ set_board_info compiler  "[find_gcc]"
 # Temporary solution is to add a few bytes of "guard" space, so that
 # existing GCC testcases can be executed successfully. Hence set the
 # stack top a few bytes below the simulator's DRAM end.
-set workaround_ldflags "-Wl,--defsym=__stack_top=0x3fff800"
+set workaround_ldflags "-Wl,--defsym=_stack_top=0x3fff800"
 
 set_board_info cflags  "-mmcu=sim [libgloss_include_flags] [newlib_include_flags]"
 set_board_info ldflags  "[libgloss_link_flags] [newlib_link_flags] $workaround_ldflags"
