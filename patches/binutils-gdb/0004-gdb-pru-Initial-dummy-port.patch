@@ -1,7 +1,7 @@
-From f1bfad049e2a917d7b705c84e2de68bc298b6adc Mon Sep 17 00:00:00 2001
+From 39c751148eaa7ae1ec6e99872b80e82ce0a784a0 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 7 Oct 2016 22:51:06 +0300
-Subject: [PATCH 20/22] gdb: pru: Initial dummy port
+Subject: [PATCH 4/6] gdb: pru: Initial dummy port
 
 This needs a lot of work.
 
