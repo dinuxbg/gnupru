@@ -3,14 +3,14 @@ Section: devel
 Priority: extra
 Maintainer: Dimitar Dimitrov <dinuxbg@gmail.com>
 Standards-Version: 3.9.5
-Build-Depends: m4, autoconf2.64, libtool, bzip2, binutils-pru (>= 2.25), bison, flex, gettext, texinfo, zlib1g-dev, debhelper (>= 4.2.10), tar (>= 1.13.18), libmpfr-dev, lsb-release, patchutils, libmpc-dev, dpkg (>= 1.16.2), dh-autoreconf
+Build-Depends: m4, autoconf2.64, libtool, bzip2, binutils-pru (>= 2.28.51.20161231), bison, flex, gettext, texinfo, zlib1g-dev, debhelper (>= 4.2.10), tar (>= 1.13.18), libmpfr-dev, lsb-release, patchutils, libmpc-dev, dpkg (>= 1.16.2), dh-autoreconf
 Build-Conflicts: libgcc0, libgcc300
 
 Package: gcc-pru
 Architecture: any
 Section: devel
 Priority: extra
-Depends: ${shlibs:Depends}, ${misc:Depends}, binutils-pru (>= 2.25)
+Depends: ${shlibs:Depends}, ${misc:Depends}, binutils-pru (>= 2.28.51.20161231)
 Provides: c-compiler-pru
 Suggests: task-c-devel, gcc-doc (>= 4:4.8), gcc (>= 4:4.8)
 Description: GNU C compiler (cross compiler for pru)

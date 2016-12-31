@@ -13,7 +13,7 @@ NEWLIB_BASECOMMIT=61f181d6b872e6f37b04fed790fa903a312a3795
 # compilation.
 test -z "$GCC_GIT" && GCC_GIT=https://github.com/mirrors/gcc
 test -z "$BINUTILS_GIT" && BINUTILS_GIT=https://github.com/bminor/binutils-gdb
-test -z "$NEWLIB_GIT" && NEWLIB_GIT=https://github.com/wallento/newlib-cygwin
+test -z "$NEWLIB_GIT" && NEWLIB_GIT=https://github.com/mirror/newlib-cygwin
 
 # If you have already checked out GCC or binutils, then references
 # could save you some bandwidth

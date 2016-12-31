@@ -1,3 +1,20 @@
+binutils-pru (2.28.51.20161231) jessie; urgency=medium
+
+  * ld: Switched relocations to be more compatible with TI's toolchain. YOU MUST RECOMPILE ALL YOUR SOURCE FILES - object files from old and new binutils cannot be linked together.
+  * gas: Added WBC and WBS pseudo ops to GAS.
+  * gas: Added optional & prefix for addressed registers
+  * gas/ld: Removed %hi/%lo/%hi_rlz assembler constructs and instead implemented LDI32 pseudo instruction.
+  * gas: Switched to r3.w2 as Return Address Register for the call and ret pseudos.
+  * gas: Added %label() construct to allow disambiguating register from label JMP operands.
+
+ -- Dimitar Dimitrov <dinux@tpdeb>  Sat, 31 Dec 2016 10:44:41 +0200
+
+binutils-pru (2.27.51.20160801-0rcnee0~bpo80+20160802+1) jessie; urgency=low
+
+  * Rebuild for repos.rcn-ee.com
+
+ -- Robert Nelson <robertcnelson@gmail.com>  Tue, 02 Aug 2016 08:12:03 -0500
+
 binutils-pru (2.27.51.20160801) unstable; urgency=medium
 
   * Small fixes to the debian package.

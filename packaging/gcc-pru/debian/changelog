@@ -1,3 +1,16 @@
+gcc-pru (7.0.0.20161219) jessie; urgency=medium
+
+  * Fixed invalid-syntax assembler generation on 32bit hosts.
+  * Removed leading underscore for symbols for better TI ABI compatibility.
+
+ -- Dimitar Dimitrov <dinux@tpdeb>  Sat, 31 Dec 2016 10:50:00 +0200
+
+gcc-pru (7.0.0.20160801-0rcnee0~bpo80+20160803+1) jessie; urgency=low
+
+  * Rebuild for repos.rcn-ee.com
+
+ -- Robert Nelson <robertcnelson@gmail.com>  Wed, 03 Aug 2016 08:07:56 -0500
+
 gcc-pru (7.0.0.20160801) unstable; urgency=medium
 
   * Switch to native packaging format.
