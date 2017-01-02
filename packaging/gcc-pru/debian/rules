@@ -76,7 +76,7 @@ configure-stamp: $(unpack_stamp) patch-stamp
 	touch configure-stamp
 
 build: configure-stamp build-stamp
-build-stamp: patch-stamp
+build-stamp: patch-stamp configure-stamp
 	dh_testdir
 
 	# Add here commands to compile the package.
