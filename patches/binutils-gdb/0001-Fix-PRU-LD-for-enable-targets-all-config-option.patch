@@ -1,0 +1,44 @@
+From 79aa54b8818370fbdbe161cce3410b9ba5224e73 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Sat, 31 Dec 2016 14:24:12 +0200
+Subject: [PATCH 1/9] Fix PRU LD for --enable-targets=all config option
+
+2016-12-31  Dimitar Dimitrov  <dimitar@dinux.eu>
+
+ld/
+
+	* Makefile.in: Regenerate
+	* Makefile.am (ALL_EMULATION_SOURCES): Add epruelf.c.
+	* Makefile.am (epruelf.c): Remove unneeded dependencies.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ ld/Makefile.am | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/ld/Makefile.am b/ld/Makefile.am
+index 524be3e097..895c86c7ed 100644
+--- a/ld/Makefile.am
++++ b/ld/Makefile.am
+@@ -391,6 +391,7 @@ ALL_EMULATION_SOURCES = \
+ 	eppcmacos.c \
+ 	eppcnw.c \
+ 	eppcpe.c \
++	epruelf.c \
+ 	eriscix.c \
+ 	escore3_elf.c \
+ 	escore7_elf.c \
+@@ -1715,10 +1716,8 @@ eppcpe.c: $(srcdir)/emulparams/ppcpe.sh \
+   $(srcdir)/emultempl/pe.em $(srcdir)/scripttempl/ppcpe.sc ${GEN_DEPENDS}
+ 
+ epruelf.c: $(srcdir)/emulparams/pruelf.sh \
+-  $(srcdir)/emultempl/elf32.em \
+   $(ELF_DEPS) $(srcdir)/scripttempl/pru.sc \
+   $(srcdir)/emultempl/pruelf.em ${GEN_DEPENDS}
+-	${GENSCRIPTS} pruelf "$(tdir_pruelf)"
+ 
+ eriscix.c: $(srcdir)/emulparams/riscix.sh \
+   $(srcdir)/emultempl/generic.em $(srcdir)/scripttempl/aout.sc ${GEN_DEPENDS}
+-- 
+2.11.0
+

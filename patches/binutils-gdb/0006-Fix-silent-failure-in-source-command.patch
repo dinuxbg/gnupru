@@ -1,7 +1,7 @@
-From 2a95ef27899697c7ac3b54066c403378ac1e1dbe Mon Sep 17 00:00:00 2001
+From d9732f3862292772bfeffa16091886317af161fd Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 15 Jun 2014 09:58:48 +0300
-Subject: [PATCH 3/6] Fix silent failure in source command
+Subject: [PATCH 6/9] Fix silent failure in source command
 
 On a debian with dash as default shell the following error is silently ignored:
 LIB_PATH='' /bin/bash ../../binutils-gdb/ld/genscripts.sh "../../binutils-gdb/ld" "/home/dinux/bin/pru-gcc/lib" "/home/dinux/bin/pru-gcc" "/home/dinux/bin/pru-gcc" x86_64-unknown-linux-gnu pru-unknown-none pru "pruelf" "/usr/local/lib /lib /usr/lib" no no pruelf "pru"
