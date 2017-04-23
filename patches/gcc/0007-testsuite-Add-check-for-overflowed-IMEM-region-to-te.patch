@@ -1,7 +1,7 @@
-From b5721750bddb28ef25c58f1237e2238e781dafa4 Mon Sep 17 00:00:00 2001
+From ba7ccb3a7869bf33164dd50e7bfd6c46f55dea6a Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:57:14 +0200
-Subject: [PATCH 07/15] testsuite: Add check for overflowed IMEM region to
+Subject: [PATCH 07/16] testsuite: Add check for overflowed IMEM region to
  testsuite
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
@@ -11,7 +11,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  2 files changed, 8 insertions(+)
 
 diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
-index 6217272ac4c..be281c30bfd 100644
+index 83c38cfbeb7..cd60f971884 100644
 --- a/gcc/testsuite/lib/gcc-dg.exp
 +++ b/gcc/testsuite/lib/gcc-dg.exp
 @@ -358,6 +358,11 @@ proc gcc-dg-prune { system text } {
@@ -27,7 +27,7 @@ index 6217272ac4c..be281c30bfd 100644
            && [check_effective_target_tiny] } {
          return "::unsupported::memory full"
 diff --git a/gcc/testsuite/lib/target-utils.exp b/gcc/testsuite/lib/target-utils.exp
-index 6e61bbaeddc..e503211898f 100644
+index d8fa62054b8..2b6ab21116a 100644
 --- a/gcc/testsuite/lib/target-utils.exp
 +++ b/gcc/testsuite/lib/target-utils.exp
 @@ -28,6 +28,9 @@

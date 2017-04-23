@@ -1,7 +1,7 @@
-From 34aab005ed085a2bf66851ddf9cc8c99855a45de Mon Sep 17 00:00:00 2001
+From a98e89b5021d211cccce3b99a46a8f2d5c4e8dd6 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:53:18 +0200
-Subject: [PATCH 01/15] Initial TI PRU GCC port
+Subject: [PATCH 01/16] Initial TI PRU GCC port
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -59,10 +59,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 libgcc/config/pru/t-pru
 
 diff --git a/configure.ac b/configure.ac
-index 51ee70507cf..b3a85677e30 100644
+index 12377499295..14e736c75b4 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -656,6 +656,10 @@ case "${target}" in
+@@ -674,6 +674,10 @@ case "${target}" in
    powerpc-*-aix* | rs6000-*-aix*)
      noconfigdirs="$noconfigdirs target-libssp"
      ;;
@@ -73,7 +73,7 @@ index 51ee70507cf..b3a85677e30 100644
    rl78-*-*)
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
-@@ -846,6 +850,9 @@ case "${target}" in
+@@ -864,6 +868,9 @@ case "${target}" in
    powerpc*-*-*)
      libgloss_dir=rs6000
      ;;
@@ -133,20 +133,20 @@ index 00000000000..f30386e8b00
 +
 +struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index 7afbc54bc78..c96beb0cac2 100644
+index b8bb4d65825..ffd76700adb 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -449,6 +449,9 @@ powerpc*-*-*)
+@@ -452,6 +452,9 @@ powerpc*-*-*)
  	esac
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
 +pru-*-*)
 +	cpu_type=pru
 +	;;
- rs6000*-*-*)
- 	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
- 	;;
-@@ -2500,6 +2503,13 @@ powerpcle-*-eabi*)
+ riscv*)
+ 	cpu_type=riscv
+ 	extra_objs="riscv-builtins.o riscv-c.o"
+@@ -2546,6 +2549,13 @@ powerpcle-*-eabi*)
  	extra_options="${extra_options} rs6000/sysv4.opt"
  	use_gcc_stdint=wrap
  	;;
@@ -4116,10 +4116,10 @@ index 00000000000..af3eac95c31
 +	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $<
 +
 diff --git a/gcc/doc/extend.texi b/gcc/doc/extend.texi
-index 1f303bcb9aa..86c449a6859 100644
+index 219fa2cf5bd..90181d9723a 100644
 --- a/gcc/doc/extend.texi
 +++ b/gcc/doc/extend.texi
-@@ -20669,6 +20669,7 @@ for further explanation.
+@@ -20817,6 +20817,7 @@ for further explanation.
  * ARM Pragmas::
  * M32C Pragmas::
  * MeP Pragmas::
@@ -4127,7 +4127,7 @@ index 1f303bcb9aa..86c449a6859 100644
  * RS/6000 and PowerPC Pragmas::
  * S/390 Pragmas::
  * Darwin Pragmas::
-@@ -20820,6 +20821,25 @@ extern int foo ();
+@@ -20968,6 +20969,25 @@ extern int foo ();
  
  @end table
  
@@ -4154,10 +4154,10 @@ index 1f303bcb9aa..86c449a6859 100644
  @subsection RS/6000 and PowerPC Pragmas
  
 diff --git a/gcc/doc/md.texi b/gcc/doc/md.texi
-index 9f193140bea..6bb371e4f49 100644
+index dde3644890e..e4188c790cd 100644
 --- a/gcc/doc/md.texi
 +++ b/gcc/doc/md.texi
-@@ -3260,6 +3260,28 @@ Vector constant that is all zeros.
+@@ -3275,6 +3275,28 @@ Vector constant that is all zeros.
  
  @end table
  
@@ -4187,7 +4187,7 @@ index 9f193140bea..6bb371e4f49 100644
  @table @code
  
 diff --git a/libgcc/config.host b/libgcc/config.host
-index d67edfbc443..1f76f970b4d 100644
+index b279a6458f9..b3ce6fe74c1 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
 @@ -165,6 +165,9 @@ nios2*-*-*)
@@ -4199,17 +4199,17 @@ index d67edfbc443..1f76f970b4d 100644
 +	;;
  rs6000*-*-*)
  	;;
- sparc64*-*-*)
-@@ -1091,6 +1094,9 @@ powerpcle-*-eabi*)
+ riscv*-*-*)
+@@ -1096,6 +1099,9 @@ powerpcle-*-eabi*)
  	tmake_file="${tmake_file} rs6000/t-ppccomm rs6000/t-crtstuff t-crtstuff-pic t-fdpbit"
  	extra_parts="$extra_parts crtbegin.o crtend.o crtbeginS.o crtendS.o crtbeginT.o ecrti.o ecrtn.o ncrti.o ncrtn.o"
  	;;
 +pru-*-*)
 +	tmake_file="$tm_file t-fdpbit pru/t-pru"
 +	;;
- rs6000-ibm-aix4.[3456789]* | powerpc-ibm-aix4.[3456789]*)
- 	md_unwind_header=rs6000/aix-unwind.h
- 	tmake_file="t-fdpbit rs6000/t-ppc64-fp rs6000/t-slibgcc-aix rs6000/t-ibm-ldouble"
+ riscv*-*-linux*)
+ 	tmake_file="${tmake_file} riscv/t-softfp${host_address} t-softfp riscv/t-elf riscv/t-elf${host_address}"
+ 	extra_parts="$extra_parts crtbegin.o crtend.o crti.o crtn.o crtendS.o crtbeginT.o"
 diff --git a/libgcc/config/pru/lib2bitcountHI.c b/libgcc/config/pru/lib2bitcountHI.c
 new file mode 100644
 index 00000000000..f9d43f48b7a
