@@ -1,4 +1,4 @@
-From 145d51ace7534748abc09e280f1ed0e4a4246b30 Mon Sep 17 00:00:00 2001
+From cc705d9a248fdd8ef7b26a96e10d2136b205e5e0 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 17 Apr 2017 17:39:42 +0300
 Subject: [PATCH 16/16] WIP: TI ABI compatibility
@@ -8,17 +8,23 @@ compatible with the TI ABI.
 
 WARNING: This patch is not usable! Please use the stable branch.
 
+TODO:
+  - Add QI/HI/SI constraints for inline assembly.
+  - Add tests for ABI compatibility with TI's toolchain.
+  - Cleanup the code.
+  - Run the GCC testsuite.
+
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  gcc/config/pru/constraints.md       |    6 +
  gcc/config/pru/predicates.md        |    8 +-
  gcc/config/pru/pru-ldst-multiple.md | 3192 +++++++++++++++++------------------
  gcc/config/pru/pru-ldst-multiple.ml |   22 +-
- gcc/config/pru/pru.c                |   82 +-
- gcc/config/pru/pru.h                |  150 +-
+ gcc/config/pru/pru.c                |  235 ++-
+ gcc/config/pru/pru.h                |  166 +-
  gcc/config/pru/pru.md               |  120 +-
  libgcc/config/pru/lib2shift.c       |   35 +
- 8 files changed, 1885 insertions(+), 1730 deletions(-)
+ 8 files changed, 2004 insertions(+), 1780 deletions(-)
 
 diff --git a/gcc/config/pru/constraints.md b/gcc/config/pru/constraints.md
 index b66cd2bc00b..0be83b30a66 100644
@@ -4518,7 +4524,7 @@ index 23747a37e96..dc79584b8ea 100644
    Printf.printf "  [(set_attr \"type\" \"ld\")\n";
    Printf.printf "   (set_attr \"length\" \"4\")";
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
-index 85643bac9a3..8d25424f7b2 100644
+index 85643bac9a3..9e3c1cabfd7 100644
 --- a/gcc/config/pru/pru.c
 +++ b/gcc/config/pru/pru.c
 @@ -1,5 +1,5 @@
@@ -4664,7 +4670,7 @@ index 85643bac9a3..8d25424f7b2 100644
       P: prints swapped condition.
       Q: prints swapped and reversed condition.
       R: prints reversed condition.
-@@ -1218,15 +1232,30 @@ pru_print_operand (FILE *file, rtx op, int letter)
+@@ -1218,17 +1232,35 @@ pru_print_operand (FILE *file, rtx op, int letter)
        }
        else if (letter == 'N')
        {
@@ -4675,31 +4681,40 @@ index 85643bac9a3..8d25424f7b2 100644
  	      return;
        }
        else if (letter == 'x')
-       {
- 	      const int sz = GET_MODE_SIZE (GET_MODE (op));
+-      {
+-	      const int sz = GET_MODE_SIZE (GET_MODE (op));
 -	      const char *subreg = (sz == 1) ? ".b0" : ((sz == 2) ? ".w0" : "");
 -	      fprintf (file, "%s%s", reg_names[REGNO (op)], subreg);
-+	      const int base_reg = REGNO (op) / 4;
-+	      const char *suffix = "";
-+	      switch ((sz << 8) | (REGNO (op) % 4))
-+		{
-+		case (1 << 8) | 0: suffix = ".b0"; break;
-+		case (1 << 8) | 1: suffix = ".b1"; break;
-+		case (1 << 8) | 2: suffix = ".b2"; break;
-+		case (1 << 8) | 3: suffix = ".b3"; break;
-+		case (2 << 8) | 0: suffix = ".w0"; break;
-+		case (2 << 8) | 1: suffix = ".w1"; break;
-+		case (2 << 8) | 2: suffix = ".w2"; break;
-+		case (4 << 8) | 0: suffix = ""; break;
-+		default:
-+		  printf("%s: r=%d, sz=%d\n", __func__, REGNO (op), sz);
-+		  gcc_unreachable ();
-+		}
-+	      fprintf (file, "r%d%s", base_reg, suffix);
- 	      return;
-       }
+-	      return;
+-      }
++	{
++	  /* Translate between the MachineDescription notion
++	     of 8-bit consecutive registers, to the PRU
++	     assembler syntax of REGWORD[.SUBREG].  */
++	  const int sz = GET_MODE_SIZE (GET_MODE (op));
++	  const int base_reg = REGNO (op) / 4;
++	  const char *suffix = "";
++	  switch ((sz << 8) | (REGNO (op) % 4))
++	    {
++	    case (1 << 8) | 0: suffix = ".b0"; break;
++	    case (1 << 8) | 1: suffix = ".b1"; break;
++	    case (1 << 8) | 2: suffix = ".b2"; break;
++	    case (1 << 8) | 3: suffix = ".b3"; break;
++	    case (2 << 8) | 0: suffix = ".w0"; break;
++	    case (2 << 8) | 1: suffix = ".w1"; break;
++	    case (2 << 8) | 2: suffix = ".w2"; break;
++	    case (4 << 8) | 0: suffix = ""; break;
++	    default:
++	      printf("%s: r=%d, sz=%d\n", __func__, REGNO (op), sz);
++	      gcc_unreachable ();
++	    }
++	  fprintf (file, "r%d%s", base_reg, suffix);
++	  return;
++	}
        break;
-@@ -1307,7 +1336,7 @@ pru_print_operand (FILE *file, rtx op, int letter)
+ 
+     case CONST_INT:
+@@ -1307,7 +1339,7 @@ pru_print_operand (FILE *file, rtx op, int letter)
  	      rtx op1 = XEXP (base, 1);
  
  	      /* PLUS cannot have two constant operands, so one
@@ -4708,33 +4723,184 @@ index 85643bac9a3..8d25424f7b2 100644
  		 exact base address.  */
  	      if (ctable_base_operand (op0, VOIDmode)
  		  || ctable_base_operand (op1, VOIDmode))
-@@ -1542,7 +1571,7 @@ pru_arg_partial_bytes (cumulative_args_t cum_v,
+@@ -1490,6 +1522,82 @@ pru_file_start (void)
+ 
+ /* Function argument related.  */
  
-   if (cum->regs_used < NUM_ARG_REGS
-       && cum->regs_used + param_size > NUM_ARG_REGS)
--    return (NUM_ARG_REGS - cum->regs_used) * UNITS_PER_WORD;
-+    return (NUM_ARG_REGS - cum->regs_used) /* * UNITS_PER_WORD */;
- 
-   return 0;
- }
-@@ -1568,12 +1597,15 @@ pru_function_arg_advance (cumulative_args_t cum_v, machine_mode mode,
-     param_size = GET_MODE_SIZE (mode);
- 
-   /* Convert to words (round up).  */
--  param_size = (UNITS_PER_WORD - 1 + param_size) / UNITS_PER_WORD;
-+  //param_size = (UNITS_PER_WORD - 1 + param_size) / UNITS_PER_WORD;
- 
-   if (cum->regs_used + param_size > NUM_ARG_REGS)
-     cum->regs_used = NUM_ARG_REGS;
-   else
-     cum->regs_used += param_size;
++static int
++pru_function_arg_size (machine_mode mode, const_tree type)
++{
++  HOST_WIDE_INT param_size;
 +
-+  /* Align to the next word.  */
-+  cum->regs_used = (cum->regs_used + 3) & ~3lu;
++  if (mode == BLKmode)
++    {
++      param_size = int_size_in_bytes (type);
++      gcc_assert (param_size >= 0);
++    }
++  else
++    param_size = GET_MODE_SIZE (mode);
++
++  /* Convert to words (round up).  */
++  param_size = (UNITS_PER_WORD - 1 + param_size) / UNITS_PER_WORD;
++
++  return param_size;
++}
++
++
++static int
++pru_function_arg_regi (cumulative_args_t cum_v,
++		       machine_mode mode, const_tree type,
++		       bool named)
++{
++  CUMULATIVE_ARGS *cum = get_cumulative_args (cum_v);
++  size_t argsize = pru_function_arg_size (mode, type);
++  size_t i, bi;
++  int regi = -1;
++
++  /* Arguments larger than 64bits are passed on stack.  */
++  if (argsize > GET_MODE_SIZE (DImode))
++    return -1;
++
++  if (!named)
++    return -1;
++
++  /* Find the first available slot that fits. Yes, that's the PRU ABI.  */
++  for (i = 0; regi < 0 && i < ARRAY_SIZE(cum->regs_used); i++) {
++      /* Ensure alignment.  */
++      if ((argsize == 2 && (i % 2) != 0) || ((argsize >= 4) && (i % 4) != 0))
++	continue;
++
++      for (bi = 0; bi < argsize && (bi + i) < ARRAY_SIZE(cum->regs_used); bi++) {
++	  if (cum->regs_used[bi + i])
++	    break;
++      }
++      if (bi == argsize)
++	regi = FIRST_ARG_REGNO + i;
++  }
++
++  return regi;
++}
++
++static void
++pru_function_arg_regi_mark_slot (int regi,
++				 cumulative_args_t cum_v,
++				 machine_mode mode, const_tree type,
++				 bool named)
++{
++  CUMULATIVE_ARGS *cum = get_cumulative_args (cum_v);
++  HOST_WIDE_INT param_size = pru_function_arg_size (mode, type);
++
++  gcc_assert (param_size > 0 && param_size <= GET_MODE_SIZE (DImode));
++  gcc_assert (named);
++
++  /* Mark all byte sub-registers occupied by argument as used.  */
++  while (param_size--)
++    {
++      gcc_assert (regi >= FIRST_ARG_REGNO && regi <= LAST_ARG_REGNO);
++      gcc_assert (!cum->regs_used[regi - FIRST_ARG_REGNO]);
++      cum->regs_used[regi - FIRST_ARG_REGNO] = true;
++      regi++;
++    }
++}
++
+ /* Define where to put the arguments to a function.  Value is zero to
+    push the argument on the stack, or a hard register in which to
+    store the argument.
+@@ -1505,14 +1613,14 @@ pru_file_start (void)
+ 
+ static rtx
+ pru_function_arg (cumulative_args_t cum_v, machine_mode mode,
+-		    const_tree type ATTRIBUTE_UNUSED,
+-		    bool named ATTRIBUTE_UNUSED)
++		    const_tree type,
++		    bool named)
+ {
+-  CUMULATIVE_ARGS *cum = get_cumulative_args (cum_v);
+   rtx return_rtx = NULL_RTX;
++  int regi = pru_function_arg_regi (cum_v, mode, type, named);
+ 
+-  if (cum->regs_used < NUM_ARG_REGS)
+-    return_rtx = gen_rtx_REG (mode, FIRST_ARG_REGNO + cum->regs_used);
++  if (regi >= 0)
++    return_rtx = gen_rtx_REG (mode, regi);
+ 
+   return return_rtx;
+ }
+@@ -1523,28 +1631,23 @@ pru_function_arg (cumulative_args_t cum_v, machine_mode mode,
+ 
+ static int
+ pru_arg_partial_bytes (cumulative_args_t cum_v,
+-		       machine_mode mode, tree type ATTRIBUTE_UNUSED,
+-		       bool named ATTRIBUTE_UNUSED)
++		       machine_mode mode, tree type,
++		       bool named)
+ {
+-  CUMULATIVE_ARGS *cum = get_cumulative_args (cum_v);
+-  HOST_WIDE_INT param_size;
++  return 0;
+ 
+-  if (mode == BLKmode)
++#if 0
++  int regi = pru_function_arg_regi (cum_v, mode, type, named);
++
++  if (regi >= 0)
+     {
+-      param_size = int_size_in_bytes (type);
+-      gcc_assert (param_size >= 0);
++      return pru_function_arg_size (mode, type);
+     }
+   else
+-    param_size = GET_MODE_SIZE (mode);
+-
+-  /* Convert to words (round up).  */
+-  param_size = (UNITS_PER_WORD - 1 + param_size) / UNITS_PER_WORD;
+-
+-  if (cum->regs_used < NUM_ARG_REGS
+-      && cum->regs_used + param_size > NUM_ARG_REGS)
+-    return (NUM_ARG_REGS - cum->regs_used) * UNITS_PER_WORD;
+-
+-  return 0;
++    {
++      return 0;
++    }
++#endif
+ }
+ 
+ /* Update the data in CUM to advance over an argument of mode MODE
+@@ -1553,27 +1656,13 @@ pru_arg_partial_bytes (cumulative_args_t cum_v,
+ 
+ static void
+ pru_function_arg_advance (cumulative_args_t cum_v, machine_mode mode,
+-			    const_tree type ATTRIBUTE_UNUSED,
+-			    bool named ATTRIBUTE_UNUSED)
++			    const_tree type,
++			    bool named)
+ {
+-  CUMULATIVE_ARGS *cum = get_cumulative_args (cum_v);
+-  HOST_WIDE_INT param_size;
+-
+-  if (mode == BLKmode)
+-    {
+-      param_size = int_size_in_bytes (type);
+-      gcc_assert (param_size >= 0);
+-    }
+-  else
+-    param_size = GET_MODE_SIZE (mode);
++  int regi = pru_function_arg_regi (cum_v, mode, type, named);
+ 
+-  /* Convert to words (round up).  */
+-  param_size = (UNITS_PER_WORD - 1 + param_size) / UNITS_PER_WORD;
+-
+-  if (cum->regs_used + param_size > NUM_ARG_REGS)
+-    cum->regs_used = NUM_ARG_REGS;
+-  else
+-    cum->regs_used += param_size;
++  if (regi >= 0)
++    pru_function_arg_regi_mark_slot (regi, cum_v, mode, type, named);
  }
  
  /* Implement TARGET_FUNCTION_VALUE.  */
-@@ -1602,7 +1634,7 @@ pru_function_value_regno_p (const unsigned int regno)
+@@ -1602,10 +1691,11 @@ pru_function_value_regno_p (const unsigned int regno)
  static bool
  pru_return_in_memory (const_tree type, const_tree fntype ATTRIBUTE_UNUSED)
  {
@@ -4743,8 +4909,42 @@ index 85643bac9a3..8d25424f7b2 100644
  	  || int_size_in_bytes (type) == -1);
  }
  
++#if 0
+ /* TODO: It may be possible to eliminate the copyback and implement
+    own va_arg type.  */
+ static void
+@@ -1638,6 +1728,7 @@ pru_setup_incoming_varargs (cumulative_args_t cum_v,
+   if (pret_size)
+     *pretend_size = pret_size;
+ }
++#endif
+ 
+ /* Implement TARGET_CAN_USE_DOLOOP_P.  */
+ 
+@@ -2404,8 +2495,8 @@ pru_set_current_function (tree fndecl)
+ #undef TARGET_RETURN_IN_MEMORY
+ #define TARGET_RETURN_IN_MEMORY pru_return_in_memory
+ 
+-#undef TARGET_SETUP_INCOMING_VARARGS
+-#define TARGET_SETUP_INCOMING_VARARGS pru_setup_incoming_varargs
++//#undef TARGET_SETUP_INCOMING_VARARGS
++//#define TARGET_SETUP_INCOMING_VARARGS pru_setup_incoming_varargs
+ 
+ #undef TARGET_MUST_PASS_IN_STACK
+ #define TARGET_MUST_PASS_IN_STACK must_pass_in_stack_var_size
+@@ -2443,6 +2534,10 @@ pru_set_current_function (tree fndecl)
+ #undef TARGET_INVALID_WITHIN_DOLOOP
+ #define TARGET_INVALID_WITHIN_DOLOOP  pru_invalid_within_doloop
+ 
++/* There are no shared libraries envisioned for PRU.  */
++#undef TARGET_CXX_USE_ATEXIT_FOR_CXA_ATEXIT
++#define TARGET_CXX_USE_ATEXIT_FOR_CXA_ATEXIT hook_bool_void_true
++
+ struct gcc_target targetm = TARGET_INITIALIZER;
+ 
+ #include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
-index bb7737ad005..d340cc24695 100644
+index bb7737ad005..3fc03af06cf 100644
 --- a/gcc/config/pru/pru.h
 +++ b/gcc/config/pru/pru.h
 @@ -36,6 +36,13 @@
@@ -4901,7 +5101,41 @@ index bb7737ad005..d340cc24695 100644
  
  #define RETURN_ADDR_RTX(C,F) pru_get_return_address (C)
  
-@@ -308,44 +347,45 @@ typedef struct pru_args
+@@ -253,15 +292,19 @@ enum reg_class
+   (OFFSET) = pru_initial_elimination_offset ((FROM), (TO))
+ 
+ /* Calling convention definitions.  */
++#if !defined(IN_LIBGCC2)
++
++#define NUM_ARG_REGS (LAST_ARG_REGNO - FIRST_ARG_REGNO + 1)
++
+ typedef struct pru_args
+ {
+-  int regs_used;
++  bool regs_used[NUM_ARG_REGS];
+ } CUMULATIVE_ARGS;
+ 
+-#define NUM_ARG_REGS (LAST_ARG_REGNO - FIRST_ARG_REGNO + 1)
+-
+-#define INIT_CUMULATIVE_ARGS(CUM, FNTYPE, LIBNAME, FNDECL, N_NAMED_ARGS) \
+-  do { (CUM).regs_used = 0; } while (0)
++#define INIT_CUMULATIVE_ARGS(CUM, FNTYPE, LIBNAME, FNDECL, N_NAMED_ARGS)  \
++  do {									  \
++      memset((CUM).regs_used, 0, sizeof((CUM).regs_used));		  \
++  } while (0)
+ 
+ #define FUNCTION_ARG_REGNO_P(REGNO) \
+   ((REGNO) >= FIRST_ARG_REGNO && (REGNO) <= LAST_ARG_REGNO)
+@@ -279,6 +322,8 @@ typedef struct pru_args
+ #define FUNCTION_PROFILER(FILE, LABELNO) \
+   pru_function_profiler ((FILE), (LABELNO))
+ 
++#endif	/* IN_LIBGCC2 */
++
+ /* Addressing modes.  */
+ 
+ #define CONSTANT_ADDRESS_P(X) \
+@@ -308,44 +353,45 @@ typedef struct pru_args
  
  #define GLOBAL_ASM_OP "\t.global\t"
  
