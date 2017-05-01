@@ -1,16 +1,6 @@
 
 #include <stdint.h>
 
-/*
- * WARNING: GCC does not support the ||SYMBOL|| construct, and instead
- * prepends an underscore to all symbol names.
- *
- * WARNING: GCC does no register packing. Hence we use only uint32_t
- * functional arguments only.
- */
-
-#include <stdint.h>
-
 #include "shared.h"
 
 uint32_t ti_u32 = 0xccbbeedd;

@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "shared.h"
+#include "test.h"
 
 static volatile void * volatile ti_relocs[3] = { &ti_u32, &ti_u16, &ti_u8 };
 
@@ -53,24 +54,11 @@ int main(void)
 
 	printf("TI: 0x%08"PRIx32", GCC: 0x%08"PRIx32"\n", ti_result, gcc_result);
 
-	if (gcc_u32 != *(uint32_t*)ti_relocs[0]) {
-		printf("TI/GCC DATA 32-bit relocation failure!\n");
-		exit(EXIT_FAILURE);
-	}
-	if (gcc_u16 != *(uint16_t*)ti_relocs[1]) {
-		printf("TI/GCC DATA 16-bit relocation failure!\n");
-		exit(EXIT_FAILURE);
-	}
-	if (gcc_u8 != *(uint8_t*)ti_relocs[2]) {
-		printf("TI/GCC DATA 8-bit relocation failure!\n");
-		exit(EXIT_FAILURE);
-	}
+	CHECK (gcc_u32 == *(uint32_t*)ti_relocs[0]);
+	CHECK (gcc_u16 == *(uint16_t*)ti_relocs[1]);
+	CHECK (gcc_u8 == *(uint8_t*)ti_relocs[2]);
+	CHECK (ti_result == gcc_result);
 
-	if (ti_result != gcc_result) {
-		printf("\n\nERROR: TI AND GCC RESULTS DIFFER!\n\n");
-		return EXIT_FAILURE;
-	} else {
-		printf("SUCCESS\n");
-		return EXIT_SUCCESS;
-	}
+	printf("SUCCESS\n");
+	return EXIT_SUCCESS;
 }
