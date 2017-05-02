@@ -1,4 +1,4 @@
-From cc705d9a248fdd8ef7b26a96e10d2136b205e5e0 Mon Sep 17 00:00:00 2001
+From 69504b36a2fce9fe5b946f42b8b494e6b1633d70 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 17 Apr 2017 17:39:42 +0300
 Subject: [PATCH 16/16] WIP: TI ABI compatibility
@@ -13,6 +13,8 @@ TODO:
   - Add tests for ABI compatibility with TI's toolchain.
   - Cleanup the code.
   - Run the GCC testsuite.
+  - 48-bit argument (packed struct) - reg or stack?
+  - Revisit the AP pointer reg.
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -20,11 +22,11 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  gcc/config/pru/predicates.md        |    8 +-
  gcc/config/pru/pru-ldst-multiple.md | 3192 +++++++++++++++++------------------
  gcc/config/pru/pru-ldst-multiple.ml |   22 +-
- gcc/config/pru/pru.c                |  235 ++-
- gcc/config/pru/pru.h                |  166 +-
+ gcc/config/pru/pru.c                |  237 ++-
+ gcc/config/pru/pru.h                |  176 +-
  gcc/config/pru/pru.md               |  120 +-
  libgcc/config/pru/lib2shift.c       |   35 +
- 8 files changed, 2004 insertions(+), 1780 deletions(-)
+ 8 files changed, 2011 insertions(+), 1785 deletions(-)
 
 diff --git a/gcc/config/pru/constraints.md b/gcc/config/pru/constraints.md
 index b66cd2bc00b..0be83b30a66 100644
@@ -4524,7 +4526,7 @@ index 23747a37e96..dc79584b8ea 100644
    Printf.printf "  [(set_attr \"type\" \"ld\")\n";
    Printf.printf "   (set_attr \"length\" \"4\")";
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
-index 85643bac9a3..9e3c1cabfd7 100644
+index 85643bac9a3..f4feb7fc5b6 100644
 --- a/gcc/config/pru/pru.c
 +++ b/gcc/config/pru/pru.c
 @@ -1,5 +1,5 @@
@@ -4723,7 +4725,7 @@ index 85643bac9a3..9e3c1cabfd7 100644
  		 exact base address.  */
  	      if (ctable_base_operand (op0, VOIDmode)
  		  || ctable_base_operand (op1, VOIDmode))
-@@ -1490,6 +1522,82 @@ pru_file_start (void)
+@@ -1490,6 +1522,84 @@ pru_file_start (void)
  
  /* Function argument related.  */
  
@@ -4733,15 +4735,13 @@ index 85643bac9a3..9e3c1cabfd7 100644
 +  HOST_WIDE_INT param_size;
 +
 +  if (mode == BLKmode)
-+    {
 +      param_size = int_size_in_bytes (type);
-+      gcc_assert (param_size >= 0);
-+    }
 +  else
 +    param_size = GET_MODE_SIZE (mode);
 +
 +  /* Convert to words (round up).  */
 +  param_size = (UNITS_PER_WORD - 1 + param_size) / UNITS_PER_WORD;
++  gcc_assert (param_size >= 0);
 +
 +  return param_size;
 +}
@@ -4766,8 +4766,12 @@ index 85643bac9a3..9e3c1cabfd7 100644
 +
 +  /* Find the first available slot that fits. Yes, that's the PRU ABI.  */
 +  for (i = 0; regi < 0 && i < ARRAY_SIZE(cum->regs_used); i++) {
-+      /* Ensure alignment.  */
-+      if ((argsize == 2 && (i % 2) != 0) || ((argsize >= 4) && (i % 4) != 0))
++      /* Ensure SI and DI arguments are stored in full registers only.  */
++      if ((argsize >= 4) && (i % 4) != 0)
++	continue;
++      /* rX.w0/w1/w2 are OK. But avoid spreading the second byte
++         into a different full register.  */
++      if (argsize == 2 && (i % 4) == 3)
 +	continue;
 +
 +      for (bi = 0; bi < argsize && (bi + i) < ARRAY_SIZE(cum->regs_used); bi++) {
@@ -4806,7 +4810,7 @@ index 85643bac9a3..9e3c1cabfd7 100644
  /* Define where to put the arguments to a function.  Value is zero to
     push the argument on the stack, or a hard register in which to
     store the argument.
-@@ -1505,14 +1613,14 @@ pru_file_start (void)
+@@ -1505,14 +1615,14 @@ pru_file_start (void)
  
  static rtx
  pru_function_arg (cumulative_args_t cum_v, machine_mode mode,
@@ -4826,14 +4830,15 @@ index 85643bac9a3..9e3c1cabfd7 100644
  
    return return_rtx;
  }
-@@ -1523,28 +1631,23 @@ pru_function_arg (cumulative_args_t cum_v, machine_mode mode,
+@@ -1522,29 +1632,24 @@ pru_function_arg (cumulative_args_t cum_v, machine_mode mode,
+    in memory.  */
  
  static int
- pru_arg_partial_bytes (cumulative_args_t cum_v,
+-pru_arg_partial_bytes (cumulative_args_t cum_v,
 -		       machine_mode mode, tree type ATTRIBUTE_UNUSED,
--		       bool named ATTRIBUTE_UNUSED)
-+		       machine_mode mode, tree type,
-+		       bool named)
++pru_arg_partial_bytes (cumulative_args_t cum_v ATTRIBUTE_UNUSED,
++		       machine_mode mode ATTRIBUTE_UNUSED, tree type ATTRIBUTE_UNUSED,
+ 		       bool named ATTRIBUTE_UNUSED)
  {
 -  CUMULATIVE_ARGS *cum = get_cumulative_args (cum_v);
 -  HOST_WIDE_INT param_size;
@@ -4867,7 +4872,7 @@ index 85643bac9a3..9e3c1cabfd7 100644
  }
  
  /* Update the data in CUM to advance over an argument of mode MODE
-@@ -1553,27 +1656,13 @@ pru_arg_partial_bytes (cumulative_args_t cum_v,
+@@ -1553,27 +1658,13 @@ pru_arg_partial_bytes (cumulative_args_t cum_v,
  
  static void
  pru_function_arg_advance (cumulative_args_t cum_v, machine_mode mode,
@@ -4886,11 +4891,11 @@ index 85643bac9a3..9e3c1cabfd7 100644
 -    }
 -  else
 -    param_size = GET_MODE_SIZE (mode);
-+  int regi = pru_function_arg_regi (cum_v, mode, type, named);
- 
+-
 -  /* Convert to words (round up).  */
 -  param_size = (UNITS_PER_WORD - 1 + param_size) / UNITS_PER_WORD;
--
++  int regi = pru_function_arg_regi (cum_v, mode, type, named);
+ 
 -  if (cum->regs_used + param_size > NUM_ARG_REGS)
 -    cum->regs_used = NUM_ARG_REGS;
 -  else
@@ -4900,7 +4905,7 @@ index 85643bac9a3..9e3c1cabfd7 100644
  }
  
  /* Implement TARGET_FUNCTION_VALUE.  */
-@@ -1602,10 +1691,11 @@ pru_function_value_regno_p (const unsigned int regno)
+@@ -1602,10 +1693,11 @@ pru_function_value_regno_p (const unsigned int regno)
  static bool
  pru_return_in_memory (const_tree type, const_tree fntype ATTRIBUTE_UNUSED)
  {
@@ -4913,7 +4918,7 @@ index 85643bac9a3..9e3c1cabfd7 100644
  /* TODO: It may be possible to eliminate the copyback and implement
     own va_arg type.  */
  static void
-@@ -1638,6 +1728,7 @@ pru_setup_incoming_varargs (cumulative_args_t cum_v,
+@@ -1638,6 +1730,7 @@ pru_setup_incoming_varargs (cumulative_args_t cum_v,
    if (pret_size)
      *pretend_size = pret_size;
  }
@@ -4921,7 +4926,7 @@ index 85643bac9a3..9e3c1cabfd7 100644
  
  /* Implement TARGET_CAN_USE_DOLOOP_P.  */
  
-@@ -2404,8 +2495,8 @@ pru_set_current_function (tree fndecl)
+@@ -2404,8 +2497,8 @@ pru_set_current_function (tree fndecl)
  #undef TARGET_RETURN_IN_MEMORY
  #define TARGET_RETURN_IN_MEMORY pru_return_in_memory
  
@@ -4932,7 +4937,7 @@ index 85643bac9a3..9e3c1cabfd7 100644
  
  #undef TARGET_MUST_PASS_IN_STACK
  #define TARGET_MUST_PASS_IN_STACK must_pass_in_stack_var_size
-@@ -2443,6 +2534,10 @@ pru_set_current_function (tree fndecl)
+@@ -2443,6 +2536,10 @@ pru_set_current_function (tree fndecl)
  #undef TARGET_INVALID_WITHIN_DOLOOP
  #define TARGET_INVALID_WITHIN_DOLOOP  pru_invalid_within_doloop
  
@@ -4944,7 +4949,7 @@ index 85643bac9a3..9e3c1cabfd7 100644
  
  #include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
-index bb7737ad005..3fc03af06cf 100644
+index bb7737ad005..147269ebdc9 100644
 --- a/gcc/config/pru/pru.h
 +++ b/gcc/config/pru/pru.h
 @@ -36,6 +36,13 @@
@@ -4971,7 +4976,7 @@ index bb7737ad005..3fc03af06cf 100644
  /* TI ABI mandates that ELF symbols do not start with any prefix.  */
  #undef USER_LABEL_PREFIX
  #define USER_LABEL_PREFIX ""
-@@ -64,8 +74,16 @@
+@@ -64,15 +74,23 @@
  #define BITS_BIG_ENDIAN 0
  #define BYTES_BIG_ENDIAN 0
  #define WORDS_BIG_ENDIAN 0
@@ -4987,8 +4992,20 @@ index bb7737ad005..3fc03af06cf 100644
 +#endif
 +
  #define POINTER_SIZE 32
- #define BIGGEST_ALIGNMENT 32
+-#define BIGGEST_ALIGNMENT 32
++#define BIGGEST_ALIGNMENT 8
  #define STRICT_ALIGNMENT 0
+-#define FUNCTION_BOUNDARY 32
+-#define PARM_BOUNDARY 32
+-#define STACK_BOUNDARY 32
+-#define PREFERRED_STACK_BOUNDARY 32
++#define FUNCTION_BOUNDARY 8	/* Func pointers are word-addressed.  */
++#define PARM_BOUNDARY 8
++#define STACK_BOUNDARY 8
++#define PREFERRED_STACK_BOUNDARY 8
+ #define MAX_FIXED_MODE_SIZE 64
+ 
+ /* Layout of source language data types.  */
 @@ -121,36 +139,45 @@
  #define FIXED_REGISTERS			      \
    {					      \
@@ -5218,7 +5235,7 @@ index bb7737ad005..3fc03af06cf 100644
  
  #define ADDITIONAL_REGISTER_NAMES       \
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
-index b679de1ef44..8db18eb6d86 100644
+index b679de1ef44..739c9d05eb5 100644
 --- a/gcc/config/pru/pru.md
 +++ b/gcc/config/pru/pru.md
 @@ -22,31 +22,28 @@
@@ -5240,7 +5257,7 @@ index b679de1ef44..8db18eb6d86 100644
 -   (LOOPCNTR_REG	    32)	; internal LOOP counter register
 -   (LAST_GP_REG		    33)	; Last general purpose register.
 +   (FIRST_ARG_REGNO	    56)	; Argument registers.
-+   (LAST_ARG_REGNO	    116)	;
++   (LAST_ARG_REGNO	    119)	;
 +   (FIRST_RETVAL_REGNO	    56)	; Return value registers.
 +   (LAST_RETVAL_REGNO	    60)	;
 +   (PROLOGUE_TEMP_REGNO	    4)	; Temporary register to use in prologue.
