@@ -1,7 +1,7 @@
-From ac56c358a65d5b162a7fb1e55157d0204bbfc6d0 Mon Sep 17 00:00:00 2001
+From 0c9ee5738216d22068531a4d1680b85c429e331b Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 7 Oct 2016 22:51:06 +0300
-Subject: [PATCH 7/9] gdb: pru: Initial dummy port
+Subject: [PATCH 4/6] gdb: pru: Initial dummy port
 
 This needs a lot of work.
 
@@ -23,10 +23,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 gdb/pru-tdep.h
 
 diff --git a/gdb/Makefile.in b/gdb/Makefile.in
-index 946d4400a9..093efe51f2 100644
+index 479d27344b..8a070d210a 100644
 --- a/gdb/Makefile.in
 +++ b/gdb/Makefile.in
-@@ -839,6 +839,7 @@ ALL_TARGET_OBS = \
+@@ -853,6 +853,7 @@ ALL_TARGET_OBS = \
  	ppc-ravenscar-thread.o \
  	ppc-sysv-tdep.o \
  	ppc64-tdep.o \
@@ -34,7 +34,7 @@ index 946d4400a9..093efe51f2 100644
  	ravenscar-thread.o \
  	rl78-tdep.o \
  	rs6000-aix-tdep.o \
-@@ -1381,6 +1382,7 @@ HFILES_NO_SRCDIR = \
+@@ -1395,6 +1396,7 @@ HFILES_NO_SRCDIR = \
  	procfs.h \
  	progspace.h \
  	prologue-value.h \
@@ -42,7 +42,7 @@ index 946d4400a9..093efe51f2 100644
  	psympriv.h \
  	psymtab.h \
  	ravenscar-thread.h \
-@@ -2569,6 +2571,7 @@ ALLDEPFILES = \
+@@ -2593,6 +2595,7 @@ ALLDEPFILES = \
  	ppc-sysv-tdep.c \
  	ppc64-tdep.c \
  	procfs.c \
@@ -51,10 +51,10 @@ index 946d4400a9..093efe51f2 100644
  	remote-sim.c \
  	rl78-tdep.c \
 diff --git a/gdb/configure.tgt b/gdb/configure.tgt
-index 3f2603ddb7..02aab4cdc4 100644
+index 411580933e..9794773bd3 100644
 --- a/gdb/configure.tgt
 +++ b/gdb/configure.tgt
-@@ -471,6 +471,12 @@ powerpc*-*-*)
+@@ -473,6 +473,12 @@ powerpc*-*-*)
  	gdb_sim=../sim/ppc/libsim.a
  	;;
  
@@ -68,10 +68,10 @@ index 3f2603ddb7..02aab4cdc4 100644
  	# Target: S390 running Linux
  	gdb_target_obs="s390-linux-tdep.o solib-svr4.o linux-tdep.o \
 diff --git a/gdb/features/Makefile b/gdb/features/Makefile
-index 30eed5db67..d4d8350359 100644
+index 3bc8b5ae85..13fe17f3ae 100644
 --- a/gdb/features/Makefile
 +++ b/gdb/features/Makefile
-@@ -173,6 +173,7 @@ XMLTOC = \
+@@ -179,6 +179,7 @@ XMLTOC = \
  	nds32.xml \
  	nios2-linux.xml \
  	nios2.xml \

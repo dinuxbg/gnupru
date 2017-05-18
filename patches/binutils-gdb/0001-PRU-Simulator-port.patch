@@ -1,29 +1,41 @@
-From 04a7547cda32661ea5aaf651ad2646d6fc07e31b Mon Sep 17 00:00:00 2001
+From a63f9246daf3751d5a614b7589a10bef4dd384b8 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 22:37:01 +0300
-Subject: [PATCH 4/9] PRU Simulator port
+Subject: [PATCH 1/6] PRU Simulator port
 
 The corresponding libgloss changes have not yet been mainlined.
 The PRU patches are available here:
    https://github.com/dinuxbg/gnupru/tree/for-next/patches/newlib-cygwin
 
-2016-10-24  Dimitar Dimitrov <dimitar@dinux.eu>
+Since the PRU sim port uses the standard libgloss system call numbers,
+the gennltvals.sh script can safely be run on a newlib source without
+patches for PRU support.
 
-	* sim/MAINTAINERS.tgt: Add myself as PRU maintainer.
-	* sim/common/gennltvals.sh: Add PRU libgloss target.
-	* sim/common/nltvals.def: Regenerate from the unofficial
-	PRU libgloss port.
-	* sim/configure: Regenerate.
-	* sim/configure.tgt: Add PRU.
-	* sim/pru/Makefile.in: New file.
-	* sim/pru/aclocal.m4: New file.
-	* sim/pru/config.in: New file.
-	* sim/pru/configure: Regenerate.
-	* sim/pru/configure.ac: New file.
-	* sim/pru/interp.c: New file.
-	* sim/pru/pru.h: New file.
-	* sim/pru/pru.isa: New file.
-	* sim/pru/sim-main.h: New file.
+sim/
+2017-02-19  Dimitar Dimitrov <dimitar@dinux.eu>
+
+	* MAINTAINERS: Add myself as PRU maintainer.
+	* configure: Regenerate.
+	* configure.tgt: Add PRU.
+
+sim/common/
+2017-02-19  Dimitar Dimitrov <dimitar@dinux.eu>
+
+	* gennltvals.sh: Add PRU libgloss target.
+	* nltvals.def: Regenerate from the latest libgloss sources.
+
+sim/pru/
+2017-02-19  Dimitar Dimitrov <dimitar@dinux.eu>
+
+	* Makefile.in: New file.
+	* aclocal.m4: New file.
+	* config.in: New file.
+	* configure: Regenerate.
+	* configure.ac: New file.
+	* interp.c: New file.
+	* pru.h: New file.
+	* pru.isa: New file.
+	* sim-main.h: New file.
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -36,11 +48,11 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  sim/pru/aclocal.m4       | 129 +++++++++
  sim/pru/config.in        | 248 ++++++++++++++++
  sim/pru/configure.ac     |  12 +
- sim/pru/interp.c         | 722 +++++++++++++++++++++++++++++++++++++++++++++++
- sim/pru/pru.h            | 110 ++++++++
- sim/pru/pru.isa          | 250 ++++++++++++++++
- sim/pru/sim-main.h       |  76 +++++
- 13 files changed, 1623 insertions(+)
+ sim/pru/interp.c         | 729 +++++++++++++++++++++++++++++++++++++++++++++++
+ sim/pru/pru.h            | 101 +++++++
+ sim/pru/pru.isa          | 249 ++++++++++++++++
+ sim/pru/sim-main.h       |  75 +++++
+ 13 files changed, 1619 insertions(+)
  create mode 100644 sim/pru/Makefile.in
  create mode 100644 sim/pru/aclocal.m4
  create mode 100644 sim/pru/config.in
@@ -51,10 +63,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 sim/pru/sim-main.h
 
 diff --git a/sim/MAINTAINERS b/sim/MAINTAINERS
-index b373f66a7b..51328cacf9 100644
+index 62887d4bb1..875661da26 100644
 --- a/sim/MAINTAINERS
 +++ b/sim/MAINTAINERS
-@@ -28,6 +28,7 @@ microblaze	Michael Eager <eager@eagercon.com>
+@@ -29,6 +29,7 @@ microblaze	Michael Eager <eager@eagercon.com>
  mips		Maciej W. Rozycki <macro@imgtec.com>
  moxie		Anthony Green <green@moxielogic.com>
  msp430		Nick Clifton <nickc@redhat.com>
@@ -155,12 +167,12 @@ index c958fb3174..357d7ac337 100644
         ;;
 diff --git a/sim/pru/Makefile.in b/sim/pru/Makefile.in
 new file mode 100644
-index 0000000000..03f791dbd9
+index 0000000000..3b5ca5392f
 --- /dev/null
 +++ b/sim/pru/Makefile.in
 @@ -0,0 +1,29 @@
 +#    Makefile template for Configure for the PRU sim library.
-+#    Copyright (C) 2014-2016 Free Software Foundation, Inc.
++#    Copyright (C) 2014-2017 Free Software Foundation, Inc.
 +#    Written by Dimitar Dimitrov <dimitar@dinux.eu>
 +#
 +#    Based on the MCore sim library
@@ -597,12 +609,12 @@ index 0000000000..54ac06f48e
 +SIM_AC_OUTPUT
 diff --git a/sim/pru/interp.c b/sim/pru/interp.c
 new file mode 100644
-index 0000000000..e7da826afe
+index 0000000000..099b9c1d42
 --- /dev/null
 +++ b/sim/pru/interp.c
-@@ -0,0 +1,722 @@
+@@ -0,0 +1,729 @@
 +/* Simulator for the Texas Instruments PRU processor
-+   Copyright 2014-2016 Free Software Foundation, Inc.
++   Copyright 2014-2017 Free Software Foundation, Inc.
 +   Inspired by the Microblase simulator
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
@@ -633,13 +645,9 @@ index 0000000000..e7da826afe
 +#include "sim-syscall.h"
 +#include "pru.h"
 +
-+#ifndef NUM_ELEM
-+#define NUM_ELEM(A) (sizeof (A) / sizeof (A)[0])
-+#endif
-+
 +/* DMEM zero address is perfectly valid.  But if CRT leaves the first word
 +   alone, we can use it as a trap to catch NULL pointer access.  */
-+static int abort_on_dmem_zero_access;
++static bfd_boolean abort_on_dmem_zero_access;
 +
 +enum {
 +  OPTION_ERROR_NULL_DEREF = OPTION_START,
@@ -701,7 +709,7 @@ index 0000000000..e7da826afe
 +    case RSEL_23_8:   return (val >> 8) & 0xffff;
 +    case RSEL_31_16:  return (val >> 16) & 0xffff;
 +    case RSEL_31_0:   return val;
-+    default:	      sim_io_error(NULL, "invalid regsel");
++    default:	      sim_io_error (NULL, "invalid regsel");
 +    }
 +}
 +
@@ -720,7 +728,7 @@ index 0000000000..e7da826afe
 +    case RSEL_23_8:   mask = (0xffffu << 8); sh = 8; break;
 +    case RSEL_31_16:  mask = (0xffffu << 16); sh = 16; break;
 +    case RSEL_31_0:   mask = 0xffffffffu; sh = 0; break;
-+    default:	      sim_io_error(NULL, "invalid regsel");
++    default:	      sim_io_error (NULL, "invalid regsel");
 +    }
 +
 +  *reg = (*reg & ~mask) | ((val << sh) & mask);
@@ -729,7 +737,7 @@ index 0000000000..e7da826afe
 +static uint32_t
 +imem_wordaddr_to_byteaddr (SIM_CPU *cpu, uint16_t wa)
 +{
-+  return (((uint32_t)wa << 2) & IMEM_ADDR_MASK) | PC_ADDR_SPACE_MARKER;
++  return (((uint32_t) wa << 2) & IMEM_ADDR_MASK) | PC_ADDR_SPACE_MARKER;
 +}
 +
 +static uint16_t
@@ -746,10 +754,10 @@ index 0000000000..e7da826afe
 +	      int regn, int regb)
 +{
 +  /* GDB assumes unconditional access to all memories, so enable additional
-+     checks only  in standalone mode.  */
++     checks only in standalone mode.  */
 +  bool standalone = (STATE_OPEN_KIND (CPU_STATE (cpu)) == SIM_OPEN_STANDALONE);
 +
-+  if (standalone && abort_on_dmem_zero_access && addr < 4)
++  if (abort_on_dmem_zero_access && addr < 4)
 +    {
 +      sim_core_signal (CPU_STATE (cpu), cpu, PC_byteaddr, write_map,
 +		       nbytes, addr, write_transfer,
@@ -766,8 +774,7 @@ index 0000000000..e7da826afe
 +    {
 +      sim_io_eprintf (CPU_STATE (cpu),
 +		      "SBBO/SBCO with invalid store data length\n");
-+      sim_engine_halt (CPU_STATE (cpu), NULL, NULL, PC_byteaddr,
-+		       sim_stopped, SIM_SIGILL);
++      RAISE_SIGILL (CPU_STATE (cpu));
 +    }
 +  else
 +    {
@@ -794,10 +801,10 @@ index 0000000000..e7da826afe
 +	      int regn, int regb)
 +{
 +  /* GDB assumes unconditional access to all memories, so enable additional
-+     checks only  in standalone mode.  */
++     checks only in standalone mode.  */
 +  bool standalone = (STATE_OPEN_KIND (CPU_STATE (cpu)) == SIM_OPEN_STANDALONE);
 +
-+  if (standalone && abort_on_dmem_zero_access && addr < 4)
++  if (abort_on_dmem_zero_access && addr < 4)
 +    {
 +      sim_core_signal (CPU_STATE (cpu), cpu, PC_byteaddr, read_map,
 +		       nbytes, addr, read_transfer,
@@ -817,8 +824,7 @@ index 0000000000..e7da826afe
 +    {
 +      sim_io_eprintf (CPU_STATE (cpu),
 +		      "LBBO/LBCO with invalid load data length\n");
-+      sim_engine_halt (CPU_STATE (cpu), NULL, NULL, PC_byteaddr,
-+		       sim_stopped, SIM_SIGILL);
++      RAISE_SIGILL (CPU_STATE (cpu));
 +    }
 +  else
 +    {
@@ -848,12 +854,12 @@ index 0000000000..e7da826afe
 +
 +  /* Set up machine just out of reset.  */
 +  CPU_PC_SET (cpu, 0);
-+  PC_ADDR_SPACE_MARKER = 0x20000000; /* from default linker script? */
++  PC_ADDR_SPACE_MARKER = IMEM_ADDR_DEFAULT; /* from default linker script? */
 +
 +  /* Clean out the GPRs.  */
-+  for (i = 0; i < NUM_ELEM (CPU.regs); i++)
++  for (i = 0; i < ARRAY_SIZE (CPU.regs); i++)
 +    CPU.regs[i] = 0;
-+  for (i = 0; i < NUM_ELEM (CPU.macregs); i++)
++  for (i = 0; i < ARRAY_SIZE (CPU.macregs); i++)
 +    CPU.macregs[i] = 0;
 +
 +  CPU.loop.looptop = CPU.loop.loopend = 0;
@@ -912,7 +918,7 @@ index 0000000000..e7da826afe
 +    case RSEL_23_8:   return 16;
 +    case RSEL_31_16:  return 16;
 +    case RSEL_31_0:   return 32;
-+    default:	      sim_io_error(NULL, "invalid regsel");
++    default:	      sim_io_error (NULL, "invalid regsel");
 +    }
 +}
 +
@@ -1056,7 +1062,7 @@ index 0000000000..e7da826afe
 +  if (!op)
 +    {
 +      sim_io_eprintf (sd, "Unknown instruction 0x%04x\n", inst);
-+      RAISE_SIGILL ();
++      RAISE_SIGILL (sd);
 +    }
 +  else
 +    {
@@ -1064,16 +1070,19 @@ index 0000000000..e7da826afe
 +
 +      switch (op->type)
 +	{
++/* Helper macro to improve clarity of pru.isa.  The empty while is a
++   guard against using RD as a left-hand side value.  */
++#define RD  do { } while (0); rd_is_modified = 1; _RDVAL
 +#define INSTRUCTION(NAME, ACTION)		\
 +	case prui_ ## NAME:			\
-+						ACTION;				\
++		ACTION;				\
 +	  break;
 +#include "pru.isa"
 +#undef INSTRUCTION
++#undef RD
 +
 +	default:
-+	  RAISE_SIGILL ();
-+	  sim_io_eprintf (sd, "Unknown opcode.\n");
++	  RAISE_SIGILL (sd);
 +	}
 +
 +      if (rd_is_modified)
@@ -1097,14 +1106,15 @@ index 0000000000..e7da826afe
 +      CPU.insts += 1;		  /* One instructions completed ...  */
 +      CPU.cycles += 1;		  /* and it takes a single cycle.  */
 +
-+      /* Account for memory access latency with a reasonable estimate.  */
++      /* Account for memory access latency with a reasonable estimate.
++	 No distinction is currently made between SRAM, DRAM and generic
++	 L3 slaves.  */
 +      if (op->type == prui_lbbo || op->type == prui_sbbo
 +	  || op->type == prui_lbco || op->type == prui_sbco)
-+	CPU.cycles += MEM_ACCESS_CYCLES;
++	CPU.cycles += 2;
 +
 +    }
 +}
-+
 +void
 +sim_engine_run (SIM_DESC sd,
 +		int next_cpu_nr, /* ignore  */
@@ -1197,12 +1207,12 @@ index 0000000000..e7da826afe
 +
 +static SIM_RC
 +pru_option_handler (SIM_DESC sd, sim_cpu *cpu, int opt, char *arg,
-+                     int is_command)
++		    int is_command)
 +{
 +  switch (opt)
 +    {
 +    case OPTION_ERROR_NULL_DEREF:
-+      abort_on_dmem_zero_access = 1;
++      abort_on_dmem_zero_access = TRUE;
 +      return SIM_RC_OK;
 +
 +    default:
@@ -1226,6 +1236,7 @@ index 0000000000..e7da826afe
 +{
 +  int i;
 +  SIM_CPU *cpu;
++  char c;
 +  SIM_DESC sd = sim_state_alloc (kind, cb);
 +  SIM_ASSERT (STATE_MAGIC (sd) == SIM_MAGIC_NUMBER);
 +
@@ -1289,12 +1300,20 @@ index 0000000000..e7da826afe
 +      set_initial_gprs (cpu);
 +    }
 +
-+  sim_do_commandf (sd, "memory-region 0x%x,0x%x",
-+		   0,
-+		   DMEM_DEFAULT_SIZE);
-+  sim_do_commandf (sd, "memory-region 0x%x,0x%x",
-+		   0x20000000,
-+		   IMEM_DEFAULT_SIZE);
++  /* Allocate external memory if none specified by user.
++     Use address 4 here in case the user wanted address 0 unmapped.  */
++  if (sim_core_read_buffer (sd, NULL, read_map, &c, 4, 1) == 0)
++    {
++      sim_do_commandf (sd, "memory-region 0x%x,0x%x",
++		       0,
++		       DMEM_DEFAULT_SIZE);
++    }
++  if (sim_core_read_buffer (sd, NULL, read_map, &c, IMEM_ADDR_DEFAULT, 1) == 0)
++    {
++      sim_do_commandf (sd, "memory-region 0x%x,0x%x",
++		       IMEM_ADDR_DEFAULT,
++		       IMEM_DEFAULT_SIZE);
++    }
 +
 +  return sd;
 +}
@@ -1312,7 +1331,7 @@ index 0000000000..e7da826afe
 +  PC_ADDR_SPACE_MARKER = addr & ~IMEM_ADDR_MASK;
 +
 +  /* Standalone mode (i.e. `run`) will take care of the argv for us in
-+     sim_open() -> sim_parse_args().  But in debug mode (i.e. 'target sim'
++     sim_open () -> sim_parse_args ().  But in debug mode (i.e. 'target sim'
 +     with `gdb`), we need to handle it because the user can change the
 +     argv on the fly via gdb's 'run'.  */
 +  if (STATE_PROG_ARGV (sd) != argv)
@@ -1325,11 +1344,11 @@ index 0000000000..e7da826afe
 +}
 diff --git a/sim/pru/pru.h b/sim/pru/pru.h
 new file mode 100644
-index 0000000000..0fddbe971e
+index 0000000000..2c55e7196a
 --- /dev/null
 +++ b/sim/pru/pru.h
-@@ -0,0 +1,110 @@
-+/* Copyright 2014-2016 Free Software Foundation, Inc.
+@@ -0,0 +1,101 @@
++/* Copyright 2014-2017 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
 +   This file is part of the PRU simulator.
@@ -1356,6 +1375,8 @@ index 0000000000..0fddbe971e
 +/* NOTE: Needed for handling the dual PRU address space.  */
 +#define IMEM_ADDR_MASK	((1u << 23) - 1)
 +
++#define IMEM_ADDR_DEFAULT 0x20000000
++
 +/* Define memory sizes to allocate for simulated target.  Sizes are
 +   artificially large to accommodate execution of compiler test suite.
 +   Please synchronize with the linker script for prusim target.  */
@@ -1366,11 +1387,8 @@ index 0000000000..0fddbe971e
 +
 +#define CPU     (cpu->pru_cpu)
 +
-+/* (void)0 is a guard against using RD as a left-hand side value.  */
-+#define RD      (void)0; rd_is_modified = 1; _RDVAL
-+
-+#define PC		(cpu->pru_cpu.pc)
-+#define PC_byteaddr	((cpu->pru_cpu.pc << 2) | PC_ADDR_SPACE_MARKER)
++#define PC		(CPU.pc)
++#define PC_byteaddr	((PC << 2) | PC_ADDR_SPACE_MARKER)
 +
 +/* Various opcode fields.  */
 +#define RS1 extract_regval (CPU.regs[GET_INSN_FIELD (RS1, inst)], \
@@ -1379,7 +1397,7 @@ index 0000000000..0fddbe971e
 +			    GET_INSN_FIELD (RS2SEL, inst))
 +
 +#define RS2_w0 extract_regval (CPU.regs[GET_INSN_FIELD (RS2, inst)], \
-+			    RSEL_15_0)
++			       RSEL_15_0)
 +
 +#define XBBO_BASEREG (CPU.regs[GET_INSN_FIELD (RS1, inst)])
 +
@@ -1394,7 +1412,7 @@ index 0000000000..0fddbe971e
 +#define RDB GET_INSN_FIELD (RDB, inst)
 +#define XFR_WBA GET_INSN_FIELD (XFR_WBA, inst)
 +#define LOOP_JMPOFFS GET_INSN_FIELD (LOOP_JMPOFFS, inst)
-+#define BROFF ((uint32_t)GET_BROFF_SIGNED (inst))
++#define BROFF ((uint32_t) GET_BROFF_SIGNED (inst))
 +
 +#define _BURSTLEN_CALCULATE(BITFIELD)					    \
 +  ((BITFIELD) >= LSSBBO_BYTECOUNT_R0_BITS7_0 ?				    \
@@ -1409,12 +1427,10 @@ index 0000000000..0fddbe971e
 +#define DO_XOUT(wba,regn,rdb,l)	  \
 +  pru_sim_xout (sd, cpu, (wba), (regn), (rdb), (l))
 +
-+#define DO_SYSCALL()	pru_sim_syscall(sd, cpu)
-+
-+#define RAISE_SIGILL()	sim_engine_halt (sd, NULL, NULL, PC_byteaddr, \
-+					 sim_signalled, SIM_SIGILL);
-+#define RAISE_SIGINT()	sim_engine_halt (sd, NULL, NULL, PC_byteaddr, \
-+					 sim_signalled, SIM_SIGINT);
++#define RAISE_SIGILL(sd)  sim_engine_halt ((sd), NULL, NULL, PC_byteaddr, \
++					   sim_stopped, SIM_SIGILL)
++#define RAISE_SIGINT(sd)  sim_engine_halt ((sd), NULL, NULL, PC_byteaddr, \
++					   sim_stopped, SIM_SIGINT)
 +
 +#define MAC_R25_MAC_MODE_MASK	  (1u << 0)
 +#define MAC_R25_ACC_CARRY_MASK	  (1u << 1)
@@ -1429,23 +1445,17 @@ index 0000000000..0fddbe971e
 +#define LOOP_IN_PROGRESS  CPU.loop.loop_in_progress
 +#define LOOPCNT		  CPU.loop.loop_counter
 +
-+#define NUM_REGS 	33
-+#define PCREG_NUM	32
-+#define INST_SIZE 	4
-+
-+/* Number of cycles spent for memory access.  No distinction is currently
-+   made between SRAM, DRAM and generic L3 slaves.  */
-+#define MEM_ACCESS_CYCLES 2
++/* 32 GP registers plus PC.  */
++#define NUM_REGS	33
 +
 +#endif /* PRU_H */
-+
 diff --git a/sim/pru/pru.isa b/sim/pru/pru.isa
 new file mode 100644
-index 0000000000..f963564289
+index 0000000000..af72cf30c7
 --- /dev/null
 +++ b/sim/pru/pru.isa
-@@ -0,0 +1,250 @@
-+/* Copyright 2014-2016 Free Software Foundation, Inc.
+@@ -0,0 +1,249 @@
++/* Copyright 2014-2017 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
 +   This file is part of the PRU simulator.
@@ -1473,39 +1483,39 @@ index 0000000000..f963564289
 +INSTRUCTION (add,
 +	     OP2 = (IO ? IMM8 : RS2);
 +	     RD = RS1 + OP2;
-+	     CARRY = (((uint64_t)RS1 + (uint64_t)OP2) >> RD_WIDTH) & 1;
++	     CARRY = (((uint64_t) RS1 + (uint64_t) OP2) >> RD_WIDTH) & 1;
 +	     PC++)
 +
 +INSTRUCTION (adc,
 +	     OP2 = (IO ? IMM8 : RS2);
 +	     RD = RS1 + OP2 + CARRY;
-+	     CARRY = (((uint64_t)RS1 + (uint64_t)OP2 + (uint64_t)CARRY)
++	     CARRY = (((uint64_t) RS1 + (uint64_t) OP2 + (uint64_t) CARRY)
 +		      >> RD_WIDTH) & 1;
 +	     PC++)
 +
 +INSTRUCTION (sub,
 +	     OP2 = (IO ? IMM8 : RS2);
 +	     RD = RS1 - OP2;
-+	     CARRY = (((uint64_t)RS1 - (uint64_t)OP2) >> RD_WIDTH) & 1;
++	     CARRY = (((uint64_t) RS1 - (uint64_t) OP2) >> RD_WIDTH) & 1;
 +	     PC++)
 +
 +INSTRUCTION (suc,
 +	     OP2 = (IO ? IMM8 : RS2);
 +	     RD = RS1 - OP2 - CARRY;
-+	     CARRY = (((uint64_t)RS1 - (uint64_t)OP2 - (uint64_t)CARRY)
++	     CARRY = (((uint64_t) RS1 - (uint64_t) OP2 - (uint64_t) CARRY)
 +		      >> RD_WIDTH) & 1;
 +	     PC++)
 +
 +INSTRUCTION (rsb,
 +	     OP2 = (IO ? IMM8 : RS2);
 +	     RD = OP2 - RS1;
-+	     CARRY = (((uint64_t)OP2 - (uint64_t)RS1) >> RD_WIDTH) & 1;
++	     CARRY = (((uint64_t) OP2 - (uint64_t) RS1) >> RD_WIDTH) & 1;
 +	     PC++)
 +
 +INSTRUCTION (rsc,
 +	     OP2 = (IO ? IMM8 : RS2);
 +	     RD = OP2 - RS1 - CARRY;
-+	     CARRY = (((uint64_t)OP2 - (uint64_t)RS1 - (uint64_t)CARRY)
++	     CARRY = (((uint64_t) OP2 - (uint64_t) RS1 - (uint64_t) CARRY)
 +		      >> RD_WIDTH) & 1;
 +	     PC++)
 +
@@ -1572,13 +1582,13 @@ index 0000000000..f963564289
 +	     PC++)
 +
 +INSTRUCTION (halt,
-+	     DO_SYSCALL ();
++	     pru_sim_syscall (sd, cpu);
 +	     PC++)
 +
 +INSTRUCTION (slp,
 +	     if (!WAKEONSTATUS)
 +	      {
-+		RAISE_SIGINT ();
++		RAISE_SIGINT (sd);
 +	      }
 +	     else
 +	      {
@@ -1650,20 +1660,20 @@ index 0000000000..f963564289
 +	     PC++)
 +
 +INSTRUCTION (xchg,
-+	     fprintf (stderr, "XCHG instruction not supported by sim\n");
-+	     RAISE_SIGILL ())
++	     sim_io_eprintf (sd, "XCHG instruction not supported by sim\n");
++	     RAISE_SIGILL (sd))
 +
 +INSTRUCTION (sxin,
-+	     fprintf (stderr, "SXIN instruction not supported by sim\n");
-+	     RAISE_SIGILL ())
++	     sim_io_eprintf (sd, "SXIN instruction not supported by sim\n");
++	     RAISE_SIGILL (sd))
 +
 +INSTRUCTION (sxout,
-+	     fprintf (stderr, "SXOUT instruction not supported by sim\n");
-+	     RAISE_SIGILL ())
++	     sim_io_eprintf (sd, "SXOUT instruction not supported by sim\n");
++	     RAISE_SIGILL (sd))
 +
 +INSTRUCTION (sxchg,
-+	     fprintf (stderr, "SXCHG instruction not supported by sim\n");
-+	     RAISE_SIGILL ())
++	     sim_io_eprintf (sd, "SXCHG instruction not supported by sim\n");
++	     RAISE_SIGILL (sd))
 +
 +INSTRUCTION (loop,
 +	     OP2 = (IO ? IMM8 + 1 : RS2_w0);
@@ -1694,14 +1704,13 @@ index 0000000000..f963564289
 +		LOOP_IN_PROGRESS = 1;
 +		PC++;
 +	     })
-+
 diff --git a/sim/pru/sim-main.h b/sim/pru/sim-main.h
 new file mode 100644
-index 0000000000..6d49809a5a
+index 0000000000..5bd9742df0
 --- /dev/null
 +++ b/sim/pru/sim-main.h
-@@ -0,0 +1,76 @@
-+/* Copyright 2014-2016 Free Software Foundation, Inc.
+@@ -0,0 +1,75 @@
++/* Copyright 2014-2017 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
 +   This file is part of the PRU simulator.
@@ -1751,7 +1760,7 @@ index 0000000000..6d49809a5a
 +  uint32_t	  pc_addr_space_marker; /* IMEM virtual linker offset.  This
 +					   is the artificial offset that
 +					   we invent in order to "separate"
-+					   the DMEM and IMEM memory spaces */
++					   the DMEM and IMEM memory spaces.  */
 +  unsigned int	  carry : 1;
 +  uint32_t	  ctable[32];		/* constant offsets table for xBCO */
 +  uint32_t	  macregs[PRU_MAC_NREGS];
@@ -1776,7 +1785,6 @@ index 0000000000..6d49809a5a
 +  sim_state_base base;
 +};
 +#endif /* PRU_SIM_MAIN */
-+
 -- 
 2.11.0
 

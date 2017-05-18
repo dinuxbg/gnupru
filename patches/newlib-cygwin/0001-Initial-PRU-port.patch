@@ -1,7 +1,7 @@
-From 7efe58b35fb166e390450821c67149f0f79720ad Mon Sep 17 00:00:00 2001
+From d2abdbc32037c96edab10826cdcf81d3a1b25105 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Thu, 1 May 2014 16:43:07 +0300
-Subject: [PATCH 1/2] Initial PRU port
+Subject: [PATCH 1/5] Initial PRU port
 
 Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---
@@ -4604,7 +4604,7 @@ index 000000000..2a4c946e8
 +AC_OUTPUT
 diff --git a/libgloss/pru/crt0.S b/libgloss/pru/crt0.S
 new file mode 100644
-index 000000000..d0ffc5f92
+index 000000000..bab6694e6
 --- /dev/null
 +++ b/libgloss/pru/crt0.S
 @@ -0,0 +1,61 @@
@@ -4624,27 +4624,27 @@ index 000000000..d0ffc5f92
 + */
 +#include "newlib.h"
 +
-+	.extern	main
++	.extern	_main
 +	.extern	exit
 +
 +	.text
 +	.section .init0, "x"
-+	.global	_start
-+_start:
++	.global	__start
++__start:
 +	/* Initialize stack pointer. */
-+	ldi32	sp, _stack_top
++	ldi32	sp, __stack_top
 +
 +	/* DATA and BSS are handled by the loader, so nothing to do here. */
 +
 +#if !defined(MINRT)
-+	.extern _do_global_dtors
++	.extern __do_global_dtors
 +	/* Ensure destructors get called. */
-+	ldi	r14, %pmem(_do_global_dtors)
-+	call	atexit
++	ldi	r14, %pmem(__do_global_dtors)
++	call	_atexit
 +
 +	/* Call constructors. Use non-call-clobbered registers. */
-+	ldi	r5, _ctors_start
-+	ldi	r6, _ctors_end
++	ldi	r5, __ctors_start
++	ldi	r6, __ctors_end
 +ctors_loop:
 +	qbeq	ctors_done, r5, r6
 +	lbbo	r7, r5, 0, 4		/* IMEM pointers are 32bits for now */
@@ -4658,17 +4658,17 @@ index 000000000..d0ffc5f92
 +	zero	r14, 3 * 4
 +
 +	/* Call main */
-+	call	main
++	call	_main
 +
 +#if !defined(MINRT)
 +	/* Call exit */
-+	call	exit
++	call	_exit
 +#endif
 +
 +	/* We should never reach here. */
-+_crt_exit:
++__crt_exit:
 +	halt
-+	jmp	_crt_exit
++	jmp	__crt_exit
 diff --git a/libgloss/pru/device-specs/am335x.pru0 b/libgloss/pru/device-specs/am335x.pru0
 new file mode 100644
 index 000000000..076fd82a9
@@ -5981,7 +5981,7 @@ index 000000000..575a30970
 +dump_modified 8K   8K     "32"         "512"       | tee pruelf-am437x.icss1.pru1.x
 diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru0.x b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
 new file mode 100644
-index 000000000..6af7477bb
+index 000000000..c04f518e5
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
 @@ -0,0 +1,190 @@
@@ -5999,8 +5999,8 @@ index 000000000..6af7477bb
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
-+ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
-+ENTRY (_start)
++ PROVIDE (__stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ENTRY (__start)
 +SECTIONS
 +{
 +  /* Read-only sections, merged into text segment: */
@@ -6063,7 +6063,7 @@ index 000000000..6af7477bb
 +  /* Internal text space.  */
 +  .text   :
 +  {
-+     _text_start = . ;
++     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
@@ -6074,7 +6074,7 @@ index 000000000..6af7477bb
 +    . = ALIGN(4);
 +    *(.gnu.linkonce.t*)
 +    . = ALIGN(4);
-+     _text_end = . ;
++     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
@@ -6082,20 +6082,20 @@ index 000000000..6af7477bb
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
 +       a "valid" NULL address.  */
-+     _ctors_start = . ;
++     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
 +     KEEP (*(.ctors))
-+     _ctors_end = . ;
-+     _dtors_start = . ;
++     __ctors_end = . ;
++     __dtors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
 +     KEEP (*(.dtors))
-+     _dtors_end = . ;
++     __dtors_end = . ;
 +    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
 +       section.  If CRT can make some use of it - great.  Otherwise skip a
 +       word.  In all cases .data/.bss sections must start at non-zero.  */
 +    . += (. == 0 ? 4 : 0);
-+     PROVIDE (_data_start = .) ;
++     PROVIDE (__data_start = .) ;
 +    *(.data)
 +     *(.data*)
 +     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
@@ -6103,7 +6103,7 @@ index 000000000..6af7477bb
 +    *(.gnu.linkonce.d*)
 +    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
-+     PROVIDE (_data_end = .) ;
++     PROVIDE (__data_end = .) ;
 +  }  > dmem
 +  .resource_table   :
 +  {
@@ -6112,20 +6112,20 @@ index 000000000..6af7477bb
 +  }  > dmem
 +  .bss   :
 +  {
-+     PROVIDE (_bss_start = .) ;
++     PROVIDE (__bss_start = .) ;
 +    *(.bss)
 +     *(.bss.*)
 +    *(.gnu.linkonce.b*)
 +    *(COMMON)
-+     PROVIDE (_bss_end = .) ;
++     PROVIDE (__bss_end = .) ;
 +  }  > dmem
 +  /* Global data not cleared after reset.  */
 +  .noinit  :
 +  {
-+     PROVIDE (_noinit_start = .) ;
++     PROVIDE (__noinit_start = .) ;
 +    *(.noinit)
-+     PROVIDE (_noinit_end = .) ;
-+     PROVIDE (_heap_start = .) ;
++     PROVIDE (__noinit_end = .) ;
++     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
 +    /* Stack is not here really.  It will be put at the end of DMEM.
 +       But we take into account its size here, in order to allow
@@ -6177,7 +6177,7 @@ index 000000000..6af7477bb
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru1.x b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
 new file mode 100644
-index 000000000..6af7477bb
+index 000000000..c04f518e5
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
 @@ -0,0 +1,190 @@
@@ -6195,8 +6195,8 @@ index 000000000..6af7477bb
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
-+ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
-+ENTRY (_start)
++ PROVIDE (__stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ENTRY (__start)
 +SECTIONS
 +{
 +  /* Read-only sections, merged into text segment: */
@@ -6259,7 +6259,7 @@ index 000000000..6af7477bb
 +  /* Internal text space.  */
 +  .text   :
 +  {
-+     _text_start = . ;
++     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
@@ -6270,7 +6270,7 @@ index 000000000..6af7477bb
 +    . = ALIGN(4);
 +    *(.gnu.linkonce.t*)
 +    . = ALIGN(4);
-+     _text_end = . ;
++     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
@@ -6278,20 +6278,20 @@ index 000000000..6af7477bb
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
 +       a "valid" NULL address.  */
-+     _ctors_start = . ;
++     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
 +     KEEP (*(.ctors))
-+     _ctors_end = . ;
-+     _dtors_start = . ;
++     __ctors_end = . ;
++     __dtors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
 +     KEEP (*(.dtors))
-+     _dtors_end = . ;
++     __dtors_end = . ;
 +    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
 +       section.  If CRT can make some use of it - great.  Otherwise skip a
 +       word.  In all cases .data/.bss sections must start at non-zero.  */
 +    . += (. == 0 ? 4 : 0);
-+     PROVIDE (_data_start = .) ;
++     PROVIDE (__data_start = .) ;
 +    *(.data)
 +     *(.data*)
 +     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
@@ -6299,7 +6299,7 @@ index 000000000..6af7477bb
 +    *(.gnu.linkonce.d*)
 +    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
-+     PROVIDE (_data_end = .) ;
++     PROVIDE (__data_end = .) ;
 +  }  > dmem
 +  .resource_table   :
 +  {
@@ -6308,20 +6308,20 @@ index 000000000..6af7477bb
 +  }  > dmem
 +  .bss   :
 +  {
-+     PROVIDE (_bss_start = .) ;
++     PROVIDE (__bss_start = .) ;
 +    *(.bss)
 +     *(.bss.*)
 +    *(.gnu.linkonce.b*)
 +    *(COMMON)
-+     PROVIDE (_bss_end = .) ;
++     PROVIDE (__bss_end = .) ;
 +  }  > dmem
 +  /* Global data not cleared after reset.  */
 +  .noinit  :
 +  {
-+     PROVIDE (_noinit_start = .) ;
++     PROVIDE (__noinit_start = .) ;
 +    *(.noinit)
-+     PROVIDE (_noinit_end = .) ;
-+     PROVIDE (_heap_start = .) ;
++     PROVIDE (__noinit_end = .) ;
++     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
 +    /* Stack is not here really.  It will be put at the end of DMEM.
 +       But we take into account its size here, in order to allow
@@ -6373,7 +6373,7 @@ index 000000000..6af7477bb
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
 new file mode 100644
-index 000000000..3a3cd94ae
+index 000000000..77a925797
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
 @@ -0,0 +1,190 @@
@@ -6391,8 +6391,8 @@ index 000000000..3a3cd94ae
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 256 ;
-+ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
-+ENTRY (_start)
++ PROVIDE (__stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ENTRY (__start)
 +SECTIONS
 +{
 +  /* Read-only sections, merged into text segment: */
@@ -6455,7 +6455,7 @@ index 000000000..3a3cd94ae
 +  /* Internal text space.  */
 +  .text   :
 +  {
-+     _text_start = . ;
++     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
@@ -6466,7 +6466,7 @@ index 000000000..3a3cd94ae
 +    . = ALIGN(4);
 +    *(.gnu.linkonce.t*)
 +    . = ALIGN(4);
-+     _text_end = . ;
++     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
@@ -6474,20 +6474,20 @@ index 000000000..3a3cd94ae
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
 +       a "valid" NULL address.  */
-+     _ctors_start = . ;
++     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
 +     KEEP (*(.ctors))
-+     _ctors_end = . ;
-+     _dtors_start = . ;
++     __ctors_end = . ;
++     __dtors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
 +     KEEP (*(.dtors))
-+     _dtors_end = . ;
++     __dtors_end = . ;
 +    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
 +       section.  If CRT can make some use of it - great.  Otherwise skip a
 +       word.  In all cases .data/.bss sections must start at non-zero.  */
 +    . += (. == 0 ? 4 : 0);
-+     PROVIDE (_data_start = .) ;
++     PROVIDE (__data_start = .) ;
 +    *(.data)
 +     *(.data*)
 +     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
@@ -6495,7 +6495,7 @@ index 000000000..3a3cd94ae
 +    *(.gnu.linkonce.d*)
 +    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
-+     PROVIDE (_data_end = .) ;
++     PROVIDE (__data_end = .) ;
 +  }  > dmem
 +  .resource_table   :
 +  {
@@ -6504,20 +6504,20 @@ index 000000000..3a3cd94ae
 +  }  > dmem
 +  .bss   :
 +  {
-+     PROVIDE (_bss_start = .) ;
++     PROVIDE (__bss_start = .) ;
 +    *(.bss)
 +     *(.bss.*)
 +    *(.gnu.linkonce.b*)
 +    *(COMMON)
-+     PROVIDE (_bss_end = .) ;
++     PROVIDE (__bss_end = .) ;
 +  }  > dmem
 +  /* Global data not cleared after reset.  */
 +  .noinit  :
 +  {
-+     PROVIDE (_noinit_start = .) ;
++     PROVIDE (__noinit_start = .) ;
 +    *(.noinit)
-+     PROVIDE (_noinit_end = .) ;
-+     PROVIDE (_heap_start = .) ;
++     PROVIDE (__noinit_end = .) ;
++     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
 +    /* Stack is not here really.  It will be put at the end of DMEM.
 +       But we take into account its size here, in order to allow
@@ -6569,7 +6569,7 @@ index 000000000..3a3cd94ae
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
 new file mode 100644
-index 000000000..3a3cd94ae
+index 000000000..77a925797
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
 @@ -0,0 +1,190 @@
@@ -6587,8 +6587,8 @@ index 000000000..3a3cd94ae
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 256 ;
-+ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
-+ENTRY (_start)
++ PROVIDE (__stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ENTRY (__start)
 +SECTIONS
 +{
 +  /* Read-only sections, merged into text segment: */
@@ -6651,7 +6651,7 @@ index 000000000..3a3cd94ae
 +  /* Internal text space.  */
 +  .text   :
 +  {
-+     _text_start = . ;
++     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
@@ -6662,7 +6662,7 @@ index 000000000..3a3cd94ae
 +    . = ALIGN(4);
 +    *(.gnu.linkonce.t*)
 +    . = ALIGN(4);
-+     _text_end = . ;
++     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
@@ -6670,20 +6670,20 @@ index 000000000..3a3cd94ae
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
 +       a "valid" NULL address.  */
-+     _ctors_start = . ;
++     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
 +     KEEP (*(.ctors))
-+     _ctors_end = . ;
-+     _dtors_start = . ;
++     __ctors_end = . ;
++     __dtors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
 +     KEEP (*(.dtors))
-+     _dtors_end = . ;
++     __dtors_end = . ;
 +    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
 +       section.  If CRT can make some use of it - great.  Otherwise skip a
 +       word.  In all cases .data/.bss sections must start at non-zero.  */
 +    . += (. == 0 ? 4 : 0);
-+     PROVIDE (_data_start = .) ;
++     PROVIDE (__data_start = .) ;
 +    *(.data)
 +     *(.data*)
 +     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
@@ -6691,7 +6691,7 @@ index 000000000..3a3cd94ae
 +    *(.gnu.linkonce.d*)
 +    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
-+     PROVIDE (_data_end = .) ;
++     PROVIDE (__data_end = .) ;
 +  }  > dmem
 +  .resource_table   :
 +  {
@@ -6700,20 +6700,20 @@ index 000000000..3a3cd94ae
 +  }  > dmem
 +  .bss   :
 +  {
-+     PROVIDE (_bss_start = .) ;
++     PROVIDE (__bss_start = .) ;
 +    *(.bss)
 +     *(.bss.*)
 +    *(.gnu.linkonce.b*)
 +    *(COMMON)
-+     PROVIDE (_bss_end = .) ;
++     PROVIDE (__bss_end = .) ;
 +  }  > dmem
 +  /* Global data not cleared after reset.  */
 +  .noinit  :
 +  {
-+     PROVIDE (_noinit_start = .) ;
++     PROVIDE (__noinit_start = .) ;
 +    *(.noinit)
-+     PROVIDE (_noinit_end = .) ;
-+     PROVIDE (_heap_start = .) ;
++     PROVIDE (__noinit_end = .) ;
++     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
 +    /* Stack is not here really.  It will be put at the end of DMEM.
 +       But we take into account its size here, in order to allow
@@ -6765,7 +6765,7 @@ index 000000000..3a3cd94ae
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
 new file mode 100644
-index 000000000..6af7477bb
+index 000000000..c04f518e5
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
 @@ -0,0 +1,190 @@
@@ -6783,8 +6783,8 @@ index 000000000..6af7477bb
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
-+ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
-+ENTRY (_start)
++ PROVIDE (__stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ENTRY (__start)
 +SECTIONS
 +{
 +  /* Read-only sections, merged into text segment: */
@@ -6847,7 +6847,7 @@ index 000000000..6af7477bb
 +  /* Internal text space.  */
 +  .text   :
 +  {
-+     _text_start = . ;
++     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
@@ -6858,7 +6858,7 @@ index 000000000..6af7477bb
 +    . = ALIGN(4);
 +    *(.gnu.linkonce.t*)
 +    . = ALIGN(4);
-+     _text_end = . ;
++     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
@@ -6866,20 +6866,20 @@ index 000000000..6af7477bb
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
 +       a "valid" NULL address.  */
-+     _ctors_start = . ;
++     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
 +     KEEP (*(.ctors))
-+     _ctors_end = . ;
-+     _dtors_start = . ;
++     __ctors_end = . ;
++     __dtors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
 +     KEEP (*(.dtors))
-+     _dtors_end = . ;
++     __dtors_end = . ;
 +    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
 +       section.  If CRT can make some use of it - great.  Otherwise skip a
 +       word.  In all cases .data/.bss sections must start at non-zero.  */
 +    . += (. == 0 ? 4 : 0);
-+     PROVIDE (_data_start = .) ;
++     PROVIDE (__data_start = .) ;
 +    *(.data)
 +     *(.data*)
 +     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
@@ -6887,7 +6887,7 @@ index 000000000..6af7477bb
 +    *(.gnu.linkonce.d*)
 +    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
-+     PROVIDE (_data_end = .) ;
++     PROVIDE (__data_end = .) ;
 +  }  > dmem
 +  .resource_table   :
 +  {
@@ -6896,20 +6896,20 @@ index 000000000..6af7477bb
 +  }  > dmem
 +  .bss   :
 +  {
-+     PROVIDE (_bss_start = .) ;
++     PROVIDE (__bss_start = .) ;
 +    *(.bss)
 +     *(.bss.*)
 +    *(.gnu.linkonce.b*)
 +    *(COMMON)
-+     PROVIDE (_bss_end = .) ;
++     PROVIDE (__bss_end = .) ;
 +  }  > dmem
 +  /* Global data not cleared after reset.  */
 +  .noinit  :
 +  {
-+     PROVIDE (_noinit_start = .) ;
++     PROVIDE (__noinit_start = .) ;
 +    *(.noinit)
-+     PROVIDE (_noinit_end = .) ;
-+     PROVIDE (_heap_start = .) ;
++     PROVIDE (__noinit_end = .) ;
++     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
 +    /* Stack is not here really.  It will be put at the end of DMEM.
 +       But we take into account its size here, in order to allow
@@ -6961,7 +6961,7 @@ index 000000000..6af7477bb
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
 new file mode 100644
-index 000000000..6af7477bb
+index 000000000..c04f518e5
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
 @@ -0,0 +1,190 @@
@@ -6979,8 +6979,8 @@ index 000000000..6af7477bb
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
-+ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
-+ENTRY (_start)
++ PROVIDE (__stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ENTRY (__start)
 +SECTIONS
 +{
 +  /* Read-only sections, merged into text segment: */
@@ -7043,7 +7043,7 @@ index 000000000..6af7477bb
 +  /* Internal text space.  */
 +  .text   :
 +  {
-+     _text_start = . ;
++     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
@@ -7054,7 +7054,7 @@ index 000000000..6af7477bb
 +    . = ALIGN(4);
 +    *(.gnu.linkonce.t*)
 +    . = ALIGN(4);
-+     _text_end = . ;
++     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
@@ -7062,20 +7062,20 @@ index 000000000..6af7477bb
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
 +       a "valid" NULL address.  */
-+     _ctors_start = . ;
++     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
 +     KEEP (*(.ctors))
-+     _ctors_end = . ;
-+     _dtors_start = . ;
++     __ctors_end = . ;
++     __dtors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
 +     KEEP (*(.dtors))
-+     _dtors_end = . ;
++     __dtors_end = . ;
 +    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
 +       section.  If CRT can make some use of it - great.  Otherwise skip a
 +       word.  In all cases .data/.bss sections must start at non-zero.  */
 +    . += (. == 0 ? 4 : 0);
-+     PROVIDE (_data_start = .) ;
++     PROVIDE (__data_start = .) ;
 +    *(.data)
 +     *(.data*)
 +     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
@@ -7083,7 +7083,7 @@ index 000000000..6af7477bb
 +    *(.gnu.linkonce.d*)
 +    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
-+     PROVIDE (_data_end = .) ;
++     PROVIDE (__data_end = .) ;
 +  }  > dmem
 +  .resource_table   :
 +  {
@@ -7092,20 +7092,20 @@ index 000000000..6af7477bb
 +  }  > dmem
 +  .bss   :
 +  {
-+     PROVIDE (_bss_start = .) ;
++     PROVIDE (__bss_start = .) ;
 +    *(.bss)
 +     *(.bss.*)
 +    *(.gnu.linkonce.b*)
 +    *(COMMON)
-+     PROVIDE (_bss_end = .) ;
++     PROVIDE (__bss_end = .) ;
 +  }  > dmem
 +  /* Global data not cleared after reset.  */
 +  .noinit  :
 +  {
-+     PROVIDE (_noinit_start = .) ;
++     PROVIDE (__noinit_start = .) ;
 +    *(.noinit)
-+     PROVIDE (_noinit_end = .) ;
-+     PROVIDE (_heap_start = .) ;
++     PROVIDE (__noinit_end = .) ;
++     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
 +    /* Stack is not here really.  It will be put at the end of DMEM.
 +       But we take into account its size here, in order to allow
@@ -7157,7 +7157,7 @@ index 000000000..6af7477bb
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-sim.x b/libgloss/pru/ldscripts/pruelf-sim.x
 new file mode 100644
-index 000000000..68a5f5ac1
+index 000000000..92dec9d09
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-sim.x
 @@ -0,0 +1,190 @@
@@ -7175,8 +7175,8 @@ index 000000000..68a5f5ac1
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 * 1024 * 1024 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 1024 * 1024 ;
-+ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
-+ENTRY (_start)
++ PROVIDE (__stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
++ENTRY (__start)
 +SECTIONS
 +{
 +  /* Read-only sections, merged into text segment: */
@@ -7239,7 +7239,7 @@ index 000000000..68a5f5ac1
 +  /* Internal text space.  */
 +  .text   :
 +  {
-+     _text_start = . ;
++     __text_start = . ;
 +    . = ALIGN(4);
 +    *(.init0)  /* Start here after reset.  */
 +    KEEP (*(.init0))
@@ -7250,7 +7250,7 @@ index 000000000..68a5f5ac1
 +    . = ALIGN(4);
 +    *(.gnu.linkonce.t*)
 +    . = ALIGN(4);
-+     _text_end = . ;
++     __text_end = . ;
 +  }  > imem
 +  .data          :
 +  {
@@ -7258,20 +7258,20 @@ index 000000000..68a5f5ac1
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
 +       a "valid" NULL address.  */
-+     _ctors_start = . ;
++     __ctors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
 +     KEEP (*(.ctors))
-+     _ctors_end = . ;
-+     _dtors_start = . ;
++     __ctors_end = . ;
++     __dtors_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
 +     KEEP (*(.dtors))
-+     _dtors_end = . ;
++     __dtors_end = . ;
 +    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
 +       section.  If CRT can make some use of it - great.  Otherwise skip a
 +       word.  In all cases .data/.bss sections must start at non-zero.  */
 +    . += (. == 0 ? 4 : 0);
-+     PROVIDE (_data_start = .) ;
++     PROVIDE (__data_start = .) ;
 +    *(.data)
 +     *(.data*)
 +     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
@@ -7279,7 +7279,7 @@ index 000000000..68a5f5ac1
 +    *(.gnu.linkonce.d*)
 +    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
-+     PROVIDE (_data_end = .) ;
++     PROVIDE (__data_end = .) ;
 +  }  > dmem
 +  .resource_table   :
 +  {
@@ -7288,20 +7288,20 @@ index 000000000..68a5f5ac1
 +  }  > dmem
 +  .bss   :
 +  {
-+     PROVIDE (_bss_start = .) ;
++     PROVIDE (__bss_start = .) ;
 +    *(.bss)
 +     *(.bss.*)
 +    *(.gnu.linkonce.b*)
 +    *(COMMON)
-+     PROVIDE (_bss_end = .) ;
++     PROVIDE (__bss_end = .) ;
 +  }  > dmem
 +  /* Global data not cleared after reset.  */
 +  .noinit  :
 +  {
-+     PROVIDE (_noinit_start = .) ;
++     PROVIDE (__noinit_start = .) ;
 +    *(.noinit)
-+     PROVIDE (_noinit_end = .) ;
-+     PROVIDE (_heap_start = .) ;
++     PROVIDE (__noinit_end = .) ;
++     PROVIDE (__heap_start = .) ;
 +     . += __HEAP_SIZE ;
 +    /* Stack is not here really.  It will be put at the end of DMEM.
 +       But we take into account its size here, in order to allow
@@ -7659,7 +7659,7 @@ index 000000000..d37554de3
 +
 diff --git a/libgloss/pru/syscalls.S b/libgloss/pru/syscalls.S
 new file mode 100644
-index 000000000..4a60394ea
+index 000000000..fbc94914c
 --- /dev/null
 +++ b/libgloss/pru/syscalls.S
 @@ -0,0 +1,32 @@
@@ -7692,9 +7692,9 @@ index 000000000..4a60394ea
 +
 +	.text
 +
-+	SC	_exit, SYS_exit
-+	SC	_write, SYS_write
-+	SC	_read, SYS_read
++	SC	__exit, SYS_exit
++	SC	__write, SYS_write
++	SC	__read, SYS_read
 diff --git a/libgloss/pru/unlink.c b/libgloss/pru/unlink.c
 new file mode 100644
 index 000000000..5ff0eef5b
@@ -14095,7 +14095,7 @@ index 000000000..65d2a74ba
 +AC_OUTPUT
 diff --git a/newlib/libc/machine/pru/setjmp.s b/newlib/libc/machine/pru/setjmp.s
 new file mode 100644
-index 000000000..415bbf758
+index 000000000..cc22975f1
 --- /dev/null
 +++ b/newlib/libc/machine/pru/setjmp.s
 @@ -0,0 +1,46 @@
@@ -14127,18 +14127,18 @@ index 000000000..415bbf758
 + */
 +	.section	.text
 +	.align	3
-+	.globl	setjmp
-+	.type	setjmp,@function
-+	.globl	longjmp
-+	.type	longjmp,@function
++	.globl	_setjmp
++	.type	_setjmp,@function
++	.globl	_longjmp
++	.type	_longjmp,@function
 +
 +
-+setjmp:
++_setjmp:
 +	sbbo	r2, r14, 0, 4*12	/* SP, RA, FP, r5-r13 */
 +	ldi	r14, 0
 +	ret
 +
-+longjmp:
++_longjmp:
 +	lbbo	r2, r14, 0, 4*12	/* SP, RA, FP, r5-r13 */
 +	mov	r14, r15		/* copy second arg to return location */
 +	qbne	1f, r14, 0		/* per stdC, we cannot return 0 */
