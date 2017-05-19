@@ -1,7 +1,7 @@
 From e1a124c200833bc844459e8fee11a7936fec1c4d Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Thu, 21 Jul 2016 22:45:01 +0300
-Subject: [PATCH 13/16] Disable LOOP instruction generation by default
+Subject: [PATCH 13/17] Disable LOOP instruction generation by default
 
 Keep it disabled by default, but still allow
 explicit enabling via -mloop option.
