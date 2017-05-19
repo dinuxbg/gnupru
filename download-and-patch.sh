@@ -56,6 +56,8 @@ prepare_source()
   cd $MAINDIR
 }
 
+die "This is an internal development branch. Do not use. You need the stable master branch."
+
 RETDIR=`pwd`
 
 [ -d $SRC ] && die Incremental builds not supported. Cleanup and retry, e.g. 'git clean -fdx'
