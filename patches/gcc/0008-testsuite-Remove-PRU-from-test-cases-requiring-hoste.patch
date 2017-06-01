@@ -1,7 +1,7 @@
-From 736240536e2076ebbe2c68262044de49ee0d9c5e Mon Sep 17 00:00:00 2001
+From 3356df81437e9ae59acaf32c9345b70b0bea617e Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 22:00:23 +0200
-Subject: [PATCH 08/15] testsuite: Remove PRU from test cases requiring hosted
+Subject: [PATCH 08/16] testsuite: Remove PRU from test cases requiring hosted
  environment
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
@@ -11,10 +11,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  2 files changed, 5 insertions(+)
 
 diff --git a/gcc/testsuite/gcc.c-torture/execute/20101011-1.c b/gcc/testsuite/gcc.c-torture/execute/20101011-1.c
-index 744763f2662..bb5d6031eb5 100644
+index 899a401dd75..f0e30fb9e5b 100644
 --- a/gcc/testsuite/gcc.c-torture/execute/20101011-1.c
 +++ b/gcc/testsuite/gcc.c-torture/execute/20101011-1.c
-@@ -89,6 +89,9 @@ __aeabi_idiv0 (int return_value)
+@@ -92,6 +92,9 @@ __aeabi_idiv0 (int return_value)
  #elif defined (__nvptx__)
  /* There isn't even a signal function.  */
  # define DO_TEST 0
@@ -25,10 +25,10 @@ index 744763f2662..bb5d6031eb5 100644
  # define DO_TEST 1
  #endif
 diff --git a/gcc/testsuite/gcc.dg/20020312-2.c b/gcc/testsuite/gcc.dg/20020312-2.c
-index 5fce50dfaf2..46eff9709af 100644
+index f5929e0b057..209ef67e263 100644
 --- a/gcc/testsuite/gcc.dg/20020312-2.c
 +++ b/gcc/testsuite/gcc.dg/20020312-2.c
-@@ -109,6 +109,8 @@ extern void abort (void);
+@@ -111,6 +111,8 @@ extern void abort (void);
  /* No pic register.  */
  #elif defined (__nvptx__)
  /* No pic register.  */

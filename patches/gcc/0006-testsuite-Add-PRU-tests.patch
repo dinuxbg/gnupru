@@ -1,7 +1,7 @@
-From 5ce6c9fbb4504fc7aa9e3e347de7b7280a7aab73 Mon Sep 17 00:00:00 2001
+From bb93ab65c0bad519eb9e41301afdcb6efef0dd26 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:56:38 +0200
-Subject: [PATCH 06/15] testsuite: Add PRU tests
+Subject: [PATCH 06/16] testsuite: Add PRU tests
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -645,10 +645,10 @@ index 00000000000..0e9ae4cf01e
 +}
 +
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index c3110dc3d72..17b4615a359 100644
+index ded6383cc1f..70b5ce4ead4 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
-@@ -484,7 +484,8 @@ proc check_effective_target_trampolines { } {
+@@ -498,7 +498,8 @@ proc check_effective_target_trampolines { } {
  	 || [istarget msp430-*-*]
  	 || [istarget nvptx-*-*]
  	 || [istarget hppa2.0w-hp-hpux11.23]
@@ -658,7 +658,7 @@ index c3110dc3d72..17b4615a359 100644
  	return 0;
      }
      return 1
-@@ -620,6 +621,7 @@ proc check_profiling_available { test_what } {
+@@ -641,6 +642,7 @@ proc check_profiling_available { test_what } {
  	     || [istarget nvptx-*-*]
  	     || [istarget powerpc-*-eabi*]
  	     || [istarget powerpc-*-elf]
@@ -666,7 +666,7 @@ index c3110dc3d72..17b4615a359 100644
  	     || [istarget rx-*-*]	
  	     || [istarget tic6x-*-elf]
  	     || [istarget visium-*-*]
-@@ -818,7 +820,7 @@ proc check_effective_target_tls_emulated {} {
+@@ -839,7 +841,7 @@ proc check_effective_target_tls_emulated {} {
  proc check_effective_target_tls_runtime {} {
      # The runtime does not have TLS support, but just
      # running the test below is insufficient to show this.
@@ -675,9 +675,9 @@ index c3110dc3d72..17b4615a359 100644
  	return 0
      }
      return [check_runtime tls_runtime {
-@@ -7943,6 +7945,7 @@ proc check_effective_target_logical_op_short_circuit {} {
- 	 || [istarget powerpc*-*-*]
+@@ -7991,6 +7993,7 @@ proc check_effective_target_logical_op_short_circuit {} {
  	 || [istarget nios2*-*-*]
+ 	 || [istarget riscv*-*-*]
  	 || [istarget visium-*-*]
 +	 || [istarget pru*-*-*]
  	 || [check_effective_target_arm_cortex_m] } {
