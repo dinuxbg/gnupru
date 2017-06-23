@@ -1,34 +1,34 @@
-From 4b84677e0d3b5e905659dea79e78a2ce4261fbf2 Mon Sep 17 00:00:00 2001
+From ecd5437a1a85c4f307f01c75c92dfac30ab186c6 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 19 May 2017 22:51:06 +0300
-Subject: [PATCH 17/17] WIP: Prototype a more efficient arithmetic shift
+Subject: [PATCH 16/17] PRU: A more efficient arithmetic shift
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
- gcc/config/pru/constraints.md |  6 ++++
- gcc/config/pru/predicates.md  |  8 +++++
- gcc/config/pru/pru.c          |  9 +++++
- gcc/config/pru/pru.md         | 14 ++++++++
- libgcc/config/pru/lib2shift.c | 83 -------------------------------------------
+ gcc/config/pru/constraints.md |  6 ++++++
+ gcc/config/pru/predicates.md  |  8 ++++++++
+ gcc/config/pru/pru.c          |  9 ++++++++
+ gcc/config/pru/pru.md         | 15 ++++++++++++++
+ libgcc/config/pru/lib2shift.c | 48 -------------------------------------------
  libgcc/config/pru/t-pru       |  1 -
- 6 files changed, 37 insertions(+), 84 deletions(-)
+ 6 files changed, 38 insertions(+), 49 deletions(-)
  delete mode 100644 libgcc/config/pru/lib2shift.c
 
 diff --git a/gcc/config/pru/constraints.md b/gcc/config/pru/constraints.md
-index 0be83b30a66..f64bf770197 100644
+index b66cd2bc00b..91d4345ff01 100644
 --- a/gcc/config/pru/constraints.md
 +++ b/gcc/config/pru/constraints.md
-@@ -25,6 +25,7 @@
+@@ -24,6 +24,7 @@
+ ;;  J: 0 to 65535.
  ;;  L: 0 to 31 (for shift counts).
  ;;  M: -255 to 0 (for converting ADD to SUB with suitable UBYTE OP2).
- ;;  N: -32768 to 32767 (16-bit signed integer)
 +;;  P: 1
  ;;  T: Text segment label.  Needed to know when to select %pmem relocation.
  ;;  Z: Constant integer zero.
  ;;
-@@ -72,6 +73,11 @@
+@@ -66,6 +67,11 @@
    (and (match_code "const_int")
-        (match_test "SHWORD_INT (ival)")))
+        (match_test "UBYTE_INT (-ival)")))
  
 +(define_constraint "P"
 +  "A constant 1."
@@ -39,7 +39,7 @@ index 0be83b30a66..f64bf770197 100644
    "A text segment (program memory) constant label."
    (match_test "text_segment_operand (op, VOIDmode)"))
 diff --git a/gcc/config/pru/predicates.md b/gcc/config/pru/predicates.md
-index 948cecd4db7..7ec94e53492 100644
+index 84c210b6f18..dde91b7e81d 100644
 --- a/gcc/config/pru/predicates.md
 +++ b/gcc/config/pru/predicates.md
 @@ -18,6 +18,10 @@
@@ -65,10 +65,10 @@ index 948cecd4db7..7ec94e53492 100644
    (and (match_code "const_int")
         (match_test "SHIFT_INT (INTVAL (op))")))
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
-index f4feb7fc5b6..499161f7e52 100644
+index 85643bac9a3..cf6c1d8f907 100644
 --- a/gcc/config/pru/pru.c
 +++ b/gcc/config/pru/pru.c
-@@ -649,6 +649,15 @@ pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
+@@ -635,6 +635,15 @@ pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
  	  *total = COSTS_N_INSNS (3);
  	  return false;
  	}
@@ -85,36 +85,37 @@ index f4feb7fc5b6..499161f7e52 100644
  	{
  	  *total = COSTS_N_INSNS (0);
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
-index 739c9d05eb5..a11c2cc4a42 100644
+index b679de1ef44..9431c6c57bb 100644
 --- a/gcc/config/pru/pru.md
 +++ b/gcc/config/pru/pru.md
-@@ -415,6 +415,20 @@
+@@ -403,6 +403,21 @@
    ""
    ""
    [(set_attr "type" "shift")])
 +
++; LRA cannot cope with clobbered op2, hence the scratch register.
 +(define_insn "ashr<mode>3"
 +  [(set (match_operand:ALL 0 "register_operand" "=&r,r")
 +        (ashiftrt:ALL
 +          (match_operand:ALL 1 "register_operand" "0,r")
-+          (match_operand:ALL 2 "reg_or_const_1_operand" "+&r,P"))
-+         )]
++          (match_operand:ALL 2 "reg_or_const_1_operand" "r,P")))
++    (clobber (match_scratch:ALL 3 "=r,X"))]
 +  ""
 +  "@
-+   ASHRLP%=:\;qbeq ASHREND%=, %x2, 0\; sub %x2, %x2, 1\; lsr\\t%x0, %x0, 1\; qbbc ASHRLP%=, %x0, (%S0 * 8) - 2\; set %x0, %x0, (%S0 * 8) - 1\; jmp ASHRLP%=\;ASHREND%=:
++   mov %x3, %x2\;ASHRLP%=:\;qbeq ASHREND%=, %x3, 0\; sub %x3, %x3, 1\; lsr\\t%x0, %x0, 1\; qbbc ASHRLP%=, %x0, (%S0 * 8) - 2\; set %x0, %x0, (%S0 * 8) - 1\; jmp ASHRLP%=\;ASHREND%=:
 +   lsr\\t%x0, %x1, 1\;qbbc LSIGN%=, %x0, (%S0 * 8) - 2\;set %x0, %x0, (%S0 * 8) - 1\;LSIGN%=:"
 +  [(set_attr "type" "complex,alu")
-+   (set_attr "length" "24,4")])
++   (set_attr "length" "28,4")])
 +
  
  ;; Include ALU patterns with zero-extension of operands.  That's where
  ;; the real insns are defined.
 diff --git a/libgcc/config/pru/lib2shift.c b/libgcc/config/pru/lib2shift.c
 deleted file mode 100644
-index ce4b5fe643e..00000000000
+index 1677dcc2098..00000000000
 --- a/libgcc/config/pru/lib2shift.c
 +++ /dev/null
-@@ -1,83 +0,0 @@
+@@ -1,48 +0,0 @@
 -/* Shift functions for the GCC support library for the PRU
 -   Copyright (C) 2014 Free Software Foundation, Inc.
 -   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -144,12 +145,8 @@ index ce4b5fe643e..00000000000
 -typedef unsigned  int  uint32_type   __attribute__ ((mode (SI)));
 -typedef		  int  sint16_type   __attribute__ ((mode (HI)));
 -typedef unsigned  int  uint16_type   __attribute__ ((mode (HI)));
--typedef		  int  sint8_type   __attribute__ ((mode (QI)));
--typedef unsigned  int  uint8_type   __attribute__ ((mode (QI)));
 -
 -sint32_type __ashrsi3 (sint32_type in, char bit);
--sint16_type __ashrhi3 (sint16_type in, char bit);
--sint8_type __ashrqi3 (sint8_type in, char bit);
 -
 -sint32_type
 -__ashrsi3 (sint32_type in, char bit)
@@ -167,37 +164,6 @@ index ce4b5fe643e..00000000000
 -  return in;
 -}
 -
--sint16_type
--__ashrhi3 (sint16_type in, char bit)
--{
--  sint16_type sign = in & (1 << 15);
--
--  if (bit > 16)
--    return 0;
--  if (bit < 0)
--    return in;
--
--  while (bit--)
--    in = ((uint16_type)in >> 1) | sign;
--
--  return in;
--}
--
--sint8_type
--__ashrqi3 (sint8_type in, char bit)
--{
--  sint8_type sign = in & (1 << 15);
--
--  if (bit > 8)
--    return 0;
--  if (bit < 0)
--    return in;
--
--  while (bit--)
--    in = ((uint8_type)in >> 1) | sign;
--
--  return in;
--}
 diff --git a/libgcc/config/pru/t-pru b/libgcc/config/pru/t-pru
 index 380509cf0e4..9051c0eaf05 100644
 --- a/libgcc/config/pru/t-pru

@@ -1,4 +1,4 @@
-From 67f0ba26a25fd0d6eadc3cc3ca94efe31c40a5e7 Mon Sep 17 00:00:00 2001
+From e6de993820b1603ee1d612a4cea949d6cc8078e8 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sat, 6 Feb 2016 21:47:44 +0200
 Subject: [PATCH 04/17] WIP: doloop support

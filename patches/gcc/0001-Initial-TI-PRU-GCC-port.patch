@@ -1,4 +1,4 @@
-From a98e89b5021d211cccce3b99a46a8f2d5c4e8dd6 Mon Sep 17 00:00:00 2001
+From 01d80adad9873218acaf44b36b789a94fc77ffd2 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:53:18 +0200
 Subject: [PATCH 01/17] Initial TI PRU GCC port
@@ -59,7 +59,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 libgcc/config/pru/t-pru
 
 diff --git a/configure.ac b/configure.ac
-index 12377499295..14e736c75b4 100644
+index 78d2d593106..df70b2da3c9 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -674,6 +674,10 @@ case "${target}" in
@@ -133,10 +133,10 @@ index 00000000000..f30386e8b00
 +
 +struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index b8bb4d65825..ffd76700adb 100644
+index f55dcaa335b..dbad57d5cde 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -452,6 +452,9 @@ powerpc*-*-*)
+@@ -465,6 +465,9 @@ powerpc*-*-*)
  	esac
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
@@ -146,7 +146,7 @@ index b8bb4d65825..ffd76700adb 100644
  riscv*)
  	cpu_type=riscv
  	extra_objs="riscv-builtins.o riscv-c.o"
-@@ -2546,6 +2549,13 @@ powerpcle-*-eabi*)
+@@ -2582,6 +2585,13 @@ powerpcle-*-eabi*)
  	extra_options="${extra_options} rs6000/sysv4.opt"
  	use_gcc_stdint=wrap
  	;;
@@ -4116,10 +4116,10 @@ index 00000000000..af3eac95c31
 +	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $<
 +
 diff --git a/gcc/doc/extend.texi b/gcc/doc/extend.texi
-index 219fa2cf5bd..90181d9723a 100644
+index 6cc95a8f7e9..fa20aa57230 100644
 --- a/gcc/doc/extend.texi
 +++ b/gcc/doc/extend.texi
-@@ -20817,6 +20817,7 @@ for further explanation.
+@@ -20888,6 +20888,7 @@ for further explanation.
  * ARM Pragmas::
  * M32C Pragmas::
  * MeP Pragmas::
@@ -4127,7 +4127,7 @@ index 219fa2cf5bd..90181d9723a 100644
  * RS/6000 and PowerPC Pragmas::
  * S/390 Pragmas::
  * Darwin Pragmas::
-@@ -20968,6 +20969,25 @@ extern int foo ();
+@@ -21039,6 +21040,25 @@ extern int foo ();
  
  @end table
  
@@ -4154,7 +4154,7 @@ index 219fa2cf5bd..90181d9723a 100644
  @subsection RS/6000 and PowerPC Pragmas
  
 diff --git a/gcc/doc/md.texi b/gcc/doc/md.texi
-index dde3644890e..e4188c790cd 100644
+index a334e52c4e4..b3639ed6322 100644
 --- a/gcc/doc/md.texi
 +++ b/gcc/doc/md.texi
 @@ -3275,6 +3275,28 @@ Vector constant that is all zeros.
@@ -4187,7 +4187,7 @@ index dde3644890e..e4188c790cd 100644
  @table @code
  
 diff --git a/libgcc/config.host b/libgcc/config.host
-index b279a6458f9..b3ce6fe74c1 100644
+index 7711abf2704..928d292fdea 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
 @@ -165,6 +165,9 @@ nios2*-*-*)
@@ -4200,7 +4200,7 @@ index b279a6458f9..b3ce6fe74c1 100644
  rs6000*-*-*)
  	;;
  riscv*-*-*)
-@@ -1096,6 +1099,9 @@ powerpcle-*-eabi*)
+@@ -1114,6 +1117,9 @@ powerpcle-*-eabi*)
  	tmake_file="${tmake_file} rs6000/t-ppccomm rs6000/t-crtstuff t-crtstuff-pic t-fdpbit"
  	extra_parts="$extra_parts crtbegin.o crtend.o crtbeginS.o crtendS.o crtbeginT.o ecrti.o ecrtn.o ncrti.o ncrtn.o"
  	;;

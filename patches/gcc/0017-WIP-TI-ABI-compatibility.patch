@@ -1,7 +1,7 @@
-From 69504b36a2fce9fe5b946f42b8b494e6b1633d70 Mon Sep 17 00:00:00 2001
+From 0f7377b01c5590fd30a54a3554b5075639e2cf45 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 17 Apr 2017 17:39:42 +0300
-Subject: [PATCH 16/17] WIP: TI ABI compatibility
+Subject: [PATCH 17/17] WIP: TI ABI compatibility
 
 This is an ongoing work on reworking the GCC PRU port to be
 compatible with the TI ABI.
@@ -18,18 +18,430 @@ TODO:
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
- gcc/config/pru/constraints.md       |    6 +
- gcc/config/pru/predicates.md        |    8 +-
- gcc/config/pru/pru-ldst-multiple.md | 3192 +++++++++++++++++------------------
- gcc/config/pru/pru-ldst-multiple.ml |   22 +-
- gcc/config/pru/pru.c                |  237 ++-
- gcc/config/pru/pru.h                |  176 +-
- gcc/config/pru/pru.md               |  120 +-
- libgcc/config/pru/lib2shift.c       |   35 +
- 8 files changed, 2011 insertions(+), 1785 deletions(-)
+ gcc/config/pru/alu-zext.md                         |   96 +-
+ gcc/config/pru/alu-zext.template.md                |   24 +-
+ gcc/config/pru/constraints.md                      |    6 +
+ gcc/config/pru/predicates.md                       |    8 +-
+ gcc/config/pru/pru-ldst-multiple.md                | 3192 ++++++++++----------
+ gcc/config/pru/pru-ldst-multiple.ml                |   22 +-
+ gcc/config/pru/pru-modes.def                       |   10 -
+ gcc/config/pru/pru.c                               |  379 ++-
+ gcc/config/pru/pru.h                               |  185 +-
+ gcc/config/pru/pru.md                              |  225 +-
+ gcc/testsuite/gcc.target/pru/ashiftrt.c            |   13 +
+ gcc/testsuite/gcc.target/pru/qbbc-3.c              |   15 +
+ .../gcc.target/pru/zero_extend-and-hisi.c          |    2 +-
+ .../gcc.target/pru/zero_extend-and-qihi.c          |    2 +-
+ .../gcc.target/pru/zero_extend-and-qisi.c          |    2 +-
+ gcc/testsuite/gcc.target/pru/zero_extend-qihi.c    |   10 +-
+ 16 files changed, 2289 insertions(+), 1902 deletions(-)
+ create mode 100644 gcc/testsuite/gcc.target/pru/ashiftrt.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/qbbc-3.c
 
+diff --git a/gcc/config/pru/alu-zext.md b/gcc/config/pru/alu-zext.md
+index d259f80a983..9ed0107d56e 100644
+--- a/gcc/config/pru/alu-zext.md
++++ b/gcc/config/pru/alu-zext.md
+@@ -41,7 +41,8 @@
+    add\\t%x0, %x1, %x2
+    add\\t%x0, %x1, %x2
+    sub\\t%x0, %x1, %n2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ (define_insn "sub_impl<EQD:mode>_<EQS0:mode><EQS1:mode>"
+   [(set (match_operand:EQD 0 "register_operand" "=r,r,r")
+@@ -57,7 +58,8 @@
+    sub\\t%x0, %x1, %x2
+    sub\\t%x0, %x1, %x2
+    rsb\\t%x0, %x2, %x1"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ 
+ (define_insn "neg_impl<EQD:mode>_<EQS0:mode>_dummy"
+@@ -68,7 +70,8 @@
+ 	 )))]
+   ""
+   "rsb\\t%x0, %x1, 0"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ 
+ (define_insn "one_cmpl_impl<EQD:mode>_<EQS0:mode>_dummy"
+@@ -79,7 +82,8 @@
+ 	 )))]
+   ""
+   "not\\t%x0, %x1"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ ; Specialized IOR/AND patterns for matching setbit/clearbit instructions.
+ ;
+@@ -94,7 +98,8 @@
+ 	  (match_operand:EQD 2 "single_zero_operand" "n")))]
+   ""
+   "clr\\t%x0, %x1, %V2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ (define_insn "setbit_<EQD:mode>_<EQS0:mode>_dummy"
+   [(set (match_operand:EQD 0 "register_operand"			"=r")
+@@ -105,7 +110,8 @@
+ 	  (match_operand:EQD 2 "single_one_operand" "n")))]
+   ""
+   "set\\t%x0, %x1, %T2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ ; Regular ALU ops
+ (define_insn "<code>_impl<EQD:mode>_<EQS0:mode><EQS1:mode>"
+@@ -119,7 +125,8 @@
+ 	 ))]
+   ""
+   "<logical_asm>\\t%x0, %x1, %x2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ ; Shift ALU ops
+ (define_insn "<shift_op>_impl<EQD:mode>_<EQS0:mode><EQS1:mode>"
+@@ -133,7 +140,8 @@
+ 	 ))]
+   ""
+   "<shift_asm>\\t%x0, %x1, %x2"
+-  [(set_attr "type" "shift")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ ;; ALU operations with zero extensions
+ ;;
+ ;; <ZOP0@Operand0:SI@Operand0:Zero-extended>
+@@ -174,7 +182,8 @@
+    add\\t%x0, %x1, %x2
+    add\\t%x0, %x1, %x2
+    sub\\t%x0, %x1, %n2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ (define_insn "sub_impl<EQD:mode>_<EQS0:mode>eqd"
+   [(set (match_operand:EQD 0 "register_operand" "=r,r,r")
+@@ -190,7 +199,8 @@
+    sub\\t%x0, %x1, %x2
+    sub\\t%x0, %x1, %x2
+    rsb\\t%x0, %x2, %x1"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ 
+ (define_insn "neg_impl<EQD:mode>_<EQS0:mode>eqd"
+@@ -201,7 +211,8 @@
+ 	 )))]
+   ""
+   "rsb\\t%x0, %x1, 0"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ 
+ (define_insn "one_cmpl_impl<EQD:mode>_<EQS0:mode>eqd"
+@@ -212,7 +223,8 @@
+ 	 )))]
+   ""
+   "not\\t%x0, %x1"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ ; Specialized IOR/AND patterns for matching setbit/clearbit instructions.
+ ;
+@@ -227,7 +239,8 @@
+ 	  (match_operand:EQD 2 "single_zero_operand" "n")))]
+   ""
+   "clr\\t%x0, %x1, %V2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ (define_insn "setbit_<EQD:mode>_<EQS0:mode>eqd"
+   [(set (match_operand:EQD 0 "register_operand"			"=r")
+@@ -238,7 +251,8 @@
+ 	  (match_operand:EQD 2 "single_one_operand" "n")))]
+   ""
+   "set\\t%x0, %x1, %T2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ ; Regular ALU ops
+ (define_insn "<code>_impl<EQD:mode>_<EQS0:mode>eqd"
+@@ -252,7 +266,8 @@
+ 	 )]
+   ""
+   "<logical_asm>\\t%x0, %x1, %x2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ ; Shift ALU ops
+ (define_insn "<shift_op>_impl<EQD:mode>_<EQS0:mode>eqd"
+@@ -266,7 +281,8 @@
+ 	 )]
+   ""
+   "<shift_asm>\\t%x0, %x1, %x2"
+-  [(set_attr "type" "shift")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ ;; ALU operations with zero extensions
+ ;;
+ ;; <ZOP0@Operand0:SI@Operand0:Zero-extended>
+@@ -307,7 +323,8 @@
+    add\\t%x0, %x1, %x2
+    add\\t%x0, %x1, %x2
+    sub\\t%x0, %x1, %n2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ (define_insn "sub_impl<EQD:mode>_eqd<EQS1:mode>"
+   [(set (match_operand:EQD 0 "register_operand" "=r,r,r")
+@@ -323,7 +340,8 @@
+    sub\\t%x0, %x1, %x2
+    sub\\t%x0, %x1, %x2
+    rsb\\t%x0, %x2, %x1"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ 
+ (define_insn "neg_impl<EQD:mode>_eqd_dummy"
+@@ -334,7 +352,8 @@
+ 	 ))]
+   ""
+   "rsb\\t%x0, %x1, 0"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ 
+ (define_insn "one_cmpl_impl<EQD:mode>_eqd_dummy"
+@@ -345,7 +364,8 @@
+ 	 ))]
+   ""
+   "not\\t%x0, %x1"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ ; Specialized IOR/AND patterns for matching setbit/clearbit instructions.
+ ;
+@@ -360,7 +380,8 @@
+ 	  (match_operand:EQD 2 "single_zero_operand" "n")))]
+   ""
+   "clr\\t%x0, %x1, %V2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ (define_insn "setbit_<EQD:mode>_eqd_dummy"
+   [(set (match_operand:EQD 0 "register_operand"			"=r")
+@@ -371,7 +392,8 @@
+ 	  (match_operand:EQD 2 "single_one_operand" "n")))]
+   ""
+   "set\\t%x0, %x1, %T2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ ; Regular ALU ops
+ (define_insn "<code>_impl<EQD:mode>_eqd<EQS1:mode>"
+@@ -385,7 +407,8 @@
+ 	 ))]
+   ""
+   "<logical_asm>\\t%x0, %x1, %x2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ ; Shift ALU ops
+ (define_insn "<shift_op>_impl<EQD:mode>_eqd<EQS1:mode>"
+@@ -399,7 +422,8 @@
+ 	 ))]
+   ""
+   "<shift_asm>\\t%x0, %x1, %x2"
+-  [(set_attr "type" "shift")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ ;; ALU operations with zero extensions
+ ;;
+ ;; <ZOP0@Operand0:SI@Operand0:Zero-extended>
+@@ -440,7 +464,8 @@
+    add\\t%x0, %x1, %x2
+    add\\t%x0, %x1, %x2
+    sub\\t%x0, %x1, %n2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ (define_insn "sub_impl<EQD:mode>_eqdeqd"
+   [(set (match_operand:EQD 0 "register_operand" "=r,r,r")
+@@ -456,7 +481,8 @@
+    sub\\t%x0, %x1, %x2
+    sub\\t%x0, %x1, %x2
+    rsb\\t%x0, %x2, %x1"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ 
+ (define_insn "neg_impl<EQD:mode>_eqdeqd"
+@@ -467,7 +493,8 @@
+ 	 ))]
+   ""
+   "rsb\\t%x0, %x1, 0"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ 
+ (define_insn "one_cmpl_impl<EQD:mode>_eqdeqd"
+@@ -478,7 +505,8 @@
+ 	 ))]
+   ""
+   "not\\t%x0, %x1"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ ; Specialized IOR/AND patterns for matching setbit/clearbit instructions.
+ ;
+@@ -493,7 +521,8 @@
+ 	  (match_operand:EQD 2 "single_zero_operand" "n")))]
+   ""
+   "clr\\t%x0, %x1, %V2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ (define_insn "setbit_<EQD:mode>_eqdeqd"
+   [(set (match_operand:EQD 0 "register_operand"			"=r")
+@@ -504,7 +533,8 @@
+ 	  (match_operand:EQD 2 "single_one_operand" "n")))]
+   ""
+   "set\\t%x0, %x1, %T2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ ; Regular ALU ops
+ (define_insn "<code>_impl<EQD:mode>_eqdeqd"
+@@ -518,7 +548,8 @@
+ 	 )]
+   ""
+   "<logical_asm>\\t%x0, %x1, %x2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ ; Shift ALU ops
+ (define_insn "<shift_op>_impl<EQD:mode>_eqdeqd"
+@@ -532,4 +563,5 @@
+ 	 )]
+   ""
+   "<shift_asm>\\t%x0, %x1, %x2"
+-  [(set_attr "type" "shift")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+diff --git a/gcc/config/pru/alu-zext.template.md b/gcc/config/pru/alu-zext.template.md
+index f5f4effddb5..9595ba357ad 100644
+--- a/gcc/config/pru/alu-zext.template.md
++++ b/gcc/config/pru/alu-zext.template.md
+@@ -38,7 +38,8 @@
+    add\\t%x0, %x1, %x2
+    add\\t%x0, %x1, %x2
+    sub\\t%x0, %x1, %n2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ (define_insn "sub_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@<EQS1:mode>}"
+   [(set (match_operand:EQD 0 "register_operand" "=r,r,r")
+@@ -54,7 +55,8 @@
+    sub\\t%x0, %x1, %x2
+    sub\\t%x0, %x1, %x2
+    rsb\\t%x0, %x2, %x1"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ 
+ (define_insn "neg_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@_dummy}"
+@@ -65,7 +67,8 @@
+ 	 {ZOP0@@)}))]
+   ""
+   "rsb\\t%x0, %x1, 0"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ 
+ (define_insn "one_cmpl_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@_dummy}"
+@@ -76,7 +79,8 @@
+ 	 {ZOP0@@)}))]
+   ""
+   "not\\t%x0, %x1"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ ; Specialized IOR/AND patterns for matching setbit/clearbit instructions.
+ ;
+@@ -91,7 +95,8 @@
+ 	  (match_operand:EQD 2 "single_zero_operand" "n")))]
+   ""
+   "clr\\t%x0, %x1, %V2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ (define_insn "setbit_<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@_dummy}"
+   [(set (match_operand:EQD 0 "register_operand"			"=r")
+@@ -102,7 +107,8 @@
+ 	  (match_operand:EQD 2 "single_one_operand" "n")))]
+   ""
+   "set\\t%x0, %x1, %T2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ ; Regular ALU ops
+ (define_insn "<code>_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@<EQS1:mode>}"
+@@ -116,7 +122,8 @@
+ 	 {ZOP1@@)})]
+   ""
+   "<logical_asm>\\t%x0, %x1, %x2"
+-  [(set_attr "type" "alu")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+ 
+ ; Shift ALU ops
+ (define_insn "<shift_op>_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@<EQS1:mode>}"
+@@ -130,4 +137,5 @@
+ 	 {ZOP1@@)})]
+   ""
+   "<shift_asm>\\t%x0, %x1, %x2"
+-  [(set_attr "type" "shift")])
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
 diff --git a/gcc/config/pru/constraints.md b/gcc/config/pru/constraints.md
-index b66cd2bc00b..0be83b30a66 100644
+index 91d4345ff01..f64bf770197 100644
 --- a/gcc/config/pru/constraints.md
 +++ b/gcc/config/pru/constraints.md
 @@ -24,6 +24,7 @@
@@ -37,10 +449,10 @@ index b66cd2bc00b..0be83b30a66 100644
  ;;  L: 0 to 31 (for shift counts).
  ;;  M: -255 to 0 (for converting ADD to SUB with suitable UBYTE OP2).
 +;;  N: -32768 to 32767 (16-bit signed integer)
+ ;;  P: 1
  ;;  T: Text segment label.  Needed to know when to select %pmem relocation.
  ;;  Z: Constant integer zero.
- ;;
-@@ -66,6 +67,11 @@
+@@ -67,6 +68,11 @@
    (and (match_code "const_int")
         (match_test "UBYTE_INT (-ival)")))
  
@@ -49,14 +461,14 @@ index b66cd2bc00b..0be83b30a66 100644
 +  (and (match_code "const_int")
 +       (match_test "SHWORD_INT (ival)")))
 +
- (define_constraint "T"
-   "A text segment (program memory) constant label."
-   (match_test "text_segment_operand (op, VOIDmode)"))
+ (define_constraint "P"
+   "A constant 1."
+   (and (match_code "const_int")
 diff --git a/gcc/config/pru/predicates.md b/gcc/config/pru/predicates.md
-index 84c210b6f18..948cecd4db7 100644
+index dde91b7e81d..7ec94e53492 100644
 --- a/gcc/config/pru/predicates.md
 +++ b/gcc/config/pru/predicates.md
-@@ -141,10 +141,10 @@
+@@ -149,10 +149,10 @@
  
        if (GET_CODE (elt) != SET
  	  || GET_CODE (SET_DEST (elt)) != REG
@@ -69,7 +481,7 @@ index 84c210b6f18..948cecd4db7 100644
  	  || GET_CODE (XEXP (SET_SRC (elt), 0)) != PLUS
  	  || ! rtx_equal_p (XEXP (XEXP (SET_SRC (elt), 0), 0), src_addr)
  	  || GET_CODE (XEXP (XEXP (SET_SRC (elt), 0), 1)) != CONST_INT
-@@ -193,10 +193,10 @@
+@@ -201,10 +201,10 @@
  
        if (GET_CODE (elt) != SET
  	  || GET_CODE (SET_SRC (elt)) != REG
@@ -4525,8 +4937,26 @@ index 23747a37e96..dc79584b8ea 100644
    end;
    Printf.printf "  [(set_attr \"type\" \"ld\")\n";
    Printf.printf "   (set_attr \"length\" \"4\")";
+diff --git a/gcc/config/pru/pru-modes.def b/gcc/config/pru/pru-modes.def
+index d37259a1105..d10fea2f32f 100644
+--- a/gcc/config/pru/pru-modes.def
++++ b/gcc/config/pru/pru-modes.def
+@@ -17,13 +17,3 @@ You should have received a copy of the GNU General Public License
+ along with GCC; see the file COPYING3.  If not see
+ <http://www.gnu.org/licenses/>.  */
+ 
+-INT_MODE (OI, 32);
+-INT_MODE (XI, 64);
+-
+-/* Keep the OI and XI modes from confusing the compiler into thinking
+-   that these modes could actually be used for computation.  They are
+-   only holders for vectors during data movement.  */
+-#define MAX_BITSIZE_MODE_ANY_INT (128)
+-
+-/* The symbol Pmode stands for one of the above machine modes (usually SImode).
+-   The tm.h file specifies which one.  It is not a distinct mode.  */
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
-index 85643bac9a3..f4feb7fc5b6 100644
+index cf6c1d8f907..5e15804006f 100644
 --- a/gcc/config/pru/pru.c
 +++ b/gcc/config/pru/pru.c
 @@ -1,5 +1,5 @@
@@ -4636,7 +5066,16 @@ index 85643bac9a3..f4feb7fc5b6 100644
  }
  
  /* Implement FUNCTION_PROFILER macro.  */
-@@ -451,6 +452,8 @@ prologue_saved_reg_p (unsigned regno)
+@@ -448,9 +449,17 @@ prologue_saved_reg_p (unsigned regno)
+ 
+   if (regno == HARD_FRAME_POINTER_REGNUM && frame_pointer_needed)
+     return true;
++  if (regno == HARD_FRAME_POINTER_REGNUM + 1&& frame_pointer_needed)
++    return true;
++  if (regno == HARD_FRAME_POINTER_REGNUM + 2&& frame_pointer_needed)
++    return true;
++  if (regno == HARD_FRAME_POINTER_REGNUM + 3 && frame_pointer_needed)
++    return true;
  
    if (regno == RA_REGNO && df_regs_ever_live_p (RA_REGNO))
      return true;
@@ -4645,7 +5084,7 @@ index 85643bac9a3..f4feb7fc5b6 100644
  
    return false;
  }
-@@ -524,6 +527,17 @@ pru_option_override (void)
+@@ -524,6 +533,17 @@ pru_option_override (void)
    SUBTARGET_OVERRIDE_OPTIONS;
  #endif
  
@@ -4663,7 +5102,135 @@ index 85643bac9a3..f4feb7fc5b6 100644
    /* Check for unsupported options.  */
    if (flag_pic == 1)
      warning (OPT_fpic, "-fpic is not supported");
-@@ -1162,7 +1176,7 @@ pru_comparison_str (enum rtx_code cond)
+@@ -566,11 +586,16 @@ pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
+ 	    *total = COSTS_N_INSNS (0);
+ 	    return true;
+ 	  }
+-	else
++	else if (UHWORD_INT (INTVAL (x)))
+ 	  {
+ 	    *total = COSTS_N_INSNS (1);
+ 	    return true;
+ 	  }
++	else
++	  {
++	    *total = COSTS_N_INSNS (2);
++	    return true;
++	  }
+ 
+       case LABEL_REF:
+       case SYMBOL_REF:
+@@ -586,7 +611,7 @@ pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
+ 	     the mode for the factor.  */
+ 	  mode = GET_MODE (SET_DEST (x));
+ 
+-	  if (GET_MODE_SIZE (mode) <= UNITS_PER_WORD
++	  if (GET_MODE_SIZE (mode) <= GET_MODE_SIZE (SImode)
+ 	      && (GET_CODE (SET_SRC (x)) == ZERO_EXTEND
+ 		  || outer_code == ZERO_EXTEND))
+ 	    {
+@@ -594,7 +619,8 @@ pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
+ 	    }
+ 	  else
+ 	    {
+-	      int factor = GET_MODE_SIZE (mode) / UNITS_PER_WORD;
++	      /* SI move has the same cost as a QI move.  */
++	      int factor = GET_MODE_SIZE (mode) / GET_MODE_SIZE (SImode);
+ 	      if (factor == 0)
+ 		factor = 1;
+ 	      *total = factor * COSTS_N_INSNS (1);
+@@ -644,6 +670,24 @@ pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
+ 	    *total = COSTS_N_INSNS (6);
+ 	  return false;
+ 	}
++      case ZERO_EXTRACT:
++	{
++	  rtx op2 = XEXP(x, 2);
++	  if ((outer_code == EQ || outer_code == NE)
++	      && CONST_INT_P (op2)
++	      && INTVAL (op2) == 1)
++	    {
++	      /* Branch if bit is set/clear is a single instruction. */
++	      *total = COSTS_N_INSNS (0);
++	      return true;
++	    }
++	  else
++	    {
++	      *total = COSTS_N_INSNS (2);
++	      return false;
++	    }
++	}
++
+       case ZERO_EXTEND:
+ 	{
+ 	  *total = COSTS_N_INSNS (0);
+@@ -651,7 +695,11 @@ pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
+ 	}
+ 
+       default:
+-	return false;
++	{
++	  /* Do not factor mode size in the cost.  */
++	  *total = COSTS_N_INSNS (1);
++	  return false;
++	}
+     }
+ }
+ 
+@@ -678,14 +726,21 @@ pru_output_sign_extend (rtx *operands)
+   int bufi;
+   const int dst_sz = GET_MODE_SIZE (GET_MODE (operands[0]));
+   const int src_sz = GET_MODE_SIZE (GET_MODE (operands[1]));
+-  const int ext_start = src_sz;
++  char ext_start;
++
++  switch (src_sz)
++    {
++    case 1: ext_start = 'y'; break;
++    case 2: ext_start = 'z'; break;
++    default: gcc_unreachable ();
++    }
+ 
+   gcc_assert (dst_sz > src_sz);
+ 
+   bufi = snprintf (buf, sizeof (buf),
+ 	  "mov\t%%0, %%x1\n\t"		      /* Copy AND make positive.  */
+ 	  "qbbc\t.+8, %%x0, %d\n\t"	      /* Check sign bit.  */
+-	  "fill\t%%0.b%d, %d",		      /* Make negative.  */
++	  "fill\t%%%c0, %d",		      /* Make negative.  */
+ 	  sign_bit_position (operands[1]),
+ 	  ext_start,
+ 	  dst_sz - src_sz);
+@@ -1018,7 +1073,7 @@ pru_valid_const_ubyte_offset (machine_mode mode, HOST_WIDE_INT offset)
+ 
+   /* Reload can split multi word accesses, so make sure we can address
+      the second word in a DI.  */
+-  if (valid && GET_MODE_SIZE (mode) > UNITS_PER_WORD)
++  if (valid && GET_MODE_SIZE (mode) > GET_MODE_SIZE (SImode))
+     valid = UBYTE_INT (offset + GET_MODE_SIZE (mode) - 1);
+ 
+   return valid;
+@@ -1164,14 +1219,26 @@ pru_comparison_str (enum rtx_code cond)
+     }
+ }
+ 
++/* Access some RTX as INT_MODE.  If X is a CONST_FIXED we can get
++   the bit representation of X by "casting" it to CONST_INT.  */
++
++static rtx
++pru_to_int_mode (rtx x)
++{
++  machine_mode mode = GET_MODE (x);
++
++  return VOIDmode == mode
++    ? x
++    : simplify_gen_subreg (int_mode_for_mode (mode), x, mode, 0);
++}
++
+ /* Print the operand OP to file stream FILE modified by LETTER.
+    LETTER can be one of:
+ 
+-     x: for registers with size (e.g. R0.b0, R3.w0)
       B: prints 'c' or 'b' for CTABLE or REG base in a memory address
       H: Higher 16-bits of a const_int operand
       L: Lower 16-bits of a const_int operand
@@ -4672,16 +5239,40 @@ index 85643bac9a3..f4feb7fc5b6 100644
       P: prints swapped condition.
       Q: prints swapped and reversed condition.
       R: prints reversed condition.
-@@ -1218,17 +1232,35 @@ pru_print_operand (FILE *file, rtx op, int letter)
-       }
+@@ -1180,6 +1247,9 @@ pru_comparison_str (enum rtx_code cond)
+      V: print exact_log2 () of negated const_int operands
+      w: Lower 32-bits of a const_int operand
+      W: Upper 32-bits of a const_int operand
++     x: for registers with size (e.g. R0.b0, R3.w0)
++     y: print the next 8-bit register (regardless of op size)
++     z: print the second next 8-bit register (regardless of op size)
+ */
+ static void
+ pru_print_operand (FILE *file, rtx op, int letter)
+@@ -1221,23 +1291,55 @@ pru_print_operand (FILE *file, rtx op, int letter)
+     {
+     case REG:
+       if (letter == 0)
+-      {
+-	      fprintf (file, "%s", reg_names[REGNO (op)]);
+-	      return;
+-      }
++	{
++	  fprintf (file, "%s", reg_names[REGNO (op)]);
++	  return;
++	}
        else if (letter == 'N')
-       {
+-      {
 -	      gcc_assert (REGNO (op) < 29);
 -	      fprintf (file, "%s", reg_names[REGNO (op) + 1]);
-+	      gcc_assert (REGNO (op) <= LAST_NONIO_GP_REG);
-+	      fprintf (file, "%s", reg_names[REGNO (op) + 4]);
- 	      return;
-       }
+-	      return;
+-      }
++	{
++	  gcc_assert (REGNO (op) <= LAST_NONIO_GP_REG);
++	  gcc_assert (REGNO (op) % 4 == 0);
++	  fprintf (file, "%s", reg_names[REGNO (op) + 4]);
++	  return;
++	}
        else if (letter == 'x')
 -      {
 -	      const int sz = GET_MODE_SIZE (GET_MODE (op));
@@ -4696,6 +5287,7 @@ index 85643bac9a3..f4feb7fc5b6 100644
 +	  const int sz = GET_MODE_SIZE (GET_MODE (op));
 +	  const int base_reg = REGNO (op) / 4;
 +	  const char *suffix = "";
++
 +	  switch ((sz << 8) | (REGNO (op) % 4))
 +	    {
 +	    case (1 << 8) | 0: suffix = ".b0"; break;
@@ -4707,16 +5299,98 @@ index 85643bac9a3..f4feb7fc5b6 100644
 +	    case (2 << 8) | 2: suffix = ".w2"; break;
 +	    case (4 << 8) | 0: suffix = ""; break;
 +	    default:
-+	      printf("%s: r=%d, sz=%d\n", __func__, REGNO (op), sz);
-+	      gcc_unreachable ();
++		printf("%s: r=%d, sz=%d\n", __func__, REGNO (op), sz);
++		gcc_unreachable ();
 +	    }
 +	  fprintf (file, "r%d%s", base_reg, suffix);
++	  return;
++	}
++      else if (letter == 'y')
++	{
++	  gcc_assert (REGNO (op) <= LAST_NONIO_GP_REG - 1);
++	  fprintf (file, "%s", reg_names[REGNO (op) + 1]);
++	  return;
++	}
++      else if (letter == 'z')
++	{
++	  gcc_assert (REGNO (op) <= LAST_NONIO_GP_REG - 2);
++	  fprintf (file, "%s", reg_names[REGNO (op) + 2]);
 +	  return;
 +	}
        break;
  
      case CONST_INT:
-@@ -1307,7 +1339,7 @@ pru_print_operand (FILE *file, rtx op, int letter)
+@@ -1263,14 +1365,17 @@ pru_print_operand (FILE *file, rtx op, int letter)
+ 	}
+       else if (letter == 'T')
+ 	{
+-	  HOST_WIDE_INT val = exact_log2 (INTVAL (op) & 0xffffffff);
++	  /* The predicate should have already validated the 1-high-bit
++	     requirement. Use CTZ here to deal with constant's sign
++	     extension.  */
++	  HOST_WIDE_INT val = wi::ctz (INTVAL (op));
+ 	  gcc_assert (val >= 0 && val <= 31);
+ 	  output_addr_const (file, gen_int_mode (val, SImode));
+ 	  return;
+ 	}
+       else if (letter == 'V')
+ 	{
+-	  HOST_WIDE_INT val = exact_log2 (~INTVAL (op) & 0xffffffff);
++	  HOST_WIDE_INT val = wi::ctz (~INTVAL (op));
+ 	  gcc_assert (val >= 0 && val <= 31);
+ 	  output_addr_const (file, gen_int_mode (val, SImode));
+ 	  return;
+@@ -1292,7 +1397,6 @@ pru_print_operand (FILE *file, rtx op, int letter)
+     case CONST:
+     case LABEL_REF:
+     case SYMBOL_REF:
+-    case CONST_DOUBLE:
+       if (letter == 0)
+ 	{
+ 	  output_addr_const (file, op);
+@@ -1300,6 +1404,41 @@ pru_print_operand (FILE *file, rtx op, int letter)
+ 	}
+       break;
+ 
++    case CONST_FIXED:
++	{
++	  HOST_WIDE_INT ival = INTVAL (pru_to_int_mode (op));
++	  if (letter != 0)
++	    output_operand_lossage ("Unsupported code '%c' for fixed-point:",
++				    letter);
++	  fprintf (file, HOST_WIDE_INT_PRINT_DEC, ival);
++	  return;
++	}
++      break;
++
++    case CONST_DOUBLE:
++      if (letter == 0)
++	{
++	  long val;
++
++	  if (GET_MODE (op) != SFmode)
++	    fatal_insn ("internal compiler error.  Unknown mode:", op);
++	  REAL_VALUE_TO_TARGET_SINGLE (*CONST_DOUBLE_REAL_VALUE (op), val);
++	  fprintf (file, "0x%lx", val);
++	  return;
++	}
++      else if (letter == 'w' || letter == 'W')
++	{
++	  long t[2];
++	  REAL_VALUE_TO_TARGET_DOUBLE (*CONST_DOUBLE_REAL_VALUE (op), t);
++	  fprintf (file, "0x%lx", t[letter == 'w' ? 0 : 1]);
++	  return;
++	}
++      else
++	{
++	  gcc_unreachable ();
++	}
++      break;
++
+     case SUBREG:
+     case MEM:
+       if (letter == 0)
+@@ -1316,7 +1455,7 @@ pru_print_operand (FILE *file, rtx op, int letter)
  	      rtx op1 = XEXP (base, 1);
  
  	      /* PLUS cannot have two constant operands, so one
@@ -4725,7 +5399,7 @@ index 85643bac9a3..f4feb7fc5b6 100644
  		 exact base address.  */
  	      if (ctable_base_operand (op0, VOIDmode)
  		  || ctable_base_operand (op1, VOIDmode))
-@@ -1490,6 +1522,84 @@ pru_file_start (void)
+@@ -1499,6 +1638,83 @@ pru_file_start (void)
  
  /* Function argument related.  */
  
@@ -4794,7 +5468,6 @@ index 85643bac9a3..f4feb7fc5b6 100644
 +  CUMULATIVE_ARGS *cum = get_cumulative_args (cum_v);
 +  HOST_WIDE_INT param_size = pru_function_arg_size (mode, type);
 +
-+  gcc_assert (param_size > 0 && param_size <= GET_MODE_SIZE (DImode));
 +  gcc_assert (named);
 +
 +  /* Mark all byte sub-registers occupied by argument as used.  */
@@ -4810,7 +5483,7 @@ index 85643bac9a3..f4feb7fc5b6 100644
  /* Define where to put the arguments to a function.  Value is zero to
     push the argument on the stack, or a hard register in which to
     store the argument.
-@@ -1505,14 +1615,14 @@ pru_file_start (void)
+@@ -1514,14 +1730,14 @@ pru_file_start (void)
  
  static rtx
  pru_function_arg (cumulative_args_t cum_v, machine_mode mode,
@@ -4830,7 +5503,7 @@ index 85643bac9a3..f4feb7fc5b6 100644
  
    return return_rtx;
  }
-@@ -1522,29 +1632,24 @@ pru_function_arg (cumulative_args_t cum_v, machine_mode mode,
+@@ -1531,29 +1747,24 @@ pru_function_arg (cumulative_args_t cum_v, machine_mode mode,
     in memory.  */
  
  static int
@@ -4872,7 +5545,7 @@ index 85643bac9a3..f4feb7fc5b6 100644
  }
  
  /* Update the data in CUM to advance over an argument of mode MODE
-@@ -1553,27 +1658,13 @@ pru_arg_partial_bytes (cumulative_args_t cum_v,
+@@ -1562,27 +1773,13 @@ pru_arg_partial_bytes (cumulative_args_t cum_v,
  
  static void
  pru_function_arg_advance (cumulative_args_t cum_v, machine_mode mode,
@@ -4883,7 +5556,8 @@ index 85643bac9a3..f4feb7fc5b6 100644
  {
 -  CUMULATIVE_ARGS *cum = get_cumulative_args (cum_v);
 -  HOST_WIDE_INT param_size;
--
++  int regi = pru_function_arg_regi (cum_v, mode, type, named);
+ 
 -  if (mode == BLKmode)
 -    {
 -      param_size = int_size_in_bytes (type);
@@ -4894,8 +5568,7 @@ index 85643bac9a3..f4feb7fc5b6 100644
 -
 -  /* Convert to words (round up).  */
 -  param_size = (UNITS_PER_WORD - 1 + param_size) / UNITS_PER_WORD;
-+  int regi = pru_function_arg_regi (cum_v, mode, type, named);
- 
+-
 -  if (cum->regs_used + param_size > NUM_ARG_REGS)
 -    cum->regs_used = NUM_ARG_REGS;
 -  else
@@ -4905,7 +5578,7 @@ index 85643bac9a3..f4feb7fc5b6 100644
  }
  
  /* Implement TARGET_FUNCTION_VALUE.  */
-@@ -1602,10 +1693,11 @@ pru_function_value_regno_p (const unsigned int regno)
+@@ -1611,10 +1808,11 @@ pru_function_value_regno_p (const unsigned int regno)
  static bool
  pru_return_in_memory (const_tree type, const_tree fntype ATTRIBUTE_UNUSED)
  {
@@ -4918,7 +5591,7 @@ index 85643bac9a3..f4feb7fc5b6 100644
  /* TODO: It may be possible to eliminate the copyback and implement
     own va_arg type.  */
  static void
-@@ -1638,6 +1730,7 @@ pru_setup_incoming_varargs (cumulative_args_t cum_v,
+@@ -1647,6 +1845,7 @@ pru_setup_incoming_varargs (cumulative_args_t cum_v,
    if (pret_size)
      *pretend_size = pret_size;
  }
@@ -4926,7 +5599,7 @@ index 85643bac9a3..f4feb7fc5b6 100644
  
  /* Implement TARGET_CAN_USE_DOLOOP_P.  */
  
-@@ -2404,8 +2497,8 @@ pru_set_current_function (tree fndecl)
+@@ -2413,8 +2612,8 @@ pru_set_current_function (tree fndecl)
  #undef TARGET_RETURN_IN_MEMORY
  #define TARGET_RETURN_IN_MEMORY pru_return_in_memory
  
@@ -4937,7 +5610,7 @@ index 85643bac9a3..f4feb7fc5b6 100644
  
  #undef TARGET_MUST_PASS_IN_STACK
  #define TARGET_MUST_PASS_IN_STACK must_pass_in_stack_var_size
-@@ -2443,6 +2536,10 @@ pru_set_current_function (tree fndecl)
+@@ -2452,6 +2651,10 @@ pru_set_current_function (tree fndecl)
  #undef TARGET_INVALID_WITHIN_DOLOOP
  #define TARGET_INVALID_WITHIN_DOLOOP  pru_invalid_within_doloop
  
@@ -4949,7 +5622,7 @@ index 85643bac9a3..f4feb7fc5b6 100644
  
  #include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
-index bb7737ad005..147269ebdc9 100644
+index bb7737ad005..461d7659bae 100644
 --- a/gcc/config/pru/pru.h
 +++ b/gcc/config/pru/pru.h
 @@ -36,6 +36,13 @@
@@ -5006,7 +5679,7 @@ index bb7737ad005..147269ebdc9 100644
  #define MAX_FIXED_MODE_SIZE 64
  
  /* Layout of source language data types.  */
-@@ -121,36 +139,45 @@
+@@ -121,36 +139,52 @@
  #define FIXED_REGISTERS			      \
    {					      \
  /*	  +0  1  2  3  4  5  6  7  8  9 */    \
@@ -5055,19 +5728,26 @@ index bb7737ad005..147269ebdc9 100644
  
  #define MODES_TIEABLE_P(MODE1, MODE2) 1
 -#define HARD_REGNO_MODE_OK(REGNO, MODE) 1
-+#define HARD_REGNO_MODE_OK(REGNO, MODE) ((MODE) == SImode ?		    \
++#define HARD_REGNO_MODE_OK(REGNO, MODE)					    \
++      ((MODE) == SImode || (MODE) == SFmode || (MODE) == SDmode ?	    \
++      ((REGNO) % 4 == 0)						    \
++     : (MODE) == SQmode || (MODE) == USQmode ?				    \
 +      ((REGNO) % 4 == 0)						    \
 +     : (MODE) == Pmode ?						    \
 +      ((REGNO) % 4 == 0)						    \
-+     : (MODE) == DImode ?						    \
++     : (MODE) == DImode || (MODE) == DFmode || (MODE) == DDmode ?	    \
 +      ((REGNO) % 4 == 0)						    \
-+     : (MODE) == HImode ?						    \
-+      ((REGNO) % 2 == 0)						    \
++     : (MODE) == DQmode || (MODE) == UDQmode ?				    \
++      ((REGNO) % 4 == 0)						    \
++     : (MODE) == HImode || (MODE) == HQmode || (MODE) == UHQmode ?	    \
++      ((REGNO) % 4 <= 2)						    \
++     : (MODE) == HAmode || (MODE) == UHAmode ?				    \
++      ((REGNO) % 4 <= 2)						    \
 +     : 1)
  #define HARD_REGNO_NREGS(REGNO, MODE)	      \
    ((GET_MODE_SIZE (MODE) + UNITS_PER_WORD - 1) / UNITS_PER_WORD)
  
-@@ -177,6 +204,7 @@ enum reg_class
+@@ -177,6 +211,7 @@ enum reg_class
  
  #define GENERAL_REGS ALL_REGS
  
@@ -5075,7 +5755,7 @@ index bb7737ad005..147269ebdc9 100644
  #define REG_CLASS_CONTENTS			\
    {						\
      /* NO_REGS	      */ { 0, 0},		\
-@@ -185,6 +213,15 @@ enum reg_class
+@@ -185,6 +220,15 @@ enum reg_class
      /* GP_REGS	      */ { ~0, 0},		\
      /* ALL_REGS	      */ { ~0,~0}		\
    }
@@ -5091,7 +5771,7 @@ index bb7737ad005..147269ebdc9 100644
  
  
  #define GP_REG_P(REGNO) ((unsigned)(REGNO) <= LAST_GP_REG)
-@@ -205,12 +242,15 @@ enum reg_class
+@@ -205,12 +249,15 @@ enum reg_class
  #define SHIFT_INT(X) ((X) >= 0 && (X) <= 31)
  
  #define UHWORD_INT(X) (IN_RANGE ((X), 0, 0xffff))
@@ -5108,7 +5788,7 @@ index bb7737ad005..147269ebdc9 100644
  
  /* EXIT_IGNORE_STACK should be nonzero if, when returning from a function,
     the stack pointer does not matter.  The value is tested only in
-@@ -228,8 +268,7 @@ enum reg_class
+@@ -228,8 +275,7 @@ enum reg_class
  #define FIRST_PARM_OFFSET(FUNDECL) 0
  
  /* Before the prologue, RA lives in r3.w2.  */
@@ -5118,7 +5798,7 @@ index bb7737ad005..147269ebdc9 100644
  
  #define RETURN_ADDR_RTX(C,F) pru_get_return_address (C)
  
-@@ -253,15 +292,19 @@ enum reg_class
+@@ -253,15 +299,19 @@ enum reg_class
    (OFFSET) = pru_initial_elimination_offset ((FROM), (TO))
  
  /* Calling convention definitions.  */
@@ -5143,7 +5823,7 @@ index bb7737ad005..147269ebdc9 100644
  
  #define FUNCTION_ARG_REGNO_P(REGNO) \
    ((REGNO) >= FIRST_ARG_REGNO && (REGNO) <= LAST_ARG_REGNO)
-@@ -279,6 +322,8 @@ typedef struct pru_args
+@@ -279,6 +329,8 @@ typedef struct pru_args
  #define FUNCTION_PROFILER(FILE, LABELNO) \
    pru_function_profiler ((FILE), (LABELNO))
  
@@ -5152,7 +5832,7 @@ index bb7737ad005..147269ebdc9 100644
  /* Addressing modes.  */
  
  #define CONSTANT_ADDRESS_P(X) \
-@@ -308,44 +353,45 @@ typedef struct pru_args
+@@ -308,44 +360,45 @@ typedef struct pru_args
  
  #define GLOBAL_ASM_OP "\t.global\t"
  
@@ -5234,8 +5914,17 @@ index bb7737ad005..147269ebdc9 100644
  }
  
  #define ADDITIONAL_REGISTER_NAMES       \
+@@ -433,7 +486,7 @@ do {									\
+ /* Unfortunately the LBBO instruction does not zero-extend data. */
+ #undef LOAD_EXTEND_OP
+ 
+-/* #define WORD_REGISTER_OPERATIONS		1 */
++#undef WORD_REGISTER_OPERATIONS
+ 
+ #define HAS_LONG_UNCOND_BRANCH			1
+ #define HAS_LONG_COND_BRANCH			1
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
-index b679de1ef44..739c9d05eb5 100644
+index 9431c6c57bb..d5768d7a08a 100644
 --- a/gcc/config/pru/pru.md
 +++ b/gcc/config/pru/pru.md
 @@ -22,31 +22,28 @@
@@ -5264,7 +5953,7 @@ index b679de1ef44..739c9d05eb5 100644
 +
 +   (RA_REGNO		    14)	; Return address register r3.w2.
 +   (FP_REGNO		    16)	; Frame pointer register.
-+   (LAST_NONIO_GP_REG	    116)	; Last non-I/O general purpose register.
++   (LAST_NONIO_GP_REG	    119)	; Last non-I/O general purpose register.
 +   (LOOPCNTR_REG	    128)	; internal LOOP counter register
 +   (LAST_GP_REG		    132)	; Last general purpose register.
  
@@ -5287,15 +5976,49 @@ index b679de1ef44..739c9d05eb5 100644
  				; genextract.c uses 'a'..'z' to record
  				; "path to a vector".
    ]
-@@ -88,6 +85,7 @@
+@@ -86,9 +83,17 @@
+ (include "predicates.md")
+ (include "constraints.md")
  
- (define_mode_iterator ALL [QI HI SI])
+-(define_mode_iterator ALL [QI HI SI])
++;; All supported direct move-modes
++(define_mode_iterator MOVMODE [QI QQ UQQ
++                               HI HQ UHQ HA UHA
++                               SI SQ USQ SA USA
++                               SF])
++
++(define_mode_iterator MOV32 [SI SF SD SQ USQ])
++(define_mode_iterator MOV64 [DI DF DD DQ UDQ])
++(define_mode_iterator QISI [QI HI SI])
  (define_mode_iterator HISI [HI SI])
+-(define_mode_iterator BIGI [DI TI OI XI])
 +(define_mode_iterator QIHI [QI HI])
- (define_mode_iterator BIGI [DI TI OI XI])
  
  ;; EQS0/0 for extension source 0/1 and EQD for extension destination patterns.
-@@ -136,8 +134,19 @@
+ (define_mode_iterator EQS0 [QI HI SI])
+@@ -101,8 +106,8 @@
+ ;; Move instructions
+ 
+ (define_expand "mov<mode>"
+-  [(set (match_operand:ALL 0 "nonimmediate_operand" "")
+-	(match_operand:ALL 1 "general_operand"       ""))]
++  [(set (match_operand:MOVMODE 0 "nonimmediate_operand" "")
++	(match_operand:MOVMODE 1 "general_operand"       ""))]
+   ""
+   "
+   {
+@@ -118,8 +123,8 @@
+ ;; Leave mem and reg operands in the same insn.  Otherwise LRA gets
+ ;; confused, and gcc.target/pru/pr64366.c triggers infinite loops in reload.
+ (define_insn "prumov<mode>"
+-  [(set (match_operand:ALL 0 "nonimmediate_operand" "=m,r,r")
+-	(match_operand:ALL 1 "nonimmediate_operand" "r,m,r"))]
++  [(set (match_operand:MOVMODE 0 "nonimmediate_operand" "=m,r,r")
++	(match_operand:MOVMODE 1 "nonimmediate_operand" "r,m,r"))]
+   ""
+   "@
+     sb%B0o\\t%1, %0, %S0
+@@ -136,8 +141,19 @@
  ;;
  ;; Note: Assume that Program Mem (T constraint) can fit in 16 bits!
  (define_insn "prumov_ldi<mode>"
@@ -5311,13 +6034,26 @@ index b679de1ef44..739c9d05eb5 100644
 +  [(set_attr "type" "alu,alu,alu")
 +   (set_attr "length" "4,4,4")])
 +
-+(define_insn "prumov_ldisi"
-+  [(set (match_operand:SI 0 "register_operand"	      "=r,r,r")
-+	(match_operand:SI 1 "immediate_operand"       "T,J,i"))]
++(define_insn "prumov_ldisisf<mode>"
++  [(set (match_operand:MOV32 0 "register_operand"	 "=r,r,r")
++	(match_operand:MOV32 1 "immediate_operand"       "T,J,iF"))]
    ""
    "@
      ldi\\t%x0, %%pmem(%1)
-@@ -169,7 +178,7 @@
+@@ -154,9 +170,9 @@
+ ; Forcing DI reg alignment (akin to microblaze's HARD_REGNO_MODE_OK)
+ ; does not seem efficient, and might get in the way in future work
+ ; on register packing.
+-(define_insn "movdi"
+-  [(set (match_operand:DI 0 "nonimmediate_operand" "=m,r,r,r,r,r")
+-	(match_operand:DI 1 "general_operand"       "r,m,r,T,J,n"))]
++(define_insn "mov<mode>"
++  [(set (match_operand:MOV64 0 "nonimmediate_operand" "=m,r,r,r,r,r")
++	(match_operand:MOV64 1 "general_operand"       "r,m,r,T,J,nF"))]
+   ""
+   {
+     switch (which_alternative)
+@@ -169,7 +185,7 @@
  	/* careful with overlapping source and destination regs.  */
  	gcc_assert (GP_REG_P (REGNO (operands[0])));
  	gcc_assert (GP_REG_P (REGNO (operands[1])));
@@ -5326,7 +6062,7 @@ index b679de1ef44..739c9d05eb5 100644
  	  return "mov\\t%N0, %N1\;mov\\t%0, %1";
  	else
  	  return "mov\\t%0, %1\;mov\\t%N0, %N1";
-@@ -192,7 +201,7 @@
+@@ -192,7 +208,7 @@
  ;;   op1: first memory location
  ;;   op2: number of consecutive registers
  (define_expand "load_multiple"
@@ -5335,7 +6071,7 @@ index b679de1ef44..739c9d05eb5 100644
  			  (match_operand:SI 1 "" ""))
  		     (use (match_operand:SI 2 "" ""))])]
    ""
-@@ -217,8 +226,8 @@
+@@ -217,8 +233,8 @@
  
    for (i = 0; i < count; i++)
      XVECEXP (operands[3], 0, i)
@@ -5346,7 +6082,7 @@ index b679de1ef44..739c9d05eb5 100644
  				  plus_constant (Pmode,
  						 XEXP (operands[1], 0),
  						 i * UNITS_PER_WORD)));
-@@ -229,8 +238,8 @@
+@@ -229,8 +245,8 @@
  ;;   op1: first of the consecutive registers
  ;;   op2: number of consecutive registers
  (define_expand "store_multiple"
@@ -5357,7 +6093,7 @@ index b679de1ef44..739c9d05eb5 100644
  		     (use (match_operand:SI 2 "" ""))])]
    ""
    "
-@@ -254,11 +263,11 @@
+@@ -254,11 +270,11 @@
  
    for (i = 0; i < count; i++)
      XVECEXP (operands[3], 0, i)
@@ -5371,17 +6107,129 @@ index b679de1ef44..739c9d05eb5 100644
  }")
  
  ;; Include the machine-generated patterns for all LBBO/SBBO multuple-reg
-@@ -365,6 +374,9 @@
+@@ -299,12 +315,30 @@
+   [(set_attr "type" "complex")
+    (set_attr "length" "12")])
+ 
++;; Bit extraction
++;; We define it solely to allow combine to choose SImode
++;; for word mode when trying to match our cbranch_qbbx_* insn.
++;;
++;; Check how combine.c:make_extraction() uses
++;; get_best_reg_extraction_insn() to select the op size.
++(define_insn "extzv<mode>"
++  [(set (match_operand:QISI 0 "register_operand" "=r")
++        (zero_extract:QISI (match_operand:QISI 1 "register_operand" "r")
++                      (match_operand:QISI 2 "const_int_operand" "i")
++                      (match_operand:QISI 3 "const_int_operand" "i")))]
++  ""
++  "lsl\\t%x0, %x1, (%S0 * 8 - %2 - %3)\;lsr\\t%x0, %x0, (%S0 * 8 - %2)"
++  [(set_attr "type" "complex")
++   (set_attr "length" "8")])
++
++
++
+ ;; Arithmetic Operations
+ 
+-(define_expand "addsi3"
+-  [(set (match_operand:SI 0 "register_operand"		  "=r,r,r")
+-	(plus:SI (match_operand:SI 1 "register_operand"   "%r,r,r")
+-		 (match_operand:SI 2 "nonmemory_operand"  "r,I,M")))]
++(define_expand "add<mode>3"
++  [(set (match_operand:QISI 0 "register_operand"		  "=r,r,r")
++	(plus:QISI (match_operand:QISI 1 "register_operand"   "%r,r,r")
++		 (match_operand:QISI 2 "nonmemory_operand"  "r,I,M")))]
+   ""
+   ""
+   [(set_attr "type" "alu")])
+@@ -321,10 +355,10 @@
+   [(set_attr "type" "alu,alu,alu")
+    (set_attr "length" "8,8,8")])
+ 
+-(define_expand "subsi3"
+-  [(set (match_operand:SI 0 "register_operand"		      "=r,r,r")
+-	(minus:SI (match_operand:SI 1 "reg_or_ubyte_operand"  "r,r,I")
+-		  (match_operand:SI 2 "reg_or_ubyte_operand"  "r,I,r")))]
++(define_expand "sub<mode>3"
++  [(set (match_operand:QISI 0 "register_operand"		      "=r,r,r")
++	(minus:QISI (match_operand:QISI 1 "reg_or_ubyte_operand"  "r,r,I")
++		  (match_operand:QISI 2 "reg_or_ubyte_operand"  "r,I,r")))]
+   ""
+   ""
+   [(set_attr "type" "alu")])
+@@ -343,16 +377,16 @@
+ 
+ ;;  Negate and ones complement
+ 
+-(define_expand "negsi2"
+-  [(set (match_operand:SI 0 "register_operand"		"=r")
+-	(neg:SI (match_operand:SI 1 "register_operand"	"r")))]
++(define_expand "neg<mode>2"
++  [(set (match_operand:QISI 0 "register_operand"		"=r")
++	(neg:QISI (match_operand:QISI 1 "register_operand"	"r")))]
+   ""
+   ""
+   [(set_attr "type" "alu")])
+ 
+-(define_expand "one_cmplsi2"
+-  [(set (match_operand:SI 0 "register_operand"		"=r")
+-	(not:SI (match_operand:SI 1 "register_operand"	"r")))]
++(define_expand "one_cmpl<mode>2"
++  [(set (match_operand:QISI 0 "register_operand"		"=r")
++	(not:QISI (match_operand:QISI 1 "register_operand"	"r")))]
+   ""
+   ""
+   [(set_attr "type" "alu")])
+@@ -365,10 +399,13 @@
  (define_code_iterator LOGICAL [and ior xor umin umax])
  (define_code_attr logical_asm [(and "and") (ior "or") (xor "xor") (umin "min") (umax "max")])
  
+-(define_expand "<code>si3"
+-  [(set (match_operand:SI 0 "register_operand"			"=r")
+-	(LOGICAL:SI (match_operand:SI 1 "register_operand"	"%r")
+-		    (match_operand:SI 2 "reg_or_ubyte_operand"	"rI")))]
 +(define_code_iterator LOGICAL_BITOP [and ior xor])
 +(define_code_attr logical_bitop_asm [(and "and") (ior "or") (xor "xor")])
 +
- (define_expand "<code>si3"
-   [(set (match_operand:SI 0 "register_operand"			"=r")
- 	(LOGICAL:SI (match_operand:SI 1 "register_operand"	"%r")
-@@ -406,8 +418,38 @@
++(define_expand "<code><mode>3"
++  [(set (match_operand:QISI 0 "register_operand"			"=r")
++	(LOGICAL:QISI (match_operand:QISI 1 "register_operand"	"%r")
++		    (match_operand:QISI 2 "reg_or_ubyte_operand"	"rI")))]
+   ""
+   ""
+   [(set_attr "type" "alu")])
+@@ -396,21 +433,21 @@
+ (define_code_attr shift_op   [(ashift "ashl") (lshiftrt "lshr")])
+ (define_code_attr shift_asm  [(ashift "lsl") (lshiftrt "lsr")])
+ 
+-(define_expand "<shift_op>si3"
+-  [(set (match_operand:SI 0 "register_operand"		  "=r")
+-	(SHIFT:SI (match_operand:SI 1 "register_operand"  "r")
+-		  (match_operand:SI 2 "shift_operand"	  "rL")))]
++(define_expand "<shift_op><mode>3"
++  [(set (match_operand:QISI 0 "register_operand"		  "=r")
++	(SHIFT:QISI (match_operand:QISI 1 "register_operand"  "r")
++		  (match_operand:QISI 2 "shift_operand"	  "rL")))]
+   ""
+   ""
+   [(set_attr "type" "shift")])
+ 
+ ; LRA cannot cope with clobbered op2, hence the scratch register.
+ (define_insn "ashr<mode>3"
+-  [(set (match_operand:ALL 0 "register_operand" "=&r,r")
+-        (ashiftrt:ALL
+-          (match_operand:ALL 1 "register_operand" "0,r")
+-          (match_operand:ALL 2 "reg_or_const_1_operand" "r,P")))
+-    (clobber (match_scratch:ALL 3 "=r,X"))]
++  [(set (match_operand:QISI 0 "register_operand" "=&r,r")
++        (ashiftrt:QISI
++          (match_operand:QISI 1 "register_operand" "0,r")
++          (match_operand:QISI 2 "reg_or_const_1_operand" "r,P")))
++    (clobber (match_scratch:QISI 3 "=r,X"))]
+   ""
+   "@
+    mov %x3, %x2\;ASHRLP%=:\;qbeq ASHREND%=, %x3, 0\; sub %x3, %x3, 1\; lsr\\t%x0, %x0, 1\; qbbc ASHRLP%=, %x0, (%S0 * 8) - 2\; set %x0, %x0, (%S0 * 8) - 1\; jmp ASHRLP%=\;ASHREND%=:
+@@ -421,8 +458,38 @@
  
  ;; Include ALU patterns with zero-extension of operands.  That's where
  ;; the real insns are defined.
@@ -5420,7 +6268,7 @@ index b679de1ef44..739c9d05eb5 100644
  ;; Multiply instruction.  Idea for fixing registers comes from the AVR backend.
  
  (define_expand "mulsi3"
-@@ -422,20 +464,20 @@
+@@ -437,20 +504,20 @@
  
  
  (define_expand "mulsi3_fixinp"
@@ -5450,58 +6298,154 @@ index b679de1ef44..739c9d05eb5 100644
    ""
    "ldi\\tr25, 0\;xout\\t0, r25, 1\;xin\\t0, r26, 8"
    [(set_attr "type" "alu")
-diff --git a/libgcc/config/pru/lib2shift.c b/libgcc/config/pru/lib2shift.c
-index 1677dcc2098..ce4b5fe643e 100644
---- a/libgcc/config/pru/lib2shift.c
-+++ b/libgcc/config/pru/lib2shift.c
-@@ -27,8 +27,12 @@ typedef		  int  sint32_type   __attribute__ ((mode (SI)));
- typedef unsigned  int  uint32_type   __attribute__ ((mode (SI)));
- typedef		  int  sint16_type   __attribute__ ((mode (HI)));
- typedef unsigned  int  uint16_type   __attribute__ ((mode (HI)));
-+typedef		  int  sint8_type   __attribute__ ((mode (QI)));
-+typedef unsigned  int  uint8_type   __attribute__ ((mode (QI)));
+@@ -610,8 +677,8 @@
+   [(set (pc)
+      (if_then_else
+        (match_operator 0 "ordered_comparison_operator"
+-	 [(match_operand:ALL 1 "register_operand" "r,r,r")
+-	  (match_operand:ALL 2 "reg_or_ubyte_operand" "r,Z,I")])
++	 [(match_operand:QISI 1 "register_operand" "r,r,r")
++	  (match_operand:QISI 2 "reg_or_ubyte_operand" "r,Z,I")])
+        (label_ref (match_operand 3 "" ""))
+        (pc)))]
+   ""
+@@ -661,10 +728,10 @@
+ (define_code_attr qbbx_op   [(eq "qbbc") (ne "qbbs")])
+ (define_code_attr qbbx_negop   [(eq "qbbs") (ne "qbbc")])
  
- sint32_type __ashrsi3 (sint32_type in, char bit);
-+sint16_type __ashrhi3 (sint16_type in, char bit);
-+sint8_type __ashrqi3 (sint8_type in, char bit);
- 
- sint32_type
- __ashrsi3 (sint32_type in, char bit)
-@@ -46,3 +50,34 @@ __ashrsi3 (sint32_type in, char bit)
-   return in;
+-(define_insn "cbranch_qbbx_<BIT_TEST:code><EQS0:mode><EQS1:mode>4"
++(define_insn "cbranch_qbbx_<BIT_TEST:code><EQS0:mode><EQS1:mode><EQD:mode>4"
+  [(set (pc)
+    (if_then_else
+-    (BIT_TEST (zero_extract:SI
++    (BIT_TEST (zero_extract:EQD
+ 	 (match_operand:EQS0 0 "register_operand" "r")
+ 	 (const_int 1)
+ 	 (match_operand:EQS1 1 "reg_or_ubyte_operand" "rI"))
+diff --git a/gcc/testsuite/gcc.target/pru/ashiftrt.c b/gcc/testsuite/gcc.target/pru/ashiftrt.c
+new file mode 100644
+index 00000000000..ee8d55d60e6
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/ashiftrt.c
+@@ -0,0 +1,13 @@
++/* Test shift optimization */
++
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  */
++
++extern void func2(unsigned char);
++
++void test(unsigned char v)
++{
++    /* { dg-final { scan-assembler "lsl\tr14.b0, r14.b0, .\+\n\tlsr\tr14.b0, r14.b0" } } */
++    func2((v & 2) ? 1 : 0);
++}
+diff --git a/gcc/testsuite/gcc.target/pru/qbbc-3.c b/gcc/testsuite/gcc.target/pru/qbbc-3.c
+new file mode 100644
+index 00000000000..7fb7e1a9742
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/qbbc-3.c
+@@ -0,0 +1,15 @@
++/* Test QBBC recognition */
++
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it bit-check-and-branch
++   operation may not be optimized to QBBC.  */
++
++unsigned int
++test_qbbc_reg (unsigned int a, unsigned int b, unsigned short val)
++{
++  /* { dg-final { scan-assembler "qbbc\\t.L\[0-9\]*, r16.w0, 12" } } */
++  if (!(val & (1 << 12)))
++    return a;
++  return b;
++}
+diff --git a/gcc/testsuite/gcc.target/pru/zero_extend-and-hisi.c b/gcc/testsuite/gcc.target/pru/zero_extend-and-hisi.c
+index cc07d2959aa..716043cf071 100644
+--- a/gcc/testsuite/gcc.target/pru/zero_extend-and-hisi.c
++++ b/gcc/testsuite/gcc.target/pru/zero_extend-and-hisi.c
+@@ -10,7 +10,7 @@
+ unsigned int
+ test_zext_and_hi (unsigned short val1, unsigned int val2)
+ {
+-  /* { dg-final { scan-assembler "and\\tr14, r14, r15.w0" } } */
++  /* { dg-final { scan-assembler "and\\tr14, r14.w0, r15" } } */
+   return val1 & val2;
  }
  
-+sint16_type
-+__ashrhi3 (sint16_type in, char bit)
-+{
-+  sint16_type sign = in & (1 << 15);
-+
-+  if (bit > 16)
-+    return 0;
-+  if (bit < 0)
-+    return in;
-+
-+  while (bit--)
-+    in = ((uint16_type)in >> 1) | sign;
-+
-+  return in;
-+}
-+
-+sint8_type
-+__ashrqi3 (sint8_type in, char bit)
-+{
-+  sint8_type sign = in & (1 << 15);
-+
-+  if (bit > 8)
-+    return 0;
-+  if (bit < 0)
-+    return in;
-+
-+  while (bit--)
-+    in = ((uint8_type)in >> 1) | sign;
-+
-+  return in;
-+}
+diff --git a/gcc/testsuite/gcc.target/pru/zero_extend-and-qihi.c b/gcc/testsuite/gcc.target/pru/zero_extend-and-qihi.c
+index 9728ba0ff86..06f58459720 100644
+--- a/gcc/testsuite/gcc.target/pru/zero_extend-and-qihi.c
++++ b/gcc/testsuite/gcc.target/pru/zero_extend-and-qihi.c
+@@ -10,7 +10,7 @@
+ unsigned int
+ test_zext_and_hi (unsigned char val1, unsigned int val2)
+ {
+-  /* { dg-final { scan-assembler "and\\tr14, r14, r15.b0" } } */
++  /* { dg-final { scan-assembler "and\\tr14, r14.b0, r15" } } */
+   return val1 & val2;
+ }
+ 
+diff --git a/gcc/testsuite/gcc.target/pru/zero_extend-and-qisi.c b/gcc/testsuite/gcc.target/pru/zero_extend-and-qisi.c
+index 9728ba0ff86..06f58459720 100644
+--- a/gcc/testsuite/gcc.target/pru/zero_extend-and-qisi.c
++++ b/gcc/testsuite/gcc.target/pru/zero_extend-and-qisi.c
+@@ -10,7 +10,7 @@
+ unsigned int
+ test_zext_and_hi (unsigned char val1, unsigned int val2)
+ {
+-  /* { dg-final { scan-assembler "and\\tr14, r14, r15.b0" } } */
++  /* { dg-final { scan-assembler "and\\tr14, r14.b0, r15" } } */
+   return val1 & val2;
+ }
+ 
+diff --git a/gcc/testsuite/gcc.target/pru/zero_extend-qihi.c b/gcc/testsuite/gcc.target/pru/zero_extend-qihi.c
+index 10c32a96743..62e81f8a4cc 100644
+--- a/gcc/testsuite/gcc.target/pru/zero_extend-qihi.c
++++ b/gcc/testsuite/gcc.target/pru/zero_extend-qihi.c
+@@ -9,35 +9,35 @@
+ unsigned int
+ test_zext_plus_hi (unsigned char val1, unsigned short val2)
+ {
+-  /* { dg-final { scan-assembler "add\\tr14, r14.b0, r15.w0" } } */
++  /* { dg-final { scan-assembler "add\\tr14, r14.b0, r14.w1" } } */
+   return val1 + val2;
+ }
+ 
+ unsigned int
+ test_zext_minus_hi (unsigned char val1, unsigned short val2)
+ {
+-  /* { dg-final { scan-assembler "sub\\tr14, r14.b0, r15.w0" } } */
++  /* { dg-final { scan-assembler "sub\\tr14, r14.b0, r14.w1" } } */
+   return val1 - val2;
+ }
+ 
+ unsigned int
+ test_zext_xor_hi (unsigned char val1, unsigned short val2)
+ {
+-  /* { dg-final { scan-assembler "xor\\tr14, r14.b0, r15.w0" } } */
++  /* { dg-final { scan-assembler "xor\\tr14, r14.b0, r14.w1" } } */
+   return val1 ^ val2;
+ }
+ 
+ unsigned int
+ test_zext_or_hi (unsigned char val1, unsigned short val2)
+ {
+-  /* { dg-final { scan-assembler "or\\tr14, r14.b0, r15.w0" } } */
++  /* { dg-final { scan-assembler "or\\tr14, r14.b0, r14.w1" } } */
+   return val1 | val2;
+ }
+ 
+ unsigned int
+ test_zext_ashl_hi (unsigned char val1, unsigned short val2)
+ {
+-  /* { dg-final { scan-assembler "lsl\\tr14, r14.b0, r15.w0" } } */
++  /* { dg-final { scan-assembler "lsl\\tr14, r14.b0, r14.w1" } } */
+   return val1 << val2;
+ }
+ 
 -- 
 2.11.0
 

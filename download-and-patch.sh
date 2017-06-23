@@ -5,7 +5,7 @@
 
 # On which upstream commits to apply patches. I frequently rebase so
 # expect these to be somewhat random.
-GCC_BASECOMMIT=5784c70cf7a090404e4de72b1f1c5870dbc2627f
+GCC_BASECOMMIT=1b144f1382f9ce9f65527340cf4d29703c95949d
 BINUTILS_BASECOMMIT=4e9868d4e0c8e45505876901d22c021dd36972a8
 NEWLIB_BASECOMMIT=f70d9ae6adc6ed7952806056349ba9f8ba3c65c8
 

@@ -1,4 +1,4 @@
-From ba7ccb3a7869bf33164dd50e7bfd6c46f55dea6a Mon Sep 17 00:00:00 2001
+From 07549b361c6ff9d0372c3fc7960ec05156cae0d9 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:57:14 +0200
 Subject: [PATCH 07/17] testsuite: Add check for overflowed IMEM region to
@@ -11,10 +11,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  2 files changed, 8 insertions(+)
 
 diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
-index 83c38cfbeb7..cd60f971884 100644
+index b6865b441dc..f25e5cab55e 100644
 --- a/gcc/testsuite/lib/gcc-dg.exp
 +++ b/gcc/testsuite/lib/gcc-dg.exp
-@@ -358,6 +358,11 @@ proc gcc-dg-prune { system text } {
+@@ -359,6 +359,11 @@ proc gcc-dg-prune { system text } {
  	return "::unsupported::memory full"
      }
  

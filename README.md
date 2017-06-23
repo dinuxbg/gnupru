@@ -5,11 +5,11 @@ This is an unofficial GCC/Binutils port for the PRU I/O CPU core that is present
 
 The release is ready for cautious usage. A simulator is used to execute the GCC C regression test suite. Results for this release are:
 
-	# of expected passes            84927
-	# of unexpected failures        19
-	# of expected failures          124
-	# of unresolved testcases       1
-	# of unsupported tests          2547
+	# of expected passes		87431
+	# of unexpected failures	74
+	# of unexpected successes	3
+	# of expected failures		151
+	# of unsupported tests		2625
 
 There are several examples to get started:
  * Assorted small examples: https://github.com/dinuxbg/pru-gcc-examples
@@ -64,8 +64,3 @@ Testing the output:
 
 ## Acknowledgements
  * GCC/Binutils Nios2 port was taken as a base for the PRU port.
-
-## TODO
-A few long term tasks:
- * Need to review the GCC function prologue handling. Current code is a direct copy of the Nios2 code. It should be correct but is not efficient for PRU.
- * Investigate feasibility of "packed" register support in GCC. PRU port may have to be rewritten to use "virtual" 8-bit registers in order to allow more efficient variable packing.
