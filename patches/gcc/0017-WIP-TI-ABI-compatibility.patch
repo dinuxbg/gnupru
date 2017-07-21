@@ -1,4 +1,4 @@
-From 0f7377b01c5590fd30a54a3554b5075639e2cf45 Mon Sep 17 00:00:00 2001
+From 1297e53916f7950ff4a31fb897359e2ea89bae4f Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 17 Apr 2017 17:39:42 +0300
 Subject: [PATCH 17/17] WIP: TI ABI compatibility
@@ -26,7 +26,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  gcc/config/pru/pru-ldst-multiple.ml                |   22 +-
  gcc/config/pru/pru-modes.def                       |   10 -
  gcc/config/pru/pru.c                               |  379 ++-
- gcc/config/pru/pru.h                               |  185 +-
+ gcc/config/pru/pru.h                               |  191 +-
  gcc/config/pru/pru.md                              |  225 +-
  gcc/testsuite/gcc.target/pru/ashiftrt.c            |   13 +
  gcc/testsuite/gcc.target/pru/qbbc-3.c              |   15 +
@@ -34,7 +34,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  .../gcc.target/pru/zero_extend-and-qihi.c          |    2 +-
  .../gcc.target/pru/zero_extend-and-qisi.c          |    2 +-
  gcc/testsuite/gcc.target/pru/zero_extend-qihi.c    |   10 +-
- 16 files changed, 2289 insertions(+), 1902 deletions(-)
+ 16 files changed, 2292 insertions(+), 1905 deletions(-)
  create mode 100644 gcc/testsuite/gcc.target/pru/ashiftrt.c
  create mode 100644 gcc/testsuite/gcc.target/pru/qbbc-3.c
 
@@ -5622,7 +5622,7 @@ index cf6c1d8f907..5e15804006f 100644
  
  #include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
-index bb7737ad005..461d7659bae 100644
+index bb7737ad005..aa35608fc47 100644
 --- a/gcc/config/pru/pru.h
 +++ b/gcc/config/pru/pru.h
 @@ -36,6 +36,13 @@
@@ -5832,7 +5832,7 @@ index bb7737ad005..461d7659bae 100644
  /* Addressing modes.  */
  
  #define CONSTANT_ADDRESS_P(X) \
-@@ -308,44 +360,45 @@ typedef struct pru_args
+@@ -308,51 +360,52 @@ typedef struct pru_args
  
  #define GLOBAL_ASM_OP "\t.global\t"
  
@@ -5914,6 +5914,16 @@ index bb7737ad005..461d7659bae 100644
  }
  
  #define ADDITIONAL_REGISTER_NAMES       \
+ {					\
+-  {"r2", 2},				\
+-  {"r3", 3},				\
+-  {"r4", 4},				\
++  {"r2", 2 * 4},			\
++  {"r3", 3 * 4},			\
++  {"r4", 4 * 4},			\
+ }
+ 
+ #define ASM_OUTPUT_ADDR_VEC_ELT(FILE, VALUE)  \
 @@ -433,7 +486,7 @@ do {									\
  /* Unfortunately the LBBO instruction does not zero-extend data. */
  #undef LOAD_EXTEND_OP
