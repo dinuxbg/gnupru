@@ -1,7 +1,7 @@
 From 01d80adad9873218acaf44b36b789a94fc77ffd2 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:53:18 +0200
-Subject: [PATCH 01/17] Initial TI PRU GCC port
+Subject: [PATCH 01/18] Initial TI PRU GCC port
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---

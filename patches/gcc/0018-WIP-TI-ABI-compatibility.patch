@@ -1,7 +1,7 @@
-From 1297e53916f7950ff4a31fb897359e2ea89bae4f Mon Sep 17 00:00:00 2001
+From f22c0a58be4d049be7d1f094f4a94567fb193c45 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 17 Apr 2017 17:39:42 +0300
-Subject: [PATCH 17/17] WIP: TI ABI compatibility
+Subject: [PATCH 18/18] WIP: TI ABI compatibility
 
 This is an ongoing work on reworking the GCC PRU port to be
 compatible with the TI ABI.
@@ -25,8 +25,9 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  gcc/config/pru/pru-ldst-multiple.md                | 3192 ++++++++++----------
  gcc/config/pru/pru-ldst-multiple.ml                |   22 +-
  gcc/config/pru/pru-modes.def                       |   10 -
- gcc/config/pru/pru.c                               |  379 ++-
- gcc/config/pru/pru.h                               |  191 +-
+ gcc/config/pru/pru-protos.h                        |    1 +
+ gcc/config/pru/pru.c                               |  437 ++-
+ gcc/config/pru/pru.h                               |  194 +-
  gcc/config/pru/pru.md                              |  225 +-
  gcc/testsuite/gcc.target/pru/ashiftrt.c            |   13 +
  gcc/testsuite/gcc.target/pru/qbbc-3.c              |   15 +
@@ -34,7 +35,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  .../gcc.target/pru/zero_extend-and-qihi.c          |    2 +-
  .../gcc.target/pru/zero_extend-and-qisi.c          |    2 +-
  gcc/testsuite/gcc.target/pru/zero_extend-qihi.c    |   10 +-
- 16 files changed, 2292 insertions(+), 1905 deletions(-)
+ 17 files changed, 2353 insertions(+), 1906 deletions(-)
  create mode 100644 gcc/testsuite/gcc.target/pru/ashiftrt.c
  create mode 100644 gcc/testsuite/gcc.target/pru/qbbc-3.c
 
@@ -4955,8 +4956,20 @@ index d37259a1105..d10fea2f32f 100644
 -
 -/* The symbol Pmode stands for one of the above machine modes (usually SImode).
 -   The tm.h file specifies which one.  It is not a distinct mode.  */
+diff --git a/gcc/config/pru/pru-protos.h b/gcc/config/pru/pru-protos.h
+index 07717136912..f05029eac54 100644
+--- a/gcc/config/pru/pru-protos.h
++++ b/gcc/config/pru/pru-protos.h
+@@ -39,6 +39,7 @@ void pru_register_pragmas (void);
+ 
+ #ifdef RTX_CODE
+ extern rtx pru_get_return_address (int);
++extern int pru_hard_regno_rename_ok (unsigned int, unsigned int);
+ 
+ extern const char * pru_output_sign_extend (rtx *);
+ extern const char * pru_output_signed_cbranch (rtx *, bool);
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
-index cf6c1d8f907..5e15804006f 100644
+index cf6c1d8f907..a82e1a2832c 100644
 --- a/gcc/config/pru/pru.c
 +++ b/gcc/config/pru/pru.c
 @@ -1,5 +1,5 @@
@@ -5070,9 +5083,9 @@ index cf6c1d8f907..5e15804006f 100644
  
    if (regno == HARD_FRAME_POINTER_REGNUM && frame_pointer_needed)
      return true;
-+  if (regno == HARD_FRAME_POINTER_REGNUM + 1&& frame_pointer_needed)
++  if (regno == HARD_FRAME_POINTER_REGNUM + 1 && frame_pointer_needed)
 +    return true;
-+  if (regno == HARD_FRAME_POINTER_REGNUM + 2&& frame_pointer_needed)
++  if (regno == HARD_FRAME_POINTER_REGNUM + 2 && frame_pointer_needed)
 +    return true;
 +  if (regno == HARD_FRAME_POINTER_REGNUM + 3 && frame_pointer_needed)
 +    return true;
@@ -5084,7 +5097,65 @@ index cf6c1d8f907..5e15804006f 100644
  
    return false;
  }
-@@ -524,6 +533,17 @@ pru_option_override (void)
+@@ -509,6 +518,57 @@ pru_can_use_return_insn (void)
+   return pru_compute_frame_layout () == 0;
+ }
+ 
++
++/* Implement `TARGET_HARD_REGNO_SCRATCH_OK'.  */
++/* Returns true if SCRATCH are safe to be allocated as a scratch
++   registers (for a define_peephole2) in the current function.  */
++
++static bool
++pru_hard_regno_scratch_ok (unsigned int regno)
++{
++  /* Don't allow hard registers that might be part of the frame pointer.
++     Some places in the compiler just test for [HARD_]FRAME_POINTER_REGNUM
++     and don't care for a frame pointer that spans more than one register.  */
++
++  if ((!reload_completed || frame_pointer_needed)
++      && ((regno >= HARD_FRAME_POINTER_REGNUM
++	   && regno <= HARD_FRAME_POINTER_REGNUM + 3)
++	  || (regno >= FRAME_POINTER_REGNUM
++	      && regno <= FRAME_POINTER_REGNUM + 3)))
++    {
++      return false;
++    }
++
++  return true;
++}
++
++
++/* Worker function for `HARD_REGNO_RENAME_OK'.  */
++/* Return nonzero if register OLD_REG can be renamed to register NEW_REG.  */
++
++int
++pru_hard_regno_rename_ok (unsigned int old_reg,
++			  unsigned int new_reg)
++{
++  /* Don't allow hard registers that might be part of the frame pointer.
++     Some places in the compiler just test for [HARD_]FRAME_POINTER_REGNUM
++     and don't care for a frame pointer that spans more than one register.  */
++  if ((!reload_completed || frame_pointer_needed)
++      && ((old_reg >= HARD_FRAME_POINTER_REGNUM
++	   && old_reg <= HARD_FRAME_POINTER_REGNUM + 3)
++	  || (old_reg >= FRAME_POINTER_REGNUM
++	      && old_reg <= FRAME_POINTER_REGNUM + 3)
++	  || (new_reg >= HARD_FRAME_POINTER_REGNUM
++	      && new_reg <= HARD_FRAME_POINTER_REGNUM + 3)
++	  || (new_reg >= FRAME_POINTER_REGNUM
++	      && new_reg <= FRAME_POINTER_REGNUM + 3)))
++    {
++      return 0;
++    }
++
++  return 1;
++}
++
+ /* Allocate a chunk of memory for per-function machine-dependent data.  */
+ static struct machine_function *
+ pru_init_machine_status (void)
+@@ -524,6 +584,17 @@ pru_option_override (void)
    SUBTARGET_OVERRIDE_OPTIONS;
  #endif
  
@@ -5102,7 +5173,7 @@ index cf6c1d8f907..5e15804006f 100644
    /* Check for unsupported options.  */
    if (flag_pic == 1)
      warning (OPT_fpic, "-fpic is not supported");
-@@ -566,11 +586,16 @@ pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
+@@ -566,11 +637,16 @@ pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
  	    *total = COSTS_N_INSNS (0);
  	    return true;
  	  }
@@ -5120,7 +5191,7 @@ index cf6c1d8f907..5e15804006f 100644
  
        case LABEL_REF:
        case SYMBOL_REF:
-@@ -586,7 +611,7 @@ pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
+@@ -586,7 +662,7 @@ pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
  	     the mode for the factor.  */
  	  mode = GET_MODE (SET_DEST (x));
  
@@ -5129,7 +5200,7 @@ index cf6c1d8f907..5e15804006f 100644
  	      && (GET_CODE (SET_SRC (x)) == ZERO_EXTEND
  		  || outer_code == ZERO_EXTEND))
  	    {
-@@ -594,7 +619,8 @@ pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
+@@ -594,7 +670,8 @@ pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
  	    }
  	  else
  	    {
@@ -5139,7 +5210,7 @@ index cf6c1d8f907..5e15804006f 100644
  	      if (factor == 0)
  		factor = 1;
  	      *total = factor * COSTS_N_INSNS (1);
-@@ -644,6 +670,24 @@ pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
+@@ -644,6 +721,24 @@ pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
  	    *total = COSTS_N_INSNS (6);
  	  return false;
  	}
@@ -5164,7 +5235,7 @@ index cf6c1d8f907..5e15804006f 100644
        case ZERO_EXTEND:
  	{
  	  *total = COSTS_N_INSNS (0);
-@@ -651,7 +695,11 @@ pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
+@@ -651,7 +746,11 @@ pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
  	}
  
        default:
@@ -5177,7 +5248,7 @@ index cf6c1d8f907..5e15804006f 100644
      }
  }
  
-@@ -678,14 +726,21 @@ pru_output_sign_extend (rtx *operands)
+@@ -678,14 +777,23 @@ pru_output_sign_extend (rtx *operands)
    int bufi;
    const int dst_sz = GET_MODE_SIZE (GET_MODE (operands[0]));
    const int src_sz = GET_MODE_SIZE (GET_MODE (operands[1]));
@@ -5193,15 +5264,18 @@ index cf6c1d8f907..5e15804006f 100644
  
    gcc_assert (dst_sz > src_sz);
  
++  /* Note that src and dst can be different parts of the same
++     register, e.g. "r7, r7.w1".  */
    bufi = snprintf (buf, sizeof (buf),
- 	  "mov\t%%0, %%x1\n\t"		      /* Copy AND make positive.  */
+-	  "mov\t%%0, %%x1\n\t"		      /* Copy AND make positive.  */
++	  "mov\t%%x0, %%x1\n\t"		      /* Copy AND make positive.  */
  	  "qbbc\t.+8, %%x0, %d\n\t"	      /* Check sign bit.  */
 -	  "fill\t%%0.b%d, %d",		      /* Make negative.  */
 +	  "fill\t%%%c0, %d",		      /* Make negative.  */
  	  sign_bit_position (operands[1]),
  	  ext_start,
  	  dst_sz - src_sz);
-@@ -1018,7 +1073,7 @@ pru_valid_const_ubyte_offset (machine_mode mode, HOST_WIDE_INT offset)
+@@ -1018,7 +1126,7 @@ pru_valid_const_ubyte_offset (machine_mode mode, HOST_WIDE_INT offset)
  
    /* Reload can split multi word accesses, so make sure we can address
       the second word in a DI.  */
@@ -5210,7 +5284,7 @@ index cf6c1d8f907..5e15804006f 100644
      valid = UBYTE_INT (offset + GET_MODE_SIZE (mode) - 1);
  
    return valid;
-@@ -1164,14 +1219,26 @@ pru_comparison_str (enum rtx_code cond)
+@@ -1164,14 +1272,26 @@ pru_comparison_str (enum rtx_code cond)
      }
  }
  
@@ -5239,7 +5313,7 @@ index cf6c1d8f907..5e15804006f 100644
       P: prints swapped condition.
       Q: prints swapped and reversed condition.
       R: prints reversed condition.
-@@ -1180,6 +1247,9 @@ pru_comparison_str (enum rtx_code cond)
+@@ -1180,6 +1300,9 @@ pru_comparison_str (enum rtx_code cond)
       V: print exact_log2 () of negated const_int operands
       w: Lower 32-bits of a const_int operand
       W: Upper 32-bits of a const_int operand
@@ -5249,7 +5323,7 @@ index cf6c1d8f907..5e15804006f 100644
  */
  static void
  pru_print_operand (FILE *file, rtx op, int letter)
-@@ -1221,23 +1291,55 @@ pru_print_operand (FILE *file, rtx op, int letter)
+@@ -1221,23 +1344,55 @@ pru_print_operand (FILE *file, rtx op, int letter)
      {
      case REG:
        if (letter == 0)
@@ -5320,7 +5394,7 @@ index cf6c1d8f907..5e15804006f 100644
        break;
  
      case CONST_INT:
-@@ -1263,14 +1365,17 @@ pru_print_operand (FILE *file, rtx op, int letter)
+@@ -1263,14 +1418,17 @@ pru_print_operand (FILE *file, rtx op, int letter)
  	}
        else if (letter == 'T')
  	{
@@ -5340,7 +5414,7 @@ index cf6c1d8f907..5e15804006f 100644
  	  gcc_assert (val >= 0 && val <= 31);
  	  output_addr_const (file, gen_int_mode (val, SImode));
  	  return;
-@@ -1292,7 +1397,6 @@ pru_print_operand (FILE *file, rtx op, int letter)
+@@ -1292,7 +1450,6 @@ pru_print_operand (FILE *file, rtx op, int letter)
      case CONST:
      case LABEL_REF:
      case SYMBOL_REF:
@@ -5348,7 +5422,7 @@ index cf6c1d8f907..5e15804006f 100644
        if (letter == 0)
  	{
  	  output_addr_const (file, op);
-@@ -1300,6 +1404,41 @@ pru_print_operand (FILE *file, rtx op, int letter)
+@@ -1300,6 +1457,41 @@ pru_print_operand (FILE *file, rtx op, int letter)
  	}
        break;
  
@@ -5390,7 +5464,7 @@ index cf6c1d8f907..5e15804006f 100644
      case SUBREG:
      case MEM:
        if (letter == 0)
-@@ -1316,7 +1455,7 @@ pru_print_operand (FILE *file, rtx op, int letter)
+@@ -1316,7 +1508,7 @@ pru_print_operand (FILE *file, rtx op, int letter)
  	      rtx op1 = XEXP (base, 1);
  
  	      /* PLUS cannot have two constant operands, so one
@@ -5399,7 +5473,7 @@ index cf6c1d8f907..5e15804006f 100644
  		 exact base address.  */
  	      if (ctable_base_operand (op0, VOIDmode)
  		  || ctable_base_operand (op1, VOIDmode))
-@@ -1499,6 +1638,83 @@ pru_file_start (void)
+@@ -1499,6 +1691,83 @@ pru_file_start (void)
  
  /* Function argument related.  */
  
@@ -5483,7 +5557,7 @@ index cf6c1d8f907..5e15804006f 100644
  /* Define where to put the arguments to a function.  Value is zero to
     push the argument on the stack, or a hard register in which to
     store the argument.
-@@ -1514,14 +1730,14 @@ pru_file_start (void)
+@@ -1514,14 +1783,14 @@ pru_file_start (void)
  
  static rtx
  pru_function_arg (cumulative_args_t cum_v, machine_mode mode,
@@ -5503,7 +5577,7 @@ index cf6c1d8f907..5e15804006f 100644
  
    return return_rtx;
  }
-@@ -1531,29 +1747,24 @@ pru_function_arg (cumulative_args_t cum_v, machine_mode mode,
+@@ -1531,29 +1800,24 @@ pru_function_arg (cumulative_args_t cum_v, machine_mode mode,
     in memory.  */
  
  static int
@@ -5545,7 +5619,7 @@ index cf6c1d8f907..5e15804006f 100644
  }
  
  /* Update the data in CUM to advance over an argument of mode MODE
-@@ -1562,27 +1773,13 @@ pru_arg_partial_bytes (cumulative_args_t cum_v,
+@@ -1562,27 +1826,13 @@ pru_arg_partial_bytes (cumulative_args_t cum_v,
  
  static void
  pru_function_arg_advance (cumulative_args_t cum_v, machine_mode mode,
@@ -5556,8 +5630,7 @@ index cf6c1d8f907..5e15804006f 100644
  {
 -  CUMULATIVE_ARGS *cum = get_cumulative_args (cum_v);
 -  HOST_WIDE_INT param_size;
-+  int regi = pru_function_arg_regi (cum_v, mode, type, named);
- 
+-
 -  if (mode == BLKmode)
 -    {
 -      param_size = int_size_in_bytes (type);
@@ -5565,7 +5638,8 @@ index cf6c1d8f907..5e15804006f 100644
 -    }
 -  else
 -    param_size = GET_MODE_SIZE (mode);
--
++  int regi = pru_function_arg_regi (cum_v, mode, type, named);
+ 
 -  /* Convert to words (round up).  */
 -  param_size = (UNITS_PER_WORD - 1 + param_size) / UNITS_PER_WORD;
 -
@@ -5578,7 +5652,7 @@ index cf6c1d8f907..5e15804006f 100644
  }
  
  /* Implement TARGET_FUNCTION_VALUE.  */
-@@ -1611,10 +1808,11 @@ pru_function_value_regno_p (const unsigned int regno)
+@@ -1611,10 +1861,11 @@ pru_function_value_regno_p (const unsigned int regno)
  static bool
  pru_return_in_memory (const_tree type, const_tree fntype ATTRIBUTE_UNUSED)
  {
@@ -5591,7 +5665,7 @@ index cf6c1d8f907..5e15804006f 100644
  /* TODO: It may be possible to eliminate the copyback and implement
     own va_arg type.  */
  static void
-@@ -1647,6 +1845,7 @@ pru_setup_incoming_varargs (cumulative_args_t cum_v,
+@@ -1647,6 +1898,7 @@ pru_setup_incoming_varargs (cumulative_args_t cum_v,
    if (pret_size)
      *pretend_size = pret_size;
  }
@@ -5599,7 +5673,17 @@ index cf6c1d8f907..5e15804006f 100644
  
  /* Implement TARGET_CAN_USE_DOLOOP_P.  */
  
-@@ -2413,8 +2612,8 @@ pru_set_current_function (tree fndecl)
+@@ -2392,6 +2644,9 @@ pru_set_current_function (tree fndecl)
+ #undef TARGET_CAN_ELIMINATE
+ #define TARGET_CAN_ELIMINATE pru_can_eliminate
+ 
++#undef  TARGET_HARD_REGNO_SCRATCH_OK
++#define TARGET_HARD_REGNO_SCRATCH_OK pru_hard_regno_scratch_ok
++
+ #undef TARGET_FUNCTION_ARG
+ #define TARGET_FUNCTION_ARG pru_function_arg
+ 
+@@ -2413,8 +2668,8 @@ pru_set_current_function (tree fndecl)
  #undef TARGET_RETURN_IN_MEMORY
  #define TARGET_RETURN_IN_MEMORY pru_return_in_memory
  
@@ -5610,7 +5694,7 @@ index cf6c1d8f907..5e15804006f 100644
  
  #undef TARGET_MUST_PASS_IN_STACK
  #define TARGET_MUST_PASS_IN_STACK must_pass_in_stack_var_size
-@@ -2452,6 +2651,10 @@ pru_set_current_function (tree fndecl)
+@@ -2452,6 +2707,10 @@ pru_set_current_function (tree fndecl)
  #undef TARGET_INVALID_WITHIN_DOLOOP
  #define TARGET_INVALID_WITHIN_DOLOOP  pru_invalid_within_doloop
  
@@ -5622,7 +5706,7 @@ index cf6c1d8f907..5e15804006f 100644
  
  #include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
-index bb7737ad005..aa35608fc47 100644
+index bb7737ad005..190a032f568 100644
 --- a/gcc/config/pru/pru.h
 +++ b/gcc/config/pru/pru.h
 @@ -36,6 +36,13 @@
@@ -5783,8 +5867,8 @@ index bb7737ad005..aa35608fc47 100644
     considered live at the start of the called function.  */
 -#define EPILOGUE_USES(REGNO) (epilogue_completed && (REGNO) == RA_REGNO)
 +#define EPILOGUE_USES(REGNO) (epilogue_completed &&	      \
-+			      ((REGNO) == RA_REGNO)	      \
-+			       || (REGNO) == (RA_REGNO + 1))
++			      (((REGNO) == RA_REGNO)	      \
++			       || (REGNO) == (RA_REGNO + 1)))
  
  /* EXIT_IGNORE_STACK should be nonzero if, when returning from a function,
     the stack pointer does not matter.  The value is tested only in
@@ -5798,9 +5882,13 @@ index bb7737ad005..aa35608fc47 100644
  
  #define RETURN_ADDR_RTX(C,F) pru_get_return_address (C)
  
-@@ -253,15 +299,19 @@ enum reg_class
+@@ -252,16 +298,23 @@ enum reg_class
+ #define INITIAL_ELIMINATION_OFFSET(FROM, TO, OFFSET) \
    (OFFSET) = pru_initial_elimination_offset ((FROM), (TO))
  
++#define HARD_REGNO_RENAME_OK(OLD_REG, NEW_REG) \
++  pru_hard_regno_rename_ok (OLD_REG, NEW_REG)
++
  /* Calling convention definitions.  */
 +#if !defined(IN_LIBGCC2)
 +
@@ -5823,7 +5911,7 @@ index bb7737ad005..aa35608fc47 100644
  
  #define FUNCTION_ARG_REGNO_P(REGNO) \
    ((REGNO) >= FIRST_ARG_REGNO && (REGNO) <= LAST_ARG_REGNO)
-@@ -279,6 +329,8 @@ typedef struct pru_args
+@@ -279,6 +332,8 @@ typedef struct pru_args
  #define FUNCTION_PROFILER(FILE, LABELNO) \
    pru_function_profiler ((FILE), (LABELNO))
  
@@ -5832,7 +5920,7 @@ index bb7737ad005..aa35608fc47 100644
  /* Addressing modes.  */
  
  #define CONSTANT_ADDRESS_P(X) \
-@@ -308,51 +360,52 @@ typedef struct pru_args
+@@ -308,51 +363,52 @@ typedef struct pru_args
  
  #define GLOBAL_ASM_OP "\t.global\t"
  
@@ -5924,7 +6012,7 @@ index bb7737ad005..aa35608fc47 100644
  }
  
  #define ASM_OUTPUT_ADDR_VEC_ELT(FILE, VALUE)  \
-@@ -433,7 +486,7 @@ do {									\
+@@ -433,7 +489,7 @@ do {									\
  /* Unfortunately the LBBO instruction does not zero-extend data. */
  #undef LOAD_EXTEND_OP
  

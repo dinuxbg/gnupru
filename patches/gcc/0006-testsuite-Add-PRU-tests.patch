@@ -1,7 +1,7 @@
 From bb93ab65c0bad519eb9e41301afdcb6efef0dd26 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:56:38 +0200
-Subject: [PATCH 06/17] testsuite: Add PRU tests
+Subject: [PATCH 06/18] testsuite: Add PRU tests
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
