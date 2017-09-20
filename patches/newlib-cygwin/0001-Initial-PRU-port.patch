@@ -1,7 +1,7 @@
-From d2abdbc32037c96edab10826cdcf81d3a1b25105 Mon Sep 17 00:00:00 2001
+From 92cd1c9771753e03c81ea048fd1318eacd24cedc Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Thu, 1 May 2014 16:43:07 +0300
-Subject: [PATCH 1/5] Initial PRU port
+Subject: [PATCH 1/6] Initial PRU port
 
 Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---
@@ -50,7 +50,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgloss/pru/stat.c                               |   33 +
  libgloss/pru/syscalls.S                           |   32 +
  libgloss/pru/unlink.c                             |   31 +
- newlib/configure.host                             |   13 +-
+ newlib/configure.host                             |   14 +-
  newlib/libc/include/machine/ieeefp.h              |    4 +
  newlib/libc/include/machine/setjmp.h              |    5 +
  newlib/libc/machine/configure                     |    3 +
@@ -61,7 +61,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  newlib/libc/machine/pru/configure                 | 4748 +++++++++++++++++++++
  newlib/libc/machine/pru/configure.in              |   14 +
  newlib/libc/machine/pru/setjmp.s                  |   46 +
- 56 files changed, 13614 insertions(+), 1 deletion(-)
+ 56 files changed, 13615 insertions(+), 1 deletion(-)
  create mode 100644 libgloss/pru/Makefile.in
  create mode 100644 libgloss/pru/aclocal.m4
  create mode 100644 libgloss/pru/close.c
@@ -160,10 +160,10 @@ index 3cb95d69d..021d3645a 100644
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
 diff --git a/libgloss/configure b/libgloss/configure
-index 90a05222a..fa4c69cd6 100755
+index aa6f8f834..8d2638b7c 100755
 --- a/libgloss/configure
 +++ b/libgloss/configure
-@@ -709,6 +709,7 @@ spu
+@@ -710,6 +710,7 @@ spu
  tic6x
  iq2000
  or1k
@@ -171,7 +171,7 @@ index 90a05222a..fa4c69cd6 100755
  libnosys'
  
  # Initialize some variables set by options.
-@@ -2581,6 +2582,10 @@ case "${target}" in
+@@ -2586,6 +2587,10 @@ case "${target}" in
  	subdirs="$subdirs or1k"
  
  	;;
@@ -183,10 +183,10 @@ index 90a05222a..fa4c69cd6 100755
  
  
 diff --git a/libgloss/configure.in b/libgloss/configure.in
-index d1b3b3469..a47c7c260 100644
+index 6da164352..9f39e0517 100644
 --- a/libgloss/configure.in
 +++ b/libgloss/configure.in
-@@ -172,6 +172,8 @@ case "${target}" in
+@@ -175,6 +175,8 @@ case "${target}" in
  	;;
    or1k-*-* | or1knd-*-* )
  	AC_CONFIG_SUBDIRS([or1k])
@@ -7733,7 +7733,7 @@ index 000000000..5ff0eef5b
 +  return (-1);
 +}
 diff --git a/newlib/configure.host b/newlib/configure.host
-index d47120089..596e07d5f 100644
+index ba2d8c6c7..c9d86336e 100644
 --- a/newlib/configure.host
 +++ b/newlib/configure.host
 @@ -80,7 +80,7 @@ case "${target_optspace}:${host}" in
@@ -7757,24 +7757,26 @@ index d47120089..596e07d5f 100644
 +	default_newlib_atexit_dynamic_alloc="no"
 +	machine_dir=pru
 +	;;
-   rl78)
- 	machine_dir=rl78
- 	newlib_cflags="${newlib_cflags} -DPREFER_SIZE_OVER_SPEED -DSMALL_MEMORY"
-@@ -806,6 +814,9 @@ case "${host}" in
+   riscv*)
+ 	libm_machine_dir=riscv
+ 	machine_dir=riscv
+@@ -812,7 +820,11 @@ case "${host}" in
  	newlib_cflags="${newlib_cflags} -DHAVE_OPENDIR -DHAVE_RENAME -DHAVE_FCNTL -D_NO_POSIX_SPAWN"
  	syscall_dir=syscalls
  	;;
++<<<<<<< HEAD
+   riscv*-*-*)
++=======
 +  pru*)
-+	syscall_dir=syscalls
-+	;;
-   sh*-*-*)
- 	default_newlib_io_long_long="yes"
++>>>>>>> Initial PRU port
  	syscall_dir=syscalls
+ 	;;
+   sh*-*-*)
 diff --git a/newlib/libc/include/machine/ieeefp.h b/newlib/libc/include/machine/ieeefp.h
-index 11ef0dd03..b9cd23619 100644
+index 29c08fa43..a6d100b46 100644
 --- a/newlib/libc/include/machine/ieeefp.h
 +++ b/newlib/libc/include/machine/ieeefp.h
-@@ -380,6 +380,10 @@
+@@ -384,6 +384,10 @@
  #define __SMALL_BITFIELDS	/* 16 Bit INT */
  #endif
  
@@ -7786,7 +7788,7 @@ index 11ef0dd03..b9cd23619 100644
  #define __IEEE_LITTLE_ENDIAN
  #define __SMALL_BITFIELDS	/* 16 Bit INT */
 diff --git a/newlib/libc/include/machine/setjmp.h b/newlib/libc/include/machine/setjmp.h
-index 2b4dd8b91..23860a8f4 100644
+index b33f437d7..c9de638a3 100644
 --- a/newlib/libc/include/machine/setjmp.h
 +++ b/newlib/libc/include/machine/setjmp.h
 @@ -349,6 +349,11 @@ _BEGIN_STD_C
@@ -7802,10 +7804,10 @@ index 2b4dd8b91..23860a8f4 100644
  #define _JBLEN 0x44
  #endif
 diff --git a/newlib/libc/machine/configure b/newlib/libc/machine/configure
-index 35535a751..857917334 100755
+index c72010b6d..28752a326 100755
 --- a/newlib/libc/machine/configure
 +++ b/newlib/libc/machine/configure
-@@ -823,6 +823,7 @@ necv70
+@@ -824,6 +824,7 @@ necv70
  nios2
  or1k
  powerpc
@@ -7813,7 +7815,7 @@ index 35535a751..857917334 100755
  rl78
  rx
  sh
-@@ -11909,6 +11910,8 @@ subdirs="$subdirs a29k"
+@@ -11912,6 +11913,8 @@ subdirs="$subdirs a29k"
   ;;
  	powerpc) subdirs="$subdirs powerpc"
   ;;
@@ -7823,10 +7825,10 @@ index 35535a751..857917334 100755
   ;;
  	rx) subdirs="$subdirs rx"
 diff --git a/newlib/libc/machine/configure.in b/newlib/libc/machine/configure.in
-index 25dedbaf5..200eb8474 100644
+index bca12129d..61fb6bf61 100644
 --- a/newlib/libc/machine/configure.in
 +++ b/newlib/libc/machine/configure.in
-@@ -62,6 +62,7 @@ if test -n "${machine_dir}"; then
+@@ -63,6 +63,7 @@ if test -n "${machine_dir}"; then
  	nios2) AC_CONFIG_SUBDIRS(nios2) ;;
  	or1k) AC_CONFIG_SUBDIRS(or1k) ;;
  	powerpc) AC_CONFIG_SUBDIRS(powerpc) ;;

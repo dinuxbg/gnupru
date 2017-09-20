@@ -5,9 +5,9 @@
 
 # On which upstream commits to apply patches. I frequently rebase so
 # expect these to be somewhat random.
-GCC_BASECOMMIT=6834b83784dcf0364eb820e8f6afc1bc1eca0885
-BINUTILS_BASECOMMIT=e3d1d4088ad3b4d0fed39df62ad295ed60707807
-NEWLIB_BASECOMMIT=f70d9ae6adc6ed7952806056349ba9f8ba3c65c8
+GCC_BASECOMMIT=20c4114f15d3e4c827b773f2cc93b28b04e86bbe
+BINUTILS_BASECOMMIT=0615127c587253a6386fe49468fd64abf827273e
+NEWLIB_BASECOMMIT=05cfd1aed8b262e82f62acc2de2858d2d2b6679c
 
 # You can export your (local) repositories to speed up
 # compilation.
@@ -55,8 +55,6 @@ prepare_source()
   done
   cd $MAINDIR
 }
-
-die "This is an internal development branch. Do not use. You need the stable master branch."
 
 RETDIR=`pwd`
 

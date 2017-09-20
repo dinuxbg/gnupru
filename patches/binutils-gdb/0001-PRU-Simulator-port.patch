@@ -1,7 +1,7 @@
-From a63f9246daf3751d5a614b7589a10bef4dd384b8 Mon Sep 17 00:00:00 2001
+From d4bd751a26ab7efd492756b15138641ad784c3f0 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 22:37:01 +0300
-Subject: [PATCH 1/6] PRU Simulator port
+Subject: [PATCH 1/7] PRU Simulator port
 
 The corresponding libgloss changes have not yet been mainlined.
 The PRU patches are available here:
@@ -126,7 +126,7 @@ index 3f82d47b6b..92ccc9aded 100644
 +#endif
 +#endif
 diff --git a/sim/configure b/sim/configure
-index 2729e69817..f92d310a2c 100755
+index 243ecc90e3..03f47cdcec 100755
 --- a/sim/configure
 +++ b/sim/configure
 @@ -654,6 +654,7 @@ mips
@@ -137,7 +137,7 @@ index 2729e69817..f92d310a2c 100755
  rl78
  rx
  sh64
-@@ -3768,6 +3769,13 @@ subdirs="$subdirs aarch64"
+@@ -3770,6 +3771,13 @@ subdirs="$subdirs aarch64"
  
  
         ;;

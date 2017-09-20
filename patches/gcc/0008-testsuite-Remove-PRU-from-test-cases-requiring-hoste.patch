@@ -1,7 +1,7 @@
-From 3356df81437e9ae59acaf32c9345b70b0bea617e Mon Sep 17 00:00:00 2001
+From d327ac3e9677fed556c7c936239a96da7cc04c81 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 22:00:23 +0200
-Subject: [PATCH 08/18] testsuite: Remove PRU from test cases requiring hosted
+Subject: [PATCH 08/16] testsuite: Remove PRU from test cases requiring hosted
  environment
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
@@ -11,10 +11,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  2 files changed, 5 insertions(+)
 
 diff --git a/gcc/testsuite/gcc.c-torture/execute/20101011-1.c b/gcc/testsuite/gcc.c-torture/execute/20101011-1.c
-index 899a401dd75..f0e30fb9e5b 100644
+index dda49a59852..7f8d14d617c 100644
 --- a/gcc/testsuite/gcc.c-torture/execute/20101011-1.c
 +++ b/gcc/testsuite/gcc.c-torture/execute/20101011-1.c
-@@ -92,6 +92,9 @@ __aeabi_idiv0 (int return_value)
+@@ -93,6 +93,9 @@ __aeabi_idiv0 (int return_value)
  #elif defined (__nvptx__)
  /* There isn't even a signal function.  */
  # define DO_TEST 0

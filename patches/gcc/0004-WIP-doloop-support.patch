@@ -1,7 +1,7 @@
-From e6de993820b1603ee1d612a4cea949d6cc8078e8 Mon Sep 17 00:00:00 2001
+From c53cf4ac7babf933b5b3b82aab5fa21870188afb Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sat, 6 Feb 2016 21:47:44 +0200
-Subject: [PATCH 04/18] WIP: doloop support
+Subject: [PATCH 04/16] WIP: doloop support
 
 TODO:
   - Add recognition for and handle "double-entry" loops, e.g.:

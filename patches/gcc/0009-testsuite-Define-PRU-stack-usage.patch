@@ -1,7 +1,7 @@
-From 0cfe1fc9dc71f1c22ffcc8b217a500c0597b9ebb Mon Sep 17 00:00:00 2001
+From e6f8d23af16ec2c9a5257a28486f0f73b5e2607a Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 22:00:47 +0200
-Subject: [PATCH 09/18] testsuite: Define PRU stack usage
+Subject: [PATCH 09/16] testsuite: Define PRU stack usage
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -9,7 +9,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  1 file changed, 2 insertions(+)
 
 diff --git a/gcc/testsuite/gcc.dg/stack-usage-1.c b/gcc/testsuite/gcc.dg/stack-usage-1.c
-index f10ba2061e7..bb74d6895f8 100644
+index 45d2c7b6aae..5487fbef318 100644
 --- a/gcc/testsuite/gcc.dg/stack-usage-1.c
 +++ b/gcc/testsuite/gcc.dg/stack-usage-1.c
 @@ -89,6 +89,8 @@

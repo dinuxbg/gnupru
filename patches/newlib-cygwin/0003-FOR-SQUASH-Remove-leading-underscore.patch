@@ -1,7 +1,7 @@
-From 172bd819d1decf10303465c60887cf99a537696b Mon Sep 17 00:00:00 2001
+From d12aae0423ec660906ca98ddd36ce970eed05969 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Tue, 27 Dec 2016 16:22:34 +0200
-Subject: [PATCH 3/5] FOR SQUASH: Remove leading underscore
+Subject: [PATCH 3/6] FOR SQUASH: Remove leading underscore
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
