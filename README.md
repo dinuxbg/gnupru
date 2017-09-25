@@ -27,7 +27,7 @@ If you are running Beaglebone Debian Jessie image, then installation is simple:
 
 For other Debian Jessie images, you'll need to add Robert Nelson's package repository. Open /etc/apt/sources.list and add the following line:
 
-	deb [arch=armhf] http://repos.rcn-ee.com/debian/ jessie main
+	deb [arch=armhf] http://repos.rcn-ee.com/debian/ stretch main
 
 ## Building From Sources
 The toolchain is published as a series of patches inside the patches subdirectory. The build scripts are tested on a Debian host, but should work on any recent distro.
