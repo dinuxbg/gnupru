@@ -1,5 +1,5 @@
 
-PRU_CGT ?= /usr/share/ti/cgt-pru
+PRU_CGT ?= /usr
 
 OUT := out
 TARGET := test
@@ -11,7 +11,7 @@ COMMON_CFLAGS := -DTESTCASE=\"$(TESTCASE)\" -I../
 TI_CFLAGS := -v3 -O2 --display_error_number --endian=little --hardware_mac=on
 # TODO - GNU LD PRU port does not yet support debug REL relocations.
 TI_CFLAGS += --symdebug:none
-GCC_CFLAGS := -O1 -g -Wall -Wextra -mmcu=sim
+GCC_CFLAGS := -O1 -g -Wall -Wextra -mmcu=sim -mabi=ti
 GCC_LDFLAGS :=
 
 all: $(OUT)/$(TARGET)

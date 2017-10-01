@@ -1,7 +1,7 @@
 From 523727040d4d7e35b9c600e8367a949aa559cc01 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 22:03:45 +0200
-Subject: [PATCH 10/16] testsuite: Workaround stack underflow with PRU
+Subject: [PATCH 10/17] testsuite: Workaround stack underflow with PRU
 
 TODO - should we rely on the DejaGNu workaround that moves the stack?
 

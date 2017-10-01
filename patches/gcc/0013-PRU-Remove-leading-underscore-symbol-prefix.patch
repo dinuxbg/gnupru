@@ -1,7 +1,7 @@
 From 10ff875c002461619d246cca3c6e7f0a666fb28f Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Tue, 27 Dec 2016 16:22:14 +0200
-Subject: [PATCH 13/16] PRU: Remove leading underscore symbol prefix
+Subject: [PATCH 13/17] PRU: Remove leading underscore symbol prefix
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
