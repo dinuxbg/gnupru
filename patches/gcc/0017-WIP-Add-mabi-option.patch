@@ -1,4 +1,4 @@
-From 6b90cc651eaa777aa5e695aca9477a2d1e242929 Mon Sep 17 00:00:00 2001
+From 915eb6aaac3c4f7a0f016507cbf5ed55f1a7f4d9 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sat, 23 Sep 2017 20:40:44 +0300
 Subject: [PATCH 17/17] WIP: Add mabi option
@@ -9,8 +9,8 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  gcc/config/pru/pru-opts.h                |  31 +++++
  gcc/config/pru/pru-passes.c              | 197 +++++++++++++++++++++++++++++++
  gcc/config/pru/pru-protos.h              |   5 +
- gcc/config/pru/pru.c                     |  60 +++-------
- gcc/config/pru/pru.h                     |   2 +
+ gcc/config/pru/pru.c                     |  71 +++++------
+ gcc/config/pru/pru.h                     |   7 +-
  gcc/config/pru/pru.opt                   |  19 ++-
  gcc/config/pru/t-pru                     |   6 +-
  gcc/doc/invoke.texi                      |  55 +++++++++
@@ -19,7 +19,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  gcc/testsuite/gcc.target/pru/mabi-ti-3.c |  12 ++
  gcc/testsuite/gcc.target/pru/mabi-ti-4.c |  14 +++
  gcc/testsuite/gcc.target/pru/mabi-ti-5.c |  33 ++++++
- 14 files changed, 417 insertions(+), 45 deletions(-)
+ 14 files changed, 430 insertions(+), 48 deletions(-)
  create mode 100644 gcc/config/pru/pru-opts.h
  create mode 100644 gcc/config/pru/pru-passes.c
  create mode 100644 gcc/testsuite/gcc.target/pru/mabi-ti-1.c
@@ -299,7 +299,7 @@ index f05029eac54..cd15be7ed15 100644
 +
  #endif /* GCC_PRU_PROTOS_H */
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
-index 10df43d47c3..8c23ca4bd7e 100644
+index 10df43d47c3..b78a5e2932f 100644
 --- a/gcc/config/pru/pru.c
 +++ b/gcc/config/pru/pru.c
 @@ -540,7 +540,7 @@ pru_hard_regno_mode_ok (unsigned int regno, machine_mode mode)
@@ -391,7 +391,22 @@ index 10df43d47c3..8c23ca4bd7e 100644
  
  /* Implement TARGET_CAN_USE_DOLOOP_P.  */
  
-@@ -2735,9 +2716,6 @@ pru_set_current_function (tree fndecl)
+@@ -2683,6 +2664,14 @@ pru_set_current_function (tree fndecl)
+     }
+ }
+ 
++
++static scalar_int_mode
++pru_unwind_word_mode (void)
++{
++  return SImode;
++}
++
++
+ /* Initialize the GCC target structure.  */
+ #undef TARGET_ASM_FUNCTION_PROLOGUE
+ #define TARGET_ASM_FUNCTION_PROLOGUE pru_asm_function_prologue
+@@ -2735,9 +2724,6 @@ pru_set_current_function (tree fndecl)
  #undef TARGET_RETURN_IN_MEMORY
  #define TARGET_RETURN_IN_MEMORY pru_return_in_memory
  
@@ -401,8 +416,18 @@ index 10df43d47c3..8c23ca4bd7e 100644
  #undef TARGET_MUST_PASS_IN_STACK
  #define TARGET_MUST_PASS_IN_STACK must_pass_in_stack_var_size
  
+@@ -2778,6 +2764,9 @@ pru_set_current_function (tree fndecl)
+ #undef TARGET_CXX_USE_ATEXIT_FOR_CXA_ATEXIT
+ #define TARGET_CXX_USE_ATEXIT_FOR_CXA_ATEXIT hook_bool_void_true
+ 
++#undef  TARGET_UNWIND_WORD_MODE
++#define TARGET_UNWIND_WORD_MODE pru_unwind_word_mode
++
+ struct gcc_target targetm = TARGET_INITIALIZER;
+ 
+ #include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
-index 4fe63ba741c..f4f077e74fc 100644
+index 4fe63ba741c..81d4dda9aa7 100644
 --- a/gcc/config/pru/pru.h
 +++ b/gcc/config/pru/pru.h
 @@ -21,6 +21,8 @@
@@ -414,6 +439,31 @@ index 4fe63ba741c..f4f077e74fc 100644
  /* Define built-in preprocessor macros.  */
  #define TARGET_CPU_CPP_BUILTINS()		    \
    do						    \
+@@ -36,12 +38,14 @@
+ 
+ #define DRIVER_SELF_SPECS " %{mmcu=*:-specs=device-specs/%*%s %<mmcu=*} "
+ 
++#if 0
+ #undef  CC1PLUS_SPEC
+ #define CC1PLUS_SPEC                                    \
+   "%(cc1) "                                             \
+   "%{!frtti:-fno-rtti} "                                \
+   "%{!fenforce-eh-specs:-fno-enforce-eh-specs} "        \
+   "%{!fexceptions:-fno-exceptions} "
++#endif
+ 
+ #undef  ASM_SPEC
+ #define ASM_SPEC				\
+@@ -58,9 +62,6 @@
+ #undef  ENDFILE_SPEC
+ #define ENDFILE_SPEC "-lgloss"
+ 
+-/* No libstdc++ for now.  Empty string doesn't work.  */
+-#define LIBSTDCXX "gcc"
+-
+ /* TI ABI mandates that ELF symbols do not start with any prefix.  */
+ #undef USER_LABEL_PREFIX
+ #define USER_LABEL_PREFIX ""
 diff --git a/gcc/config/pru/pru.opt b/gcc/config/pru/pru.opt
 index df76ed5c593..97af71a04a1 100644
 --- a/gcc/config/pru/pru.opt
