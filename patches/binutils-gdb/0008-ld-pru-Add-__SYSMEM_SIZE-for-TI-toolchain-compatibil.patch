@@ -1,0 +1,27 @@
+From 80d44bc9e1cf5e4cece0390f7959d0ae866fc219 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Sat, 30 Sep 2017 20:39:41 +0300
+Subject: [PATCH 8/8] ld: pru: Add __SYSMEM_SIZE for TI toolchain compatibility
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ ld/scripttempl/pru.sc | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/ld/scripttempl/pru.sc b/ld/scripttempl/pru.sc
+index 88fe06cb63..2a57910419 100644
+--- a/ld/scripttempl/pru.sc
++++ b/ld/scripttempl/pru.sc
+@@ -11,6 +11,9 @@ MEMORY
+ __HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32;
+ __STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512;
+ 
++/* For compatibility with TI's toolchain.  */
++__SYSMEM_SIZE = __HEAP_SIZE;
++
+ ${RELOCATING+ PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ; }
+ 
+ ${RELOCATING+ENTRY (_start)}
+-- 
+2.11.0
+
