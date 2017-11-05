@@ -27,3 +27,7 @@ To execute the GCC C test suite go to the GCC build directory and run:
 	make check-gcc-c RUNTESTFLAGS=--target_board=pru-sim
 
 Note that the C++ testsuite cannot be run due to the enormous C++ core library size. It cannot fit in the maximum possible 64k words of program memory possible in the PRU ISA architecture.
+
+To execute the GCC ABI regression test suite against the TI toolchain do:
+
+	make check-gcc-c RUNTESTFLAGS="--target_board=pru-sim compat.exp" COMPAT_OPTIONS='[list [list {-O2 -mmcu=sim -mabi=ti} {-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -I$(dirname `which clpru`)/include/}]]' ALT_CC_UNDER_TEST=`which clpru`

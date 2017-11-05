@@ -1,7 +1,7 @@
 From d6747bd3b6c7af6bccdb55cd334abe9d1e41cdf7 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Wed, 1 Nov 2017 15:13:13 +0200
-Subject: [PATCH 18/18] Align FP libfuncs with TI ABI
+Subject: [PATCH 18/19] Align FP libfuncs with TI ABI
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---

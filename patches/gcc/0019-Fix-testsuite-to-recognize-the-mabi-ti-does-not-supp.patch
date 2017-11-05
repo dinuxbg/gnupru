@@ -1,0 +1,71 @@
+From 537def51b1b63adca679775832a3788327acf874 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Sun, 5 Nov 2017 19:35:06 +0200
+Subject: [PATCH 19/19] Fix testsuite to recognize the -mabi-ti does not
+ support function pointers
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ gcc/testsuite/gcc.dg/compat/compat-common.h |  2 ++
+ gcc/testsuite/lib/gcc-dg.exp                | 11 +++++++++++
+ gcc/testsuite/lib/target-utils.exp          | 10 ++++++++++
+ 3 files changed, 23 insertions(+)
+
+diff --git a/gcc/testsuite/gcc.dg/compat/compat-common.h b/gcc/testsuite/gcc.dg/compat/compat-common.h
+index 4b3fb9c14ca..2f898b4d05d 100644
+--- a/gcc/testsuite/gcc.dg/compat/compat-common.h
++++ b/gcc/testsuite/gcc.dg/compat/compat-common.h
+@@ -37,6 +37,8 @@
+ #else
+ #ifdef __SUNPRO_C
+ /* ??? Complex support without <complex.h>.  */
++#elif defined(__TI_COMPILER_VERSION__)
++/* ??? */
+ #else
+ #include <complex.h>
+ #endif
+diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
+index 3be256d10ec..8f6bdea293c 100644
+--- a/gcc/testsuite/lib/gcc-dg.exp
++++ b/gcc/testsuite/lib/gcc-dg.exp
+@@ -386,6 +386,17 @@ proc gcc-dg-prune { system text } {
+ 	return "::unsupported::memory full"
+     }
+ 
++    if {[string match "pru-*" $system] && \
++	    [string match "*error: function pointers not supported with -mabi=ti option*" $text]} {
++	# The format here is important.  See dg.exp.
++	return "::unsupported::abi"
++    }
++    if {[string match "pru-*" $system] && \
++	    [string match "*error: large return values not supported with -mabi=ti option*" $text]} {
++	# The format here is important.  See dg.exp.
++	return "::unsupported::abi"
++    }
++
+     return $text
+ }
+ 
+diff --git a/gcc/testsuite/lib/target-utils.exp b/gcc/testsuite/lib/target-utils.exp
+index 2b6ab21116a..1362521e03e 100644
+--- a/gcc/testsuite/lib/target-utils.exp
++++ b/gcc/testsuite/lib/target-utils.exp
+@@ -43,5 +43,15 @@ proc ${tool}_check_unsupported_p { output } {
+ 	     [string match "*exceeds local store*" $output] } {
+ 	return "memory full"
+     }
++    if {[string match "pru-*" $system] && \
++	    [string match "*error: large return values not supported with -mabi=ti option*" $text]} {
++	# The format here is important.  See dg.exp.
++	return "abi not supported"
++    }
++    if {[string match "pru-*" $system] && \
++	    [string match "*error: function pointers not supported with -mabi=ti option*" $text]} {
++	# The format here is important.  See dg.exp.
++	return "abi not supported"
++    }
+     return ""
+ }
+-- 
+2.11.0
+

@@ -1,7 +1,7 @@
 From be5ea30a25737f588beb47881c1b5877f0992324 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sat, 24 Dec 2016 12:50:55 +0200
-Subject: [PATCH 05/18] EXPERIMENTAL: Use r3.w2 for call/ret
+Subject: [PATCH 05/19] EXPERIMENTAL: Use r3.w2 for call/ret
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
