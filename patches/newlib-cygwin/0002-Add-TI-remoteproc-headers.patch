@@ -1,7 +1,7 @@
 From a538f5561f3b88dd878dc48b982fdb6245541a9e Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sun, 11 Oct 2015 11:52:38 +0300
-Subject: [PATCH 2/2] Add TI remoteproc headers
+Subject: [PATCH 2/3] Add TI remoteproc headers
 
 Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---

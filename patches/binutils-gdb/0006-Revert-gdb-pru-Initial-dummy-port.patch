@@ -1,7 +1,7 @@
-From 5835169ab8230c850a74325a5a4e0c24b89f29f5 Mon Sep 17 00:00:00 2001
+From 1678d685a8c8ce8db7d3e355a7cf47912386492c Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 5 Dec 2016 19:55:46 +0200
-Subject: [PATCH 5/8] Revert "gdb: pru: Initial dummy port"
+Subject: [PATCH 6/9] Revert "gdb: pru: Initial dummy port"
 
 This reverts commit 2f00577670f212261578bc6f72f7695f3f670978.
 ---
@@ -21,10 +21,10 @@ This reverts commit 2f00577670f212261578bc6f72f7695f3f670978.
  delete mode 100644 gdb/pru-tdep.h
 
 diff --git a/gdb/Makefile.in b/gdb/Makefile.in
-index 499e761076..9dfc117b2f 100644
+index e122ea9287..a3bfbf93e1 100644
 --- a/gdb/Makefile.in
 +++ b/gdb/Makefile.in
-@@ -871,7 +871,6 @@ ALL_TARGET_OBS = \
+@@ -878,7 +878,6 @@ ALL_TARGET_OBS = \
  	ppc-ravenscar-thread.o \
  	ppc-sysv-tdep.o \
  	ppc64-tdep.o \
@@ -32,7 +32,7 @@ index 499e761076..9dfc117b2f 100644
  	ravenscar-thread.o \
  	rl78-tdep.o \
  	rs6000-aix-tdep.o \
-@@ -1432,7 +1431,6 @@ HFILES_NO_SRCDIR = \
+@@ -1437,7 +1436,6 @@ HFILES_NO_SRCDIR = \
  	progspace.h \
  	progspace-and-thread.h \
  	prologue-value.h \
@@ -40,7 +40,7 @@ index 499e761076..9dfc117b2f 100644
  	psympriv.h \
  	psymtab.h \
  	ravenscar-thread.h \
-@@ -2644,7 +2642,6 @@ ALLDEPFILES = \
+@@ -2655,7 +2653,6 @@ ALLDEPFILES = \
  	ppc-sysv-tdep.c \
  	ppc64-tdep.c \
  	procfs.c \
@@ -49,10 +49,10 @@ index 499e761076..9dfc117b2f 100644
  	remote-sim.c \
  	rl78-tdep.c \
 diff --git a/gdb/configure.tgt b/gdb/configure.tgt
-index 8d944e4520..2e69e1d8cb 100644
+index c6aa8a14e4..1fce0798e2 100644
 --- a/gdb/configure.tgt
 +++ b/gdb/configure.tgt
-@@ -485,12 +485,6 @@ powerpc*-*-*)
+@@ -511,12 +511,6 @@ powerpc*-*-*)
  	gdb_sim=../sim/ppc/libsim.a
  	;;
  
@@ -66,12 +66,12 @@ index 8d944e4520..2e69e1d8cb 100644
  	# Target: S390 running Linux
  	gdb_target_obs="s390-linux-tdep.o solib-svr4.o linux-tdep.o \
 diff --git a/gdb/features/Makefile b/gdb/features/Makefile
-index e13c71f4b9..4a95c8179d 100644
+index d18b6b09dd..b41d56106b 100644
 --- a/gdb/features/Makefile
 +++ b/gdb/features/Makefile
-@@ -147,7 +147,6 @@ XMLTOC = \
+@@ -137,7 +137,6 @@ XMLTOC = \
+ 	mips64-linux.xml \
  	nds32.xml \
- 	nios2-linux.xml \
  	nios2.xml \
 -	pru.xml \
  	rs6000/powerpc-32.xml \

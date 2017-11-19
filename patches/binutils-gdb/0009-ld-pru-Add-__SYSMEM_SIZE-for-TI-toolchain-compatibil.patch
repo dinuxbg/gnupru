@@ -1,7 +1,7 @@
-From 80d44bc9e1cf5e4cece0390f7959d0ae866fc219 Mon Sep 17 00:00:00 2001
+From 367d7b26b75f533134b29a7d3bfdefeaa89904c8 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sat, 30 Sep 2017 20:39:41 +0300
-Subject: [PATCH 8/8] ld: pru: Add __SYSMEM_SIZE for TI toolchain compatibility
+Subject: [PATCH 9/9] ld: pru: Add __SYSMEM_SIZE for TI toolchain compatibility
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---

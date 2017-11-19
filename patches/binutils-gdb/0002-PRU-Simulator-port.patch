@@ -1,7 +1,7 @@
-From d4bd751a26ab7efd492756b15138641ad784c3f0 Mon Sep 17 00:00:00 2001
+From 6404be92701b752c3ba5e2740523c66892835bb8 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 22:37:01 +0300
-Subject: [PATCH 1/8] PRU Simulator port
+Subject: [PATCH 2/9] PRU Simulator port
 
 The corresponding libgloss changes have not yet been mainlined.
 The PRU patches are available here:
@@ -63,10 +63,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 sim/pru/sim-main.h
 
 diff --git a/sim/MAINTAINERS b/sim/MAINTAINERS
-index 62887d4bb1..875661da26 100644
+index 59d23a0f29..c37d77a423 100644
 --- a/sim/MAINTAINERS
 +++ b/sim/MAINTAINERS
-@@ -29,6 +29,7 @@ microblaze	Michael Eager <eager@eagercon.com>
+@@ -30,6 +30,7 @@ microblaze	Michael Eager <eager@eagercon.com>
  mips		Maciej W. Rozycki <macro@imgtec.com>
  moxie		Anthony Green <green@moxielogic.com>
  msp430		Nick Clifton <nickc@redhat.com>

@@ -1,7 +1,7 @@
-From dfdcef7802d26c4690a614e3c25393c942449365 Mon Sep 17 00:00:00 2001
+From 7700e55c37b0c436084f1b5b7bf8a560894c9bd7 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 7 Oct 2016 22:51:06 +0300
-Subject: [PATCH 4/8] gdb: pru: Initial dummy port
+Subject: [PATCH 5/9] gdb: pru: Initial dummy port
 
 This needs a lot of work.
 
@@ -23,10 +23,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 gdb/pru-tdep.h
 
 diff --git a/gdb/Makefile.in b/gdb/Makefile.in
-index 9dfc117b2f..499e761076 100644
+index a3bfbf93e1..e122ea9287 100644
 --- a/gdb/Makefile.in
 +++ b/gdb/Makefile.in
-@@ -871,6 +871,7 @@ ALL_TARGET_OBS = \
+@@ -878,6 +878,7 @@ ALL_TARGET_OBS = \
  	ppc-ravenscar-thread.o \
  	ppc-sysv-tdep.o \
  	ppc64-tdep.o \
@@ -34,7 +34,7 @@ index 9dfc117b2f..499e761076 100644
  	ravenscar-thread.o \
  	rl78-tdep.o \
  	rs6000-aix-tdep.o \
-@@ -1431,6 +1432,7 @@ HFILES_NO_SRCDIR = \
+@@ -1436,6 +1437,7 @@ HFILES_NO_SRCDIR = \
  	progspace.h \
  	progspace-and-thread.h \
  	prologue-value.h \
@@ -42,7 +42,7 @@ index 9dfc117b2f..499e761076 100644
  	psympriv.h \
  	psymtab.h \
  	ravenscar-thread.h \
-@@ -2642,6 +2644,7 @@ ALLDEPFILES = \
+@@ -2653,6 +2655,7 @@ ALLDEPFILES = \
  	ppc-sysv-tdep.c \
  	ppc64-tdep.c \
  	procfs.c \
@@ -51,10 +51,10 @@ index 9dfc117b2f..499e761076 100644
  	remote-sim.c \
  	rl78-tdep.c \
 diff --git a/gdb/configure.tgt b/gdb/configure.tgt
-index 2e69e1d8cb..8d944e4520 100644
+index 1fce0798e2..c6aa8a14e4 100644
 --- a/gdb/configure.tgt
 +++ b/gdb/configure.tgt
-@@ -485,6 +485,12 @@ powerpc*-*-*)
+@@ -511,6 +511,12 @@ powerpc*-*-*)
  	gdb_sim=../sim/ppc/libsim.a
  	;;
  
@@ -68,12 +68,12 @@ index 2e69e1d8cb..8d944e4520 100644
  	# Target: S390 running Linux
  	gdb_target_obs="s390-linux-tdep.o solib-svr4.o linux-tdep.o \
 diff --git a/gdb/features/Makefile b/gdb/features/Makefile
-index 4a95c8179d..e13c71f4b9 100644
+index b41d56106b..d18b6b09dd 100644
 --- a/gdb/features/Makefile
 +++ b/gdb/features/Makefile
-@@ -147,6 +147,7 @@ XMLTOC = \
+@@ -137,6 +137,7 @@ XMLTOC = \
+ 	mips64-linux.xml \
  	nds32.xml \
- 	nios2-linux.xml \
  	nios2.xml \
 +	pru.xml \
  	rs6000/powerpc-32.xml \

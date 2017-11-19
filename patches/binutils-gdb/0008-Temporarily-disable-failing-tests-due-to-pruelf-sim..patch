@@ -1,7 +1,7 @@
-From 49b6aac871ee945a6564d39accfd741e6c832cae Mon Sep 17 00:00:00 2001
+From c598c417a9042b0d7fce4dee5f53e478060835e9 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 1 Jun 2017 04:50:28 +0300
-Subject: [PATCH 7/8] Temporarily disable failing tests due to pruelf-sim.x
+Subject: [PATCH 8/9] Temporarily disable failing tests due to pruelf-sim.x
 
 Disable until I figure out how to fix Dejagnu to find pruelf-sim.x:
 .../ld/tmpdir/ld/collect-ld: cannot open linker script file pruelf-sim.x: No such file or directory
@@ -13,10 +13,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  2 files changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/ld/testsuite/ld-elf/elf.exp b/ld/testsuite/ld-elf/elf.exp
-index 655f0daf23..f980368875 100644
+index acdad8db22..c3555f4163 100644
 --- a/ld/testsuite/ld-elf/elf.exp
 +++ b/ld/testsuite/ld-elf/elf.exp
-@@ -296,7 +296,7 @@ set array_tests_static {
+@@ -323,7 +323,7 @@ set array_tests_static {
  
  # NetBSD ELF systems do not currently support the .*_array sections.
  set xfails "*-*-netbsdelf*"
@@ -25,7 +25,7 @@ index 655f0daf23..f980368875 100644
  
  if { [istarget *-*-linux*]
       || [istarget *-*-nacl*]
-@@ -332,6 +332,6 @@ switch -regexp $target_triplet {
+@@ -359,6 +359,6 @@ switch -regexp $target_triplet {
  	set xfails "*-*-*"
      }
  }
