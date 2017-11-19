@@ -28,6 +28,20 @@ To execute the GCC C test suite go to the GCC build directory and run:
 
 Note that the C++ testsuite cannot be run due to the enormous C++ core library size. It cannot fit in the maximum possible 64k words of program memory possible in the PRU ISA architecture.
 
+## Checking ABI compatibility
+It is possible to run part of the GCC testsuite in an "ABI check" mode. The testsuite will compile object files with different compilers, and then check that functions from one object file can call and get correct return value from the other object file.
+
+To install, first put the clpru.sh script into your PATH. This wrapper script is needed because TI compiler does not follow the standard command line option interface, that is expected by the GCC testsuite.
+
+	ln -s gnupru/testing/clpru.sh $HOME/bin/
+
 To execute the GCC ABI regression test suite against the TI toolchain do:
 
-	make check-gcc-c RUNTESTFLAGS="--target_board=pru-sim compat.exp" COMPAT_OPTIONS='[list [list {-O2 -mmcu=sim -mabi=ti} {-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -I$(dirname `which clpru`)/include/}]]' ALT_CC_UNDER_TEST=`which clpru`
+	# Cleanup (important for incremental checks)
+	find . -name site.exp | xargs rm -f
+	make check-gcc-c RUNTESTFLAGS="--target_board=pru-sim compat.exp" COMPAT_OPTIONS="[list [list {-O2 -mmcu=sim -mabi=ti} {-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none}]]" ALT_CC_UNDER_TEST=`which clpru.sh`
+
+A few notes about the options:
+* --hardware_mac=on is needed since GCC does not currently support turning off MAC instruction generation. Please let me know if you see a real usecase for this feature, and I may reconsider.
+* --symdebug:none is needed since the binutils linker doest not yet support the debug relaxations output by TI toolchain.
+* -mmcu=sim is needed by the GNU LD to provide sufficient memory for test execution.
