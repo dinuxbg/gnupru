@@ -1,7 +1,7 @@
-From 8135e6ab4a99a78b312259b66ad47c6b446f2996 Mon Sep 17 00:00:00 2001
+From 3db7ee7ca26ef7c1130d77f65278d795a33a5771 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 28 Jul 2014 23:10:08 +0300
-Subject: [PATCH 02/19] HACK: Limit LBBO/SBBO bursts to 19 regs
+Subject: [PATCH 02/16] HACK: Limit LBBO/SBBO bursts to 19 regs
 
 Until gcc/genextract.c is fixed to work with gargantuan
 machine-generated insn patterns, limit PRU bursts to 19 registers.
@@ -13,7 +13,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  2 files changed, 8 insertions(+), 1 deletion(-)
 
 diff --git a/gcc/config/pru/pru-ldst-multiple.ml b/gcc/config/pru/pru-ldst-multiple.ml
-index dc58acafbc0..23747a37e96 100644
+index 2a35d7b9bb9..5b5f8e20a60 100644
 --- a/gcc/config/pru/pru-ldst-multiple.ml
 +++ b/gcc/config/pru/pru-ldst-multiple.ml
 @@ -105,7 +105,7 @@ let write_pattern_1 name ls nregs do_first_offs write_set_fn =
@@ -26,22 +26,22 @@ index dc58acafbc0..23747a37e96 100644
      write_pattern_1 "lbbo" "load" nregs false write_ldm_set;
      write_pattern_1 "sbbo" "store" nregs true write_stm_set;
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
-index 7546d70e689..c869d36608e 100644
+index 01c1dcff351..168d8d4d617 100644
 --- a/gcc/config/pru/pru.md
 +++ b/gcc/config/pru/pru.md
-@@ -42,6 +42,11 @@
-    (FRAME_POINTER_REGNUM	33)
-    (ARG_POINTER_REGNUM		34)
-    (FIRST_PSEUDO_REGISTER	35)
+@@ -41,6 +41,11 @@
+    (FRAME_POINTER_REGNUM	136)
+    (ARG_POINTER_REGNUM		140)
+    (FIRST_PSEUDO_REGISTER	144)
 +
 +   ;; Misc
-+   (MAX_XBBO_BURST_LEN	    20)	; Artificially limited by GCC - see how
++   (MAX_XBBO_BURST_LEN	    19)	; Artificially limited by GCC - see how
 +				; genextract.c uses 'a'..'z' to record
 +				; "path to a vector".
    ]
  )
  
-@@ -193,6 +198,7 @@
+@@ -215,6 +220,7 @@
       only if at least one register.  */
    if (GET_CODE (operands[2]) != CONST_INT
        || INTVAL (operands[2]) < 1
@@ -49,7 +49,7 @@ index 7546d70e689..c869d36608e 100644
        || GET_CODE (operands[1]) != MEM
        || GET_CODE (operands[0]) != REG
        || (REGNO (operands[0]) + INTVAL (operands[2]) - 1) > LAST_NONIO_GP_REG)
-@@ -229,6 +235,7 @@
+@@ -251,6 +257,7 @@
       only if at least one register.  */
    if (GET_CODE (operands[2]) != CONST_INT
        || INTVAL (operands[2]) < 1

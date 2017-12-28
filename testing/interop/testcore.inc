@@ -9,10 +9,11 @@ TESTCASE := $(shell basename `pwd`)
 COMMON_CFLAGS := -DTESTCASE=\"$(TESTCASE)\" -I../
 
 TI_CFLAGS := -v3 -O2 --display_error_number --endian=little --hardware_mac=on
+TI_CFLAGS += -I$(PRU_CGT)/include
 # TODO - GNU LD PRU port does not yet support debug REL relocations.
 TI_CFLAGS += --symdebug:none
-GCC_CFLAGS := -O1 -g -Wall -Wextra -mmcu=sim -mabi=ti
-GCC_LDFLAGS :=
+GCC_CFLAGS += -O1 -g -Wall -Wextra -mmcu=sim -mabi=ti
+GCC_LDFLAGS +=
 
 all: $(OUT)/$(TARGET)
 	pru-run $<
@@ -34,7 +35,7 @@ clean:
 	rm -fr $(OUT)
 
 $(OUT)/selftest-host: ti-mod.c gcc-main.c | $(OUT) $(wildcard *.h)
-	gcc -O2 -Wall -Wextra $(COMMON_CFLAGS) $^ -o $@
+	gcc -O2 -Wall -Wextra -lm $(COMMON_CFLAGS) $^ -o $@
 
 selftest: $(OUT)/selftest-host
 	./$<

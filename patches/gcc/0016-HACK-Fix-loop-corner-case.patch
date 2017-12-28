@@ -1,0 +1,52 @@
+From c41bf85dd8b3203b54eeb80704f4229b7042d5f3 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Wed, 27 Dec 2017 22:43:46 +0200
+Subject: [PATCH 16/16] HACK: Fix loop corner case
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ gcc/config/pru/pru.c  | 14 ++++++++++++++
+ gcc/config/pru/pru.md |  5 +++++
+ 2 files changed, 19 insertions(+)
+
+diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
+index 7665d7998e7..8e784de0907 100644
+--- a/gcc/config/pru/pru.c
++++ b/gcc/config/pru/pru.c
+@@ -2556,6 +2556,20 @@ pru_reorg_loop (rtx_insn *insns)
+ 	/* Emit a pruloop_end (to improve the readability of the output).  */
+ 	emit_insn_before (gen_pruloop_end (), loop->end->insn);
+ 
++	/* HACK: TODO: This is usually not needed, but is required for
++	   a few rare cases where a JUMP that breaks the loop
++	   references the LOOP_END address.  In other words, since
++	   we're missing a real "loop_end" instruction, a loop "break"
++	   may accidentally reference the loop end itself, and thus
++	   continuing the cycle.  */
++	for (insn = NEXT_INSN (loop->end->insn);
++	     insn != next_real_insn (loop->end->insn);
++	     insn = NEXT_INSN (insn))
++	  {
++	    if (LABEL_P (insn) && LABEL_NUSES (insn) > 0)
++	      emit_insn_before (gen_nop_loop_guard (), loop->end->insn);
++	  }
++
+ 	/* Delete the first doloop_end.  */
+ 	delete_insn (loop->end->insn);
+ 
+diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
+index ec67d5ac09d..87cc5ab5dc0 100644
+--- a/gcc/config/pru/pru.md
++++ b/gcc/config/pru/pru.md
+@@ -901,3 +901,8 @@
+   "nop"
+   [(set_attr "type" "alu")])
+ 
++(define_insn "nop_loop_guard"
++  [(const_int 0)]
++  ""
++  "nop\\t# Loop end guard"
++  [(set_attr "type" "alu")])
+-- 
+2.11.0
+

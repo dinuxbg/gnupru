@@ -1,0 +1,53 @@
+From ba8fa1504b7de309224f14d9a2dc1bdf3041f745 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dddimitrov@mm-sol.com>
+Date: Sun, 23 Jul 2017 20:59:53 -0700
+Subject: [PATCH 11/16] Fix LRA to handle multi-word eliminable registers
+
+For some targets, Pmode != UNITS_PER_WORD. Take this into account
+when marking hard registers as being used.
+
+Signed-off-by: Dimitar Dimitrov <dddimitrov@mm-sol.com>
+---
+ gcc/lra-eliminations.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/gcc/lra-eliminations.c b/gcc/lra-eliminations.c
+index 4f130a68e79..1863987efbb 100644
+--- a/gcc/lra-eliminations.c
++++ b/gcc/lra-eliminations.c
+@@ -1180,6 +1180,16 @@ spill_pseudos (HARD_REG_SET set)
+   bitmap_clear (&to_process);
+ }
+ 
++static void set_ptr_hard_reg_bits (HARD_REG_SET *hard_reg_set, int r)
++{
++  int w;
++
++  for (w = 0; w < GET_MODE_SIZE (Pmode); w += UNITS_PER_WORD, r++)
++    {
++	  SET_HARD_REG_BIT (*hard_reg_set, r);
++    }
++}
++
+ /* Update all offsets and possibility for elimination on eliminable
+    registers.  Spill pseudos assigned to registers which are
+    uneliminable, update LRA_NO_ALLOC_REGS and ELIMINABLE_REG_SET.  Add
+@@ -1264,13 +1274,13 @@ update_reg_eliminate (bitmap insns_with_changed_offsets)
+   CLEAR_HARD_REG_SET (temp_hard_reg_set);
+   for (ep = reg_eliminate; ep < &reg_eliminate[NUM_ELIMINABLE_REGS]; ep++)
+     if (elimination_map[ep->from] == NULL)
+-      SET_HARD_REG_BIT (temp_hard_reg_set, ep->from);
++      set_ptr_hard_reg_bits (&temp_hard_reg_set, ep->from);
+     else if (elimination_map[ep->from] == ep)
+       {
+ 	/* Prevent the hard register into which we eliminate from
+ 	   the usage for pseudos.  */
+         if (ep->from != ep->to)
+-	  SET_HARD_REG_BIT (temp_hard_reg_set, ep->to);
++	  set_ptr_hard_reg_bits (&temp_hard_reg_set, ep->to);
+ 	if (maybe_ne (ep->previous_offset, ep->offset))
+ 	  {
+ 	    bitmap_ior_into (insns_with_changed_offsets,
+-- 
+2.11.0
+

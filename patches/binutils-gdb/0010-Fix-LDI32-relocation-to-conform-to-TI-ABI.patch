@@ -1,0 +1,274 @@
+From f4d5f2abd6d71927506f3d996ff6d7b52833515a Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Fri, 8 Dec 2017 23:21:26 +0200
+Subject: [PATCH 10/10] Fix LDI32 relocation to conform to TI ABI
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ bfd/elf32-pru.c                          | 31 +++++++++++++++++++++----------
+ gas/config/tc-pru.c                      | 16 +++++++++++-----
+ gas/testsuite/gas/pru/ldi.d              |  8 ++++----
+ ld/testsuite/ld-pru/ldi32.d              |  2 +-
+ ld/testsuite/ld-pru/norelax_ldi32-data.d |  8 ++++----
+ ld/testsuite/ld-pru/norelax_ldi32-dis.d  | 28 ++++++++++++++--------------
+ ld/testsuite/ld-pru/relax_ldi32-data.d   |  8 ++++----
+ ld/testsuite/ld-pru/relax_ldi32-dis.d    | 20 ++++++++++----------
+ 8 files changed, 69 insertions(+), 52 deletions(-)
+
+diff --git a/bfd/elf32-pru.c b/bfd/elf32-pru.c
+index a98b4b3d7e..7f8d6efd77 100644
+--- a/bfd/elf32-pru.c
++++ b/bfd/elf32-pru.c
+@@ -550,14 +550,14 @@ pru_elf32_do_ldi32_relocate (bfd *abfd, reloc_howto_type *howto,
+   in1 = bfd_get_32 (abfd, location);
+   in2 = bfd_get_32 (abfd, location + 4);
+ 
+-  /* Extract the addend - should be zero per my understanding.  */
+-  num = GET_INSN_FIELD (IMM16, in1) | (GET_INSN_FIELD (IMM16, in2) << 16);
+-  BFD_ASSERT (!num);
++  /* Although GAS does not use addend and always puts zeros, the TI
++     toolchain occasionally fills it in.  */
++  num = (GET_INSN_FIELD (IMM16, in1) << 16) | GET_INSN_FIELD (IMM16, in2);
+ 
+   relocation += num;
+ 
+-  SET_INSN_FIELD (IMM16, in1, relocation & 0xffff);
+-  SET_INSN_FIELD (IMM16, in2, relocation >> 16);
++  SET_INSN_FIELD (IMM16, in1, relocation >> 16);
++  SET_INSN_FIELD (IMM16, in2, relocation & 0xffff);
+ 
+   bfd_put_32 (abfd, in1, location);
+   bfd_put_32 (abfd, in2, location + 4);
+@@ -1080,7 +1080,7 @@ pru_elf_relax_delete_bytes (bfd *abfd,
+ 	 continue;
+ 
+        shrinked_insn_address = (sec->output_section->vma
+-				+ sec->output_offset + addr - count);
++				+ sec->output_offset + addr);
+ 
+        irel = elf_section_data (isec)->relocs;
+        /* PR 12161: Read in the relocs for this section if necessary.  */
+@@ -1340,17 +1340,28 @@ pru_elf32_relax_section (bfd * abfd, asection * sec,
+ 
+ 	  if ((long) value >> 16 == 0)
+ 	    {
++	      unsigned long insn;
++
+ 	      /* Note that we've changed the relocs, section contents.  */
+ 	      elf_section_data (sec)->relocs = internal_relocs;
+ 	      elf_section_data (sec)->this_hdr.contents = contents;
+ 	      symtab_hdr->contents = (unsigned char *) isymbuf;
+ 
+-	      /* Delete bytes.  */
+-	      if (!pru_elf_relax_delete_bytes (abfd, sec, irel->r_offset + 4, 4))
++	      /* Make the second instruction load the 16-bit constant
++		 into the full 32-bit register.  */
++	      insn = bfd_get_32 (abfd, contents + irel->r_offset + 4);
++	      BFD_ASSERT (GET_INSN_FIELD (RDSEL, insn) == RSEL_15_0);
++	      SET_INSN_FIELD (RDSEL, insn, RSEL_31_0);
++	      bfd_put_32 (abfd, insn, contents + irel->r_offset + 4);
++
++	      /* Delete the first LDI instruction.  Note that there should
++		 be no relocations or symbols pointing to the second LDI
++		 instruction.  */
++	      if (!pru_elf_relax_delete_bytes (abfd, sec, irel->r_offset, 4))
+ 		goto error_return;
+ 
+-	      /* We're done with deletion of the second instruction.
+-		 Set a regular LDI relocation for the first instruction
++	      /* We're done with deletion of the first instruction.
++		 Set a regular LDI relocation for the second instruction
+ 		 we left to load the 16-bit value into the 32-bit
+ 		 register.  */
+ 	      irel->r_info = ELF32_R_INFO (ELF32_R_SYM (irel->r_info),
+diff --git a/gas/config/tc-pru.c b/gas/config/tc-pru.c
+index d5aa5a5146..1887880678 100644
+--- a/gas/config/tc-pru.c
++++ b/gas/config/tc-pru.c
+@@ -814,8 +814,11 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
+ 	      /* As the only 64-bit "insn", LDI32 needs special handling. */
+ 	      uint32_t insn1 = insn & 0xffffffff;
+ 	      uint32_t insn2 = insn >> 32;
+-	      SET_INSN_FIELD (IMM16, insn1, fixup & 0xffff);
+-	      SET_INSN_FIELD (IMM16, insn2, fixup >> 16);
++	      SET_INSN_FIELD (IMM16, insn1, fixup >> 16);
++	      SET_INSN_FIELD (IMM16, insn2, fixup & 0xffff);
++
++	      SET_INSN_FIELD (RDSEL, insn1, RSEL_31_16);
++	      SET_INSN_FIELD (RDSEL, insn2, RSEL_15_0);
+ 
+ 	      md_number_to_chars (buf, insn1, 4);
+ 	      md_number_to_chars (buf + 4, insn2, 4);
+@@ -1141,7 +1144,8 @@ pru_assemble_arg_i (pru_insn_infoS *insn_info, const char *argstr)
+ 
+   /* QUIRK: LDI must clear IO bit high, even though it has immediate arg. */
+   SET_INSN_FIELD (IO, insn_info->insn_code, 0);
+-  SET_INSN_FIELD (IMM16, insn_info->insn_code, imm32 & 0xffff);
++  SET_INSN_FIELD (RDSEL, insn_info->insn_code, RSEL_31_16);
++  SET_INSN_FIELD (IMM16, insn_info->insn_code, imm32 >> 16);
+   insn_info->ldi32_imm32 = imm32;
+ }
+ 
+@@ -1475,11 +1479,13 @@ output_insn_ldi32 (pru_insn_infoS *insn)
+   unsigned long insn2;
+ 
+   f = frag_more (8);
++  SET_INSN_FIELD (IMM16, insn->insn_code, insn->ldi32_imm32 >> 16);
++  SET_INSN_FIELD (RDSEL, insn->insn_code, RSEL_31_16);
+   md_number_to_chars (f, insn->insn_code, 4);
+ 
+   insn2 = insn->insn_code;
+-  SET_INSN_FIELD (IMM16, insn2, insn->ldi32_imm32 >> 16);
+-  SET_INSN_FIELD (RDSEL, insn2, RSEL_31_16);
++  SET_INSN_FIELD (IMM16, insn2, insn->ldi32_imm32 & 0xffff);
++  SET_INSN_FIELD (RDSEL, insn2, RSEL_15_0);
+   md_number_to_chars (f + 4, insn2, 4);
+ 
+   /* Emit debug info.  */
+diff --git a/gas/testsuite/gas/pru/ldi.d b/gas/testsuite/gas/pru/ldi.d
+index 885150495e..4c2cf7a0c7 100644
+--- a/gas/testsuite/gas/pru/ldi.d
++++ b/gas/testsuite/gas/pru/ldi.d
+@@ -6,12 +6,12 @@
+ .*: +file format elf32-pru
+ 
+ Disassembly of section .text:
+-0+0000 <[^>]*> 240000f0 	ldi	r16, 0
++0+0000 <[^>]*> 240000d0 	ldi	r16.w2, 0
+ [\t ]*0: R_PRU_LDI32	\*ABS\*\+0x12345678
+-0+0004 <[^>]*> 240000d0 	ldi	r16.w2, 0
++0+0004 <[^>]*> 24000090 	ldi	r16.w0, 0
+ 0+0008 <[^>]*> 241234f0 	ldi	r16, 4660
+ 0+000c <[^>]*> 240000f0 	ldi	r16, 0
+ [\t ]*c: R_PRU_U16_PMEMIMM	.text
+-0+0010 <[^>]*> 240000f0 	ldi	r16, 0
++0+0010 <[^>]*> 240000d0 	ldi	r16.w2, 0
+ [\t ]*10: R_PRU_LDI32	var1
+-0+0014 <[^>]*> 240000d0 	ldi	r16.w2, 0
++0+0014 <[^>]*> 24000090 	ldi	r16.w0, 0
+diff --git a/ld/testsuite/ld-pru/ldi32.d b/ld/testsuite/ld-pru/ldi32.d
+index 123ead310f..cc9b86dd70 100644
+--- a/ld/testsuite/ld-pru/ldi32.d
++++ b/ld/testsuite/ld-pru/ldi32.d
+@@ -8,5 +8,5 @@
+ .*: +file format elf32-pru
+ 
+ Disassembly of section .text:
+-[0-9a-f]+ <[^>]*> ldi	r16, 48879
+ [0-9a-f]+ <[^>]*> ldi	r16.w2, 57005
++[0-9a-f]+ <[^>]*> ldi	r16.w0, 48879
+diff --git a/ld/testsuite/ld-pru/norelax_ldi32-data.d b/ld/testsuite/ld-pru/norelax_ldi32-data.d
+index 47fc2c12f4..cc7140e450 100644
+--- a/ld/testsuite/ld-pru/norelax_ldi32-data.d
++++ b/ld/testsuite/ld-pru/norelax_ldi32-data.d
+@@ -10,10 +10,10 @@
+ .*: +file format elf32-pru
+ 
+ Contents of section .text:
+- [0-9a-f]+ f0efbe24 d0adde24 0f00f630 f0efbe24  .*
+- [0-9a-f]+ d0adde24 f0cace24 d0000024 e0cace24  .*
+- [0-9a-f]+ f0cace24 d0010024 f0efbe24 d0acde24  .*
+- [0-9a-f]+ f0785624 d0341224 f0785624 d0000024  .*
++ [0-9a-f]+ d0adde24 90efbe24 0f00f630 d0adde24  .*
++ [0-9a-f]+ 90efbe24 d0000024 90cace24 e0cace24  .*
++ [0-9a-f]+ d0010024 90cace24 d0acde24 90efbe24  .*
++ [0-9a-f]+ d0341224 90785624 d0000024 90785624  .*
+  [0-9a-f]+ f0120024 f100007e .*
+ Contents of section .data:
+  0000 00000000 48000020 40000000 12004000  .*
+diff --git a/ld/testsuite/ld-pru/norelax_ldi32-dis.d b/ld/testsuite/ld-pru/norelax_ldi32-dis.d
+index 072de5fbd4..8f3be0f6e6 100644
+--- a/ld/testsuite/ld-pru/norelax_ldi32-dis.d
++++ b/ld/testsuite/ld-pru/norelax_ldi32-dis.d
+@@ -9,21 +9,21 @@
+ .*: +file format elf32-pru
+ 
+ Disassembly of section .text:
+-..000000 <[^>]*> ldi	r16, 48879
+-..000004 <[^>]*> ldi	r16.w2, 57005
++..000000 <[^>]*> ldi	r16.w2, 57005
++..000004 <[^>]*> ldi	r16.w0, 48879
+ ..000008 <[^>]*> loop	..000044 <__end_loop>, r22
+-..00000c <[^>]*> ldi	r16, 48879
+-..000010 <[^>]*> ldi	r16.w2, 57005
+-..000014 <[^>]*> ldi	r16, 52938
+-..000018 <[^>]*> ldi	r16.w2, 0
++..00000c <[^>]*> ldi	r16.w2, 57005
++..000010 <[^>]*> ldi	r16.w0, 48879
++..000014 <[^>]*> ldi	r16.w2, 0
++..000018 <[^>]*> ldi	r16.w0, 52938
+ ..00001c <[^>]*> ldi	r0, 52938
+-..000020 <[^>]*> ldi	r16, 52938
+-..000024 <[^>]*> ldi	r16.w2, 1
+-..000028 <[^>]*> ldi	r16, 48879
+-..00002c <[^>]*> ldi	r16.w2, 57004
+-..000030 <[^>]*> ldi	r16, 22136
+-..000034 <[^>]*> ldi	r16.w2, 4660
+-..000038 <[^>]*> ldi	r16, 22136
+-..00003c <[^>]*> ldi	r16.w2, 0
++..000020 <[^>]*> ldi	r16.w2, 1
++..000024 <[^>]*> ldi	r16.w0, 52938
++..000028 <[^>]*> ldi	r16.w2, 57004
++..00002c <[^>]*> ldi	r16.w0, 48879
++..000030 <[^>]*> ldi	r16.w2, 4660
++..000034 <[^>]*> ldi	r16.w0, 22136
++..000038 <[^>]*> ldi	r16.w2, 0
++..00003c <[^>]*> ldi	r16.w0, 22136
+ ..000040 <[^>]*> ldi	r16, 18
+ ..000044 <[^>]*> qba	..000008 <__intermediate>
+diff --git a/ld/testsuite/ld-pru/relax_ldi32-data.d b/ld/testsuite/ld-pru/relax_ldi32-data.d
+index 2c24fe422e..ffb5d81170 100644
+--- a/ld/testsuite/ld-pru/relax_ldi32-data.d
++++ b/ld/testsuite/ld-pru/relax_ldi32-data.d
+@@ -10,10 +10,10 @@
+ .*: +file format elf32-pru
+ 
+ Contents of section .text:
+- [0-9a-f]+ f0efbe24 d0adde24 0d00f630 f0efbe24  .*
+- [0-9a-f]+ d0adde24 f0cace24 e0cace24 f0cace24  .*
+- [0-9a-f]+ d0010024 f0efbe24 d0acde24 f0785624  .*
+- [0-9a-f]+ d0341224 f0785624 f0100024 f300007e  .*
++ [0-9a-f]+ d0adde24 90efbe24 0d00f630 d0adde24  .*
++ [0-9a-f]+ 90efbe24 f0cace24 e0cace24 d0010024  .*
++ [0-9a-f]+ 90cace24 d0acde24 90efbe24 d0341224  .*
++ [0-9a-f]+ 90785624 f0785624 f0100024 f300007e  .*
+ Contents of section .data:
+  0000 00000000 40000020 38000000 10003800  .*
+  0010 0e000000 f2ffffff 0e0038aa           .*
+diff --git a/ld/testsuite/ld-pru/relax_ldi32-dis.d b/ld/testsuite/ld-pru/relax_ldi32-dis.d
+index 1371f1c644..31c7818c66 100644
+--- a/ld/testsuite/ld-pru/relax_ldi32-dis.d
++++ b/ld/testsuite/ld-pru/relax_ldi32-dis.d
+@@ -9,19 +9,19 @@
+ .*: +file format elf32-pru
+ 
+ Disassembly of section .text:
+-..000000 <[^>]*> ldi	r16, 48879
+-..000004 <[^>]*> ldi	r16.w2, 57005
++..000000 <[^>]*> ldi	r16.w2, 57005
++..000004 <[^>]*> ldi	r16.w0, 48879
+ ..000008 <[^>]*> loop	..00003c <__end_loop>, r22
+-..00000c <[^>]*> ldi	r16, 48879
+-..000010 <[^>]*> ldi	r16.w2, 57005
++..00000c <[^>]*> ldi	r16.w2, 57005
++..000010 <[^>]*> ldi	r16.w0, 48879
+ ..000014 <[^>]*> ldi	r16, 52938
+ ..000018 <[^>]*> ldi	r0, 52938
+-..00001c <[^>]*> ldi	r16, 52938
+-..000020 <[^>]*> ldi	r16.w2, 1
+-..000024 <[^>]*> ldi	r16, 48879
+-..000028 <[^>]*> ldi	r16.w2, 57004
+-..00002c <[^>]*> ldi	r16, 22136
+-..000030 <[^>]*> ldi	r16.w2, 4660
++..00001c <[^>]*> ldi	r16.w2, 1
++..000020 <[^>]*> ldi	r16.w0, 52938
++..000024 <[^>]*> ldi	r16.w2, 57004
++..000028 <[^>]*> ldi	r16.w0, 48879
++..00002c <[^>]*> ldi	r16.w2, 4660
++..000030 <[^>]*> ldi	r16.w0, 22136
+ ..000034 <[^>]*> ldi	r16, 22136
+ ..000038 <[^>]*> ldi	r16, 16
+ ..00003c <[^>]*> qba	..000008 <__intermediate>
+-- 
+2.11.0
+

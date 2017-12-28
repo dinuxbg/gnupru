@@ -28,11 +28,18 @@ while [ $# != 0 ]
 do
   case ${1} in
     -o) ARGS="${ARGS} --output_file";;
-    -v) ARGS="${ARGS} -version";;
+    -v) ARGS="${ARGS} --compiler_revision"; echo -n 'TI clpru ';;
+    -w) ARGS="${ARGS} --no_warnings";;
+    -fdiagnostics-color=*) ;;
     -mmcu=sim) ;;
+    -Wno-psabi) ;;   # Why DejaGnu even passes this flag?
     *) ARGS="${ARGS} ${1}";;
   esac
   shift
 done
 
-${EXEC} ${ARGS} -I${INCDIR}
+# Zero-length arrays are ok, don't complain.
+EXTRA_ARGS=--diag_suppress=1231
+
+# Remove spurious newlines to satisfy DejaGnu (PR other/69006).
+${EXEC} ${ARGS} ${EXTRA_ARGS} -I${INCDIR} | sed -e '/^$/d'

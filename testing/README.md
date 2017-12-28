@@ -39,7 +39,7 @@ To execute the GCC ABI regression test suite against the TI toolchain do:
 
 	# Cleanup (important for incremental checks)
 	find . -name site.exp | xargs rm -f
-	make check-gcc-c RUNTESTFLAGS="--target_board=pru-sim compat.exp" COMPAT_OPTIONS="[list [list {-O2 -mmcu=sim -mabi=ti} {-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none}]]" ALT_CC_UNDER_TEST=`which clpru.sh`
+	make check-gcc-c RUNTESTFLAGS="--target_board=pru-sim compat.exp" COMPAT_OPTIONS="[list [list {-O2 -mmcu=sim -mabi=ti -DSKIP_COMPLEX -DSKIP_ATTRIBUTE} {-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE}]]" ALT_CC_UNDER_TEST=`which clpru.sh`
 
 A few notes about the options:
 * --hardware_mac=on is needed since GCC does not currently support turning off MAC instruction generation. Please let me know if you see a real usecase for this feature, and I may reconsider.

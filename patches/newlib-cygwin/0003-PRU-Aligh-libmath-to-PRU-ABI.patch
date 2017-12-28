@@ -1,7 +1,7 @@
-From 2ff891ddced23024b74176cdc5406daaad32fc86 Mon Sep 17 00:00:00 2001
+From d93e650c3e34636589d7fd21decfe0e4e64e310e Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 19 Nov 2017 14:05:41 +0200
-Subject: [PATCH 3/3] PRU: Aligh libmath to PRU ABI
+Subject: [PATCH 3/4] PRU: Aligh libmath to PRU ABI
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -46,7 +46,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 newlib/libm/machine/pru/isnormalf.c
 
 diff --git a/newlib/configure.host b/newlib/configure.host
-index 97478413c..444e06955 100644
+index 04b39ed3e..acb6ab71b 100644
 --- a/newlib/configure.host
 +++ b/newlib/configure.host
 @@ -262,6 +262,7 @@ case "${host_cpu}" in
@@ -121,7 +121,7 @@ index 2a322ee26..68c1b1074 100644
  extern float fdimf _PARAMS((float, float));
  extern float fmaxf _PARAMS((float, float));
 diff --git a/newlib/libm/common/s_round.c b/newlib/libm/common/s_round.c
-index 07aac9ecf..289dd6bea 100644
+index 047574a84..ab3664ea7 100644
 --- a/newlib/libm/common/s_round.c
 +++ b/newlib/libm/common/s_round.c
 @@ -45,7 +45,9 @@ SEEALSO
@@ -136,7 +136,7 @@ index 07aac9ecf..289dd6bea 100644
  #else
  	double round(x)
 diff --git a/newlib/libm/common/s_trunc.c b/newlib/libm/common/s_trunc.c
-index 31a1f92b9..0083187f4 100644
+index 0e06add22..e47a5aead 100644
 --- a/newlib/libm/common/s_trunc.c
 +++ b/newlib/libm/common/s_trunc.c
 @@ -42,7 +42,9 @@ ANSI C, POSIX
