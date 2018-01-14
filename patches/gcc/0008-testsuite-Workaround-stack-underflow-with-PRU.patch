@@ -1,4 +1,4 @@
-From 261c1e4faa3cb6f4da596e976aa5fac1fcc1a129 Mon Sep 17 00:00:00 2001
+From 79508306a478a770910c9b6e719731e9f4b4f13b Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 22:03:45 +0200
 Subject: [PATCH 08/16] testsuite: Workaround stack underflow with PRU

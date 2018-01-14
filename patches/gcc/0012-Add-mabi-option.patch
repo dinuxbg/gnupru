@@ -1,4 +1,4 @@
-From d3535efab3f58b353e051c6cdc8b438846b6cc24 Mon Sep 17 00:00:00 2001
+From 4b26552c1a9b878a3d9588546dc6826dd0613c2f Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sat, 23 Sep 2017 20:40:44 +0300
 Subject: [PATCH 12/16] Add mabi option
@@ -10,9 +10,9 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  gcc/config/pru/pru-passes.c              | 232 +++++++++++++++++++++++++++++++
  gcc/config/pru/pru-protos.h              |   5 +
  gcc/config/pru/pru.c                     |  71 ++++------
- gcc/config/pru/pru.h                     |   7 +-
+ gcc/config/pru/pru.h                     |  32 +++--
  gcc/config/pru/pru.opt                   |  19 ++-
- gcc/config/pru/t-pru                     |   6 +-
+ gcc/config/pru/t-pru                     |   9 +-
  gcc/doc/invoke.texi                      |  55 ++++++++
  gcc/testsuite/gcc.target/pru/mabi-ti-1.c |  10 ++
  gcc/testsuite/gcc.target/pru/mabi-ti-2.c |  15 ++
@@ -21,7 +21,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  gcc/testsuite/gcc.target/pru/mabi-ti-5.c |  33 +++++
  gcc/testsuite/gcc.target/pru/mabi-ti-6.c |  12 ++
  gcc/testsuite/gcc.target/pru/mabi-ti-7.c |  21 +++
- 16 files changed, 498 insertions(+), 48 deletions(-)
+ 16 files changed, 520 insertions(+), 54 deletions(-)
  create mode 100644 gcc/config/pru/pru-opts.h
  create mode 100644 gcc/config/pru/pru-passes.c
  create mode 100644 gcc/testsuite/gcc.target/pru/mabi-ti-1.c
@@ -48,7 +48,7 @@ index 2a1ed9d6327..0053ff54e05 100644
  rs6000-ibm-aix4.[3456789]* | powerpc-ibm-aix4.[3456789]*)
 diff --git a/gcc/config/pru/pru-opts.h b/gcc/config/pru/pru-opts.h
 new file mode 100644
-index 00000000000..056d15a9372
+index 00000000000..d63c1c94e13
 --- /dev/null
 +++ b/gcc/config/pru/pru-opts.h
 @@ -0,0 +1,31 @@
@@ -73,8 +73,8 @@ index 00000000000..056d15a9372
 +
 +/* Definitions for option handling for PRU.  */
 +
-+#ifndef GCC_AARCH64_OPTS_H
-+#define GCC_AARCH64_OPTS_H
++#ifndef GCC_PRU_OPTS_H
++#define GCC_PRU_OPTS_H
 +
 +/* ABI variant for code generation.  */
 +enum pru_abi {
@@ -338,10 +338,10 @@ index f05029eac54..cd15be7ed15 100644
 +
  #endif /* GCC_PRU_PROTOS_H */
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
-index 5d29c2369cd..30c620dc814 100644
+index eb5c9f43ed1..003043fdffd 100644
 --- a/gcc/config/pru/pru.c
 +++ b/gcc/config/pru/pru.c
-@@ -540,7 +540,7 @@ pru_hard_regno_mode_ok (unsigned int regno, machine_mode mode)
+@@ -542,7 +542,7 @@ pru_hard_regno_mode_ok (unsigned int regno, machine_mode mode)
      case 1: return true;
      case 2: return (regno % 4) <= 2;
      case 4: return (regno % 4) == 0;
@@ -350,7 +350,7 @@ index 5d29c2369cd..30c620dc814 100644
      }
  }
  
-@@ -594,6 +594,16 @@ pru_hard_regno_rename_ok (unsigned int old_reg,
+@@ -596,6 +596,16 @@ pru_hard_regno_rename_ok (unsigned int old_reg,
    return 1;
  }
  
@@ -367,7 +367,7 @@ index 5d29c2369cd..30c620dc814 100644
  /* Allocate a chunk of memory for per-function machine-dependent data.  */
  static struct machine_function *
  pru_init_machine_status (void)
-@@ -637,6 +647,9 @@ pru_option_override (void)
+@@ -639,6 +649,9 @@ pru_option_override (void)
       options.  */
    target_option_default_node = target_option_current_node
      = build_target_option_node (&global_options);
@@ -377,7 +377,7 @@ index 5d29c2369cd..30c620dc814 100644
  }
  
  /* Compute a (partial) cost for rtx X.  Return true if the complete
-@@ -1919,47 +1932,15 @@ pru_function_value_regno_p (const unsigned int regno)
+@@ -1972,47 +1985,15 @@ pru_function_value_regno_p (const unsigned int regno)
  }
  
  /* Implement TARGET_RETURN_IN_MEMORY.  */
@@ -430,7 +430,7 @@ index 5d29c2369cd..30c620dc814 100644
  
  /* Implement TARGET_CAN_USE_DOLOOP_P.  */
  
-@@ -2683,6 +2664,14 @@ pru_set_current_function (tree fndecl)
+@@ -2736,6 +2717,14 @@ pru_set_current_function (tree fndecl)
      }
  }
  
@@ -445,7 +445,7 @@ index 5d29c2369cd..30c620dc814 100644
  /* Initialize the GCC target structure.  */
  #undef TARGET_ASM_FUNCTION_PROLOGUE
  #define TARGET_ASM_FUNCTION_PROLOGUE pru_asm_function_prologue
-@@ -2735,9 +2724,6 @@ pru_set_current_function (tree fndecl)
+@@ -2788,9 +2777,6 @@ pru_set_current_function (tree fndecl)
  #undef TARGET_RETURN_IN_MEMORY
  #define TARGET_RETURN_IN_MEMORY pru_return_in_memory
  
@@ -455,7 +455,7 @@ index 5d29c2369cd..30c620dc814 100644
  #undef TARGET_MUST_PASS_IN_STACK
  #define TARGET_MUST_PASS_IN_STACK must_pass_in_stack_var_size
  
-@@ -2778,6 +2764,9 @@ pru_set_current_function (tree fndecl)
+@@ -2831,6 +2817,9 @@ pru_set_current_function (tree fndecl)
  #undef TARGET_CXX_USE_ATEXIT_FOR_CXA_ATEXIT
  #define TARGET_CXX_USE_ATEXIT_FOR_CXA_ATEXIT hook_bool_void_true
  
@@ -466,7 +466,7 @@ index 5d29c2369cd..30c620dc814 100644
  
  #include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
-index 89aaf74c63e..8bc08a10618 100644
+index 0e584db96b2..a8e4204c0ab 100644
 --- a/gcc/config/pru/pru.h
 +++ b/gcc/config/pru/pru.h
 @@ -21,6 +21,8 @@
@@ -478,9 +478,25 @@ index 89aaf74c63e..8bc08a10618 100644
  /* Define built-in preprocessor macros.  */
  #define TARGET_CPU_CPP_BUILTINS()		    \
    do						    \
-@@ -36,12 +38,14 @@
+@@ -35,14 +37,29 @@
+     }						    \
+   while (0)
  
- #define DRIVER_SELF_SPECS " %{mmcu=*:-specs=device-specs/%*%s %<mmcu=*} "
+-#define DRIVER_SELF_SPECS " %{mmcu=*:-specs=device-specs/%*%s %<mmcu=*} "
++/* TI ABI implementation is not feature enough (e.g. function pointers are
++   not supported), so we cannot list it as a multilib variant.  To prevent
++   misuse from users, do not link any of the standard libraries.  */
++#define DRIVER_SELF_SPECS			      \
++  "%{mabi=ti:-nodefaultlibs} "			      \
++  "%{mmcu=*:-specs=device-specs/%*%s %<mmcu=*} "
++
++#if 0
++  "%{mabi=ti:-nostdlib -nodefaultlibs} "
++#endif
++
++#undef CPP_SPEC
++#define CPP_SPEC					\
++  "%{mabi=ti:-D__PRU_EABI_TI__; :-D__PRU_EABI_GNU__}"
  
 +#if 0
  #undef  CC1PLUS_SPEC
@@ -493,16 +509,31 @@ index 89aaf74c63e..8bc08a10618 100644
  
  #if 0
  /* Leave relaxation to the linker, please. */
-@@ -61,9 +65,6 @@
- #undef  ENDFILE_SPEC
- #define ENDFILE_SPEC "-lgloss"
+@@ -52,18 +69,17 @@
+ #endif
  
+ #undef  LINK_SPEC
+-#define LINK_SPEC				\
+-  "%{mno-relax:--no-relax} "			\
++#define LINK_SPEC				      \
++  "%{mno-relax:--no-relax} "			      \
+   "%{shared:%eshared is not supported} "
+ 
++/* CRT0 is carefully maintained to be compatible with both GNU and TI ABIs.  */
+ #undef  STARTFILE_SPEC
+-#define STARTFILE_SPEC "%{!pg:%{minrt:crt0-minrt.o%s}%{!minrt:crt0.o%s}} -lgcc"
++#define STARTFILE_SPEC							\
++  "%{!pg:%{minrt:crt0-minrt.o%s}%{!minrt:crt0.o%s}} %{!mabi=ti:-lgcc} "
+ 
+ #undef  ENDFILE_SPEC
+-#define ENDFILE_SPEC "-lgloss"
+-
 -/* No libstdc++ for now.  Empty string doesn't work.  */
 -#define LIBSTDCXX "gcc"
--
++#define ENDFILE_SPEC "%{!mabi=ti:-lgloss} "
+ 
  /* TI ABI mandates that ELF symbols do not start with any prefix.  */
  #undef USER_LABEL_PREFIX
- #define USER_LABEL_PREFIX ""
 diff --git a/gcc/config/pru/pru.opt b/gcc/config/pru/pru.opt
 index df76ed5c593..97af71a04a1 100644
 --- a/gcc/config/pru/pru.opt
@@ -538,12 +569,16 @@ index df76ed5c593..97af71a04a1 100644
 +EnumValue
 +Enum(pru_abi_t) String(ti) Value(PRU_ABI_TI)
 diff --git a/gcc/config/pru/t-pru b/gcc/config/pru/t-pru
-index af3eac95c31..b74d3685047 100644
+index af3eac95c31..3f3094fa126 100644
 --- a/gcc/config/pru/t-pru
 +++ b/gcc/config/pru/t-pru
-@@ -20,6 +20,10 @@
+@@ -18,8 +18,13 @@
+ # License along with GCC; see the file COPYING3.  If not see
+ # <http://www.gnu.org/licenses/>.
  
- #MULTILIB_OPTIONS    = mmcu=pru
+-#MULTILIB_OPTIONS    = mmcu=pru
++# Unfortunately mabi=ti is not feature-complete enough to build newlib.
++# MULTILIB_OPTIONS    = mabi=gnu/mabi=ti
  
 -pru-pragma.o: $(srcdir)/config/pru/pru-pragma.c $(RTL_H) $(TREE_H) $(CONFIG_H) $(TM_H)
 +pru-pragma.o: $(srcdir)/config/pru/pru-pragma.c $(RTL_H) $(TREE_H) $(CONFIG_H) $(TM_H) \

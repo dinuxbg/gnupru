@@ -1,0 +1,470 @@
+From 268201910a1f7509a5d3d621b988fc5e84173b57 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Mon, 1 Jan 2018 16:36:59 +0200
+Subject: [PATCH 5/5] WIP: Init/fini array migration
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ libgloss/pru/crt0.S                               | 19 +++++++-----
+ libgloss/pru/do_global_dtors.c                    | 11 ++++---
+ libgloss/pru/ldscripts/pruelf-am335x.pru0.x       | 36 +++++++++++------------
+ libgloss/pru/ldscripts/pruelf-am335x.pru1.x       | 36 +++++++++++------------
+ libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x | 36 +++++++++++------------
+ libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x | 36 +++++++++++------------
+ libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x | 36 +++++++++++------------
+ libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x | 36 +++++++++++------------
+ libgloss/pru/ldscripts/pruelf-sim.x               | 36 +++++++++++------------
+ 9 files changed, 145 insertions(+), 137 deletions(-)
+
+diff --git a/libgloss/pru/crt0.S b/libgloss/pru/crt0.S
+index 860428351..eef23f6b8 100644
+--- a/libgloss/pru/crt0.S
++++ b/libgloss/pru/crt0.S
+@@ -28,22 +28,27 @@ _start:
+ 
+ #if !defined(MINRT)
+ 	.extern _do_global_dtors
+-	/* Ensure destructors get called. */
++	/* Ensure destructors get called.  Call is per GNU ABI (i.e. 32-bit
++	   function pointers).  But it is also compatible with the TI ABI
++	   since GCC supports only little endian PRU.
++
++	   WARNING:  Keep this compatible with both ABIs!  */
+ 	ldi	r14, %pmem(_do_global_dtors)
+ 	call	atexit
+ 
+ 	/* Call constructors. Use non-call-clobbered registers. */
+-	ldi	r5, _ctors_start
+-	ldi	r6, _ctors_end
++	ldi	r5, __init_array_begin
++	ldi	r6, __init_array_end
+ ctors_loop:
+ 	qbeq	ctors_done, r5, r6
+-	lbbo	r7, r5, 0, 4		/* IMEM pointers are 32bits for now */
+-	call	r7
+-	add	r5, r5, 4
++	/* ABI dictates 16-bit IMEM pointers. */
++	lbbo	r7, r5, 0, 2
++	call	r7.w0
++	add	r5, r5, 2
+ 	jmp	ctors_loop
+ ctors_done:
+ #endif
+-	
++
+ 	/* Just in case main() tries to access argc, argv[] and envp. */
+ 	zero	r14, 3 * 4
+ 
+diff --git a/libgloss/pru/do_global_dtors.c b/libgloss/pru/do_global_dtors.c
+index 07b996bf0..63cd73546 100644
+--- a/libgloss/pru/do_global_dtors.c
++++ b/libgloss/pru/do_global_dtors.c
+@@ -16,8 +16,8 @@
+ #include <_ansi.h>
+ #include "syscall.h"
+ 
+-extern void *_dtors_start;
+-extern void *_dtors_end;
++extern void *__fini_array_begin;
++extern void *__fini_array_end;
+ 
+ /*
+  * _do_global_dtors
+@@ -25,11 +25,14 @@ extern void *_dtors_end;
+ void
+ _DEFUN_VOID (_do_global_dtors)
+ {
++    /* ABI dictates pointers in init/fini arrays are 16-bit.  */
++    uint16_t *p;
+     void (**dtor) (void);
+ 
+     /* call destructors in reverse order */
+-    for (dtor = &_dtors_end; dtor > &_dtors_start; ) {
+-	dtor--;
++    for (p = &__fini_array_end; p > &__fini_array_begin; ) {
++	p--;
++	dtor = (void *)p;
+ 	(*dtor) ();
+     }
+ }
+diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru0.x b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
+index e52f8f7ad..8ef05d211 100644
+--- a/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
++++ b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
+@@ -71,16 +71,16 @@ SECTIONS
+       *(.rela.data:*)
+       *(.rela.gnu.linkonce.d*)
+     }
+-  .rel.ctors     : { *(.rel.ctors)	}
+-  .rela.ctors    : { *(.rela.ctors)	}
+-  .rel.dtors     : { *(.rel.dtors)	}
+-  .rela.dtors    : { *(.rela.dtors)	}
+-  .rel.got       : { *(.rel.got)		}
+-  .rela.got      : { *(.rela.got)		}
+-  .rel.bss       : { *(.rel.bss)		}
+-  .rela.bss      : { *(.rela.bss)		}
+-  .rel.plt       : { *(.rel.plt)		}
+-  .rela.plt      : { *(.rela.plt)		}
++  .rel.init_array   	  : { *(.rel.init_array)	}
++  .rela.init_array  	  : { *(.rela.init_array)	}
++  .rel.fini_array   	  : { *(.rel.fini_array)	}
++  .rela.fini_array  	  : { *(.rela.fini_array)	}
++  .rel.got     		  : { *(.rel.got)		}
++  .rela.got    		  : { *(.rela.got)	}
++  .rel.bss     		  : { *(.rel.bss)		}
++  .rela.bss    		  : { *(.rela.bss)	}
++  .rel.plt     		  : { *(.rel.plt)		}
++  .rela.plt    		  : { *(.rela.plt)	}
+   /* Internal text space.  */
+   .text   :
+   {
+@@ -105,14 +105,14 @@ SECTIONS
+      *(.data.atzero*)
+     /* CRT is prepared for constructor/destructor table to have
+        a "valid" NULL address.  */
+-     _ctors_start = . ;
+-     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
+-     KEEP (*(.ctors))
+-     _ctors_end = . ;
+-     _dtors_start = . ;
+-     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
+-     KEEP (*(.dtors))
+-     _dtors_end = . ;
++     __init_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
++     KEEP (*(.init_array))
++     __init_array_end = . ;
++     __fini_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
++     KEEP (*(.fini_array))
++     __fini_array_end = . ;
+     /* DATA memory starts at address 0.  So to avoid placing a valid static
+        variable at the invalid NULL address, we introduce the .data.atzero
+        section.  If CRT can make some use of it - great.  Otherwise skip a
+diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru1.x b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
+index e52f8f7ad..8ef05d211 100644
+--- a/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
++++ b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
+@@ -71,16 +71,16 @@ SECTIONS
+       *(.rela.data:*)
+       *(.rela.gnu.linkonce.d*)
+     }
+-  .rel.ctors     : { *(.rel.ctors)	}
+-  .rela.ctors    : { *(.rela.ctors)	}
+-  .rel.dtors     : { *(.rel.dtors)	}
+-  .rela.dtors    : { *(.rela.dtors)	}
+-  .rel.got       : { *(.rel.got)		}
+-  .rela.got      : { *(.rela.got)		}
+-  .rel.bss       : { *(.rel.bss)		}
+-  .rela.bss      : { *(.rela.bss)		}
+-  .rel.plt       : { *(.rel.plt)		}
+-  .rela.plt      : { *(.rela.plt)		}
++  .rel.init_array   	  : { *(.rel.init_array)	}
++  .rela.init_array  	  : { *(.rela.init_array)	}
++  .rel.fini_array   	  : { *(.rel.fini_array)	}
++  .rela.fini_array  	  : { *(.rela.fini_array)	}
++  .rel.got     		  : { *(.rel.got)		}
++  .rela.got    		  : { *(.rela.got)	}
++  .rel.bss     		  : { *(.rel.bss)		}
++  .rela.bss    		  : { *(.rela.bss)	}
++  .rel.plt     		  : { *(.rel.plt)		}
++  .rela.plt    		  : { *(.rela.plt)	}
+   /* Internal text space.  */
+   .text   :
+   {
+@@ -105,14 +105,14 @@ SECTIONS
+      *(.data.atzero*)
+     /* CRT is prepared for constructor/destructor table to have
+        a "valid" NULL address.  */
+-     _ctors_start = . ;
+-     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
+-     KEEP (*(.ctors))
+-     _ctors_end = . ;
+-     _dtors_start = . ;
+-     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
+-     KEEP (*(.dtors))
+-     _dtors_end = . ;
++     __init_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
++     KEEP (*(.init_array))
++     __init_array_end = . ;
++     __fini_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
++     KEEP (*(.fini_array))
++     __fini_array_end = . ;
+     /* DATA memory starts at address 0.  So to avoid placing a valid static
+        variable at the invalid NULL address, we introduce the .data.atzero
+        section.  If CRT can make some use of it - great.  Otherwise skip a
+diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
+index b66963c2e..bd1f21768 100644
+--- a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
++++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
+@@ -71,16 +71,16 @@ SECTIONS
+       *(.rela.data:*)
+       *(.rela.gnu.linkonce.d*)
+     }
+-  .rel.ctors     : { *(.rel.ctors)	}
+-  .rela.ctors    : { *(.rela.ctors)	}
+-  .rel.dtors     : { *(.rel.dtors)	}
+-  .rela.dtors    : { *(.rela.dtors)	}
+-  .rel.got       : { *(.rel.got)		}
+-  .rela.got      : { *(.rela.got)		}
+-  .rel.bss       : { *(.rel.bss)		}
+-  .rela.bss      : { *(.rela.bss)		}
+-  .rel.plt       : { *(.rel.plt)		}
+-  .rela.plt      : { *(.rela.plt)		}
++  .rel.init_array   	  : { *(.rel.init_array)	}
++  .rela.init_array  	  : { *(.rela.init_array)	}
++  .rel.fini_array   	  : { *(.rel.fini_array)	}
++  .rela.fini_array  	  : { *(.rela.fini_array)	}
++  .rel.got     		  : { *(.rel.got)		}
++  .rela.got    		  : { *(.rela.got)	}
++  .rel.bss     		  : { *(.rel.bss)		}
++  .rela.bss    		  : { *(.rela.bss)	}
++  .rel.plt     		  : { *(.rel.plt)		}
++  .rela.plt    		  : { *(.rela.plt)	}
+   /* Internal text space.  */
+   .text   :
+   {
+@@ -105,14 +105,14 @@ SECTIONS
+      *(.data.atzero*)
+     /* CRT is prepared for constructor/destructor table to have
+        a "valid" NULL address.  */
+-     _ctors_start = . ;
+-     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
+-     KEEP (*(.ctors))
+-     _ctors_end = . ;
+-     _dtors_start = . ;
+-     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
+-     KEEP (*(.dtors))
+-     _dtors_end = . ;
++     __init_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
++     KEEP (*(.init_array))
++     __init_array_end = . ;
++     __fini_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
++     KEEP (*(.fini_array))
++     __fini_array_end = . ;
+     /* DATA memory starts at address 0.  So to avoid placing a valid static
+        variable at the invalid NULL address, we introduce the .data.atzero
+        section.  If CRT can make some use of it - great.  Otherwise skip a
+diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
+index b66963c2e..bd1f21768 100644
+--- a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
++++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
+@@ -71,16 +71,16 @@ SECTIONS
+       *(.rela.data:*)
+       *(.rela.gnu.linkonce.d*)
+     }
+-  .rel.ctors     : { *(.rel.ctors)	}
+-  .rela.ctors    : { *(.rela.ctors)	}
+-  .rel.dtors     : { *(.rel.dtors)	}
+-  .rela.dtors    : { *(.rela.dtors)	}
+-  .rel.got       : { *(.rel.got)		}
+-  .rela.got      : { *(.rela.got)		}
+-  .rel.bss       : { *(.rel.bss)		}
+-  .rela.bss      : { *(.rela.bss)		}
+-  .rel.plt       : { *(.rel.plt)		}
+-  .rela.plt      : { *(.rela.plt)		}
++  .rel.init_array   	  : { *(.rel.init_array)	}
++  .rela.init_array  	  : { *(.rela.init_array)	}
++  .rel.fini_array   	  : { *(.rel.fini_array)	}
++  .rela.fini_array  	  : { *(.rela.fini_array)	}
++  .rel.got     		  : { *(.rel.got)		}
++  .rela.got    		  : { *(.rela.got)	}
++  .rel.bss     		  : { *(.rel.bss)		}
++  .rela.bss    		  : { *(.rela.bss)	}
++  .rel.plt     		  : { *(.rel.plt)		}
++  .rela.plt    		  : { *(.rela.plt)	}
+   /* Internal text space.  */
+   .text   :
+   {
+@@ -105,14 +105,14 @@ SECTIONS
+      *(.data.atzero*)
+     /* CRT is prepared for constructor/destructor table to have
+        a "valid" NULL address.  */
+-     _ctors_start = . ;
+-     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
+-     KEEP (*(.ctors))
+-     _ctors_end = . ;
+-     _dtors_start = . ;
+-     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
+-     KEEP (*(.dtors))
+-     _dtors_end = . ;
++     __init_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
++     KEEP (*(.init_array))
++     __init_array_end = . ;
++     __fini_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
++     KEEP (*(.fini_array))
++     __fini_array_end = . ;
+     /* DATA memory starts at address 0.  So to avoid placing a valid static
+        variable at the invalid NULL address, we introduce the .data.atzero
+        section.  If CRT can make some use of it - great.  Otherwise skip a
+diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
+index e52f8f7ad..8ef05d211 100644
+--- a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
++++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
+@@ -71,16 +71,16 @@ SECTIONS
+       *(.rela.data:*)
+       *(.rela.gnu.linkonce.d*)
+     }
+-  .rel.ctors     : { *(.rel.ctors)	}
+-  .rela.ctors    : { *(.rela.ctors)	}
+-  .rel.dtors     : { *(.rel.dtors)	}
+-  .rela.dtors    : { *(.rela.dtors)	}
+-  .rel.got       : { *(.rel.got)		}
+-  .rela.got      : { *(.rela.got)		}
+-  .rel.bss       : { *(.rel.bss)		}
+-  .rela.bss      : { *(.rela.bss)		}
+-  .rel.plt       : { *(.rel.plt)		}
+-  .rela.plt      : { *(.rela.plt)		}
++  .rel.init_array   	  : { *(.rel.init_array)	}
++  .rela.init_array  	  : { *(.rela.init_array)	}
++  .rel.fini_array   	  : { *(.rel.fini_array)	}
++  .rela.fini_array  	  : { *(.rela.fini_array)	}
++  .rel.got     		  : { *(.rel.got)		}
++  .rela.got    		  : { *(.rela.got)	}
++  .rel.bss     		  : { *(.rel.bss)		}
++  .rela.bss    		  : { *(.rela.bss)	}
++  .rel.plt     		  : { *(.rel.plt)		}
++  .rela.plt    		  : { *(.rela.plt)	}
+   /* Internal text space.  */
+   .text   :
+   {
+@@ -105,14 +105,14 @@ SECTIONS
+      *(.data.atzero*)
+     /* CRT is prepared for constructor/destructor table to have
+        a "valid" NULL address.  */
+-     _ctors_start = . ;
+-     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
+-     KEEP (*(.ctors))
+-     _ctors_end = . ;
+-     _dtors_start = . ;
+-     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
+-     KEEP (*(.dtors))
+-     _dtors_end = . ;
++     __init_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
++     KEEP (*(.init_array))
++     __init_array_end = . ;
++     __fini_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
++     KEEP (*(.fini_array))
++     __fini_array_end = . ;
+     /* DATA memory starts at address 0.  So to avoid placing a valid static
+        variable at the invalid NULL address, we introduce the .data.atzero
+        section.  If CRT can make some use of it - great.  Otherwise skip a
+diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
+index e52f8f7ad..8ef05d211 100644
+--- a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
++++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
+@@ -71,16 +71,16 @@ SECTIONS
+       *(.rela.data:*)
+       *(.rela.gnu.linkonce.d*)
+     }
+-  .rel.ctors     : { *(.rel.ctors)	}
+-  .rela.ctors    : { *(.rela.ctors)	}
+-  .rel.dtors     : { *(.rel.dtors)	}
+-  .rela.dtors    : { *(.rela.dtors)	}
+-  .rel.got       : { *(.rel.got)		}
+-  .rela.got      : { *(.rela.got)		}
+-  .rel.bss       : { *(.rel.bss)		}
+-  .rela.bss      : { *(.rela.bss)		}
+-  .rel.plt       : { *(.rel.plt)		}
+-  .rela.plt      : { *(.rela.plt)		}
++  .rel.init_array   	  : { *(.rel.init_array)	}
++  .rela.init_array  	  : { *(.rela.init_array)	}
++  .rel.fini_array   	  : { *(.rel.fini_array)	}
++  .rela.fini_array  	  : { *(.rela.fini_array)	}
++  .rel.got     		  : { *(.rel.got)		}
++  .rela.got    		  : { *(.rela.got)	}
++  .rel.bss     		  : { *(.rel.bss)		}
++  .rela.bss    		  : { *(.rela.bss)	}
++  .rel.plt     		  : { *(.rel.plt)		}
++  .rela.plt    		  : { *(.rela.plt)	}
+   /* Internal text space.  */
+   .text   :
+   {
+@@ -105,14 +105,14 @@ SECTIONS
+      *(.data.atzero*)
+     /* CRT is prepared for constructor/destructor table to have
+        a "valid" NULL address.  */
+-     _ctors_start = . ;
+-     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
+-     KEEP (*(.ctors))
+-     _ctors_end = . ;
+-     _dtors_start = . ;
+-     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
+-     KEEP (*(.dtors))
+-     _dtors_end = . ;
++     __init_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
++     KEEP (*(.init_array))
++     __init_array_end = . ;
++     __fini_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
++     KEEP (*(.fini_array))
++     __fini_array_end = . ;
+     /* DATA memory starts at address 0.  So to avoid placing a valid static
+        variable at the invalid NULL address, we introduce the .data.atzero
+        section.  If CRT can make some use of it - great.  Otherwise skip a
+diff --git a/libgloss/pru/ldscripts/pruelf-sim.x b/libgloss/pru/ldscripts/pruelf-sim.x
+index f00f4f4e0..e2860a37b 100644
+--- a/libgloss/pru/ldscripts/pruelf-sim.x
++++ b/libgloss/pru/ldscripts/pruelf-sim.x
+@@ -71,16 +71,16 @@ SECTIONS
+       *(.rela.data:*)
+       *(.rela.gnu.linkonce.d*)
+     }
+-  .rel.ctors     : { *(.rel.ctors)	}
+-  .rela.ctors    : { *(.rela.ctors)	}
+-  .rel.dtors     : { *(.rel.dtors)	}
+-  .rela.dtors    : { *(.rela.dtors)	}
+-  .rel.got       : { *(.rel.got)		}
+-  .rela.got      : { *(.rela.got)		}
+-  .rel.bss       : { *(.rel.bss)		}
+-  .rela.bss      : { *(.rela.bss)		}
+-  .rel.plt       : { *(.rel.plt)		}
+-  .rela.plt      : { *(.rela.plt)		}
++  .rel.init_array   	  : { *(.rel.init_array)	}
++  .rela.init_array  	  : { *(.rela.init_array)	}
++  .rel.fini_array   	  : { *(.rel.fini_array)	}
++  .rela.fini_array  	  : { *(.rela.fini_array)	}
++  .rel.got     		  : { *(.rel.got)		}
++  .rela.got    		  : { *(.rela.got)	}
++  .rel.bss     		  : { *(.rel.bss)		}
++  .rela.bss    		  : { *(.rela.bss)	}
++  .rel.plt     		  : { *(.rel.plt)		}
++  .rela.plt    		  : { *(.rela.plt)	}
+   /* Internal text space.  */
+   .text   :
+   {
+@@ -105,14 +105,14 @@ SECTIONS
+      *(.data.atzero*)
+     /* CRT is prepared for constructor/destructor table to have
+        a "valid" NULL address.  */
+-     _ctors_start = . ;
+-     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
+-     KEEP (*(.ctors))
+-     _ctors_end = . ;
+-     _dtors_start = . ;
+-     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
+-     KEEP (*(.dtors))
+-     _dtors_end = . ;
++     __init_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
++     KEEP (*(.init_array))
++     __init_array_end = . ;
++     __fini_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
++     KEEP (*(.fini_array))
++     __fini_array_end = . ;
+     /* DATA memory starts at address 0.  So to avoid placing a valid static
+        variable at the invalid NULL address, we introduce the .data.atzero
+        section.  If CRT can make some use of it - great.  Otherwise skip a
+-- 
+2.11.0
+

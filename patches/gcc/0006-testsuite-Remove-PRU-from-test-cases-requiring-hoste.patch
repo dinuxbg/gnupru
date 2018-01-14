@@ -1,4 +1,4 @@
-From 17f41ad07c3dd43c16a9c8f56947fb7363d24e8b Mon Sep 17 00:00:00 2001
+From f69d5903a819f19238264e7f7f7e9e02314e0410 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 22:00:23 +0200
 Subject: [PATCH 06/16] testsuite: Remove PRU from test cases requiring hosted

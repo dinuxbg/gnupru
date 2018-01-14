@@ -1,4 +1,4 @@
-From 840efb7e88f78ba025f4b8eda010a9254d748bcd Mon Sep 17 00:00:00 2001
+From 6071e235231fb36dd8001d632dbe61abcac30231 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Wed, 1 Nov 2017 15:13:13 +0200
 Subject: [PATCH 13/16] Align FP libfuncs with TI ABI
@@ -74,10 +74,10 @@ index cd15be7ed15..bd34f5735a1 100644
  
  extern bool pru_regno_ok_for_base_p (int, bool);
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
-index 30c620dc814..c5c2c2d96b1 100644
+index 003043fdffd..528f5aaa8c5 100644
 --- a/gcc/config/pru/pru.c
 +++ b/gcc/config/pru/pru.c
-@@ -799,6 +799,180 @@ pru_preferred_reload_class (rtx x ATTRIBUTE_UNUSED, reg_class_t regclass)
+@@ -801,6 +801,180 @@ pru_preferred_reload_class (rtx x ATTRIBUTE_UNUSED, reg_class_t regclass)
    return regclass == NO_REGS ? GENERAL_REGS : regclass;
  }
  
@@ -258,7 +258,7 @@ index 30c620dc814..c5c2c2d96b1 100644
  /* Sign extension.  */
  
  static int sign_bit_position (const rtx op)
-@@ -2733,6 +2907,11 @@ pru_unwind_word_mode (void)
+@@ -2786,6 +2960,11 @@ pru_unwind_word_mode (void)
  #undef TARGET_PREFERRED_RELOAD_CLASS
  #define TARGET_PREFERRED_RELOAD_CLASS pru_preferred_reload_class
  

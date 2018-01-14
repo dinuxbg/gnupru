@@ -1,4 +1,4 @@
-From ba8fa1504b7de309224f14d9a2dc1bdf3041f745 Mon Sep 17 00:00:00 2001
+From 97be80452fc0f217e46400de4976443f98c4b545 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dddimitrov@mm-sol.com>
 Date: Sun, 23 Jul 2017 20:59:53 -0700
 Subject: [PATCH 11/16] Fix LRA to handle multi-word eliminable registers

@@ -1,4 +1,4 @@
-From 077cb35038af70c999e1614ee7203e1b351e9d66 Mon Sep 17 00:00:00 2001
+From aa0de384465638d6db51863ff84c706f5f14c88d Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:53:18 +0200
 Subject: [PATCH 01/16] Initial TI PRU GCC port
@@ -32,9 +32,9 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  gcc/config/pru/pru-modes.def                       |   19 +
  gcc/config/pru/pru-pragma.c                        |   92 +
  gcc/config/pru/pru-protos.h                        |   64 +
- gcc/config/pru/pru.c                               | 2783 ++++++++++++++++++++
- gcc/config/pru/pru.h                               |  529 ++++
- gcc/config/pru/pru.md                              |  880 +++++++
+ gcc/config/pru/pru.c                               | 2836 ++++++++++++++++++++
+ gcc/config/pru/pru.h                               |  552 ++++
+ gcc/config/pru/pru.md                              |  880 ++++++
  gcc/config/pru/pru.opt                             |   35 +
  gcc/config/pru/t-pru                               |   25 +
  gcc/doc/extend.texi                                |   20 +
@@ -62,7 +62,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  libgcc/config/pru/pru-asm.h                        |   36 +
  libgcc/config/pru/pru-divmod.h                     |  117 +
  libgcc/config/pru/t-pru                            |   39 +
- 41 files changed, 5978 insertions(+)
+ 41 files changed, 6054 insertions(+)
  create mode 100644 gcc/common/config/pru/pru-common.c
  create mode 100755 gcc/config/pru/alu-zext.sh
  create mode 100644 gcc/config/pru/alu-zext.template.md
@@ -1047,10 +1047,10 @@ index 00000000000..f05029eac54
 +#endif /* GCC_PRU_PROTOS_H */
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
 new file mode 100644
-index 00000000000..5d29c2369cd
+index 00000000000..eb5c9f43ed1
 --- /dev/null
 +++ b/gcc/config/pru/pru.c
-@@ -0,0 +1,2783 @@
+@@ -0,0 +1,2836 @@
 +/* Target machine subroutines for TI PRU.
 +   Copyright (C) 2014-2017 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dimitar@dinux.eu>
@@ -1107,6 +1107,8 @@ index 00000000000..5d29c2369cd
 +
 +/* This file should be included last.  */
 +#include "target-def.h"
++
++#define INIT_ARRAY_ENTRY_BYTES	2
 +
 +/* Global PRU CTABLE entries, filled in by pragmas, and used for fast
 +   addressing via LBCO/SBCO instructions.  */
@@ -2335,6 +2337,46 @@ index 00000000000..5d29c2369cd
 +
 +/* Output assembly language related definitions.  */
 +
++static void
++pru_elf_asm_constructor (rtx symbol, int priority)
++{
++  char buf[23];
++  section *s;
++
++  if (priority == DEFAULT_INIT_PRIORITY)
++    snprintf (buf, sizeof (buf), ".init_array");
++  else
++    {
++      /* While priority is known to be in range [0, 65535], so 18 bytes
++         would be enough, the compiler might not know that.  To avoid
++         -Wformat-truncation false positive, use a larger size.  */
++      snprintf (buf, sizeof (buf), ".init_array.%.5u", priority);
++    }
++  s = get_section (buf, SECTION_WRITE | SECTION_NOTYPE, NULL);
++  switch_to_section (s);
++  assemble_aligned_integer (INIT_ARRAY_ENTRY_BYTES, symbol);
++}
++
++static void
++pru_elf_asm_destructor (rtx symbol, int priority)
++{
++  char buf[23];
++  section *s;
++
++  if (priority == DEFAULT_INIT_PRIORITY)
++    snprintf (buf, sizeof (buf), ".fini_array");
++  else
++    {
++      /* While priority is known to be in range [0, 65535], so 18 bytes
++         would be enough, the compiler might not know that.  To avoid
++         -Wformat-truncation false positive, use a larger size.  */
++      snprintf (buf, sizeof (buf), ".fini_array.%.5u", priority);
++    }
++  s = get_section (buf, SECTION_WRITE | SECTION_NOTYPE, NULL);
++  switch_to_section (s);
++  assemble_aligned_integer (INIT_ARRAY_ENTRY_BYTES, symbol);
++}
++
 +static const char *
 +pru_comparison_str (enum rtx_code cond)
 +{
@@ -2776,10 +2818,21 @@ index 00000000000..5d29c2369cd
 +static bool
 +pru_assemble_integer (rtx x, unsigned int size, int aligned_p)
 +{
-+  if (size == POINTER_SIZE / BITS_PER_UNIT && aligned_p
++  if (size == POINTER_SIZE / BITS_PER_UNIT
++      && aligned_p
 +      && text_segment_operand (x, VOIDmode))
 +    {
-+      fputs ("\t.word\t%pmem(", asm_out_file);
++      fputs ("\t.4byte\t%pmem(", asm_out_file);
++      output_addr_const (asm_out_file, x);
++      fputs (")\n", asm_out_file);
++
++      return true;
++    }
++  else if (size == INIT_ARRAY_ENTRY_BYTES
++	   && aligned_p
++	   && text_segment_operand (x, VOIDmode))
++    {
++      fputs ("\t.2byte\t%pmem(", asm_out_file);
 +      output_addr_const (asm_out_file, x);
 +      fputs (")\n", asm_out_file);
 +
@@ -3836,10 +3889,10 @@ index 00000000000..5d29c2369cd
 +#include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
 new file mode 100644
-index 00000000000..89aaf74c63e
+index 00000000000..0e584db96b2
 --- /dev/null
 +++ b/gcc/config/pru/pru.h
-@@ -0,0 +1,529 @@
+@@ -0,0 +1,552 @@
 +/* Definitions of target machine for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -3871,6 +3924,7 @@ index 00000000000..89aaf74c63e
 +      builtin_define_std ("__pru__");		    \
 +      builtin_define_std ("__PRU_V3__");	    \
 +      builtin_define_std ("__LITTLE_ENDIAN__");	    \
++      builtin_define_std ("__little_endian__");	    \
 +      /* Trampolines are disabled for now.  */	    \
 +      builtin_define_std ("NO_TRAMPOLINES");	    \
 +    }						    \
@@ -4017,12 +4071,13 @@ index 00000000000..89aaf74c63e
 +#define __pru_REGSEQ(X)  (X) * 4 + 0, (X) * 4 + 1, (X) * 4 + 2, (X) * 4 + 3
 +#define REG_ALLOC_ORDER							    \
 +  {									    \
++    /* Call-clobbered, yet not used for parameters.  */			    \
++    __pru_REGSEQ(0), __pru_REGSEQ( 1),					    \
++									    \
 +    __pru_REGSEQ(14), __pru_REGSEQ(15), __pru_REGSEQ(16), __pru_REGSEQ(17), \
 +    __pru_REGSEQ(18), __pru_REGSEQ(19), __pru_REGSEQ(20), __pru_REGSEQ(21), \
 +    __pru_REGSEQ(22), __pru_REGSEQ(23), __pru_REGSEQ(24), __pru_REGSEQ(25), \
 +    __pru_REGSEQ(26), __pru_REGSEQ(27), __pru_REGSEQ(28), __pru_REGSEQ(29), \
-+									    \
-+    __pru_REGSEQ(0), __pru_REGSEQ( 1),					    \
 +									    \
 +    __pru_REGSEQ( 5), __pru_REGSEQ( 6), __pru_REGSEQ( 7), __pru_REGSEQ( 8), \
 +    __pru_REGSEQ( 9), __pru_REGSEQ(10), __pru_REGSEQ(11), __pru_REGSEQ(12), \
@@ -4312,6 +4367,27 @@ index 00000000000..89aaf74c63e
 +
 +/* Output before uninitialized data.  */
 +#define BSS_SECTION_ASM_OP "\t.section\t.bss"
++
++#define CTORS_SECTION_ASM_OP "\t.section\t.init_array,\"aw\",%init_array"
++#define DTORS_SECTION_ASM_OP "\t.section\t.fini_array,\"aw\",%fini_array"
++
++#undef INIT_SECTION_ASM_OP
++#undef FINI_SECTION_ASM_OP
++#define INIT_ARRAY_SECTION_ASM_OP CTORS_SECTION_ASM_OP
++#define FINI_ARRAY_SECTION_ASM_OP DTORS_SECTION_ASM_OP
++
++/* Since we use .init_array/.fini_array we don't need the markers at
++   the start and end of the ctors/dtors arrays.  */
++#define CTOR_LIST_BEGIN asm (CTORS_SECTION_ASM_OP)
++#define CTOR_LIST_END		/* empty */
++#define DTOR_LIST_BEGIN asm (DTORS_SECTION_ASM_OP)
++#define DTOR_LIST_END		/* empty */
++
++#undef TARGET_ASM_CONSTRUCTOR
++#define TARGET_ASM_CONSTRUCTOR pru_elf_asm_constructor
++
++#undef TARGET_ASM_DESTRUCTOR
++#define TARGET_ASM_DESTRUCTOR pru_elf_asm_destructor
 +
 +#define ASM_OUTPUT_ALIGN(FILE, LOG)		      \
 +  do {						      \

@@ -1,4 +1,4 @@
-From 3db7ee7ca26ef7c1130d77f65278d795a33a5771 Mon Sep 17 00:00:00 2001
+From 19a11a4364a738127c538c464d8a93a20bd09cf5 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 28 Jul 2014 23:10:08 +0300
 Subject: [PATCH 02/16] HACK: Limit LBBO/SBBO bursts to 19 regs

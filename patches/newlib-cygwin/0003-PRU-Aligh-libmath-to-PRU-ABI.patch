@@ -1,7 +1,7 @@
 From d93e650c3e34636589d7fd21decfe0e4e64e310e Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 19 Nov 2017 14:05:41 +0200
-Subject: [PATCH 3/4] PRU: Aligh libmath to PRU ABI
+Subject: [PATCH 3/5] PRU: Aligh libmath to PRU ABI
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---

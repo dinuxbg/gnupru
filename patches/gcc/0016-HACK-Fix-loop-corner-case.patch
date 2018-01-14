@@ -1,4 +1,4 @@
-From c41bf85dd8b3203b54eeb80704f4229b7042d5f3 Mon Sep 17 00:00:00 2001
+From 78b0515033c023615339457c68163e8ee7e5799b Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Wed, 27 Dec 2017 22:43:46 +0200
 Subject: [PATCH 16/16] HACK: Fix loop corner case
@@ -10,10 +10,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  2 files changed, 19 insertions(+)
 
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
-index 7665d7998e7..8e784de0907 100644
+index 9f00ad8abef..2e3a9375893 100644
 --- a/gcc/config/pru/pru.c
 +++ b/gcc/config/pru/pru.c
-@@ -2556,6 +2556,20 @@ pru_reorg_loop (rtx_insn *insns)
+@@ -2609,6 +2609,20 @@ pru_reorg_loop (rtx_insn *insns)
  	/* Emit a pruloop_end (to improve the readability of the output).  */
  	emit_insn_before (gen_pruloop_end (), loop->end->insn);
  

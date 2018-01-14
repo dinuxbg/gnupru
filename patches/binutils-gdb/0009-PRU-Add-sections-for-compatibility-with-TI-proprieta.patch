@@ -1,7 +1,7 @@
 From d1ce309c0206b11b2bd4357e9421693c6e9f7128 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 11 Dec 2017 21:15:46 +0200
-Subject: [PATCH 09/10] [PRU] Add sections for compatibility with TI
+Subject: [PATCH 09/11] [PRU] Add sections for compatibility with TI
  proprietary toolchain
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>

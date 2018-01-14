@@ -1,4 +1,4 @@
-From 930b20b3a402f04e70708990e6d3647f6f55ab8a Mon Sep 17 00:00:00 2001
+From b931cb9e26c3968ec4a6a6390784517baacfcfc8 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:57:14 +0200
 Subject: [PATCH 05/16] testsuite: Add check for overflowed IMEM region to

@@ -1,7 +1,7 @@
 From 09a7faae849c955af5df2ac429cfcbb5006358de Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 11 Dec 2017 21:20:49 +0200
-Subject: [PATCH 4/4] Align linker scripts
+Subject: [PATCH 4/5] Align linker scripts
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---

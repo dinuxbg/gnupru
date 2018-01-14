@@ -1,7 +1,7 @@
 From b70aca659483f1d40f9bcdf139ff4d6ab5e72623 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 5 Dec 2016 19:55:46 +0200
-Subject: [PATCH 05/10] Revert "gdb: pru: Initial dummy port"
+Subject: [PATCH 05/11] Revert "gdb: pru: Initial dummy port"
 
 This reverts commit 2f00577670f212261578bc6f72f7695f3f670978.
 ---

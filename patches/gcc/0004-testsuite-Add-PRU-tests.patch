@@ -1,4 +1,4 @@
-From 2a7a94daffbf3b8c5f95838a5cec6e203e9e3984 Mon Sep 17 00:00:00 2001
+From 58a76c8eda20e234b72b1269d0bede3a6cc5b16e Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:56:38 +0200
 Subject: [PATCH 04/16] testsuite: Add PRU tests

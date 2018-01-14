@@ -1,4 +1,4 @@
-From 361b131c9106896e6a9677ab2b086e3c99f3841b Mon Sep 17 00:00:00 2001
+From 4c553274a9799a3b1993fb811b2a8490172da234 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 5 Nov 2017 19:35:06 +0200
 Subject: [PATCH 14/16] testsuite: Fix to recognize that -mabi-ti does not

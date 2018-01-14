@@ -1,4 +1,4 @@
-From 466aec249a935246676d8135234ea5f6f4280300 Mon Sep 17 00:00:00 2001
+From f55a8e3fb3372953bd87238b5ee3c9b97d5111ad Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Wed, 20 Dec 2017 23:10:54 +0200
 Subject: [PATCH 15/16] Fix struct argument passing
@@ -11,10 +11,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 gcc/testsuite/gcc.target/pru/abi-arg-struct.c
 
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
-index c5c2c2d96b1..7665d7998e7 100644
+index 528f5aaa8c5..9f00ad8abef 100644
 --- a/gcc/config/pru/pru.c
 +++ b/gcc/config/pru/pru.c
-@@ -1956,6 +1956,18 @@ pru_function_arg_size (machine_mode mode, const_tree type)
+@@ -2009,6 +2009,18 @@ pru_function_arg_size (machine_mode mode, const_tree type)
    return param_size;
  }
  
@@ -33,7 +33,7 @@ index c5c2c2d96b1..7665d7998e7 100644
  
  static int
  pru_function_arg_regi (cumulative_args_t cum_v,
-@@ -1967,8 +1979,7 @@ pru_function_arg_regi (cumulative_args_t cum_v,
+@@ -2020,8 +2032,7 @@ pru_function_arg_regi (cumulative_args_t cum_v,
    size_t i, bi;
    int regi = -1;
  
@@ -43,7 +43,7 @@ index c5c2c2d96b1..7665d7998e7 100644
      return -1;
  
    if (!named)
-@@ -1976,13 +1987,25 @@ pru_function_arg_regi (cumulative_args_t cum_v,
+@@ -2029,13 +2040,25 @@ pru_function_arg_regi (cumulative_args_t cum_v,
  
    /* Find the first available slot that fits. Yes, that's the PRU ABI.  */
    for (i = 0; regi < 0 && i < ARRAY_SIZE(cum->regs_used); i++) {
@@ -76,7 +76,7 @@ index c5c2c2d96b1..7665d7998e7 100644
  
        for (bi = 0; bi < argsize && (bi + i) < ARRAY_SIZE(cum->regs_used); bi++) {
  	  if (cum->regs_used[bi + i])
-@@ -2109,7 +2132,7 @@ pru_function_value_regno_p (const unsigned int regno)
+@@ -2162,7 +2185,7 @@ pru_function_value_regno_p (const unsigned int regno)
  bool
  pru_return_in_memory (const_tree type, const_tree fntype ATTRIBUTE_UNUSED)
  {

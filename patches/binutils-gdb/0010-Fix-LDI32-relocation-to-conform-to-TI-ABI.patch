@@ -1,7 +1,7 @@
 From f4d5f2abd6d71927506f3d996ff6d7b52833515a Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 8 Dec 2017 23:21:26 +0200
-Subject: [PATCH 10/10] Fix LDI32 relocation to conform to TI ABI
+Subject: [PATCH 10/11] Fix LDI32 relocation to conform to TI ABI
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
