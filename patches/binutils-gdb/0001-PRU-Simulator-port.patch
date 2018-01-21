@@ -1,7 +1,7 @@
 From 81f2f18133343bf51e1f532349f8e467499ee7ce Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 22:37:01 +0300
-Subject: [PATCH 01/11] PRU Simulator port
+Subject: [PATCH 01/12] PRU Simulator port
 
 The corresponding libgloss changes have not yet been mainlined.
 The PRU patches are available here:

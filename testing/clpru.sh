@@ -33,6 +33,7 @@ do
     -fdiagnostics-color=*) ;;
     -mmcu=sim) ;;
     -Wno-psabi) ;;   # Why DejaGnu even passes this flag?
+    -fno-diagnostics-show-caret) ;;
     *) ARGS="${ARGS} ${1}";;
   esac
   shift
