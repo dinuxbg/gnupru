@@ -1,4 +1,4 @@
-From e92027a7ec3efeb7821aa0dedf5dedb5c94b61a1 Mon Sep 17 00:00:00 2001
+From 9cc8035a6657c1931f5aad4e808baa30b85e90ae Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 1 Jan 2018 16:30:44 +0200
 Subject: [PATCH 11/12] WIP: Switch to init_array linker script

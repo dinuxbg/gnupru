@@ -1,4 +1,4 @@
-From 055eabe6ea9d3dc93da865c2a48308dc777e54d9 Mon Sep 17 00:00:00 2001
+From 4565b5594d92c6b1e30dff99f9ad41884dc440fd Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 21 Jan 2018 20:47:05 +0200
 Subject: [PATCH 12/12] WIP: Enable REL relocations
@@ -11,7 +11,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  1 file changed, 76 insertions(+), 11 deletions(-)
 
 diff --git a/bfd/elf32-pru.c b/bfd/elf32-pru.c
-index 7f8d6efd77..ba3dfb6c9b 100644
+index f5bbdb757d..5071cbcc69 100644
 --- a/bfd/elf32-pru.c
 +++ b/bfd/elf32-pru.c
 @@ -525,7 +525,7 @@ pru_elf32_do_ldi32_relocate (bfd *abfd, reloc_howto_type *howto,

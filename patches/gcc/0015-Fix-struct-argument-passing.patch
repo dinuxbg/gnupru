@@ -1,4 +1,4 @@
-From f55a8e3fb3372953bd87238b5ee3c9b97d5111ad Mon Sep 17 00:00:00 2001
+From b93e8bc6d6a5d7b2a622fd23ca4b6bf0621ad511 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Wed, 20 Dec 2017 23:10:54 +0200
 Subject: [PATCH 15/16] Fix struct argument passing

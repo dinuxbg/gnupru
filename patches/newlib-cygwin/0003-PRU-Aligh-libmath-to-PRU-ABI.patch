@@ -1,7 +1,7 @@
-From d93e650c3e34636589d7fd21decfe0e4e64e310e Mon Sep 17 00:00:00 2001
+From e6a401e7be1e13ebb58373519e1f17ebade9b46e Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 19 Nov 2017 14:05:41 +0200
-Subject: [PATCH 3/5] PRU: Aligh libmath to PRU ABI
+Subject: [PATCH 3/3] PRU: Aligh libmath to PRU ABI
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -46,7 +46,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 newlib/libm/machine/pru/isnormalf.c
 
 diff --git a/newlib/configure.host b/newlib/configure.host
-index 04b39ed3e..acb6ab71b 100644
+index 056347547..d6789f3cd 100644
 --- a/newlib/configure.host
 +++ b/newlib/configure.host
 @@ -262,6 +262,7 @@ case "${host_cpu}" in
@@ -58,15 +58,15 @@ index 04b39ed3e..acb6ab71b 100644
    riscv*)
  	libm_machine_dir=riscv
 diff --git a/newlib/libc/include/math.h b/newlib/libc/include/math.h
-index 2a322ee26..68c1b1074 100644
+index 893a5d064..2d379722b 100644
 --- a/newlib/libc/include/math.h
 +++ b/newlib/libc/include/math.h
-@@ -305,10 +305,29 @@ extern double tgamma _PARAMS((double));
- extern double nearbyint _PARAMS((double));
- extern long int lrint _PARAMS((double));
- extern long long int llrint _PARAMS((double));
+@@ -305,10 +305,29 @@ extern double tgamma (double);
+ extern double nearbyint (double);
+ extern long int lrint (double);
+ extern long long int llrint (double);
 +#ifdef __PRU__
-+extern double __pruabi_nround _PARAMS((double));
++extern double __pruabi_nround (double);
 +/* libc++ requires a real function, so cannot use a macro.  */
 +static inline __attribute__((always_inline))
 +double round (double a)
@@ -74,52 +74,52 @@ index 2a322ee26..68c1b1074 100644
 +  return __pruabi_nround(a);
 +}
 +#else
- extern double round _PARAMS((double));
+ extern double round (double);
 +#endif
- extern long int lround _PARAMS((double));
- extern long long int llround _PARAMS((double));
+ extern long int lround (double);
+ extern long long int llround (double);
 +#ifdef __PRU__
-+extern double __pruabi_trunc _PARAMS((double));
++extern double __pruabi_trunc (double);
 +static inline __attribute__((always_inline))
 +double trunc (double a)
 +{
 +  return __pruabi_trunc(a);
 +}
 +#else
- extern double trunc _PARAMS((double));
+ extern double trunc (double);
 +#endif
- extern double remquo _PARAMS((double, double, int *));
- extern double fdim _PARAMS((double, double));
- extern double fmax _PARAMS((double, double));
-@@ -375,10 +394,28 @@ extern float tgammaf _PARAMS((float));
- extern float nearbyintf _PARAMS((float));
- extern long int lrintf _PARAMS((float));
- extern long long int llrintf _PARAMS((float));
+ extern double remquo (double, double, int *);
+ extern double fdim (double, double);
+ extern double fmax (double, double);
+@@ -375,10 +394,28 @@ extern float tgammaf (float);
+ extern float nearbyintf (float);
+ extern long int lrintf (float);
+ extern long long int llrintf (float);
 +#ifdef __PRU__
-+extern float __pruabi_roundf _PARAMS((float));
++extern float __pruabi_roundf (float);
 +static inline __attribute__((always_inline))
 +float roundf (float a)
 +{
 +  return __pruabi_roundf(a);
 +}
 +#else
- extern float roundf _PARAMS((float));
+ extern float roundf (float);
 +#endif
- extern long int lroundf _PARAMS((float));
- extern long long int llroundf _PARAMS((float));
+ extern long int lroundf (float);
+ extern long long int llroundf (float);
 +#ifdef __PRU__
-+extern float __pruabi_truncf _PARAMS((float));
++extern float __pruabi_truncf (float);
 +static inline __attribute__((always_inline))
 +float truncf (float a)
 +{
 +  return __pruabi_truncf(a);
 +}
 +#else
- extern float truncf _PARAMS((float));
+ extern float truncf (float);
 +#endif
- extern float remquof _PARAMS((float, float, int *));
- extern float fdimf _PARAMS((float, float));
- extern float fmaxf _PARAMS((float, float));
+ extern float remquof (float, float, int *);
+ extern float fdimf (float, float);
+ extern float fmaxf (float, float);
 diff --git a/newlib/libm/common/s_round.c b/newlib/libm/common/s_round.c
 index 047574a84..ab3664ea7 100644
 --- a/newlib/libm/common/s_round.c
@@ -183,7 +183,7 @@ index 74ea933ce..75207bf13 100644
  #else
  	float truncf(x)
 diff --git a/newlib/libm/machine/configure b/newlib/libm/machine/configure
-index 86ceca95a..5cd399884 100755
+index c15ef32ee..5a793b62f 100755
 --- a/newlib/libm/machine/configure
 +++ b/newlib/libm/machine/configure
 @@ -789,6 +789,7 @@ ac_subdirs_all='aarch64

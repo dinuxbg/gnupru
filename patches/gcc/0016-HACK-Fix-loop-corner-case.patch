@@ -1,4 +1,4 @@
-From 78b0515033c023615339457c68163e8ee7e5799b Mon Sep 17 00:00:00 2001
+From 2b542cce22204cc649b9c668e3e076b1a44b62a2 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Wed, 27 Dec 2017 22:43:46 +0200
 Subject: [PATCH 16/16] HACK: Fix loop corner case

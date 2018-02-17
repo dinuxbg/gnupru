@@ -1,4 +1,4 @@
-From b50f1693aafe89ab753ec4233c1ed87459b63d6a Mon Sep 17 00:00:00 2001
+From f0a56a5286e4ca13aa6f23937d042fd296ab9b00 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 7 Oct 2016 22:51:06 +0300
 Subject: [PATCH 04/12] gdb: pru: Initial dummy port
@@ -23,10 +23,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 gdb/pru-tdep.h
 
 diff --git a/gdb/Makefile.in b/gdb/Makefile.in
-index 5823098036..9648f6a84f 100644
+index 957654c9bd..c5a866a2d4 100644
 --- a/gdb/Makefile.in
 +++ b/gdb/Makefile.in
-@@ -747,6 +747,7 @@ ALL_TARGET_OBS = \
+@@ -748,6 +748,7 @@ ALL_TARGET_OBS = \
  	ppc-ravenscar-thread.o \
  	ppc-sysv-tdep.o \
  	ppc64-tdep.o \
@@ -42,7 +42,7 @@ index 5823098036..9648f6a84f 100644
  	psympriv.h \
  	psymtab.h \
  	ravenscar-thread.h \
-@@ -2322,6 +2324,7 @@ ALLDEPFILES = \
+@@ -2331,6 +2333,7 @@ ALLDEPFILES = \
  	ppc-sysv-tdep.c \
  	ppc64-tdep.c \
  	procfs.c \
@@ -51,10 +51,10 @@ index 5823098036..9648f6a84f 100644
  	remote-sim.c \
  	rl78-tdep.c \
 diff --git a/gdb/configure.tgt b/gdb/configure.tgt
-index fb8014a8e8..be9fff2ce3 100644
+index 122baf3a88..6849ffc683 100644
 --- a/gdb/configure.tgt
 +++ b/gdb/configure.tgt
-@@ -517,6 +517,12 @@ powerpc*-*-*)
+@@ -513,6 +513,12 @@ powerpc*-*-*)
  	gdb_sim=../sim/ppc/libsim.a
  	;;
  
@@ -66,9 +66,9 @@ index fb8014a8e8..be9fff2ce3 100644
 +
  s390*-*-linux*)
  	# Target: S390 running Linux
- 	gdb_target_obs="s390-linux-tdep.o solib-svr4.o linux-tdep.o \
+ 	gdb_target_obs="s390-linux-tdep.o s390-tdep.o solib-svr4.o \
 diff --git a/gdb/features/Makefile b/gdb/features/Makefile
-index c78349eba9..510d94a8e0 100644
+index 82609f5862..a554c9e9c9 100644
 --- a/gdb/features/Makefile
 +++ b/gdb/features/Makefile
 @@ -138,6 +138,7 @@ XMLTOC = \

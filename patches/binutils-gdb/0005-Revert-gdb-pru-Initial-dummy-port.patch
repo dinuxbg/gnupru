@@ -1,4 +1,4 @@
-From b70aca659483f1d40f9bcdf139ff4d6ab5e72623 Mon Sep 17 00:00:00 2001
+From bdf4429c81cc24bfcd2b97b6ead14e2640a25abb Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 5 Dec 2016 19:55:46 +0200
 Subject: [PATCH 05/12] Revert "gdb: pru: Initial dummy port"
@@ -21,10 +21,10 @@ This reverts commit 2f00577670f212261578bc6f72f7695f3f670978.
  delete mode 100644 gdb/pru-tdep.h
 
 diff --git a/gdb/Makefile.in b/gdb/Makefile.in
-index 9648f6a84f..5823098036 100644
+index c5a866a2d4..957654c9bd 100644
 --- a/gdb/Makefile.in
 +++ b/gdb/Makefile.in
-@@ -747,7 +747,6 @@ ALL_TARGET_OBS = \
+@@ -748,7 +748,6 @@ ALL_TARGET_OBS = \
  	ppc-ravenscar-thread.o \
  	ppc-sysv-tdep.o \
  	ppc64-tdep.o \
@@ -40,7 +40,7 @@ index 9648f6a84f..5823098036 100644
  	psympriv.h \
  	psymtab.h \
  	ravenscar-thread.h \
-@@ -2324,7 +2322,6 @@ ALLDEPFILES = \
+@@ -2333,7 +2331,6 @@ ALLDEPFILES = \
  	ppc-sysv-tdep.c \
  	ppc64-tdep.c \
  	procfs.c \
@@ -49,10 +49,10 @@ index 9648f6a84f..5823098036 100644
  	remote-sim.c \
  	rl78-tdep.c \
 diff --git a/gdb/configure.tgt b/gdb/configure.tgt
-index be9fff2ce3..fb8014a8e8 100644
+index 6849ffc683..122baf3a88 100644
 --- a/gdb/configure.tgt
 +++ b/gdb/configure.tgt
-@@ -517,12 +517,6 @@ powerpc*-*-*)
+@@ -513,12 +513,6 @@ powerpc*-*-*)
  	gdb_sim=../sim/ppc/libsim.a
  	;;
  
@@ -64,9 +64,9 @@ index be9fff2ce3..fb8014a8e8 100644
 -
  s390*-*-linux*)
  	# Target: S390 running Linux
- 	gdb_target_obs="s390-linux-tdep.o solib-svr4.o linux-tdep.o \
+ 	gdb_target_obs="s390-linux-tdep.o s390-tdep.o solib-svr4.o \
 diff --git a/gdb/features/Makefile b/gdb/features/Makefile
-index 510d94a8e0..c78349eba9 100644
+index a554c9e9c9..82609f5862 100644
 --- a/gdb/features/Makefile
 +++ b/gdb/features/Makefile
 @@ -138,7 +138,6 @@ XMLTOC = \

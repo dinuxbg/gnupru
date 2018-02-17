@@ -1,4 +1,4 @@
-From 58a76c8eda20e234b72b1269d0bede3a6cc5b16e Mon Sep 17 00:00:00 2001
+From c2861934d3389ef1cd58cee63f45d95c6976282c Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:56:38 +0200
 Subject: [PATCH 04/16] testsuite: Add PRU tests
@@ -689,7 +689,7 @@ index 00000000000..0e9ae4cf01e
 +}
 +
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index 114c1f11ccc..05e7597c42a 100644
+index 8479290f62b..d953e05b817 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
 @@ -511,7 +511,8 @@ proc check_effective_target_trampolines { } {
@@ -702,7 +702,7 @@ index 114c1f11ccc..05e7597c42a 100644
  	return 0;
      }
      return 1
-@@ -685,6 +686,7 @@ proc check_profiling_available { test_what } {
+@@ -684,6 +685,7 @@ proc check_profiling_available { test_what } {
  	     || [istarget nvptx-*-*]
  	     || [istarget powerpc-*-eabi*]
  	     || [istarget powerpc-*-elf]
@@ -710,7 +710,7 @@ index 114c1f11ccc..05e7597c42a 100644
  	     || [istarget rx-*-*]	
  	     || [istarget tic6x-*-elf]
  	     || [istarget visium-*-*]
-@@ -880,7 +882,7 @@ proc check_effective_target_tls_emulated {} {
+@@ -879,7 +881,7 @@ proc check_effective_target_tls_emulated {} {
  proc check_effective_target_tls_runtime {} {
      # The runtime does not have TLS support, but just
      # running the test below is insufficient to show this.
@@ -719,7 +719,7 @@ index 114c1f11ccc..05e7597c42a 100644
  	return 0
      }
      return [check_runtime tls_runtime {
-@@ -8589,6 +8591,7 @@ proc check_effective_target_logical_op_short_circuit {} {
+@@ -8780,6 +8782,7 @@ proc check_effective_target_logical_op_short_circuit {} {
  	 || [istarget nios2*-*-*]
  	 || [istarget riscv*-*-*]
  	 || [istarget visium-*-*]

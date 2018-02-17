@@ -1,4 +1,4 @@
-From f4d5f2abd6d71927506f3d996ff6d7b52833515a Mon Sep 17 00:00:00 2001
+From 9df5dd9026fec4fb82d6a6033c01967b1c486c5e Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 8 Dec 2017 23:21:26 +0200
 Subject: [PATCH 10/12] Fix LDI32 relocation to conform to TI ABI
@@ -16,7 +16,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  8 files changed, 69 insertions(+), 52 deletions(-)
 
 diff --git a/bfd/elf32-pru.c b/bfd/elf32-pru.c
-index a98b4b3d7e..7f8d6efd77 100644
+index 71bb0a006f..f5bbdb757d 100644
 --- a/bfd/elf32-pru.c
 +++ b/bfd/elf32-pru.c
 @@ -550,14 +550,14 @@ pru_elf32_do_ldi32_relocate (bfd *abfd, reloc_howto_type *howto,
@@ -82,7 +82,7 @@ index a98b4b3d7e..7f8d6efd77 100644
  		 register.  */
  	      irel->r_info = ELF32_R_INFO (ELF32_R_SYM (irel->r_info),
 diff --git a/gas/config/tc-pru.c b/gas/config/tc-pru.c
-index d5aa5a5146..1887880678 100644
+index d0f630e2b4..91edf14557 100644
 --- a/gas/config/tc-pru.c
 +++ b/gas/config/tc-pru.c
 @@ -814,8 +814,11 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)

@@ -1,7 +1,7 @@
-From 3ede29bba7f55b1df680ead564a6732ddd026c0a Mon Sep 17 00:00:00 2001
+From c0b5cd7accbf5cebd934d25cb510405d09f86de5 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Thu, 1 May 2014 16:43:07 +0300
-Subject: [PATCH 1/5] Initial PRU port
+Subject: [PATCH 1/3] Initial PRU port
 
 Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---
@@ -12,10 +12,10 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgloss/configure.in                             |    2 +
  libgloss/pru/Makefile.in                          |  151 +
  libgloss/pru/aclocal.m4                           |  344 ++
- libgloss/pru/close.c                              |   25 +
+ libgloss/pru/close.c                              |   24 +
  libgloss/pru/configure                            | 3791 ++++++++++++++++
  libgloss/pru/configure.in                         |   66 +
- libgloss/pru/crt0.S                               |   70 +
+ libgloss/pru/crt0.S                               |   75 +
  libgloss/pru/device-specs/am335x.pru0             |    5 +
  libgloss/pru/device-specs/am335x.pru1             |    5 +
  libgloss/pru/device-specs/am437x.icss0.pru0       |    5 +
@@ -23,33 +23,33 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  libgloss/pru/device-specs/am437x.icss1.pru0       |    5 +
  libgloss/pru/device-specs/am437x.icss1.pru1       |    5 +
  libgloss/pru/device-specs/sim                     |    5 +
- libgloss/pru/do_global_dtors.c                    |   35 +
- libgloss/pru/fstat.c                              |   30 +
- libgloss/pru/getpid.c                             |   25 +
+ libgloss/pru/do_global_dtors.c                    |   40 +
+ libgloss/pru/fstat.c                              |   28 +
+ libgloss/pru/getpid.c                             |   24 +
  libgloss/pru/gettimeofday.c                       |   31 +
- libgloss/pru/inbyte.c                             |   40 +
+ libgloss/pru/inbyte.c                             |   38 +
  libgloss/pru/include/pru/am335x.h                 |  772 ++++
  libgloss/pru/include/pru/io.h                     |  124 +
- libgloss/pru/isatty.c                             |   27 +
+ libgloss/pru/isatty.c                             |   26 +
  libgloss/pru/kill.c                               |   28 +
  libgloss/pru/ldscripts/gen-ld-scripts.sh          |   61 +
- libgloss/pru/ldscripts/pruelf-am335x.pru0.x       |  190 +
- libgloss/pru/ldscripts/pruelf-am335x.pru1.x       |  190 +
- libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x |  190 +
- libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x |  190 +
- libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x |  190 +
- libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x |  190 +
- libgloss/pru/ldscripts/pruelf-sim.x               |  190 +
- libgloss/pru/lseek.c                              |   34 +
- libgloss/pru/open.c                               |   33 +
- libgloss/pru/outbyte.c                            |   25 +
- libgloss/pru/print.c                              |   26 +
- libgloss/pru/putnum.c                             |   41 +
- libgloss/pru/raise.c                              |   22 +
- libgloss/pru/sbrk.c                               |   44 +
- libgloss/pru/stat.c                               |   33 +
+ libgloss/pru/ldscripts/pruelf-am335x.pru0.x       |  203 +
+ libgloss/pru/ldscripts/pruelf-am335x.pru1.x       |  203 +
+ libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x |  203 +
+ libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x |  203 +
+ libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x |  203 +
+ libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x |  203 +
+ libgloss/pru/ldscripts/pruelf-sim.x               |  203 +
+ libgloss/pru/lseek.c                              |   31 +
+ libgloss/pru/open.c                               |   30 +
+ libgloss/pru/outbyte.c                            |   24 +
+ libgloss/pru/print.c                              |   25 +
+ libgloss/pru/putnum.c                             |   42 +
+ libgloss/pru/raise.c                              |   24 +
+ libgloss/pru/sbrk.c                               |   46 +
+ libgloss/pru/stat.c                               |   31 +
  libgloss/pru/syscalls.S                           |   32 +
- libgloss/pru/unlink.c                             |   31 +
+ libgloss/pru/unlink.c                             |   30 +
  newlib/configure.host                             |   13 +-
  newlib/libc/include/machine/ieeefp.h              |    4 +
  newlib/libc/include/machine/setjmp.h              |    5 +
@@ -61,7 +61,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  newlib/libc/machine/pru/configure                 | 4748 +++++++++++++++++++++
  newlib/libc/machine/pru/configure.in              |   14 +
  newlib/libc/machine/pru/setjmp.s                  |   46 +
- 56 files changed, 13623 insertions(+), 1 deletion(-)
+ 56 files changed, 13711 insertions(+), 1 deletion(-)
  create mode 100644 libgloss/pru/Makefile.in
  create mode 100644 libgloss/pru/aclocal.m4
  create mode 100644 libgloss/pru/close.c
@@ -704,10 +704,10 @@ index 000000000..b6cdfaeb8
 +m4_include([../acinclude.m4])
 diff --git a/libgloss/pru/close.c b/libgloss/pru/close.c
 new file mode 100644
-index 000000000..b94cb602a
+index 000000000..c1a14fbcb
 --- /dev/null
 +++ b/libgloss/pru/close.c
-@@ -0,0 +1,25 @@
+@@ -0,0 +1,24 @@
 +/* close.c -- close a file descriptor.
 + *
 + * Copyright (c) 1995, 1999 Cygnus Support
@@ -728,8 +728,7 @@ index 000000000..b94cb602a
 + * close -- We don't need to do anything, but pretend we did.
 + */
 +int
-+_DEFUN (_close ,(fd),
-+       int fd)
++_close (int fd)
 +{
 +  return (0);
 +}
@@ -4604,10 +4603,10 @@ index 000000000..2a4c946e8
 +AC_OUTPUT
 diff --git a/libgloss/pru/crt0.S b/libgloss/pru/crt0.S
 new file mode 100644
-index 000000000..860428351
+index 000000000..eef23f6b8
 --- /dev/null
 +++ b/libgloss/pru/crt0.S
-@@ -0,0 +1,70 @@
+@@ -0,0 +1,75 @@
 +/* crt0.S -- PRU startup code
 + *
 + * Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -4638,22 +4637,27 @@ index 000000000..860428351
 +
 +#if !defined(MINRT)
 +	.extern _do_global_dtors
-+	/* Ensure destructors get called. */
++	/* Ensure destructors get called.  Call is per GNU ABI (i.e. 32-bit
++	   function pointers).  But it is also compatible with the TI ABI
++	   since GCC supports only little endian PRU.
++
++	   WARNING:  Keep this compatible with both ABIs!  */
 +	ldi	r14, %pmem(_do_global_dtors)
 +	call	atexit
 +
 +	/* Call constructors. Use non-call-clobbered registers. */
-+	ldi	r5, _ctors_start
-+	ldi	r6, _ctors_end
++	ldi	r5, __init_array_begin
++	ldi	r6, __init_array_end
 +ctors_loop:
 +	qbeq	ctors_done, r5, r6
-+	lbbo	r7, r5, 0, 4		/* IMEM pointers are 32bits for now */
-+	call	r7
-+	add	r5, r5, 4
++	/* ABI dictates 16-bit IMEM pointers. */
++	lbbo	r7, r5, 0, 2
++	call	r7.w0
++	add	r5, r5, 2
 +	jmp	ctors_loop
 +ctors_done:
 +#endif
-+	
++
 +	/* Just in case main() tries to access argc, argv[] and envp. */
 +	zero	r14, 3 * 4
 +
@@ -4757,10 +4761,10 @@ index 000000000..1dddcbec2
 +-Tpruelf-sim.x
 diff --git a/libgloss/pru/do_global_dtors.c b/libgloss/pru/do_global_dtors.c
 new file mode 100644
-index 000000000..07b996bf0
+index 000000000..12fc7c3b8
 --- /dev/null
 +++ b/libgloss/pru/do_global_dtors.c
-@@ -0,0 +1,35 @@
+@@ -0,0 +1,40 @@
 +/* do_global_dtors - invoke global destructors
 + *
 + * Copyright (c) 2015 Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -4779,29 +4783,34 @@ index 000000000..07b996bf0
 +#include <_ansi.h>
 +#include "syscall.h"
 +
-+extern void *_dtors_start;
-+extern void *_dtors_end;
++extern void *__fini_array_begin;
++extern void *__fini_array_end;
 +
 +/*
 + * _do_global_dtors
 + */
 +void
-+_DEFUN_VOID (_do_global_dtors)
++_do_global_dtors (void)
 +{
++    /* ABI dictates pointers in init/fini arrays are 16-bit.  */
++    const uint16_t *end = (uint16_t *)&__fini_array_end;
++    const uint16_t *begin = (uint16_t *)&__fini_array_begin;
++    const uint16_t *p;
 +    void (**dtor) (void);
 +
 +    /* call destructors in reverse order */
-+    for (dtor = &_dtors_end; dtor > &_dtors_start; ) {
-+	dtor--;
++    for (p = end; p > begin; ) {
++	p--;
++	dtor = (void *)p;
 +	(*dtor) ();
 +    }
 +}
 diff --git a/libgloss/pru/fstat.c b/libgloss/pru/fstat.c
 new file mode 100644
-index 000000000..02054641b
+index 000000000..7e562c3f6
 --- /dev/null
 +++ b/libgloss/pru/fstat.c
-@@ -0,0 +1,30 @@
+@@ -0,0 +1,28 @@
 +/* fstat.c -- get status of a file.
 + *
 + * Copyright (c) 1995, 1999 Cygnus Support
@@ -4823,9 +4832,7 @@ index 000000000..02054641b
 + * fstat -- Since we have no file system, we just return an error.
 + */
 +int
-+_DEFUN (_fstat, (fd, buf),
-+       int fd _AND
-+       struct stat *buf)
++_fstat (int fd, struct stat *buf)
 +{
 +  buf->st_mode = S_IFCHR;	/* Always pretend to be a tty */
 +  buf->st_blksize = 0;
@@ -4834,10 +4841,10 @@ index 000000000..02054641b
 +}
 diff --git a/libgloss/pru/getpid.c b/libgloss/pru/getpid.c
 new file mode 100644
-index 000000000..eee2ac030
+index 000000000..cc9e85749
 --- /dev/null
 +++ b/libgloss/pru/getpid.c
-@@ -0,0 +1,25 @@
+@@ -0,0 +1,24 @@
 +/* getpid.c -- get the current process id.
 + *
 + * Copyright (c) 1995, 1999 Cygnus Support
@@ -4858,14 +4865,13 @@ index 000000000..eee2ac030
 + * getpid -- only one process, so just return 1.
 + */
 +int
-+_DEFUN (_getpid, (),
-+        )
++_getpid (void)
 +{
 +  return __MYPID;
 +}
 diff --git a/libgloss/pru/gettimeofday.c b/libgloss/pru/gettimeofday.c
 new file mode 100644
-index 000000000..7bc01dcce
+index 000000000..b4b7cb078
 --- /dev/null
 +++ b/libgloss/pru/gettimeofday.c
 @@ -0,0 +1,31 @@
@@ -4888,24 +4894,24 @@ index 000000000..7bc01dcce
 +
 +#undef errno
 +extern int errno;
++struct timeval;
 +
 +/*
 + * gettimeofday -- no clock
 + * struct timeval * tp, void * tzvp
 + */
 +int
-+_DEFUN (_gettimeofday, (tp, tzvp), struct timeval * tp _AND void * tzvp
-+        )
++_gettimeofday (struct timeval * tp, void * tzvp)
 +{
 +    errno = ENOSYS;
 +    return -1;
 +}
 diff --git a/libgloss/pru/inbyte.c b/libgloss/pru/inbyte.c
 new file mode 100644
-index 000000000..b2bdff0d8
+index 000000000..d9b08d353
 --- /dev/null
 +++ b/libgloss/pru/inbyte.c
-@@ -0,0 +1,40 @@
+@@ -0,0 +1,38 @@
 +/* inbyte.c -- inbyte function for remoteproc
 + *
 + * Copyright (c) 2014-2016 Dimitar Dimitrov <dimitar@dinux.eu>
@@ -4929,9 +4935,7 @@ index 000000000..b2bdff0d8
 +extern ssize_t _read(int fd, void *b, size_t count);
 +
 +int
-+_DEFUN (inbyte, (),
-+	_NOARGS)
-+
++inbyte (void)
 +{
 +  ssize_t n;
 +  char c;
@@ -5856,10 +5860,10 @@ index 000000000..945ff06f3
 +#endif
 diff --git a/libgloss/pru/isatty.c b/libgloss/pru/isatty.c
 new file mode 100644
-index 000000000..e3c32051a
+index 000000000..bb160edf2
 --- /dev/null
 +++ b/libgloss/pru/isatty.c
-@@ -0,0 +1,27 @@
+@@ -0,0 +1,26 @@
 +/* isatty.c -- chek the terminal device.
 + * 
 + * Copyright (c) 1995 Cygnus Support
@@ -5882,14 +5886,13 @@ index 000000000..e3c32051a
 + *           serial port, we'll say yes _AND return a 1.
 + */
 +int
-+_DEFUN (_isatty, (fd),
-+       int fd)
++_isatty (int fd)
 +{
 +  return (1);
 +}
 diff --git a/libgloss/pru/kill.c b/libgloss/pru/kill.c
 new file mode 100644
-index 000000000..43a359760
+index 000000000..5bf7c4110
 --- /dev/null
 +++ b/libgloss/pru/kill.c
 @@ -0,0 +1,28 @@
@@ -5909,13 +5912,13 @@ index 000000000..43a359760
 + */
 +#include "glue.h"
 +
++extern void _exit (int) __attribute__((__noreturn__));
++
 +/*
 + * kill -- go out via exit...
 + */
 +int
-+_DEFUN (_kill, (pid, sig),
-+        int pid _AND 
-+        int sig)
++_kill (int pid, int sig)
 +{
 +  if(pid == __MYPID)
 +    _exit(sig);
@@ -5990,10 +5993,10 @@ index 000000000..575a30970
 +dump_modified 8K   8K     "32"         "512"       | tee pruelf-am437x.icss1.pru1.x
 diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru0.x b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
 new file mode 100644
-index 000000000..6af7477bb
+index 000000000..8ef05d211
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
-@@ -0,0 +1,190 @@
+@@ -0,0 +1,203 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -6008,6 +6011,8 @@ index 000000000..6af7477bb
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
++/* For compatibility with TI's toolchain.  */
++__SYSMEM_SIZE = __HEAP_SIZE;
 + PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
 +ENTRY (_start)
 +SECTIONS
@@ -6025,12 +6030,14 @@ index 000000000..6af7477bb
 +    {
 +      *(.rel.text)
 +      *(.rel.text.*)
++      *(.rel.text:*)
 +      *(.rel.gnu.linkonce.t*)
 +    }
 +  .rela.text     :
 +    {
 +      *(.rela.text)
 +      *(.rela.text.*)
++      *(.rela.text:*)
 +      *(.rela.gnu.linkonce.t*)
 +    }
 +  .rel.fini      : { *(.rel.fini)		}
@@ -6039,36 +6046,40 @@ index 000000000..6af7477bb
 +    {
 +      *(.rel.rodata)
 +      *(.rel.rodata.*)
++      *(.rel.rodata:*)
 +      *(.rel.gnu.linkonce.r*)
 +    }
 +  .rela.rodata   :
 +    {
 +      *(.rela.rodata)
 +      *(.rela.rodata.*)
++      *(.rela.rodata:*)
 +      *(.rela.gnu.linkonce.r*)
 +    }
 +  .rel.data      :
 +    {
 +      *(.rel.data)
 +      *(.rel.data.*)
++      *(.rel.data:*)
 +      *(.rel.gnu.linkonce.d*)
 +    }
 +  .rela.data     :
 +    {
 +      *(.rela.data)
 +      *(.rela.data.*)
++      *(.rela.data:*)
 +      *(.rela.gnu.linkonce.d*)
 +    }
-+  .rel.ctors     : { *(.rel.ctors)	}
-+  .rela.ctors    : { *(.rela.ctors)	}
-+  .rel.dtors     : { *(.rel.dtors)	}
-+  .rela.dtors    : { *(.rela.dtors)	}
-+  .rel.got       : { *(.rel.got)		}
-+  .rela.got      : { *(.rela.got)		}
-+  .rel.bss       : { *(.rel.bss)		}
-+  .rela.bss      : { *(.rela.bss)		}
-+  .rel.plt       : { *(.rel.plt)		}
-+  .rela.plt      : { *(.rela.plt)		}
++  .rel.init_array   	  : { *(.rel.init_array)	}
++  .rela.init_array  	  : { *(.rela.init_array)	}
++  .rel.fini_array   	  : { *(.rel.fini_array)	}
++  .rela.fini_array  	  : { *(.rela.fini_array)	}
++  .rel.got     		  : { *(.rel.got)		}
++  .rela.got    		  : { *(.rela.got)	}
++  .rel.bss     		  : { *(.rel.bss)		}
++  .rela.bss    		  : { *(.rela.bss)	}
++  .rel.plt     		  : { *(.rel.plt)		}
++  .rela.plt    		  : { *(.rela.plt)	}
 +  /* Internal text space.  */
 +  .text   :
 +  {
@@ -6081,6 +6092,8 @@ index 000000000..6af7477bb
 +    . = ALIGN(4);
 +    *(.text.*)
 +    . = ALIGN(4);
++    *(.text:*)
++    . = ALIGN(4);
 +    *(.gnu.linkonce.t*)
 +    . = ALIGN(4);
 +     _text_end = . ;
@@ -6091,14 +6104,14 @@ index 000000000..6af7477bb
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
 +       a "valid" NULL address.  */
-+     _ctors_start = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
-+     KEEP (*(.ctors))
-+     _ctors_end = . ;
-+     _dtors_start = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
-+     KEEP (*(.dtors))
-+     _dtors_end = . ;
++     __init_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
++     KEEP (*(.init_array))
++     __init_array_end = . ;
++     __fini_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
++     KEEP (*(.fini_array))
++     __fini_array_end = . ;
 +    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
 +       section.  If CRT can make some use of it - great.  Otherwise skip a
@@ -6107,8 +6120,10 @@ index 000000000..6af7477bb
 +     PROVIDE (_data_start = .) ;
 +    *(.data)
 +     *(.data*)
++     *(.data:*)
 +     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
 +     *(.rodata.*) /* with -fdata-sections.  */
++     *(.rodata:*)
 +    *(.gnu.linkonce.d*)
 +    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
@@ -6124,6 +6139,7 @@ index 000000000..6af7477bb
 +     PROVIDE (_bss_start = .) ;
 +    *(.bss)
 +     *(.bss.*)
++     *(.bss:*)
 +    *(.gnu.linkonce.b*)
 +    *(COMMON)
 +     PROVIDE (_bss_end = .) ;
@@ -6186,10 +6202,10 @@ index 000000000..6af7477bb
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru1.x b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
 new file mode 100644
-index 000000000..6af7477bb
+index 000000000..8ef05d211
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
-@@ -0,0 +1,190 @@
+@@ -0,0 +1,203 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -6204,6 +6220,8 @@ index 000000000..6af7477bb
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
++/* For compatibility with TI's toolchain.  */
++__SYSMEM_SIZE = __HEAP_SIZE;
 + PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
 +ENTRY (_start)
 +SECTIONS
@@ -6221,12 +6239,14 @@ index 000000000..6af7477bb
 +    {
 +      *(.rel.text)
 +      *(.rel.text.*)
++      *(.rel.text:*)
 +      *(.rel.gnu.linkonce.t*)
 +    }
 +  .rela.text     :
 +    {
 +      *(.rela.text)
 +      *(.rela.text.*)
++      *(.rela.text:*)
 +      *(.rela.gnu.linkonce.t*)
 +    }
 +  .rel.fini      : { *(.rel.fini)		}
@@ -6235,36 +6255,40 @@ index 000000000..6af7477bb
 +    {
 +      *(.rel.rodata)
 +      *(.rel.rodata.*)
++      *(.rel.rodata:*)
 +      *(.rel.gnu.linkonce.r*)
 +    }
 +  .rela.rodata   :
 +    {
 +      *(.rela.rodata)
 +      *(.rela.rodata.*)
++      *(.rela.rodata:*)
 +      *(.rela.gnu.linkonce.r*)
 +    }
 +  .rel.data      :
 +    {
 +      *(.rel.data)
 +      *(.rel.data.*)
++      *(.rel.data:*)
 +      *(.rel.gnu.linkonce.d*)
 +    }
 +  .rela.data     :
 +    {
 +      *(.rela.data)
 +      *(.rela.data.*)
++      *(.rela.data:*)
 +      *(.rela.gnu.linkonce.d*)
 +    }
-+  .rel.ctors     : { *(.rel.ctors)	}
-+  .rela.ctors    : { *(.rela.ctors)	}
-+  .rel.dtors     : { *(.rel.dtors)	}
-+  .rela.dtors    : { *(.rela.dtors)	}
-+  .rel.got       : { *(.rel.got)		}
-+  .rela.got      : { *(.rela.got)		}
-+  .rel.bss       : { *(.rel.bss)		}
-+  .rela.bss      : { *(.rela.bss)		}
-+  .rel.plt       : { *(.rel.plt)		}
-+  .rela.plt      : { *(.rela.plt)		}
++  .rel.init_array   	  : { *(.rel.init_array)	}
++  .rela.init_array  	  : { *(.rela.init_array)	}
++  .rel.fini_array   	  : { *(.rel.fini_array)	}
++  .rela.fini_array  	  : { *(.rela.fini_array)	}
++  .rel.got     		  : { *(.rel.got)		}
++  .rela.got    		  : { *(.rela.got)	}
++  .rel.bss     		  : { *(.rel.bss)		}
++  .rela.bss    		  : { *(.rela.bss)	}
++  .rel.plt     		  : { *(.rel.plt)		}
++  .rela.plt    		  : { *(.rela.plt)	}
 +  /* Internal text space.  */
 +  .text   :
 +  {
@@ -6277,6 +6301,8 @@ index 000000000..6af7477bb
 +    . = ALIGN(4);
 +    *(.text.*)
 +    . = ALIGN(4);
++    *(.text:*)
++    . = ALIGN(4);
 +    *(.gnu.linkonce.t*)
 +    . = ALIGN(4);
 +     _text_end = . ;
@@ -6287,14 +6313,14 @@ index 000000000..6af7477bb
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
 +       a "valid" NULL address.  */
-+     _ctors_start = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
-+     KEEP (*(.ctors))
-+     _ctors_end = . ;
-+     _dtors_start = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
-+     KEEP (*(.dtors))
-+     _dtors_end = . ;
++     __init_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
++     KEEP (*(.init_array))
++     __init_array_end = . ;
++     __fini_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
++     KEEP (*(.fini_array))
++     __fini_array_end = . ;
 +    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
 +       section.  If CRT can make some use of it - great.  Otherwise skip a
@@ -6303,8 +6329,10 @@ index 000000000..6af7477bb
 +     PROVIDE (_data_start = .) ;
 +    *(.data)
 +     *(.data*)
++     *(.data:*)
 +     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
 +     *(.rodata.*) /* with -fdata-sections.  */
++     *(.rodata:*)
 +    *(.gnu.linkonce.d*)
 +    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
@@ -6320,6 +6348,7 @@ index 000000000..6af7477bb
 +     PROVIDE (_bss_start = .) ;
 +    *(.bss)
 +     *(.bss.*)
++     *(.bss:*)
 +    *(.gnu.linkonce.b*)
 +    *(COMMON)
 +     PROVIDE (_bss_end = .) ;
@@ -6382,10 +6411,10 @@ index 000000000..6af7477bb
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
 new file mode 100644
-index 000000000..3a3cd94ae
+index 000000000..bd1f21768
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
-@@ -0,0 +1,190 @@
+@@ -0,0 +1,203 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -6400,6 +6429,8 @@ index 000000000..3a3cd94ae
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 256 ;
++/* For compatibility with TI's toolchain.  */
++__SYSMEM_SIZE = __HEAP_SIZE;
 + PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
 +ENTRY (_start)
 +SECTIONS
@@ -6417,12 +6448,14 @@ index 000000000..3a3cd94ae
 +    {
 +      *(.rel.text)
 +      *(.rel.text.*)
++      *(.rel.text:*)
 +      *(.rel.gnu.linkonce.t*)
 +    }
 +  .rela.text     :
 +    {
 +      *(.rela.text)
 +      *(.rela.text.*)
++      *(.rela.text:*)
 +      *(.rela.gnu.linkonce.t*)
 +    }
 +  .rel.fini      : { *(.rel.fini)		}
@@ -6431,36 +6464,40 @@ index 000000000..3a3cd94ae
 +    {
 +      *(.rel.rodata)
 +      *(.rel.rodata.*)
++      *(.rel.rodata:*)
 +      *(.rel.gnu.linkonce.r*)
 +    }
 +  .rela.rodata   :
 +    {
 +      *(.rela.rodata)
 +      *(.rela.rodata.*)
++      *(.rela.rodata:*)
 +      *(.rela.gnu.linkonce.r*)
 +    }
 +  .rel.data      :
 +    {
 +      *(.rel.data)
 +      *(.rel.data.*)
++      *(.rel.data:*)
 +      *(.rel.gnu.linkonce.d*)
 +    }
 +  .rela.data     :
 +    {
 +      *(.rela.data)
 +      *(.rela.data.*)
++      *(.rela.data:*)
 +      *(.rela.gnu.linkonce.d*)
 +    }
-+  .rel.ctors     : { *(.rel.ctors)	}
-+  .rela.ctors    : { *(.rela.ctors)	}
-+  .rel.dtors     : { *(.rel.dtors)	}
-+  .rela.dtors    : { *(.rela.dtors)	}
-+  .rel.got       : { *(.rel.got)		}
-+  .rela.got      : { *(.rela.got)		}
-+  .rel.bss       : { *(.rel.bss)		}
-+  .rela.bss      : { *(.rela.bss)		}
-+  .rel.plt       : { *(.rel.plt)		}
-+  .rela.plt      : { *(.rela.plt)		}
++  .rel.init_array   	  : { *(.rel.init_array)	}
++  .rela.init_array  	  : { *(.rela.init_array)	}
++  .rel.fini_array   	  : { *(.rel.fini_array)	}
++  .rela.fini_array  	  : { *(.rela.fini_array)	}
++  .rel.got     		  : { *(.rel.got)		}
++  .rela.got    		  : { *(.rela.got)	}
++  .rel.bss     		  : { *(.rel.bss)		}
++  .rela.bss    		  : { *(.rela.bss)	}
++  .rel.plt     		  : { *(.rel.plt)		}
++  .rela.plt    		  : { *(.rela.plt)	}
 +  /* Internal text space.  */
 +  .text   :
 +  {
@@ -6473,6 +6510,8 @@ index 000000000..3a3cd94ae
 +    . = ALIGN(4);
 +    *(.text.*)
 +    . = ALIGN(4);
++    *(.text:*)
++    . = ALIGN(4);
 +    *(.gnu.linkonce.t*)
 +    . = ALIGN(4);
 +     _text_end = . ;
@@ -6483,14 +6522,14 @@ index 000000000..3a3cd94ae
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
 +       a "valid" NULL address.  */
-+     _ctors_start = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
-+     KEEP (*(.ctors))
-+     _ctors_end = . ;
-+     _dtors_start = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
-+     KEEP (*(.dtors))
-+     _dtors_end = . ;
++     __init_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
++     KEEP (*(.init_array))
++     __init_array_end = . ;
++     __fini_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
++     KEEP (*(.fini_array))
++     __fini_array_end = . ;
 +    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
 +       section.  If CRT can make some use of it - great.  Otherwise skip a
@@ -6499,8 +6538,10 @@ index 000000000..3a3cd94ae
 +     PROVIDE (_data_start = .) ;
 +    *(.data)
 +     *(.data*)
++     *(.data:*)
 +     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
 +     *(.rodata.*) /* with -fdata-sections.  */
++     *(.rodata:*)
 +    *(.gnu.linkonce.d*)
 +    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
@@ -6516,6 +6557,7 @@ index 000000000..3a3cd94ae
 +     PROVIDE (_bss_start = .) ;
 +    *(.bss)
 +     *(.bss.*)
++     *(.bss:*)
 +    *(.gnu.linkonce.b*)
 +    *(COMMON)
 +     PROVIDE (_bss_end = .) ;
@@ -6578,10 +6620,10 @@ index 000000000..3a3cd94ae
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
 new file mode 100644
-index 000000000..3a3cd94ae
+index 000000000..bd1f21768
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
-@@ -0,0 +1,190 @@
+@@ -0,0 +1,203 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -6596,6 +6638,8 @@ index 000000000..3a3cd94ae
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 256 ;
++/* For compatibility with TI's toolchain.  */
++__SYSMEM_SIZE = __HEAP_SIZE;
 + PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
 +ENTRY (_start)
 +SECTIONS
@@ -6613,12 +6657,14 @@ index 000000000..3a3cd94ae
 +    {
 +      *(.rel.text)
 +      *(.rel.text.*)
++      *(.rel.text:*)
 +      *(.rel.gnu.linkonce.t*)
 +    }
 +  .rela.text     :
 +    {
 +      *(.rela.text)
 +      *(.rela.text.*)
++      *(.rela.text:*)
 +      *(.rela.gnu.linkonce.t*)
 +    }
 +  .rel.fini      : { *(.rel.fini)		}
@@ -6627,36 +6673,40 @@ index 000000000..3a3cd94ae
 +    {
 +      *(.rel.rodata)
 +      *(.rel.rodata.*)
++      *(.rel.rodata:*)
 +      *(.rel.gnu.linkonce.r*)
 +    }
 +  .rela.rodata   :
 +    {
 +      *(.rela.rodata)
 +      *(.rela.rodata.*)
++      *(.rela.rodata:*)
 +      *(.rela.gnu.linkonce.r*)
 +    }
 +  .rel.data      :
 +    {
 +      *(.rel.data)
 +      *(.rel.data.*)
++      *(.rel.data:*)
 +      *(.rel.gnu.linkonce.d*)
 +    }
 +  .rela.data     :
 +    {
 +      *(.rela.data)
 +      *(.rela.data.*)
++      *(.rela.data:*)
 +      *(.rela.gnu.linkonce.d*)
 +    }
-+  .rel.ctors     : { *(.rel.ctors)	}
-+  .rela.ctors    : { *(.rela.ctors)	}
-+  .rel.dtors     : { *(.rel.dtors)	}
-+  .rela.dtors    : { *(.rela.dtors)	}
-+  .rel.got       : { *(.rel.got)		}
-+  .rela.got      : { *(.rela.got)		}
-+  .rel.bss       : { *(.rel.bss)		}
-+  .rela.bss      : { *(.rela.bss)		}
-+  .rel.plt       : { *(.rel.plt)		}
-+  .rela.plt      : { *(.rela.plt)		}
++  .rel.init_array   	  : { *(.rel.init_array)	}
++  .rela.init_array  	  : { *(.rela.init_array)	}
++  .rel.fini_array   	  : { *(.rel.fini_array)	}
++  .rela.fini_array  	  : { *(.rela.fini_array)	}
++  .rel.got     		  : { *(.rel.got)		}
++  .rela.got    		  : { *(.rela.got)	}
++  .rel.bss     		  : { *(.rel.bss)		}
++  .rela.bss    		  : { *(.rela.bss)	}
++  .rel.plt     		  : { *(.rel.plt)		}
++  .rela.plt    		  : { *(.rela.plt)	}
 +  /* Internal text space.  */
 +  .text   :
 +  {
@@ -6669,6 +6719,8 @@ index 000000000..3a3cd94ae
 +    . = ALIGN(4);
 +    *(.text.*)
 +    . = ALIGN(4);
++    *(.text:*)
++    . = ALIGN(4);
 +    *(.gnu.linkonce.t*)
 +    . = ALIGN(4);
 +     _text_end = . ;
@@ -6679,14 +6731,14 @@ index 000000000..3a3cd94ae
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
 +       a "valid" NULL address.  */
-+     _ctors_start = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
-+     KEEP (*(.ctors))
-+     _ctors_end = . ;
-+     _dtors_start = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
-+     KEEP (*(.dtors))
-+     _dtors_end = . ;
++     __init_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
++     KEEP (*(.init_array))
++     __init_array_end = . ;
++     __fini_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
++     KEEP (*(.fini_array))
++     __fini_array_end = . ;
 +    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
 +       section.  If CRT can make some use of it - great.  Otherwise skip a
@@ -6695,8 +6747,10 @@ index 000000000..3a3cd94ae
 +     PROVIDE (_data_start = .) ;
 +    *(.data)
 +     *(.data*)
++     *(.data:*)
 +     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
 +     *(.rodata.*) /* with -fdata-sections.  */
++     *(.rodata:*)
 +    *(.gnu.linkonce.d*)
 +    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
@@ -6712,6 +6766,7 @@ index 000000000..3a3cd94ae
 +     PROVIDE (_bss_start = .) ;
 +    *(.bss)
 +     *(.bss.*)
++     *(.bss:*)
 +    *(.gnu.linkonce.b*)
 +    *(COMMON)
 +     PROVIDE (_bss_end = .) ;
@@ -6774,10 +6829,10 @@ index 000000000..3a3cd94ae
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
 new file mode 100644
-index 000000000..6af7477bb
+index 000000000..8ef05d211
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
-@@ -0,0 +1,190 @@
+@@ -0,0 +1,203 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -6792,6 +6847,8 @@ index 000000000..6af7477bb
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
++/* For compatibility with TI's toolchain.  */
++__SYSMEM_SIZE = __HEAP_SIZE;
 + PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
 +ENTRY (_start)
 +SECTIONS
@@ -6809,12 +6866,14 @@ index 000000000..6af7477bb
 +    {
 +      *(.rel.text)
 +      *(.rel.text.*)
++      *(.rel.text:*)
 +      *(.rel.gnu.linkonce.t*)
 +    }
 +  .rela.text     :
 +    {
 +      *(.rela.text)
 +      *(.rela.text.*)
++      *(.rela.text:*)
 +      *(.rela.gnu.linkonce.t*)
 +    }
 +  .rel.fini      : { *(.rel.fini)		}
@@ -6823,36 +6882,40 @@ index 000000000..6af7477bb
 +    {
 +      *(.rel.rodata)
 +      *(.rel.rodata.*)
++      *(.rel.rodata:*)
 +      *(.rel.gnu.linkonce.r*)
 +    }
 +  .rela.rodata   :
 +    {
 +      *(.rela.rodata)
 +      *(.rela.rodata.*)
++      *(.rela.rodata:*)
 +      *(.rela.gnu.linkonce.r*)
 +    }
 +  .rel.data      :
 +    {
 +      *(.rel.data)
 +      *(.rel.data.*)
++      *(.rel.data:*)
 +      *(.rel.gnu.linkonce.d*)
 +    }
 +  .rela.data     :
 +    {
 +      *(.rela.data)
 +      *(.rela.data.*)
++      *(.rela.data:*)
 +      *(.rela.gnu.linkonce.d*)
 +    }
-+  .rel.ctors     : { *(.rel.ctors)	}
-+  .rela.ctors    : { *(.rela.ctors)	}
-+  .rel.dtors     : { *(.rel.dtors)	}
-+  .rela.dtors    : { *(.rela.dtors)	}
-+  .rel.got       : { *(.rel.got)		}
-+  .rela.got      : { *(.rela.got)		}
-+  .rel.bss       : { *(.rel.bss)		}
-+  .rela.bss      : { *(.rela.bss)		}
-+  .rel.plt       : { *(.rel.plt)		}
-+  .rela.plt      : { *(.rela.plt)		}
++  .rel.init_array   	  : { *(.rel.init_array)	}
++  .rela.init_array  	  : { *(.rela.init_array)	}
++  .rel.fini_array   	  : { *(.rel.fini_array)	}
++  .rela.fini_array  	  : { *(.rela.fini_array)	}
++  .rel.got     		  : { *(.rel.got)		}
++  .rela.got    		  : { *(.rela.got)	}
++  .rel.bss     		  : { *(.rel.bss)		}
++  .rela.bss    		  : { *(.rela.bss)	}
++  .rel.plt     		  : { *(.rel.plt)		}
++  .rela.plt    		  : { *(.rela.plt)	}
 +  /* Internal text space.  */
 +  .text   :
 +  {
@@ -6865,6 +6928,8 @@ index 000000000..6af7477bb
 +    . = ALIGN(4);
 +    *(.text.*)
 +    . = ALIGN(4);
++    *(.text:*)
++    . = ALIGN(4);
 +    *(.gnu.linkonce.t*)
 +    . = ALIGN(4);
 +     _text_end = . ;
@@ -6875,14 +6940,14 @@ index 000000000..6af7477bb
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
 +       a "valid" NULL address.  */
-+     _ctors_start = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
-+     KEEP (*(.ctors))
-+     _ctors_end = . ;
-+     _dtors_start = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
-+     KEEP (*(.dtors))
-+     _dtors_end = . ;
++     __init_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
++     KEEP (*(.init_array))
++     __init_array_end = . ;
++     __fini_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
++     KEEP (*(.fini_array))
++     __fini_array_end = . ;
 +    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
 +       section.  If CRT can make some use of it - great.  Otherwise skip a
@@ -6891,8 +6956,10 @@ index 000000000..6af7477bb
 +     PROVIDE (_data_start = .) ;
 +    *(.data)
 +     *(.data*)
++     *(.data:*)
 +     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
 +     *(.rodata.*) /* with -fdata-sections.  */
++     *(.rodata:*)
 +    *(.gnu.linkonce.d*)
 +    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
@@ -6908,6 +6975,7 @@ index 000000000..6af7477bb
 +     PROVIDE (_bss_start = .) ;
 +    *(.bss)
 +     *(.bss.*)
++     *(.bss:*)
 +    *(.gnu.linkonce.b*)
 +    *(COMMON)
 +     PROVIDE (_bss_end = .) ;
@@ -6970,10 +7038,10 @@ index 000000000..6af7477bb
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
 new file mode 100644
-index 000000000..6af7477bb
+index 000000000..8ef05d211
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
-@@ -0,0 +1,190 @@
+@@ -0,0 +1,203 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -6988,6 +7056,8 @@ index 000000000..6af7477bb
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
++/* For compatibility with TI's toolchain.  */
++__SYSMEM_SIZE = __HEAP_SIZE;
 + PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
 +ENTRY (_start)
 +SECTIONS
@@ -7005,12 +7075,14 @@ index 000000000..6af7477bb
 +    {
 +      *(.rel.text)
 +      *(.rel.text.*)
++      *(.rel.text:*)
 +      *(.rel.gnu.linkonce.t*)
 +    }
 +  .rela.text     :
 +    {
 +      *(.rela.text)
 +      *(.rela.text.*)
++      *(.rela.text:*)
 +      *(.rela.gnu.linkonce.t*)
 +    }
 +  .rel.fini      : { *(.rel.fini)		}
@@ -7019,36 +7091,40 @@ index 000000000..6af7477bb
 +    {
 +      *(.rel.rodata)
 +      *(.rel.rodata.*)
++      *(.rel.rodata:*)
 +      *(.rel.gnu.linkonce.r*)
 +    }
 +  .rela.rodata   :
 +    {
 +      *(.rela.rodata)
 +      *(.rela.rodata.*)
++      *(.rela.rodata:*)
 +      *(.rela.gnu.linkonce.r*)
 +    }
 +  .rel.data      :
 +    {
 +      *(.rel.data)
 +      *(.rel.data.*)
++      *(.rel.data:*)
 +      *(.rel.gnu.linkonce.d*)
 +    }
 +  .rela.data     :
 +    {
 +      *(.rela.data)
 +      *(.rela.data.*)
++      *(.rela.data:*)
 +      *(.rela.gnu.linkonce.d*)
 +    }
-+  .rel.ctors     : { *(.rel.ctors)	}
-+  .rela.ctors    : { *(.rela.ctors)	}
-+  .rel.dtors     : { *(.rel.dtors)	}
-+  .rela.dtors    : { *(.rela.dtors)	}
-+  .rel.got       : { *(.rel.got)		}
-+  .rela.got      : { *(.rela.got)		}
-+  .rel.bss       : { *(.rel.bss)		}
-+  .rela.bss      : { *(.rela.bss)		}
-+  .rel.plt       : { *(.rel.plt)		}
-+  .rela.plt      : { *(.rela.plt)		}
++  .rel.init_array   	  : { *(.rel.init_array)	}
++  .rela.init_array  	  : { *(.rela.init_array)	}
++  .rel.fini_array   	  : { *(.rel.fini_array)	}
++  .rela.fini_array  	  : { *(.rela.fini_array)	}
++  .rel.got     		  : { *(.rel.got)		}
++  .rela.got    		  : { *(.rela.got)	}
++  .rel.bss     		  : { *(.rel.bss)		}
++  .rela.bss    		  : { *(.rela.bss)	}
++  .rel.plt     		  : { *(.rel.plt)		}
++  .rela.plt    		  : { *(.rela.plt)	}
 +  /* Internal text space.  */
 +  .text   :
 +  {
@@ -7061,6 +7137,8 @@ index 000000000..6af7477bb
 +    . = ALIGN(4);
 +    *(.text.*)
 +    . = ALIGN(4);
++    *(.text:*)
++    . = ALIGN(4);
 +    *(.gnu.linkonce.t*)
 +    . = ALIGN(4);
 +     _text_end = . ;
@@ -7071,14 +7149,14 @@ index 000000000..6af7477bb
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
 +       a "valid" NULL address.  */
-+     _ctors_start = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
-+     KEEP (*(.ctors))
-+     _ctors_end = . ;
-+     _dtors_start = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
-+     KEEP (*(.dtors))
-+     _dtors_end = . ;
++     __init_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
++     KEEP (*(.init_array))
++     __init_array_end = . ;
++     __fini_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
++     KEEP (*(.fini_array))
++     __fini_array_end = . ;
 +    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
 +       section.  If CRT can make some use of it - great.  Otherwise skip a
@@ -7087,8 +7165,10 @@ index 000000000..6af7477bb
 +     PROVIDE (_data_start = .) ;
 +    *(.data)
 +     *(.data*)
++     *(.data:*)
 +     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
 +     *(.rodata.*) /* with -fdata-sections.  */
++     *(.rodata:*)
 +    *(.gnu.linkonce.d*)
 +    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
@@ -7104,6 +7184,7 @@ index 000000000..6af7477bb
 +     PROVIDE (_bss_start = .) ;
 +    *(.bss)
 +     *(.bss.*)
++     *(.bss:*)
 +    *(.gnu.linkonce.b*)
 +    *(COMMON)
 +     PROVIDE (_bss_end = .) ;
@@ -7166,10 +7247,10 @@ index 000000000..6af7477bb
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-sim.x b/libgloss/pru/ldscripts/pruelf-sim.x
 new file mode 100644
-index 000000000..68a5f5ac1
+index 000000000..e2860a37b
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-sim.x
-@@ -0,0 +1,190 @@
+@@ -0,0 +1,203 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -7184,6 +7265,8 @@ index 000000000..68a5f5ac1
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 * 1024 * 1024 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 1024 * 1024 ;
++/* For compatibility with TI's toolchain.  */
++__SYSMEM_SIZE = __HEAP_SIZE;
 + PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
 +ENTRY (_start)
 +SECTIONS
@@ -7201,12 +7284,14 @@ index 000000000..68a5f5ac1
 +    {
 +      *(.rel.text)
 +      *(.rel.text.*)
++      *(.rel.text:*)
 +      *(.rel.gnu.linkonce.t*)
 +    }
 +  .rela.text     :
 +    {
 +      *(.rela.text)
 +      *(.rela.text.*)
++      *(.rela.text:*)
 +      *(.rela.gnu.linkonce.t*)
 +    }
 +  .rel.fini      : { *(.rel.fini)		}
@@ -7215,36 +7300,40 @@ index 000000000..68a5f5ac1
 +    {
 +      *(.rel.rodata)
 +      *(.rel.rodata.*)
++      *(.rel.rodata:*)
 +      *(.rel.gnu.linkonce.r*)
 +    }
 +  .rela.rodata   :
 +    {
 +      *(.rela.rodata)
 +      *(.rela.rodata.*)
++      *(.rela.rodata:*)
 +      *(.rela.gnu.linkonce.r*)
 +    }
 +  .rel.data      :
 +    {
 +      *(.rel.data)
 +      *(.rel.data.*)
++      *(.rel.data:*)
 +      *(.rel.gnu.linkonce.d*)
 +    }
 +  .rela.data     :
 +    {
 +      *(.rela.data)
 +      *(.rela.data.*)
++      *(.rela.data:*)
 +      *(.rela.gnu.linkonce.d*)
 +    }
-+  .rel.ctors     : { *(.rel.ctors)	}
-+  .rela.ctors    : { *(.rela.ctors)	}
-+  .rel.dtors     : { *(.rel.dtors)	}
-+  .rela.dtors    : { *(.rela.dtors)	}
-+  .rel.got       : { *(.rel.got)		}
-+  .rela.got      : { *(.rela.got)		}
-+  .rel.bss       : { *(.rel.bss)		}
-+  .rela.bss      : { *(.rela.bss)		}
-+  .rel.plt       : { *(.rel.plt)		}
-+  .rela.plt      : { *(.rela.plt)		}
++  .rel.init_array   	  : { *(.rel.init_array)	}
++  .rela.init_array  	  : { *(.rela.init_array)	}
++  .rel.fini_array   	  : { *(.rel.fini_array)	}
++  .rela.fini_array  	  : { *(.rela.fini_array)	}
++  .rel.got     		  : { *(.rel.got)		}
++  .rela.got    		  : { *(.rela.got)	}
++  .rel.bss     		  : { *(.rel.bss)		}
++  .rela.bss    		  : { *(.rela.bss)	}
++  .rel.plt     		  : { *(.rel.plt)		}
++  .rela.plt    		  : { *(.rela.plt)	}
 +  /* Internal text space.  */
 +  .text   :
 +  {
@@ -7257,6 +7346,8 @@ index 000000000..68a5f5ac1
 +    . = ALIGN(4);
 +    *(.text.*)
 +    . = ALIGN(4);
++    *(.text:*)
++    . = ALIGN(4);
 +    *(.gnu.linkonce.t*)
 +    . = ALIGN(4);
 +     _text_end = . ;
@@ -7267,14 +7358,14 @@ index 000000000..68a5f5ac1
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
 +       a "valid" NULL address.  */
-+     _ctors_start = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))
-+     KEEP (*(.ctors))
-+     _ctors_end = . ;
-+     _dtors_start = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))
-+     KEEP (*(.dtors))
-+     _dtors_end = . ;
++     __init_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
++     KEEP (*(.init_array))
++     __init_array_end = . ;
++     __fini_array_begin = . ;
++     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
++     KEEP (*(.fini_array))
++     __fini_array_end = . ;
 +    /* DATA memory starts at address 0.  So to avoid placing a valid static
 +       variable at the invalid NULL address, we introduce the .data.atzero
 +       section.  If CRT can make some use of it - great.  Otherwise skip a
@@ -7283,8 +7374,10 @@ index 000000000..68a5f5ac1
 +     PROVIDE (_data_start = .) ;
 +    *(.data)
 +     *(.data*)
++     *(.data:*)
 +     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
 +     *(.rodata.*) /* with -fdata-sections.  */
++     *(.rodata:*)
 +    *(.gnu.linkonce.d*)
 +    *(.gnu.linkonce.r*)
 +    . = ALIGN(4);
@@ -7300,6 +7393,7 @@ index 000000000..68a5f5ac1
 +     PROVIDE (_bss_start = .) ;
 +    *(.bss)
 +     *(.bss.*)
++     *(.bss:*)
 +    *(.gnu.linkonce.b*)
 +    *(COMMON)
 +     PROVIDE (_bss_end = .) ;
@@ -7362,10 +7456,10 @@ index 000000000..68a5f5ac1
 +
 diff --git a/libgloss/pru/lseek.c b/libgloss/pru/lseek.c
 new file mode 100644
-index 000000000..c0b296c93
+index 000000000..966b2b8a3
 --- /dev/null
 +++ b/libgloss/pru/lseek.c
-@@ -0,0 +1,34 @@
+@@ -0,0 +1,31 @@
 +/* lseek.c -- move read/write pointer.
 + *
 + * Copyright (c) 1995, 1999 Cygnus Support
@@ -7391,10 +7485,7 @@ index 000000000..c0b296c93
 + * lseek --  we return an error.
 + */
 +off_t
-+_DEFUN (_lseek, (fd,  offset, whence),
-+       int fd _AND
-+       off_t offset _AND
-+       int whence)
++_lseek (int fd, off_t offset, int whence)
 +{
 +  errno = ESPIPE;
 +  return ((off_t)-1);
@@ -7402,10 +7493,10 @@ index 000000000..c0b296c93
 +
 diff --git a/libgloss/pru/open.c b/libgloss/pru/open.c
 new file mode 100644
-index 000000000..2e85f37b5
+index 000000000..7140eefc4
 --- /dev/null
 +++ b/libgloss/pru/open.c
-@@ -0,0 +1,33 @@
+@@ -0,0 +1,30 @@
 +/* open.c -- open a file.
 + * 
 + * Copyright (c) 1995, 1999 Cygnus Support
@@ -7431,20 +7522,17 @@ index 000000000..2e85f37b5
 + *         we return an error.
 + */
 +int
-+_DEFUN (_open, (buf, flags, mode),
-+       const char *buf _AND
-+       int flags _AND
-+       int mode)
++_open (const char *buf, int flags, int mode)
 +{
 +  errno = EIO;
 +  return (-1);
 +}
 diff --git a/libgloss/pru/outbyte.c b/libgloss/pru/outbyte.c
 new file mode 100644
-index 000000000..ec0f70d99
+index 000000000..7f401eff3
 --- /dev/null
 +++ b/libgloss/pru/outbyte.c
-@@ -0,0 +1,25 @@
+@@ -0,0 +1,24 @@
 +/* outbyte.c -- outbyte function for simulator
 + *
 + * Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
@@ -7465,17 +7553,16 @@ index 000000000..ec0f70d99
 +extern ssize_t _write(int fd, const void *b, size_t count);
 +
 +void
-+_DEFUN (outbyte, (ch),
-+	char ch)
++outbyte (char ch)
 +{
 +  _write(STDOUT_FILENO, &ch, 1);
 +}
 diff --git a/libgloss/pru/print.c b/libgloss/pru/print.c
 new file mode 100644
-index 000000000..6d66cfa3f
+index 000000000..00a40b387
 --- /dev/null
 +++ b/libgloss/pru/print.c
-@@ -0,0 +1,26 @@
+@@ -0,0 +1,25 @@
 +/* print.c -- print a string on the output device.
 + *
 + * Copyright (c) 1995, 1999 Cygnus Support
@@ -7497,17 +7584,16 @@ index 000000000..6d66cfa3f
 + * print -- do a raw print of a string
 + */
 +void
-+_DEFUN (_print, (ptr),
-+char *ptr)
++_print (char *ptr)
 +{
 +  _write(STDOUT_FILENO, ptr, strlen(ptr));
 +}
 diff --git a/libgloss/pru/putnum.c b/libgloss/pru/putnum.c
 new file mode 100644
-index 000000000..2e37c0993
+index 000000000..127e1c3dd
 --- /dev/null
 +++ b/libgloss/pru/putnum.c
-@@ -0,0 +1,41 @@
+@@ -0,0 +1,42 @@
 +/* putnum.c -- put a hex number on the output device.
 + * 
 + * Copyright (c) 1995, 1999 Cygnus Support
@@ -7524,22 +7610,23 @@ index 000000000..2e37c0993
 + */
 +#include "glue.h"
 +
++extern void print (char *ptr);
++
 +/*
 + * putnum -- print a 32 bit number in hex
 + */
 +void
-+_DEFUN (_putnum, (num),
-+	unsigned int num)
++_putnum (unsigned int num)
 +{
 +  char  buf[9];
 +  int   cnt;
 +  char  *ptr;
 +  int   digit;
-+  
++
 +  ptr = buf;
 +  for (cnt = 7 ; cnt >= 0 ; cnt--) {
 +    digit = (num >> (cnt * 4)) & 0xf;
-+    
++
 +    if (digit <= 9)
 +      *ptr++ = (char) ('0' + digit);
 +    else
@@ -7551,10 +7638,10 @@ index 000000000..2e37c0993
 +}
 diff --git a/libgloss/pru/raise.c b/libgloss/pru/raise.c
 new file mode 100644
-index 000000000..6657aa649
+index 000000000..d8e902605
 --- /dev/null
 +++ b/libgloss/pru/raise.c
-@@ -0,0 +1,22 @@
+@@ -0,0 +1,24 @@
 +/* raise.c -- raise a signal for current process.
 + *
 + * Copyright (c) 1999 Cygnus Support
@@ -7571,18 +7658,20 @@ index 000000000..6657aa649
 + */
 +#include "glue.h"
 +
++extern int _kill (int, int);
++extern int _getpid(void);
++
 +int
-+_DEFUN (_raise, (sig),
-+	int sig)
++_raise (int sig)
 +{
 +  return _kill (_getpid (), sig);
 +}
 diff --git a/libgloss/pru/sbrk.c b/libgloss/pru/sbrk.c
 new file mode 100644
-index 000000000..5e63e7c4a
+index 000000000..f14e4ec34
 --- /dev/null
 +++ b/libgloss/pru/sbrk.c
-@@ -0,0 +1,44 @@
+@@ -0,0 +1,46 @@
 +/* sbrk.c -- allocate memory dynamically.
 + * 
 + * Copyright (c) 1995,1996,1999 Cygnus Support
@@ -7602,6 +7691,8 @@ index 000000000..5e63e7c4a
 +#include "glue.h"
 +
 +extern char _heap_start[];
++extern void exit (int) __attribute ((__noreturn__));
++extern int _write (int, char *, int);
 +
 +caddr_t
 +_sbrk (size_t incr)
@@ -7629,10 +7720,10 @@ index 000000000..5e63e7c4a
 +}
 diff --git a/libgloss/pru/stat.c b/libgloss/pru/stat.c
 new file mode 100644
-index 000000000..d37554de3
+index 000000000..64cb27253
 --- /dev/null
 +++ b/libgloss/pru/stat.c
-@@ -0,0 +1,33 @@
+@@ -0,0 +1,31 @@
 +/* stat.c -- Get the status of a file.
 + *
 + * Copyright (c) 1995, 1999 Cygnus Support
@@ -7658,9 +7749,7 @@ index 000000000..d37554de3
 + * stat -- Since we have no file system, we just return an error.
 + */
 +int
-+_DEFUN (_stat, (path, buf),
-+       const char *path _AND
-+       struct stat *buf)
++_stat (const char *path, struct stat *buf)
 +{
 +  errno = EIO;
 +  return (-1);
@@ -7706,10 +7795,10 @@ index 000000000..4a60394ea
 +	SC	_read, SYS_read
 diff --git a/libgloss/pru/unlink.c b/libgloss/pru/unlink.c
 new file mode 100644
-index 000000000..5ff0eef5b
+index 000000000..a5e490404
 --- /dev/null
 +++ b/libgloss/pru/unlink.c
-@@ -0,0 +1,31 @@
+@@ -0,0 +1,30 @@
 +/* unlink.c -- remove a file.
 + * 
 + * Copyright (c) 1995, 1999 Cygnus Support
@@ -7731,18 +7820,17 @@ index 000000000..5ff0eef5b
 +extern int errno;
 +
 +/*
-+ * unlink -- since we have no file system, 
++ * unlink -- since we have no file system,
 + *           we just return an error.
 + */
 +int
-+_DEFUN (_unlink, (path),
-+        char * path)
++_unlink (char * path)
 +{
 +  errno = EIO;
 +  return (-1);
 +}
 diff --git a/newlib/configure.host b/newlib/configure.host
-index eb645868b..04b39ed3e 100644
+index 5985f1376..056347547 100644
 --- a/newlib/configure.host
 +++ b/newlib/configure.host
 @@ -80,7 +80,7 @@ case "${target_optspace}:${host}" in
@@ -7769,7 +7857,7 @@ index eb645868b..04b39ed3e 100644
    riscv*)
  	libm_machine_dir=riscv
  	machine_dir=riscv
-@@ -810,6 +818,9 @@ newlib_cflags="${newlib_cflags} -DCLOCK_PROVIDED -DMALLOC_PROVIDED -DEXIT_PROVID
+@@ -811,6 +819,9 @@ newlib_cflags="${newlib_cflags} -DCLOCK_PROVIDED -DMALLOC_PROVIDED -DEXIT_PROVID
  	newlib_cflags="${newlib_cflags} -DHAVE_OPENDIR -DHAVE_RENAME -DHAVE_FCNTL -D_NO_POSIX_SPAWN"
  	syscall_dir=syscalls
  	;;
@@ -7780,10 +7868,10 @@ index eb645868b..04b39ed3e 100644
  	syscall_dir=syscalls
  	;;
 diff --git a/newlib/libc/include/machine/ieeefp.h b/newlib/libc/include/machine/ieeefp.h
-index b1b44665e..20664799d 100644
+index 9fbef8449..3db8c78db 100644
 --- a/newlib/libc/include/machine/ieeefp.h
 +++ b/newlib/libc/include/machine/ieeefp.h
-@@ -403,6 +403,10 @@
+@@ -405,6 +405,10 @@
  #define __SMALL_BITFIELDS	/* 16 Bit INT */
  #endif
  
@@ -7795,7 +7883,7 @@ index b1b44665e..20664799d 100644
  #define __IEEE_LITTLE_ENDIAN
  #define __SMALL_BITFIELDS	/* 16 Bit INT */
 diff --git a/newlib/libc/include/machine/setjmp.h b/newlib/libc/include/machine/setjmp.h
-index b33f437d7..c9de638a3 100644
+index 9212f840b..a3b33e372 100644
 --- a/newlib/libc/include/machine/setjmp.h
 +++ b/newlib/libc/include/machine/setjmp.h
 @@ -349,6 +349,11 @@ _BEGIN_STD_C
@@ -7811,7 +7899,7 @@ index b33f437d7..c9de638a3 100644
  #define _JBLEN 0x44
  #endif
 diff --git a/newlib/libc/machine/configure b/newlib/libc/machine/configure
-index c72010b6d..28752a326 100755
+index 17a78a8b8..c56f1e251 100755
 --- a/newlib/libc/machine/configure
 +++ b/newlib/libc/machine/configure
 @@ -824,6 +824,7 @@ necv70

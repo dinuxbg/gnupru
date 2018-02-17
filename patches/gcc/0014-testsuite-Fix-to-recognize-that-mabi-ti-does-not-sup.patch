@@ -1,4 +1,4 @@
-From 4c553274a9799a3b1993fb811b2a8490172da234 Mon Sep 17 00:00:00 2001
+From 8947ef7908231bdd3e711cd386b7d2ab34835cd8 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 5 Nov 2017 19:35:06 +0200
 Subject: [PATCH 14/16] testsuite: Fix to recognize that -mabi-ti does not
@@ -25,7 +25,7 @@ index 4b3fb9c14ca..2f898b4d05d 100644
  #include <complex.h>
  #endif
 diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
-index 62a9b720ebc..e259503d3c3 100644
+index 5b5b981067e..52ce2129e07 100644
 --- a/gcc/testsuite/lib/gcc-dg.exp
 +++ b/gcc/testsuite/lib/gcc-dg.exp
 @@ -386,6 +386,17 @@ proc gcc-dg-prune { system text } {
@@ -47,7 +47,7 @@ index 62a9b720ebc..e259503d3c3 100644
  }
  
 diff --git a/gcc/testsuite/lib/target-utils.exp b/gcc/testsuite/lib/target-utils.exp
-index 2b6ab21116a..a98d8d9d2e1 100644
+index ed06cb409d0..d22696fe7d8 100644
 --- a/gcc/testsuite/lib/target-utils.exp
 +++ b/gcc/testsuite/lib/target-utils.exp
 @@ -43,5 +43,15 @@ proc ${tool}_check_unsupported_p { output } {

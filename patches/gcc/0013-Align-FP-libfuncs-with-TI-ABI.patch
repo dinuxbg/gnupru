@@ -1,4 +1,4 @@
-From 6071e235231fb36dd8001d632dbe61abcac30231 Mon Sep 17 00:00:00 2001
+From aa11051d404da3d4bdcb0bec50ebb19401307b54 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Wed, 1 Nov 2017 15:13:13 +0200
 Subject: [PATCH 13/16] Align FP libfuncs with TI ABI
@@ -305,7 +305,7 @@ index 168d8d4d617..ec67d5ac09d 100644
  ; Bit test branch
  
 diff --git a/libgcc/config.host b/libgcc/config.host
-index 56b4e433a99..64f08ce65f5 100644
+index ca259e96c8e..60282f50450 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
 @@ -1127,7 +1127,8 @@ powerpcle-*-eabi*)

@@ -1,4 +1,4 @@
-From d1ce309c0206b11b2bd4357e9421693c6e9f7128 Mon Sep 17 00:00:00 2001
+From f4a2ca049ee824f3379edc0663ff5a5e903741cf Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 11 Dec 2017 21:15:46 +0200
 Subject: [PATCH 09/12] [PRU] Add sections for compatibility with TI
