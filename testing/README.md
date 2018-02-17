@@ -46,3 +46,14 @@ A few notes about the options:
 * --symdebug:none is needed since the binutils linker doest not yet support the debug relaxations output by TI toolchain.
 * -mmcu=sim is needed by the GNU LD to provide sufficient memory for test execution.
 * The libgcc is forcefully included with -mabi=ti when performing ABI testing. Libgcc as a whole is not really TI ABI compatible, but the parts used by the testsuite are. Multilib is not an option since GCC PRU port does not support some C constructs when -mabi=ti.
+* ABI test case pr83487 is failing due to a bug in TI CGT. See [CODEGEN-4180](https://e2e.ti.com/support/development_tools/compiler/f/343/t/652777)
+* ABI test case struct-by-value-22 is failing due to a bug in TI CGT. Stack space is not allocated for a locally defined structure.
+
+Simplified struct-by-value-22 case:
+
+	extern void tedstvoid(void *);
+	void test(int n)
+	{
+	    struct S { char a[n]; } s;
+	    testvoid(&s);
+	}
