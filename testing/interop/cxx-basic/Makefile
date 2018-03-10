@@ -9,6 +9,7 @@ TESTCASE := $(shell basename `pwd`)
 COMMON_CXXFLAGS := -DTESTCASE=\"$(TESTCASE)\" -I../
 
 TI_CXXFLAGS := -v3 -O2 --display_error_number --endian=little --hardware_mac=on
+TI_CXXFLAGS += -I$(PRU_CGT)/include
 # TODO - GNU LD PRU port does not yet support debug REL relocations.
 TI_CXXFLAGS += --symdebug:none
 GCC_CXXFLAGS := -O1 -g -Wall -Wextra -mmcu=sim

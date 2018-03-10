@@ -1,0 +1,1624 @@
+From a682476ba9e8ad94ed112c6d9122767e62dbbcf8 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Thu, 10 Nov 2016 21:56:38 +0200
+Subject: [PATCH 03/11] testsuite: Add PRU tests
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ gcc/testsuite/gcc.target/pru/abi-arg-struct.c      | 164 +++++++++++++++++++++
+ gcc/testsuite/gcc.target/pru/ashiftrt.c            |  13 ++
+ gcc/testsuite/gcc.target/pru/builtins-1.c          |  12 ++
+ gcc/testsuite/gcc.target/pru/builtins-error.c      |   6 +
+ gcc/testsuite/gcc.target/pru/clearbit.c            |  13 ++
+ gcc/testsuite/gcc.target/pru/loop-asm.c            |  19 +++
+ gcc/testsuite/gcc.target/pru/loop-dowhile.c        |  45 ++++++
+ gcc/testsuite/gcc.target/pru/loop-hi-1.c           |  38 +++++
+ gcc/testsuite/gcc.target/pru/loop-hi-2.c           |  17 +++
+ gcc/testsuite/gcc.target/pru/loop-qi-1.c           |  38 +++++
+ gcc/testsuite/gcc.target/pru/loop-qi-2.c           |  17 +++
+ gcc/testsuite/gcc.target/pru/loop-short-1.c        |  53 +++++++
+ gcc/testsuite/gcc.target/pru/loop-short-2.c        |  21 +++
+ gcc/testsuite/gcc.target/pru/loop-si-1.c           |  41 ++++++
+ gcc/testsuite/gcc.target/pru/loop-si-2.c           |  20 +++
+ .../gcc.target/pru/loop-u8_pcrel_overflow.c        |  42 ++++++
+ gcc/testsuite/gcc.target/pru/loop-ubyte-1.c        |  30 ++++
+ gcc/testsuite/gcc.target/pru/loop-ubyte-2.c        |  18 +++
+ gcc/testsuite/gcc.target/pru/mabi-ti-1.c           |  10 ++
+ gcc/testsuite/gcc.target/pru/mabi-ti-2.c           |  15 ++
+ gcc/testsuite/gcc.target/pru/mabi-ti-3.c           |  12 ++
+ gcc/testsuite/gcc.target/pru/mabi-ti-4.c           |  14 ++
+ gcc/testsuite/gcc.target/pru/mabi-ti-5.c           |  33 +++++
+ gcc/testsuite/gcc.target/pru/mabi-ti-6.c           |  12 ++
+ gcc/testsuite/gcc.target/pru/mabi-ti-7.c           |  21 +++
+ gcc/testsuite/gcc.target/pru/pr64366.c             | 128 ++++++++++++++++
+ gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c |  22 +++
+ gcc/testsuite/gcc.target/pru/pru.exp               |  41 ++++++
+ gcc/testsuite/gcc.target/pru/qbbc-1.c              |  29 ++++
+ gcc/testsuite/gcc.target/pru/qbbc-2.c              |  15 ++
+ gcc/testsuite/gcc.target/pru/qbbc-3.c              |  15 ++
+ gcc/testsuite/gcc.target/pru/qbbs-1.c              |  29 ++++
+ gcc/testsuite/gcc.target/pru/qbbs-2.c              |  15 ++
+ gcc/testsuite/gcc.target/pru/setbit.c              |  13 ++
+ .../gcc.target/pru/zero_extend-and-hisi.c          |  16 ++
+ .../gcc.target/pru/zero_extend-and-qihi.c          |  16 ++
+ .../gcc.target/pru/zero_extend-and-qisi.c          |  16 ++
+ gcc/testsuite/gcc.target/pru/zero_extend-hisi.c    |  43 ++++++
+ gcc/testsuite/gcc.target/pru/zero_extend-qihi.c    |  43 ++++++
+ gcc/testsuite/gcc.target/pru/zero_extend-qisi.c    |  43 ++++++
+ gcc/testsuite/lib/gcc-dg.exp                       |  11 ++
+ gcc/testsuite/lib/target-supports.exp              |   7 +-
+ gcc/testsuite/lib/target-utils.exp                 |  10 ++
+ 43 files changed, 1234 insertions(+), 2 deletions(-)
+ create mode 100644 gcc/testsuite/gcc.target/pru/abi-arg-struct.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/ashiftrt.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/builtins-1.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/builtins-error.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/clearbit.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/loop-asm.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/loop-dowhile.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/loop-hi-1.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/loop-hi-2.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/loop-qi-1.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/loop-qi-2.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/loop-short-1.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/loop-short-2.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/loop-si-1.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/loop-si-2.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/loop-u8_pcrel_overflow.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/loop-ubyte-1.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/loop-ubyte-2.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/mabi-ti-1.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/mabi-ti-2.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/mabi-ti-3.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/mabi-ti-4.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/mabi-ti-5.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/mabi-ti-6.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/mabi-ti-7.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/pr64366.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/pru.exp
+ create mode 100644 gcc/testsuite/gcc.target/pru/qbbc-1.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/qbbc-2.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/qbbc-3.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/qbbs-1.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/qbbs-2.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/setbit.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/zero_extend-and-hisi.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/zero_extend-and-qihi.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/zero_extend-and-qisi.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/zero_extend-hisi.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/zero_extend-qihi.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/zero_extend-qisi.c
+
+diff --git a/gcc/testsuite/gcc.target/pru/abi-arg-struct.c b/gcc/testsuite/gcc.target/pru/abi-arg-struct.c
+new file mode 100644
+index 00000000000..186074b16f3
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/abi-arg-struct.c
+@@ -0,0 +1,164 @@
++/* Test call argument ABI: passing structs */
++
++/* { dg-do run } */
++
++#include <stdarg.h>
++
++extern void abort (void);
++
++struct S3 { char a[3]; };
++struct S7 { char a[7]; };
++struct S8 { char a[8]; };
++
++struct S3 gs3 = {{11, 22, 33}};
++struct S7 gs7 = {{1, 2, 3, 4, 5, 6, 7}};
++struct S8 gs8 = {{1, 2, 3, 4, 5, 6, 7, 8}};
++
++int test3_struct(char a0, char a1, char a2, char a3,
++		 char a4, char a5, char a6, char a7,
++		 char a8, char a9, char a10, char a11,
++		 int ai)
++{
++  if (a0 != 11) return 1;
++  if (a1 != 22) return 2;
++  if (a2 != 33) return 3;
++  if (a4 != 101) return 4;
++  if (a5 != 111) return 5;
++  if (a6 != 121) return 6;
++  if (a8 != 55) return 8;
++  if (a9 != 66) return 9;
++  if (a10 != 77) return 10;
++
++  if (ai != 55443322) return 100;
++
++  return 0;
++}
++
++void test3(void)
++{
++  struct S3 s3x = { {101, 111, 121} };
++  struct S3 s3y = { {55, 66, 77} };
++
++  int (* volatile f)(struct S3, struct S3, struct S3, int) =
++    (int (* volatile)(struct S3, struct S3, struct S3, int)) test3_struct;
++
++  if (f(gs3, s3x, s3y, 55443322))
++    abort();
++}
++
++int test7_struct(unsigned ai, struct S7 a0, ...)
++{
++  va_list ap;
++  struct S7 s[3];
++  int i;
++
++  va_start (ap, a0);
++
++  s[0] = a0;
++  for (i = 1; i < 3; i++) {
++      s[i] = va_arg (ap, struct S7);
++  }
++
++  va_end (ap);
++
++  if (ai != 0xaabbccdd)
++    return 1;
++
++  if (s[0].a[0] != 1) return 1;
++  if (s[0].a[1] != 2) return 1;
++  if (s[0].a[2] != 3) return 1;
++  if (s[0].a[3] != 4) return 1;
++  if (s[0].a[4] != 5) return 1;
++  if (s[0].a[5] != 6) return 1;
++  if (s[0].a[6] != 7) return 1;
++
++  if (s[1].a[0] != 11) return 1;
++  if (s[1].a[1] != 12) return 1;
++  if (s[1].a[2] != 13) return 1;
++  if (s[1].a[3] != 14) return 1;
++  if (s[1].a[4] != 15) return 1;
++  if (s[1].a[5] != 16) return 1;
++  if (s[1].a[6] != 17) return 1;
++
++  if (s[2].a[0] != 22) return 1;
++  if (s[2].a[1] != 23) return 1;
++  if (s[2].a[2] != 24) return 1;
++  if (s[2].a[3] != 25) return 1;
++  if (s[2].a[4] != 26) return 1;
++  if (s[2].a[5] != 27) return 1;
++  if (s[2].a[6] != 28) return 1;
++
++  return 0;
++}
++
++void test7(void)
++{
++  struct S7 s7x = { {11, 12, 13, 14, 15, 16, 17} };
++  struct S7 s7y = { {22, 23, 24, 25, 26, 27, 28} };
++
++  int (* volatile f)(unsigned, struct S7, struct S7, struct S7) =
++    (int (* volatile)(unsigned, struct S7, struct S7, struct S7)) test7_struct;
++
++  if (f(0xaabbccdd, gs7, s7x, s7y))
++    abort();
++}
++
++int test8_struct(char a0, char a1, char a2, char a3,
++		 char a4, char a5, char a6, char a7,
++		 char a8, char a9, char a10, char a11,
++		 char a12, char a13, char a14, char a15,
++		 char a16, char a17, char a18, char a19,
++		 char a20, char a21, char a22, char a23)
++{
++  if (a0 != 1) return 1;
++  if (a1 != 2) return 1;
++  if (a2 != 3) return 1;
++  if (a3 != 4) return 1;
++  if (a4 != 5) return 1;
++  if (a5 != 6) return 1;
++  if (a6 != 7) return 1;
++  if (a7 != 8) return 1;
++
++  if (a8 != 11) return 1;
++  if (a9 != 12) return 1;
++  if (a10 != 13) return 1;
++  if (a11 != 14) return 1;
++  if (a12 != 15) return 1;
++  if (a13 != 16) return 1;
++  if (a14 != 17) return 1;
++  if (a15 != 18) return 1;
++
++  if (a16 != 22) return 1;
++  if (a17 != 23) return 1;
++  if (a18 != 24) return 1;
++  if (a19 != 25) return 1;
++  if (a20 != 26) return 1;
++  if (a21 != 27) return 1;
++  if (a22 != 28) return 1;
++  if (a23 != 29) return 1;
++
++  return 0;
++}
++
++void test8(void)
++{
++  struct S8 s8x = { {11, 12, 13, 14, 15, 16, 17, 18} };
++  struct S8 s8y = { {22, 23, 24, 25, 26, 27, 28, 29} };
++
++  int (* volatile f)(struct S8, struct S8, struct S8) =
++    (int (* volatile)(struct S8, struct S8, struct S8)) test8_struct;
++
++  if (f(gs8, s8x, s8y))
++    abort();
++}
++
++int
++main (int argc, char** argv)
++{
++  test3();
++  test7();
++  test8();
++
++  return 0;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/ashiftrt.c b/gcc/testsuite/gcc.target/pru/ashiftrt.c
+new file mode 100644
+index 00000000000..ee8d55d60e6
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/ashiftrt.c
+@@ -0,0 +1,13 @@
++/* Test shift optimization */
++
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  */
++
++extern void func2(unsigned char);
++
++void test(unsigned char v)
++{
++    /* { dg-final { scan-assembler "lsl\tr14.b0, r14.b0, .\+\n\tlsr\tr14.b0, r14.b0" } } */
++    func2((v & 2) ? 1 : 0);
++}
+diff --git a/gcc/testsuite/gcc.target/pru/builtins-1.c b/gcc/testsuite/gcc.target/pru/builtins-1.c
+new file mode 100644
+index 00000000000..7b7472bbbd5
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/builtins-1.c
+@@ -0,0 +1,12 @@
++/* { dg-do compile } */
++
++void delay0 (void)  { __delay_cycles (0); }
++void delay1 (void)  { __delay_cycles (1); }
++void delay2 (void)  { __delay_cycles (2); }
++void delay3 (void)  { __delay_cycles (3); }
++
++void delay_1 (void)  { __delay_cycles (44); }
++void delay_2 (void)  { __delay_cycles (0x1234); }
++void delay_3 (void)  { __delay_cycles (0x123456); }
++
++/* { dg-final { scan-assembler-not "__delay_cycles" } } */
+diff --git a/gcc/testsuite/gcc.target/pru/builtins-error.c b/gcc/testsuite/gcc.target/pru/builtins-error.c
+new file mode 100644
+index 00000000000..af1ca1a02b7
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/builtins-error.c
+@@ -0,0 +1,6 @@
++/* { dg-do assemble } */
++
++void delay (long a)
++{
++    __delay_cycles (a); /* { dg-error "__delay_cycles\\(\\) only takes constant arguments" } */
++}
+diff --git a/gcc/testsuite/gcc.target/pru/clearbit.c b/gcc/testsuite/gcc.target/pru/clearbit.c
+new file mode 100644
+index 00000000000..cc24b3bb1b9
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/clearbit.c
+@@ -0,0 +1,13 @@
++/* clearbit instruction generation */
++
++/* { dg-do compile } */
++/* { dg-options "-O1" } */
++
++unsigned int
++test_clearbit (unsigned int val)
++{
++  /* { dg-final { scan-assembler "clr\\tr14, r14, 19" } } */
++  val &= ~(1u << 19);
++  return val;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/loop-asm.c b/gcc/testsuite/gcc.target/pru/loop-asm.c
+new file mode 100644
+index 00000000000..7b737a09803
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/loop-asm.c
+@@ -0,0 +1,19 @@
++/* Test that LOOP will not be generated when body contains asm statement */
++
++/* { dg-do compile } */
++/* { dg-options "-O1 -mloop" } */
++
++/* -O1 in the options is significant.  Without it do-loop will not be
++   run.  */
++
++unsigned int
++test_loop (unsigned int n)
++{
++	unsigned i;
++	/* { dg-final { scan-assembler-not "loop\t.\+" } } */
++	for (i = 0; i < 10; i++) {
++		n <<= 2;
++		asm volatile ("nop" : : );
++	}
++	return n;
++}
+diff --git a/gcc/testsuite/gcc.target/pru/loop-dowhile.c b/gcc/testsuite/gcc.target/pru/loop-dowhile.c
+new file mode 100644
+index 00000000000..0926b98a953
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/loop-dowhile.c
+@@ -0,0 +1,45 @@
++/* Test LOOP generation for do while.
++   Ensure the post-condition "do while" is correctly translated
++   to a pre-condition PRU LOOP instruction.  */
++
++/* { dg-do run } */
++/* { dg-options "-O1 -mloop" } */
++
++/* -O1 in the options is significant.  Without it do-loop will not be
++   run.  */
++
++extern void abort (void);
++
++volatile unsigned int int_12345 = 12345;
++volatile unsigned int int_0 = 0;
++volatile unsigned int int_1 = 1;
++
++unsigned int
++test_loop (unsigned int n)
++{
++  unsigned int i = 0;
++  volatile unsigned int s = 0;
++
++  if (n >= 0x7fff) return 0;
++
++  do {
++    s++;
++    i++;
++  } while (i < n);
++  return s;
++}
++
++
++int
++main (int argc, char** argv)
++{
++  if (test_loop (int_0) != 1)
++    abort();
++  if (test_loop (int_1) != 1)
++    abort();
++  if (test_loop (int_12345) != 12345)
++    abort();
++
++  return 0;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/loop-hi-1.c b/gcc/testsuite/gcc.target/pru/loop-hi-1.c
+new file mode 100644
+index 00000000000..23caf20f674
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/loop-hi-1.c
+@@ -0,0 +1,38 @@
++/* Test LOOP recognition - short ints*/
++
++/* { dg-do run } */
++/* { dg-options "-O1 -mloop" } */
++
++/* -O1 in the options is significant.  Without it do-loop will not be
++   run.  */
++
++extern void abort (void);
++
++volatile unsigned short short_12345 = 12345;
++volatile unsigned short short_0 = 0;
++volatile unsigned short short_1 = 1;
++
++unsigned int
++test_loop_short (unsigned short n)
++{
++  unsigned short i;
++  volatile unsigned int s = 0;
++
++  for (i = 0; i < n; i++)
++    s++;
++  return s;
++}
++
++int
++main (int argc, char** argv)
++{
++  if (test_loop_short (short_0) != 0)
++    abort();
++  if (test_loop_short (short_1) != 1)
++    abort();
++  if (test_loop_short (short_12345) != 12345)
++    abort();
++
++  return 0;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/loop-hi-2.c b/gcc/testsuite/gcc.target/pru/loop-hi-2.c
+new file mode 100644
+index 00000000000..0ef4ec76481
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/loop-hi-2.c
+@@ -0,0 +1,17 @@
++/* Test LOOP recognition - short ints*/
++
++/* { dg-options "-O2 -mloop" } */
++
++/* -O2 in the options is significant.  Without it do-loop will not be
++   run.  */
++
++unsigned int
++test_loop_short (int x, short n)
++{
++  int i;
++
++  /* { dg-final { scan-assembler "loop\\t.L\[0-9\]*, r\[0-9w.\]*" } } */
++  for (i = 0; i < n; i++)
++    x <<= 3;
++  return x;
++}
+diff --git a/gcc/testsuite/gcc.target/pru/loop-qi-1.c b/gcc/testsuite/gcc.target/pru/loop-qi-1.c
+new file mode 100644
+index 00000000000..a4bb7d6d803
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/loop-qi-1.c
+@@ -0,0 +1,38 @@
++/* Test LOOP recognition */
++
++/* { dg-do run } */
++/* { dg-options "-O1 -mloop" } */
++
++/* -O1 in the options is significant.  Without it do-loop will not be
++   run.  */
++
++extern void abort (void);
++
++volatile unsigned char char_123 = 123;
++volatile unsigned char char_0 = 0;
++volatile unsigned char char_1 = 1;
++
++unsigned int
++test_loop_char (unsigned char n)
++{
++  unsigned char i;
++  volatile unsigned int s = 0;
++
++  for (i = 0; i < n; i++)
++    s++;
++  return s;
++}
++
++int
++main (int argc, char** argv)
++{
++  if (test_loop_char (char_0) != 0)
++    abort();
++  if (test_loop_char (char_1) != 1)
++    abort();
++  if (test_loop_char (char_123) != 123)
++    abort();
++
++  return 0;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/loop-qi-2.c b/gcc/testsuite/gcc.target/pru/loop-qi-2.c
+new file mode 100644
+index 00000000000..24a343d579e
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/loop-qi-2.c
+@@ -0,0 +1,17 @@
++/* Test LOOP recognition */
++
++/* { dg-options "-O2 -mloop" } */
++
++/* -O2 in the options is significant.  Without it do-loop will not be
++   run.  */
++
++unsigned int
++test_loop_char (unsigned int x, char n)
++{
++  int i;
++
++  /* { dg-final { scan-assembler "loop\\t.L\[0-9\]*, r\[0-9b.\]*" } } */
++  for (i = 0; i < n; i++)
++    x <<= 2;
++  return x;
++}
+diff --git a/gcc/testsuite/gcc.target/pru/loop-short-1.c b/gcc/testsuite/gcc.target/pru/loop-short-1.c
+new file mode 100644
+index 00000000000..14d75300301
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/loop-short-1.c
+@@ -0,0 +1,53 @@
++/* Test LOOP generation for very short loops. */
++
++/* { dg-do run } */
++/* { dg-options "-O1 -mloop" } */
++
++/* -O1 in the options is significant.  Without it do-loop will not be
++   run.  */
++
++extern void abort (void);
++
++volatile unsigned int int_12345 = 12345;
++volatile unsigned int int_0 = 0;
++volatile unsigned int int_1 = 1;
++
++unsigned int
++test_loop_sum (unsigned int n)
++{
++	unsigned i;
++	volatile unsigned int s = 0;
++	for (i = 0; i < n; i++) {
++		s++;
++	}
++	return s;
++}
++
++unsigned int
++test_loop_shift20 (unsigned int n)
++{
++	unsigned i;
++	for (i = 0; i < 10; i++) {
++		n <<= 2;
++	}
++	return n;
++}
++
++int
++main (int argc, char** argv)
++{
++  if (test_loop_sum (int_0) != 0)
++    abort();
++  if (test_loop_sum (int_1) != 1)
++    abort();
++  if (test_loop_sum (int_12345) != 12345)
++    abort();
++
++  if (test_loop_shift20 (int_0) != 0)
++    abort();
++  if (test_loop_shift20 (int_1) != (1u << 20))
++    abort();
++
++  return 0;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/loop-short-2.c b/gcc/testsuite/gcc.target/pru/loop-short-2.c
+new file mode 100644
+index 00000000000..b0e1986bad3
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/loop-short-2.c
+@@ -0,0 +1,21 @@
++/* Test LOOP generation for very short loops. */
++
++/* { dg-options "-O1 -mloop" } */
++
++/* -O1 in the options is significant.  Without it do-loop will not be
++   run.  */
++
++unsigned int
++test_loop (unsigned int n, unsigned int x)
++{
++  unsigned int i;
++
++  if (n >= 0x10000) return 0;
++  if (!n) return 0;
++
++  /* { dg-final { scan-assembler "loop\\t.L\[0-9\]*, r\[0-9\]*" } } */
++  /* { dg-final { scan-assembler "nop" } } */
++  for (i = 0; i < n; i++)
++    x <<= 2;
++  return x;
++}
+diff --git a/gcc/testsuite/gcc.target/pru/loop-si-1.c b/gcc/testsuite/gcc.target/pru/loop-si-1.c
+new file mode 100644
+index 00000000000..84087bf7160
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/loop-si-1.c
+@@ -0,0 +1,41 @@
++/* Test LOOP recognition */
++
++/* { dg-do run } */
++/* { dg-options "-O1 -mloop" } */
++
++/* -O1 in the options is significant.  Without it do-loop will not be
++   run.  */
++
++extern void abort (void);
++
++volatile unsigned int int_12345 = 12345;
++volatile unsigned int int_0 = 0;
++volatile unsigned int int_1 = 1;
++
++unsigned int
++test_loop (unsigned int n)
++{
++  unsigned int i;
++  volatile unsigned int s = 0;
++
++  if (n >= 0x10000) return 0;
++
++  for (i = 0; i < n; i++)
++    s++;
++  return s;
++}
++
++
++int
++main (int argc, char** argv)
++{
++  if (test_loop (int_0) != 0)
++    abort();
++  if (test_loop (int_1) != 1)
++    abort();
++  if (test_loop (int_12345) != 12345)
++    abort();
++
++  return 0;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/loop-si-2.c b/gcc/testsuite/gcc.target/pru/loop-si-2.c
+new file mode 100644
+index 00000000000..1e8a9d1ff9b
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/loop-si-2.c
+@@ -0,0 +1,20 @@
++/* Test LOOP recognition */
++
++/* { dg-options "-O1 -mloop" } */
++
++/* -O1 in the options is significant.  Without it do-loop will not be
++   run.  */
++
++unsigned int
++test_loop (unsigned int n)
++{
++  unsigned int i;
++  volatile unsigned int s = 0;
++
++  if (n >= 0x10000) return 0;
++
++  /* { dg-final { scan-assembler "loop\\t.L\[0-9\]*, r\[0-9\]*" } } */
++  for (i = 0; i < n; i++)
++    s++;
++  return s;
++}
+diff --git a/gcc/testsuite/gcc.target/pru/loop-u8_pcrel_overflow.c b/gcc/testsuite/gcc.target/pru/loop-u8_pcrel_overflow.c
+new file mode 100644
+index 00000000000..8ae91c6edb3
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/loop-u8_pcrel_overflow.c
+@@ -0,0 +1,42 @@
++/* Test large loop bodies where U8_PCREL would overflow */
++
++/* { dg-do run } */
++/* { dg-options "-O1 -mloop" } */
++
++/* -O1 in the options is significant.  Without it do-loop will not be
++   run.  */
++
++extern void abort (void);
++
++#define OP	do { i1 <<= 2; i1 >>= 2; i2 *= 3; i2 /= 2; } while(0)
++#define OP4	OP; OP; OP; OP
++#define OP16	OP4; OP4; OP4; OP4
++#define OP64	OP16; OP16; OP16; OP16
++#define OP256	OP64; OP64; OP64; OP64
++
++unsigned int
++test_loop (unsigned int i1, unsigned i2)
++{
++  unsigned int i;
++  volatile unsigned int s = 0;
++
++  for (i = 0; i < 100; i++) {
++    /* cannot use ASM NOP because it will prevent
++       GCC from issuing a LOOP instruction. */
++    OP256;
++    s++;
++  }
++  return s + i1 + i2;
++}
++
++volatile unsigned int I1 = 0;
++volatile unsigned int I2 = 0;
++
++int
++main (int argc, char** argv)
++{
++  if (test_loop (I1, I2) != 100)
++    abort();
++
++  return 0;
++}
+diff --git a/gcc/testsuite/gcc.target/pru/loop-ubyte-1.c b/gcc/testsuite/gcc.target/pru/loop-ubyte-1.c
+new file mode 100644
+index 00000000000..8444f81bba7
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/loop-ubyte-1.c
+@@ -0,0 +1,30 @@
++/* Test LOOP recognition */
++
++/* { dg-do run } */
++/* { dg-options "-O1 -mloop" } */
++
++/* -O1 in the options is significant.  Without it do-loop will not be
++   run.  */
++
++extern void abort (void);
++
++unsigned int
++test_loop_ubyte_101 (void)
++{
++  unsigned int i;
++  volatile unsigned int s = 0;
++
++  for (i = 0; i < 101; i++)
++    s++;
++  return s;
++}
++
++int
++main (int argc, char** argv)
++{
++  if (test_loop_ubyte_101 () != 101)
++    abort();
++
++  return 0;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/loop-ubyte-2.c b/gcc/testsuite/gcc.target/pru/loop-ubyte-2.c
+new file mode 100644
+index 00000000000..058cbb08bda
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/loop-ubyte-2.c
+@@ -0,0 +1,18 @@
++/* Test LOOP recognition */
++
++/* { dg-options "-O1 -mloop" } */
++
++/* -O1 in the options is significant.  Without it do-loop will not be
++   run.  */
++
++unsigned int
++test_loop_ubyte_101 (void)
++{
++  unsigned int i;
++  volatile unsigned int s = 0;
++
++  /* { dg-final { scan-assembler "loop\\t.L\[0-9\]*, 101" } } */
++  for (i = 0; i < 101; i++)
++    s++;
++  return s;
++}
+diff --git a/gcc/testsuite/gcc.target/pru/mabi-ti-1.c b/gcc/testsuite/gcc.target/pru/mabi-ti-1.c
+new file mode 100644
+index 00000000000..a4b699e9ff6
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/mabi-ti-1.c
+@@ -0,0 +1,10 @@
++/* Test TI ABI unsupported constructs */
++
++/* { dg-do assemble } */
++/* { dg-options "-O1 -mabi=ti" } */
++
++
++int test(int a, int b, void (*fp)(void))
++{ /* { dg-error "function pointers not supported with -mabi=ti option" } */
++  return a+b;
++}
+diff --git a/gcc/testsuite/gcc.target/pru/mabi-ti-2.c b/gcc/testsuite/gcc.target/pru/mabi-ti-2.c
+new file mode 100644
+index 00000000000..d6bf7bed29f
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/mabi-ti-2.c
+@@ -0,0 +1,15 @@
++/* Test TI ABI unsupported constructs */
++
++/* { dg-do assemble } */
++/* { dg-options "-O1 -mabi=ti" } */
++
++
++struct big {
++	char c[9];
++};
++
++struct big test(void)
++{ /* { dg-error "large return values not supported with -mabi=ti option" } */
++  static struct big b;
++  return b;
++}
+diff --git a/gcc/testsuite/gcc.target/pru/mabi-ti-3.c b/gcc/testsuite/gcc.target/pru/mabi-ti-3.c
+new file mode 100644
+index 00000000000..0789dda82f9
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/mabi-ti-3.c
+@@ -0,0 +1,12 @@
++/* Test TI ABI unsupported constructs */
++
++/* { dg-do assemble } */
++/* { dg-options "-O1 -mabi=ti" } */
++
++
++extern void extfunc(void (*fp)(void));
++
++void test(void)
++{
++  extfunc(test); /* { dg-error "function pointers not supported with -mabi=ti option" } */
++}
+diff --git a/gcc/testsuite/gcc.target/pru/mabi-ti-4.c b/gcc/testsuite/gcc.target/pru/mabi-ti-4.c
+new file mode 100644
+index 00000000000..0110e6ce290
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/mabi-ti-4.c
+@@ -0,0 +1,14 @@
++/* Test TI ABI with supported constructs */
++
++/* { dg-do assemble } */
++/* { dg-options "-O1 -mabi=ti" } */
++
++
++extern void extfunc1(long long);
++extern long long extfunc2(long long);
++
++long long test(void)
++{
++  extfunc1(3);
++  return extfunc2(1);
++}
+diff --git a/gcc/testsuite/gcc.target/pru/mabi-ti-5.c b/gcc/testsuite/gcc.target/pru/mabi-ti-5.c
+new file mode 100644
+index 00000000000..fa8833fde9c
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/mabi-ti-5.c
+@@ -0,0 +1,33 @@
++/* Test TI ABI unsupported constructs */
++
++/* { dg-do assemble } */
++/* { dg-options "-O1 -mabi=ti" } */
++
++struct s1 {
++    void (*f)(void);
++    int a;
++};
++
++struct s2 {
++    union {
++	void (*f)(void);
++	int a;
++	long b;
++    } u;
++};
++
++int test1(struct s1 *p)
++{
++  return p->a; /* { dg-error "function pointers not supported with -mabi=ti option" } */
++  return 1;
++}
++
++int test1_unused_arg(struct s1 p, int a)
++{ /* { dg-error "function pointers not supported with -mabi=ti option" } */
++  return a;
++}
++
++int test2(struct s2 v)
++{ /* { dg-error "function pointers not supported with -mabi=ti option" } */
++  return 2;
++}
+diff --git a/gcc/testsuite/gcc.target/pru/mabi-ti-6.c b/gcc/testsuite/gcc.target/pru/mabi-ti-6.c
+new file mode 100644
+index 00000000000..25ccdbbad82
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/mabi-ti-6.c
+@@ -0,0 +1,12 @@
++/* Test TI ABI unsupported constructs */
++
++/* { dg-do assemble } */
++/* { dg-options "-O1 -mabi=ti" } */
++
++
++extern void (*extfuncp)(int);
++
++void test(void)
++{
++  extfuncp(1); /* { dg-error "function pointers not supported with -mabi=ti option" } */
++}
+diff --git a/gcc/testsuite/gcc.target/pru/mabi-ti-7.c b/gcc/testsuite/gcc.target/pru/mabi-ti-7.c
+new file mode 100644
+index 00000000000..eff016a2524
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/mabi-ti-7.c
+@@ -0,0 +1,21 @@
++/* Test TI ABI unsupported constructs */
++
++/* { dg-do assemble } */
++/* { dg-options "-O1 -mabi=ti" } */
++
++struct s1 {
++    int (*f)(void);
++    int a;
++};
++
++extern struct s1 s;
++
++int test1(void)
++{
++  return s.f(); /* { dg-error "function pointers not supported with -mabi=ti option" } */
++}
++
++int test2(void)
++{
++  return s.a; /* { dg-error "function pointers not supported with -mabi=ti option" } */
++}
+diff --git a/gcc/testsuite/gcc.target/pru/pr64366.c b/gcc/testsuite/gcc.target/pru/pr64366.c
+new file mode 100644
+index 00000000000..1608d469499
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/pr64366.c
+@@ -0,0 +1,128 @@
++/* { dg-do compile } */
++/* { dg-options "-O2" } */
++
++typedef int int8_t __attribute__ ((__mode__ (__QI__)));
++typedef int int16_t __attribute__ ((__mode__ (__HI__)));
++typedef int int32_t __attribute__ ((__mode__ (__SI__)));
++typedef int int64_t __attribute__ ((__mode__ (__DI__)));
++typedef unsigned char uint8_t;
++typedef unsigned short int uint16_t;
++typedef unsigned int uint32_t;
++__extension__ typedef unsigned long long int uint64_t;
++typedef int intptr_t;
++typedef struct BigStruct{
++  uint8_t a;
++  int8_t b;
++  uint16_t c;
++  int16_t d;
++  uint32_t e;
++  int32_t f;
++  uint64_t g;
++  int64_t h;
++  float i;
++  double j;
++  long double k;
++  char* l;
++  uint8_t m;
++  int8_t n;
++  uint16_t o;
++  int16_t p;
++  uint32_t q;
++  int32_t r;
++  uint64_t s;
++  int64_t t;
++  float u;
++  double v;
++  long double w;
++  char* x;
++  uint8_t y;
++  int8_t z;
++  uint16_t aa;
++  int16_t bb;
++  uint32_t cc;
++  int32_t dd;
++  uint64_t ee;
++  int64_t ff;
++  float gg;
++  double hh;
++  long double ii;
++  char* jj;
++  uint8_t kk;
++  int8_t ll;
++  uint16_t mm;
++  int16_t nn;
++  uint32_t oo;
++  int32_t pp;
++  uint64_t qq;
++  int64_t rr;
++  float ss;
++  double tt;
++  long double uu;
++  char* vv;
++  uint8_t ww;
++  int8_t xx;
++}  BigStruct;
++
++extern void foobar();
++
++void
++test_large_fn (uint8_t ui8_1, int8_t si8_1, uint16_t ui16_1, int16_t si16_1,
++	       uint32_t ui32_1, int32_t si32_1, uint64_t ui64_1, int64_t si64_1,
++	       float f_1, double d_1, long double ld_1, char* p_1,
++	       uint8_t ui8_2, int8_t si8_2, uint16_t ui16_2, int16_t si16_2,
++	       uint32_t ui32_2, int32_t si32_2, uint64_t ui64_2, int64_t si64_2,
++	       float f_2, double d_2, long double ld_2, char* p_2,
++	       uint8_t ui8_3, int8_t si8_3, uint16_t ui16_3, int16_t si16_3,
++	       uint32_t ui32_3, int32_t si32_3, uint64_t ui64_3, int64_t si64_3,
++	       float f_3, double d_3, long double ld_3, char* p_3,
++	       uint8_t ui8_4, int8_t si8_4, uint16_t ui16_4, int16_t si16_4,
++	       uint32_t ui32_4, int32_t si32_4, uint64_t ui64_4, int64_t si64_4,
++	       float f_4, double d_4, long double ld_4, char* p_4,
++	       uint8_t ui8_5, int8_t si8_5)
++{
++    BigStruct retVal =
++      {
++	ui8_1 + 1, si8_1 + 1, ui16_1 + 1, si16_1 + 1,
++	ui32_1 + 1, si32_1 + 1, ui64_1 + 1, si64_1 + 1,
++	f_1 + 1, d_1 + 1, ld_1 + 1, (char*)((intptr_t)p_1 + 1),
++	ui8_2 + 2, si8_2 + 2, ui16_2 + 2, si16_2 + 2,
++	ui32_2 + 2, si32_2 + 2, ui64_2 + 2, si64_2 + 2,
++	f_2 + 2, d_2 + 2, ld_2 + 2, (char*)((intptr_t)p_2 + 2),
++	ui8_3 + 3, si8_3 + 3, ui16_3 + 3, si16_3 + 3,
++	ui32_3 + 3, si32_3 + 3, ui64_3 + 3, si64_3 + 3,
++	f_3 + 3, d_3 + 3, ld_3 + 3, (char*)((intptr_t)p_3 + 3),
++	ui8_4 + 4, si8_4 + 4, ui16_4 + 4, si16_4 + 4,
++	ui32_4 + 4, si32_4 + 4, ui64_4 + 4, si64_4 + 4,
++	f_4 + 4, d_4 + 4, ld_4 + 4, (char*)((intptr_t)p_4 + 4),
++	ui8_5 + 5, si8_5 + 5
++      };
++
++    foobar ("%" "u" " %" "d" " %hu %hd %u %d %" "ll" "u" " %" "ll" "d"
++	      " %.0f %.0f %.0Lf %#lx " "%" "u" " %" "d" " %hu %hd %u %d %"
++	      "ll" "u" " %" "ll" "d" " %.0f %.0f %.0Lf %#lx " "%" "u"
++	      " %" "d" " %hu %hd %u %d %" "ll" "u" " %" "ll" "d"
++	      " %.0f %.0f %.0Lf %#lx " "%" "u" " %" "d" " %hu %hd %u %d %"
++	      "ll" "u" " %" "ll" "d" " %.0f %.0f %.0Lf %#lx %" "u" " %"
++	      "d" ": " "%" "u" " %" "d" " %hu %hd %u %d %" "ll" "u" " %"
++	      "ll" "d" " %.0f %.0f %.0Lf %#lx " "%" "u" " %" "d"
++	      " %hu %hd %u %d %" "ll" "u" " %" "ll" "d" " %.0f %.0f %.0Lf %#lx "
++	      "%" "u" " %" "d" " %hu %hd %u %d %" "ll" "u" " %" "ll" "d"
++	      " %.0f %.0f %.0Lf %#lx " "%" "u" " %" "d" " %hu %hd %u %d %"
++	    "ll" "u" " %" "ll" "d" " %.0f %.0f %.0Lf %#lx %" "u" " %" "d" "\n",
++	    ui8_1, si8_1, ui16_1, si16_1, ui32_1, si32_1, ui64_1, si64_1,
++	    f_1, d_1, ld_1, (unsigned long)p_1, ui8_2, si8_2, ui16_2, si16_2,
++	    ui32_2, si32_2, ui64_2, si64_2, f_2, d_2, ld_2, (unsigned long)p_2,
++	    ui8_3, si8_3, ui16_3, si16_3, ui32_3, si32_3, ui64_3, si64_3, f_3,
++	    d_3, ld_3, (unsigned long)p_3, ui8_4, si8_4, ui16_4, si16_4, ui32_4,
++	    si32_4, ui64_4, si64_4, f_4, d_4, ld_4, (unsigned long)p_4, ui8_5,
++	    si8_5, retVal.a, retVal.b, retVal.c, retVal.d, retVal.e, retVal.f,
++	    retVal.g, retVal.h, retVal.i, retVal.j, retVal.k,
++	    (unsigned long)retVal.l, retVal.m, retVal.n, retVal.o, retVal.p,
++	    retVal.q, retVal.r, retVal.s, retVal.t, retVal.u, retVal.v,
++	    retVal.w, (unsigned long)retVal.x, retVal.y, retVal.z, retVal.aa,
++	    retVal.bb, retVal.cc, retVal.dd, retVal.ee, retVal.ff, retVal.gg,
++	    retVal.hh, retVal.ii, (unsigned long)retVal.jj, retVal.kk,
++	    retVal.ll, retVal.mm, retVal.nn, retVal.oo, retVal.pp, retVal.qq,
++	    retVal.rr, retVal.ss, retVal.tt, retVal.uu, (unsigned long)retVal.vv,
++	    retVal.ww, retVal.xx);
++}
+diff --git a/gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c b/gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c
+new file mode 100644
+index 00000000000..2c5ea375505
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/pragma-ctable_entry.c
+@@ -0,0 +1,22 @@
++/* Test specification of custom instructions via command-line options.  */
++
++/* { dg-do compile } */
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it LBCO/SBCO operations may
++   not be optimized to the respective instructions.  */
++
++
++#pragma ctable_entry 12 0x48040000
++
++unsigned int
++test_ctable (unsigned int val1, unsigned int val2)
++{
++  ((volatile unsigned short int *)0x48040000)[0] = val2;
++  ((volatile unsigned int *)0x48040000)[val1] = val2;
++  return ((volatile unsigned int *)0x48040000)[4];
++}
++
++/* { dg-final { scan-assembler "sbco\\tr15.b\[012\]?, 12, 0, 2" } } */
++/* { dg-final { scan-assembler "sbco\\tr15.b0, 12, r14, 4" } } */
++/* { dg-final { scan-assembler "lbco\\tr14.b0, 12, 16, 4" } } */
+diff --git a/gcc/testsuite/gcc.target/pru/pru.exp b/gcc/testsuite/gcc.target/pru/pru.exp
+new file mode 100644
+index 00000000000..122a2b3a503
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/pru.exp
+@@ -0,0 +1,41 @@
++# Copyright (C) 2015 Free Software Foundation, Inc.
++
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3 of the License, or
++# (at your option) any later version.
++# 
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++# 
++# You should have received a copy of the GNU General Public License
++# along with GCC; see the file COPYING3.  If not see
++# <http://www.gnu.org/licenses/>.
++
++# GCC testsuite that uses the `dg.exp' driver.
++
++# Exit immediately if this isn't a PRU target.
++if ![istarget pru*-*-*] then {
++  return
++}
++
++# Load support procs.
++load_lib gcc-dg.exp
++
++# If a testcase doesn't have special options, use these.
++global DEFAULT_CFLAGS
++if ![info exists DEFAULT_CFLAGS] then {
++    set DEFAULT_CFLAGS " -ansi -pedantic-errors"
++}
++
++# Initialize `dg'.
++dg-init
++
++# Main loop.
++dg-runtest [lsort [glob -nocomplain $srcdir/$subdir/*.\[cCS\]]] \
++	"" $DEFAULT_CFLAGS
++
++# All done.
++dg-finish
+diff --git a/gcc/testsuite/gcc.target/pru/qbbc-1.c b/gcc/testsuite/gcc.target/pru/qbbc-1.c
+new file mode 100644
+index 00000000000..1a891907561
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/qbbc-1.c
+@@ -0,0 +1,29 @@
++/* Test QBBC recognition */
++
++/* { dg-do run } */
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it bit-check-and-branch
++   operation may not be optimized to QBBC.  */
++
++extern void abort (void);
++
++unsigned int
++test_qbbc_reg (unsigned int a, unsigned int b, unsigned int val)
++{
++  if (!(val & (1 << 19)))
++    return a;
++  return b;
++}
++
++int
++main (int argc, char** argv)
++{
++  if (test_qbbc_reg (101, 505, (1u << 19)) != 505)
++    abort();
++  if (test_qbbc_reg (101, 505, (1u << 18)) != 101)
++    abort();
++
++  return 0;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/qbbc-2.c b/gcc/testsuite/gcc.target/pru/qbbc-2.c
+new file mode 100644
+index 00000000000..208e039afa9
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/qbbc-2.c
+@@ -0,0 +1,15 @@
++/* Test QBBC recognition */
++
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it bit-check-and-branch
++   operation may not be optimized to QBBC.  */
++
++unsigned int
++test_qbbc_reg (unsigned int a, unsigned int b, unsigned int val)
++{
++  /* { dg-final { scan-assembler "qbbc\\t.L\[0-9\]*, r16, 19" } } */
++  if (!(val & (1 << 19)))
++    return a;
++  return b;
++}
+diff --git a/gcc/testsuite/gcc.target/pru/qbbc-3.c b/gcc/testsuite/gcc.target/pru/qbbc-3.c
+new file mode 100644
+index 00000000000..7fb7e1a9742
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/qbbc-3.c
+@@ -0,0 +1,15 @@
++/* Test QBBC recognition */
++
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it bit-check-and-branch
++   operation may not be optimized to QBBC.  */
++
++unsigned int
++test_qbbc_reg (unsigned int a, unsigned int b, unsigned short val)
++{
++  /* { dg-final { scan-assembler "qbbc\\t.L\[0-9\]*, r16.w0, 12" } } */
++  if (!(val & (1 << 12)))
++    return a;
++  return b;
++}
+diff --git a/gcc/testsuite/gcc.target/pru/qbbs-1.c b/gcc/testsuite/gcc.target/pru/qbbs-1.c
+new file mode 100644
+index 00000000000..01f8187d64f
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/qbbs-1.c
+@@ -0,0 +1,29 @@
++/* Test QBBS recognition */
++
++/* { dg-do run } */
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it bit-check-and-branch
++   operation may not be optimized to QBBS.  */
++
++extern void abort (void);
++
++unsigned int
++test_qbbs_reg (unsigned int a, unsigned int b, unsigned int val)
++{
++  if (val & (1 << 19))
++    return a;
++  return b;
++}
++
++int
++main (int argc, char** argv)
++{
++  if (test_qbbs_reg (101, 505, (1u << 19)) != 101)
++    abort();
++  if (test_qbbs_reg (101, 505, (1u << 18)) != 505)
++    abort();
++
++  return 0;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/qbbs-2.c b/gcc/testsuite/gcc.target/pru/qbbs-2.c
+new file mode 100644
+index 00000000000..fea7f202659
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/qbbs-2.c
+@@ -0,0 +1,15 @@
++/* Test QBBS recognition */
++
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it bit-check-and-branch
++   operation may not be optimized to QBBS.  */
++
++unsigned int
++test_qbbs_reg (unsigned int a, unsigned int b, unsigned int val)
++{
++  /* { dg-final { scan-assembler "qbbs\\t.L\[0-9\]*, r16, 19" } } */
++  if (val & (1 << 19))
++    return a;
++  return b;
++}
+diff --git a/gcc/testsuite/gcc.target/pru/setbit.c b/gcc/testsuite/gcc.target/pru/setbit.c
+new file mode 100644
+index 00000000000..6e63b736206
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/setbit.c
+@@ -0,0 +1,13 @@
++/* setbit instruction generation */
++
++/* { dg-do compile } */
++/* { dg-options "-O1" } */
++
++unsigned int
++test_setbit (unsigned int val)
++{
++  /* { dg-final { scan-assembler "set\\tr14, r14, 31" } } */
++  val |= (1u << 31);
++  return val;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/zero_extend-and-hisi.c b/gcc/testsuite/gcc.target/pru/zero_extend-and-hisi.c
+new file mode 100644
+index 00000000000..716043cf071
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/zero_extend-and-hisi.c
+@@ -0,0 +1,16 @@
++/* AND with zero extension of operands.
++   It is matched slightly different than rest of ALU ops. */
++
++/* { dg-do compile } */
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it the zero extension might not
++   be coalesced into the ALU instruction. */
++
++unsigned int
++test_zext_and_hi (unsigned short val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "and\\tr14, r14.w0, r15" } } */
++  return val1 & val2;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/zero_extend-and-qihi.c b/gcc/testsuite/gcc.target/pru/zero_extend-and-qihi.c
+new file mode 100644
+index 00000000000..06f58459720
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/zero_extend-and-qihi.c
+@@ -0,0 +1,16 @@
++/* AND with zero extension of operands.
++   It is matched slightly different than rest of ALU ops. */
++
++/* { dg-do compile } */
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it the zero extension might not
++   be coalesced into the ALU instruction. */
++
++unsigned int
++test_zext_and_hi (unsigned char val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "and\\tr14, r14.b0, r15" } } */
++  return val1 & val2;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/zero_extend-and-qisi.c b/gcc/testsuite/gcc.target/pru/zero_extend-and-qisi.c
+new file mode 100644
+index 00000000000..06f58459720
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/zero_extend-and-qisi.c
+@@ -0,0 +1,16 @@
++/* AND with zero extension of operands.
++   It is matched slightly different than rest of ALU ops. */
++
++/* { dg-do compile } */
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it the zero extension might not
++   be coalesced into the ALU instruction. */
++
++unsigned int
++test_zext_and_hi (unsigned char val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "and\\tr14, r14.b0, r15" } } */
++  return val1 & val2;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/zero_extend-hisi.c b/gcc/testsuite/gcc.target/pru/zero_extend-hisi.c
+new file mode 100644
+index 00000000000..eddd4298169
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/zero_extend-hisi.c
+@@ -0,0 +1,43 @@
++/* ALU operations with zero extended operands. */
++
++/* { dg-do compile } */
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it the zero extension might not
++   be coalesced into the ALU instruction. */
++
++unsigned int
++test_zext_plus_hi (unsigned short val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "add\\tr14, r14.w0, r15" } } */
++  return val1 + val2;
++}
++
++unsigned int
++test_zext_minus_hi (unsigned short val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "sub\\tr14, r14.w0, r15" } } */
++  return val1 - val2;
++}
++
++unsigned int
++test_zext_xor_hi (unsigned short val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "xor\\tr14, r14.w0, r15" } } */
++  return val1 ^ val2;
++}
++
++unsigned int
++test_zext_or_hi (unsigned short val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "or\\tr14, r14.w0, r15" } } */
++  return val1 | val2;
++}
++
++unsigned int
++test_zext_ashl_hi (unsigned short val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "lsl\\tr14, r14.w0, r15" } } */
++  return val1 << val2;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/zero_extend-qihi.c b/gcc/testsuite/gcc.target/pru/zero_extend-qihi.c
+new file mode 100644
+index 00000000000..62e81f8a4cc
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/zero_extend-qihi.c
+@@ -0,0 +1,43 @@
++/* ALU operations with zero extended operands. */
++
++/* { dg-do compile } */
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it the zero extension might not
++   be coalesced into the ALU instruction. */
++
++unsigned int
++test_zext_plus_hi (unsigned char val1, unsigned short val2)
++{
++  /* { dg-final { scan-assembler "add\\tr14, r14.b0, r14.w1" } } */
++  return val1 + val2;
++}
++
++unsigned int
++test_zext_minus_hi (unsigned char val1, unsigned short val2)
++{
++  /* { dg-final { scan-assembler "sub\\tr14, r14.b0, r14.w1" } } */
++  return val1 - val2;
++}
++
++unsigned int
++test_zext_xor_hi (unsigned char val1, unsigned short val2)
++{
++  /* { dg-final { scan-assembler "xor\\tr14, r14.b0, r14.w1" } } */
++  return val1 ^ val2;
++}
++
++unsigned int
++test_zext_or_hi (unsigned char val1, unsigned short val2)
++{
++  /* { dg-final { scan-assembler "or\\tr14, r14.b0, r14.w1" } } */
++  return val1 | val2;
++}
++
++unsigned int
++test_zext_ashl_hi (unsigned char val1, unsigned short val2)
++{
++  /* { dg-final { scan-assembler "lsl\\tr14, r14.b0, r14.w1" } } */
++  return val1 << val2;
++}
++
+diff --git a/gcc/testsuite/gcc.target/pru/zero_extend-qisi.c b/gcc/testsuite/gcc.target/pru/zero_extend-qisi.c
+new file mode 100644
+index 00000000000..0e9ae4cf01e
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/zero_extend-qisi.c
+@@ -0,0 +1,43 @@
++/* ALU operations with zero extended operands. */
++
++/* { dg-do compile } */
++/* { dg-options "-O1" } */
++
++/* -O1 in the options is significant.  Without it the zero extension might not
++   be coalesced into the ALU instruction. */
++
++unsigned int
++test_zext_plus_hi (unsigned char val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "add\\tr14, r14.b0, r15" } } */
++  return val1 + val2;
++}
++
++unsigned int
++test_zext_minus_hi (unsigned char val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "sub\\tr14, r14.b0, r15" } } */
++  return val1 - val2;
++}
++
++unsigned int
++test_zext_xor_hi (unsigned char val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "xor\\tr14, r14.b0, r15" } } */
++  return val1 ^ val2;
++}
++
++unsigned int
++test_zext_or_hi (unsigned char val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "or\\tr14, r14.b0, r15" } } */
++  return val1 | val2;
++}
++
++unsigned int
++test_zext_ashl_hi (unsigned char val1, unsigned int val2)
++{
++  /* { dg-final { scan-assembler "lsl\\tr14, r14.b0, r15" } } */
++  return val1 << val2;
++}
++
+diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
+index 3770f698c46..1dfe02c4e39 100644
+--- a/gcc/testsuite/lib/gcc-dg.exp
++++ b/gcc/testsuite/lib/gcc-dg.exp
+@@ -381,6 +381,17 @@ proc gcc-dg-prune { system text } {
+ 	return "::unsupported::memory full"
+     }
+ 
++    if {[string match "pru-*" $system] && \
++	    [string match "*error: function pointers not supported with -mabi=ti option*" $text]} {
++	# The format here is important.  See dg.exp.
++	return "::unsupported::abi"
++    }
++    if {[string match "pru-*" $system] && \
++	    [string match "*error: large return values not supported with -mabi=ti option*" $text]} {
++	# The format here is important.  See dg.exp.
++	return "::unsupported::abi"
++    }
++
+     return $text
+ }
+ 
+diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
+index 8479290f62b..d953e05b817 100644
+--- a/gcc/testsuite/lib/target-supports.exp
++++ b/gcc/testsuite/lib/target-supports.exp
+@@ -511,7 +511,8 @@ proc check_effective_target_trampolines { } {
+ 	 || [istarget msp430-*-*]
+ 	 || [istarget nvptx-*-*]
+ 	 || [istarget hppa2.0w-hp-hpux11.23]
+-	 || [istarget hppa64-hp-hpux11.23] } {
++	 || [istarget hppa64-hp-hpux11.23]
++	 || [istarget pru-*-*] } {
+ 	return 0;
+     }
+     return 1
+@@ -684,6 +685,7 @@ proc check_profiling_available { test_what } {
+ 	     || [istarget nvptx-*-*]
+ 	     || [istarget powerpc-*-eabi*]
+ 	     || [istarget powerpc-*-elf]
++	     || [istarget pru-*-*]
+ 	     || [istarget rx-*-*]	
+ 	     || [istarget tic6x-*-elf]
+ 	     || [istarget visium-*-*]
+@@ -879,7 +881,7 @@ proc check_effective_target_tls_emulated {} {
+ proc check_effective_target_tls_runtime {} {
+     # The runtime does not have TLS support, but just
+     # running the test below is insufficient to show this.
+-    if { [istarget msp430-*-*] || [istarget visium-*-*] } {
++    if { [istarget msp430-*-*] || [istarget visium-*-*] || [istarget pru-*-*] } {
+ 	return 0
+     }
+     return [check_runtime tls_runtime {
+@@ -8780,6 +8782,7 @@ proc check_effective_target_logical_op_short_circuit {} {
+ 	 || [istarget nios2*-*-*]
+ 	 || [istarget riscv*-*-*]
+ 	 || [istarget visium-*-*]
++	 || [istarget pru*-*-*]
+ 	 || [check_effective_target_arm_cortex_m] } {
+ 	return 1
+     }
+diff --git a/gcc/testsuite/lib/target-utils.exp b/gcc/testsuite/lib/target-utils.exp
+index bd39cc5bc79..75999fce8c2 100644
+--- a/gcc/testsuite/lib/target-utils.exp
++++ b/gcc/testsuite/lib/target-utils.exp
+@@ -40,5 +40,15 @@ proc ${tool}_check_unsupported_p { output } {
+ 	     [string match "*exceeds local store*" $output] } {
+ 	return "memory full"
+     }
++    if {[istarget pru-*] && \
++	    [string match "*error: large return values not supported with -mabi=ti option*" $output]} {
++	# The format here is important.  See dg.exp.
++	return "abi not supported"
++    }
++    if {[istarget pru-*] && \
++	    [string match "*error: function pointers not supported with -mabi=ti option*" $output]} {
++	# The format here is important.  See dg.exp.
++	return "abi not supported"
++    }
+     return ""
+ }
+-- 
+2.11.0
+

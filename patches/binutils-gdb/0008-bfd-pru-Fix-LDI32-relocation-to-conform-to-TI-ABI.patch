@@ -1,0 +1,85 @@
+From f86d0cc83c5b3ba1ac79ed653a4e9fc9f22da41d Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Sun, 4 Mar 2018 22:42:14 +0200
+Subject: [PATCH 08/12] bfd:pru: Fix LDI32 relocation to conform to TI ABI
+
+My original implementation for LDI32 pseudo does not conform to
+the TI ABI. This was exposed when running the GCC ABI testsuite.
+According to TI ABI, LDI32 must use first LDI instruction to load
+the MSB 16bits, and second LDI instruction for the LSB 16bits.
+
+This patch will break binary compatibility with previously released
+binutils versions for PRU. Still, I think it is better to align
+binutils to the vendor ABI.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ bfd/elf32-pru.c | 27 +++++++++++++++++++--------
+ 1 file changed, 19 insertions(+), 8 deletions(-)
+
+diff --git a/bfd/elf32-pru.c b/bfd/elf32-pru.c
+index 71bb0a006f..b99c45a506 100644
+--- a/bfd/elf32-pru.c
++++ b/bfd/elf32-pru.c
+@@ -551,13 +551,13 @@ pru_elf32_do_ldi32_relocate (bfd *abfd, reloc_howto_type *howto,
+   in2 = bfd_get_32 (abfd, location + 4);
+ 
+   /* Extract the addend - should be zero per my understanding.  */
+-  num = GET_INSN_FIELD (IMM16, in1) | (GET_INSN_FIELD (IMM16, in2) << 16);
++  num = (GET_INSN_FIELD (IMM16, in1) << 16) | GET_INSN_FIELD (IMM16, in2);
+   BFD_ASSERT (!num);
+ 
+   relocation += num;
+ 
+-  SET_INSN_FIELD (IMM16, in1, relocation & 0xffff);
+-  SET_INSN_FIELD (IMM16, in2, relocation >> 16);
++  SET_INSN_FIELD (IMM16, in1, relocation >> 16);
++  SET_INSN_FIELD (IMM16, in2, relocation & 0xffff);
+ 
+   bfd_put_32 (abfd, in1, location);
+   bfd_put_32 (abfd, in2, location + 4);
+@@ -1080,7 +1080,7 @@ pru_elf_relax_delete_bytes (bfd *abfd,
+ 	 continue;
+ 
+        shrinked_insn_address = (sec->output_section->vma
+-				+ sec->output_offset + addr - count);
++				+ sec->output_offset + addr);
+ 
+        irel = elf_section_data (isec)->relocs;
+        /* PR 12161: Read in the relocs for this section if necessary.  */
+@@ -1340,17 +1340,28 @@ pru_elf32_relax_section (bfd * abfd, asection * sec,
+ 
+ 	  if ((long) value >> 16 == 0)
+ 	    {
++	      unsigned long insn;
++
+ 	      /* Note that we've changed the relocs, section contents.  */
+ 	      elf_section_data (sec)->relocs = internal_relocs;
+ 	      elf_section_data (sec)->this_hdr.contents = contents;
+ 	      symtab_hdr->contents = (unsigned char *) isymbuf;
+ 
+-	      /* Delete bytes.  */
+-	      if (!pru_elf_relax_delete_bytes (abfd, sec, irel->r_offset + 4, 4))
++	      /* Make the second instruction load the 16-bit constant
++		 into the full 32-bit register.  */
++	      insn = bfd_get_32 (abfd, contents + irel->r_offset + 4);
++	      BFD_ASSERT (GET_INSN_FIELD (RDSEL, insn) == RSEL_15_0);
++	      SET_INSN_FIELD (RDSEL, insn, RSEL_31_0);
++	      bfd_put_32 (abfd, insn, contents + irel->r_offset + 4);
++
++	      /* Delete the first LDI instruction.  Note that there should
++		 be no relocations or symbols pointing to the second LDI
++		 instruction.  */
++	      if (!pru_elf_relax_delete_bytes (abfd, sec, irel->r_offset, 4))
+ 		goto error_return;
+ 
+-	      /* We're done with deletion of the second instruction.
+-		 Set a regular LDI relocation for the first instruction
++	      /* We're done with deletion of the first instruction.
++		 Set a regular LDI relocation for the second instruction
+ 		 we left to load the 16-bit value into the 32-bit
+ 		 register.  */
+ 	      irel->r_info = ELF32_R_INFO (ELF32_R_SYM (irel->r_info),
+-- 
+2.11.0
+
