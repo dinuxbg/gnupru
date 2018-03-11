@@ -27,6 +27,7 @@ mkdir -p $WORKSPACE/$LOGDIR
 
 [ -d "$BINUTILS_SRC" ] || git clone $BINUTILS_URL $BINUTILS_SRC || die "initial $BINUTILS_URL clone failed"
 
+(cd $BINUTILS_SRC && git remote prune origin) || die "failed to prune remote"
 (cd $BINUTILS_SRC && git fetch origin && git checkout origin/master) || die "failed to sync $BINUTILS_URL"
 
 BINUTILS_TOT=`cd $BINUTILS_SRC && git rev-parse HEAD`
