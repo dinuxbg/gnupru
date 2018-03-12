@@ -1,4 +1,4 @@
-From cfc03d7e5ba2ce200f6cb4d79a969f9fc321676d Mon Sep 17 00:00:00 2001
+From fa89ee6534b68596945917506cac04e3dd3057bd Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 22:07:17 +0200
 Subject: [PATCH 08/11] testsuite: Mark that PRU has one-cycle jumps

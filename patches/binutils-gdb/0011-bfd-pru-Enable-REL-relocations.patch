@@ -1,4 +1,4 @@
-From 78642fe88620ac0de66f02164ce5855ca2abb407 Mon Sep 17 00:00:00 2001
+From 9b41448ab6a5b9454ca95b1dc301ab9ab971892a Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 21 Jan 2018 20:47:05 +0200
 Subject: [PATCH 11/12] bfd:pru: Enable REL relocations
@@ -13,10 +13,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  1 file changed, 90 insertions(+), 12 deletions(-)
 
 diff --git a/bfd/elf32-pru.c b/bfd/elf32-pru.c
-index b99c45a506..49af708b5f 100644
+index 4343b4ac83..1e4cad3eec 100644
 --- a/bfd/elf32-pru.c
 +++ b/bfd/elf32-pru.c
-@@ -525,7 +525,7 @@ pru_elf32_do_ldi32_relocate (bfd *abfd, reloc_howto_type *howto,
+@@ -539,7 +539,7 @@ pru_elf32_do_ldi32_relocate (bfd *abfd, reloc_howto_type *howto,
    bfd_signed_vma relocation;
    bfd_size_type octets = offset * bfd_octets_per_byte (abfd);
    bfd_byte *location;
@@ -25,7 +25,7 @@ index b99c45a506..49af708b5f 100644
  
    /* A hacked-up version of _bfd_final_link_relocate() follows.  */
  
-@@ -550,12 +550,6 @@ pru_elf32_do_ldi32_relocate (bfd *abfd, reloc_howto_type *howto,
+@@ -564,12 +564,6 @@ pru_elf32_do_ldi32_relocate (bfd *abfd, reloc_howto_type *howto,
    in1 = bfd_get_32 (abfd, location);
    in2 = bfd_get_32 (abfd, location + 4);
  
@@ -38,7 +38,7 @@ index b99c45a506..49af708b5f 100644
    SET_INSN_FIELD (IMM16, in1, relocation >> 16);
    SET_INSN_FIELD (IMM16, in2, relocation & 0xffff);
  
-@@ -580,6 +574,7 @@ pru_elf32_pmem_relocate (bfd *abfd, arelent *reloc_entry,
+@@ -594,6 +588,7 @@ pru_elf32_pmem_relocate (bfd *abfd, arelent *reloc_entry,
      return bfd_elf_generic_reloc (abfd, reloc_entry, symbol, data,
  				  input_section, output_bfd, error_message);
  
@@ -46,7 +46,7 @@ index b99c45a506..49af708b5f 100644
    return pru_elf32_do_pmem_relocate (abfd, reloc_entry->howto,
  				     input_section,
  				     data, reloc_entry->address,
-@@ -667,15 +662,24 @@ pru_elf32_relocate_section (bfd *output_bfd,
+@@ -681,15 +676,24 @@ pru_elf32_relocate_section (bfd *output_bfd,
  			    Elf_Internal_Sym *local_syms,
  			    asection **local_sections)
  {
@@ -71,7 +71,7 @@ index b99c45a506..49af708b5f 100644
    for (rel = relocs; rel < relend; rel++)
      {
        reloc_howto_type *howto;
-@@ -688,6 +692,10 @@ pru_elf32_relocate_section (bfd *output_bfd,
+@@ -702,6 +706,10 @@ pru_elf32_relocate_section (bfd *output_bfd,
        const char *name = NULL;
        const char* msg = (const char*) NULL;
        bfd_boolean unresolved_reloc;
@@ -82,7 +82,7 @@ index b99c45a506..49af708b5f 100644
  
        r_symndx = ELF32_R_SYM (rel->r_info);
  
-@@ -730,15 +738,52 @@ pru_elf32_relocate_section (bfd *output_bfd,
+@@ -744,15 +752,52 @@ pru_elf32_relocate_section (bfd *output_bfd,
  	      r = bfd_reloc_ok;
  	      break;
  
@@ -136,7 +136,7 @@ index b99c45a506..49af708b5f 100644
  	      r = pru_elf32_do_s10_pcrel_relocate (input_bfd, howto,
  						      input_section,
  						      contents,
-@@ -747,6 +792,7 @@ pru_elf32_relocate_section (bfd *output_bfd,
+@@ -761,6 +806,7 @@ pru_elf32_relocate_section (bfd *output_bfd,
  						      rel->r_addend);
  	      break;
  	    case R_PRU_U8_PCREL:
@@ -144,7 +144,7 @@ index b99c45a506..49af708b5f 100644
  	      r = pru_elf32_do_u8_pcrel_relocate (input_bfd, howto,
  						      input_section,
  						      contents,
-@@ -755,29 +801,56 @@ pru_elf32_relocate_section (bfd *output_bfd,
+@@ -769,29 +815,56 @@ pru_elf32_relocate_section (bfd *output_bfd,
  						      rel->r_addend);
  	      break;
  	    case R_PRU_LDI32:
@@ -203,7 +203,7 @@ index b99c45a506..49af708b5f 100644
  	    }
  	}
        else
-@@ -1463,12 +1536,17 @@ pru_elf32_link_hash_table_create (bfd *abfd)
+@@ -1477,12 +1550,17 @@ pru_elf32_link_hash_table_create (bfd *abfd)
  #define bfd_elf32_bfd_reloc_type_lookup	  pru_elf32_bfd_reloc_type_lookup
  #define bfd_elf32_bfd_reloc_name_lookup	  pru_elf32_bfd_reloc_name_lookup
  

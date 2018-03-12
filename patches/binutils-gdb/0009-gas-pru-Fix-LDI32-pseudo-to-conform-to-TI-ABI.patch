@@ -1,4 +1,4 @@
-From 007597a7e38f8a75cbe1742f2fee516d06dffd1b Mon Sep 17 00:00:00 2001
+From b3ce0e7a1209afdbf935f4efdedf47f9cbd90fee Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 4 Mar 2018 22:51:20 +0200
 Subject: [PATCH 09/12] gas:pru: Fix LDI32 pseudo to conform to TI ABI

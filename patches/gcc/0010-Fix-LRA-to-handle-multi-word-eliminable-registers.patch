@@ -1,4 +1,4 @@
-From 72c68390888d086204a0e214501aeda4aeb0af6c Mon Sep 17 00:00:00 2001
+From 9803d9a1840d60e84450a616ea79ee5dcf46f769 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dddimitrov@mm-sol.com>
 Date: Sun, 23 Jul 2017 20:59:53 -0700
 Subject: [PATCH 10/11] Fix LRA to handle multi-word eliminable registers
@@ -12,7 +12,7 @@ Signed-off-by: Dimitar Dimitrov <dddimitrov@mm-sol.com>
  1 file changed, 12 insertions(+), 2 deletions(-)
 
 diff --git a/gcc/lra-eliminations.c b/gcc/lra-eliminations.c
-index 44ad96af38d..f50782861a2 100644
+index 21d8d5f8018..566cc2c8248 100644
 --- a/gcc/lra-eliminations.c
 +++ b/gcc/lra-eliminations.c
 @@ -1180,6 +1180,16 @@ spill_pseudos (HARD_REG_SET set)

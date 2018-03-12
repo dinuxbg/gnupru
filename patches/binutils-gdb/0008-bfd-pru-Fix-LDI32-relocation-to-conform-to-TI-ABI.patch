@@ -1,4 +1,4 @@
-From f86d0cc83c5b3ba1ac79ed653a4e9fc9f22da41d Mon Sep 17 00:00:00 2001
+From 59858002db3a1eada4cdeabe332ec183e290cd43 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 4 Mar 2018 22:42:14 +0200
 Subject: [PATCH 08/12] bfd:pru: Fix LDI32 relocation to conform to TI ABI
@@ -18,10 +18,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  1 file changed, 19 insertions(+), 8 deletions(-)
 
 diff --git a/bfd/elf32-pru.c b/bfd/elf32-pru.c
-index 71bb0a006f..b99c45a506 100644
+index a3c431ba7e..4343b4ac83 100644
 --- a/bfd/elf32-pru.c
 +++ b/bfd/elf32-pru.c
-@@ -551,13 +551,13 @@ pru_elf32_do_ldi32_relocate (bfd *abfd, reloc_howto_type *howto,
+@@ -565,13 +565,13 @@ pru_elf32_do_ldi32_relocate (bfd *abfd, reloc_howto_type *howto,
    in2 = bfd_get_32 (abfd, location + 4);
  
    /* Extract the addend - should be zero per my understanding.  */
@@ -38,7 +38,7 @@ index 71bb0a006f..b99c45a506 100644
  
    bfd_put_32 (abfd, in1, location);
    bfd_put_32 (abfd, in2, location + 4);
-@@ -1080,7 +1080,7 @@ pru_elf_relax_delete_bytes (bfd *abfd,
+@@ -1094,7 +1094,7 @@ pru_elf_relax_delete_bytes (bfd *abfd,
  	 continue;
  
         shrinked_insn_address = (sec->output_section->vma
@@ -47,7 +47,7 @@ index 71bb0a006f..b99c45a506 100644
  
         irel = elf_section_data (isec)->relocs;
         /* PR 12161: Read in the relocs for this section if necessary.  */
-@@ -1340,17 +1340,28 @@ pru_elf32_relax_section (bfd * abfd, asection * sec,
+@@ -1354,17 +1354,28 @@ pru_elf32_relax_section (bfd * abfd, asection * sec,
  
  	  if ((long) value >> 16 == 0)
  	    {

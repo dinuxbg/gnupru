@@ -25,8 +25,7 @@ First, newlib must be recompiled in "full" mode. Note that a lot of standard fea
 To execute the GCC C test suite go to the GCC build directory and run:
 
 	make check-gcc-c RUNTESTFLAGS=--target_board=pru-sim
-
-Note that the C++ testsuite cannot be run due to the enormous C++ core library size. It cannot fit in the maximum possible 64k words of program memory possible in the PRU ISA architecture.
+	make check-gcc-c++ RUNTESTFLAGS=--target_board=pru-sim
 
 ## Checking ABI compatibility
 It is possible to run part of the GCC testsuite in an "ABI check" mode. The testsuite will compile object files with different compilers, and then check that functions from one object file can call and get correct return value from the other object file.
@@ -43,7 +42,7 @@ To execute the GCC ABI regression test suite against the TI toolchain do:
 
 A few notes about the options:
 * --hardware_mac=on is needed since GCC does not currently support turning off MAC instruction generation. Please let me know if you see a real usecase for this feature, and I may reconsider.
-* --symdebug:none is needed since the binutils linker doest not yet support the debug relaxations output by TI toolchain.
+* --symdebug:none is needed since the binutils linker does not yet support the debug relocations output by TI toolchain.
 * -mmcu=sim is needed by the GNU LD to provide sufficient memory for test execution.
 * The libgcc is forcefully included with -mabi=ti when performing ABI testing. Libgcc as a whole is not really TI ABI compatible, but the parts used by the testsuite are. Multilib is not an option since GCC PRU port does not support some C constructs when -mabi=ti.
 * ABI test case pr83487 is failing due to a bug in TI CGT. See [CODEGEN-4180](https://e2e.ti.com/support/development_tools/compiler/f/343/t/652777)

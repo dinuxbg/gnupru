@@ -1,4 +1,4 @@
-From b970ba131579f094fbe54029d000ec0657215de8 Mon Sep 17 00:00:00 2001
+From 999d88157fe039faa401c30ed6c359ef01263f49 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 22:00:47 +0200
 Subject: [PATCH 06/11] testsuite: Define PRU stack usage

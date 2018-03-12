@@ -1,4 +1,4 @@
-From 6edc7741acdf0d82877f4f7411d6e32ab08bed5f Mon Sep 17 00:00:00 2001
+From 42b37217c3e00c82be3062de511e75d49d6f78f9 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sat, 24 Feb 2018 09:22:16 +0200
 Subject: [PATCH 12/12] gas: pru: Add range checks for constant operands

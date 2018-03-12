@@ -1,4 +1,4 @@
-From 4428dbc0a65a3ccb628f418d021521fa0d94ea65 Mon Sep 17 00:00:00 2001
+From e9e010da570a370751342d910dd67c42c8f7b1f1 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 4 Mar 2018 22:52:16 +0200
 Subject: [PATCH 10/12] ld:testsuite:pru: Fix LDI32 pseudo to conform to TI ABI

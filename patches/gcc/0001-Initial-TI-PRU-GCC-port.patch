@@ -1,4 +1,4 @@
-From 00ddf5352cbdb08689e31febca5759a24bab2958 Mon Sep 17 00:00:00 2001
+From 5a20299fb0a9c51de58608976f5c65335dc13427 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:53:18 +0200
 Subject: [PATCH 01/11] Initial TI PRU GCC port
@@ -173,10 +173,10 @@ index 00000000000..f4dc8640a92
 +
 +struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index c52fecf4221..cf76a95b669 100644
+index 81627d5d1c7..6914e848b47 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -479,6 +479,9 @@ powerpc*-*-*)
+@@ -481,6 +481,9 @@ powerpc*-*-*)
  	esac
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
@@ -186,7 +186,7 @@ index c52fecf4221..cf76a95b669 100644
  riscv*)
  	cpu_type=riscv
  	extra_objs="riscv-builtins.o riscv-c.o"
-@@ -2602,6 +2605,12 @@ powerpcle-*-eabi*)
+@@ -2604,6 +2607,12 @@ powerpcle-*-eabi*)
  	extra_options="${extra_options} rs6000/sysv4.opt"
  	use_gcc_stdint=wrap
  	;;
@@ -5938,10 +5938,10 @@ index 00000000000..3f3094fa126
 +		$(srcdir)/config/pru/pru-protos.h
 +	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $<
 diff --git a/gcc/doc/extend.texi b/gcc/doc/extend.texi
-index b5240095ab6..98210802816 100644
+index 1379502ebbb..877d2795ae0 100644
 --- a/gcc/doc/extend.texi
 +++ b/gcc/doc/extend.texi
-@@ -21982,6 +21982,7 @@ for further explanation.
+@@ -21992,6 +21992,7 @@ for further explanation.
  * ARM Pragmas::
  * M32C Pragmas::
  * MeP Pragmas::
@@ -5949,7 +5949,7 @@ index b5240095ab6..98210802816 100644
  * RS/6000 and PowerPC Pragmas::
  * S/390 Pragmas::
  * Darwin Pragmas::
-@@ -22133,6 +22134,25 @@ extern int foo ();
+@@ -22143,6 +22144,25 @@ extern int foo ();
  
  @end table
  
@@ -5976,7 +5976,7 @@ index b5240095ab6..98210802816 100644
  @subsection RS/6000 and PowerPC Pragmas
  
 diff --git a/gcc/doc/invoke.texi b/gcc/doc/invoke.texi
-index 277c99a0527..3a52df59270 100644
+index 2492148b30f..dd7483e69e4 100644
 --- a/gcc/doc/invoke.texi
 +++ b/gcc/doc/invoke.texi
 @@ -1029,6 +1029,10 @@ See RS/6000 and PowerPC Options.
@@ -5990,7 +5990,7 @@ index 277c99a0527..3a52df59270 100644
  @emph{RISC-V Options}
  @gccoptlist{-mbranch-cost=@var{N-instruction} @gol
  -mplt  -mno-plt @gol
-@@ -14487,6 +14491,7 @@ platform.
+@@ -14522,6 +14526,7 @@ platform.
  * picoChip Options::
  * PowerPC Options::
  * PowerPC SPE Options::
@@ -5998,7 +5998,7 @@ index 277c99a0527..3a52df59270 100644
  * RISC-V Options::
  * RL78 Options::
  * RS/6000 and PowerPC Options::
-@@ -22957,6 +22962,57 @@ the offset with a symbol reference to a canary in the TLS block.
+@@ -22992,6 +22997,57 @@ the offset with a symbol reference to a canary in the TLS block.
  @end table
  
  

@@ -1,4 +1,4 @@
-From dfe15530d745978b046e2317f59bd1618e485655 Mon Sep 17 00:00:00 2001
+From 87276809ede632c2a03a12230ce814fe2e1ce541 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 1 Jan 2018 16:30:44 +0200
 Subject: [PATCH 07/12] ld:pru: Switch to init_array linker script

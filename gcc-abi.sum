@@ -1,4 +1,4 @@
-Test run by dinux on Sat Mar 10 06:44:37 2018
+Test run by dinux on Sat Mar 17 00:26:12 2018
 Target is pru-unknown-elf
 Host   is x86_64-pc-linux-gnu
 
@@ -765,5 +765,5 @@ UNSUPPORTED: gcc.dg/compat/vector-2b_main.c
 # of unexpected failures	7
 # of unresolved testcases	38
 # of unsupported tests		18
-/home/dinux/projects/pru/local-workspace/gcc-pru-build/gcc/xgcc  version 8.0.1 20180217 (experimental) (GCC) 
+/home/dinux/projects/pru/local-workspace/gcc-pru-build/gcc/xgcc  version 8.0.1 20180310 (experimental) (GCC) 
 

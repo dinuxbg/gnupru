@@ -1,4 +1,4 @@
-From d3bae383a99bd718a51b93393395e9db6399c715 Mon Sep 17 00:00:00 2001
+From e38a9e211f0fac412c43af8d02541b965ab17c77 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sat, 12 Nov 2016 19:29:55 +0200
 Subject: [PATCH 02/11] Add auto-generated PRU RTL rules

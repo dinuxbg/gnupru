@@ -1,4 +1,4 @@
-From 25596ff966f0ac7ffc976d989c4465562e75521d Mon Sep 17 00:00:00 2001
+From 42d67b9fc06f4507710aededb3b3c96f03bbc304 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 11 Dec 2017 21:15:46 +0200
 Subject: [PATCH 06/12] ld:pru: Add sections for compatibility with TI
