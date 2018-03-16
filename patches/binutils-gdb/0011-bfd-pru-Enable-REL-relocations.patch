@@ -1,0 +1,228 @@
+From 9b41448ab6a5b9454ca95b1dc301ab9ab971892a Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Sun, 21 Jan 2018 20:47:05 +0200
+Subject: [PATCH 11/12] bfd:pru: Enable REL relocations
+
+Different TI toolchain versions use a mix of REL and RELA
+relocations. Implement REL so that GNU LD can link object files
+from all TI versions.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ bfd/elf32-pru.c | 102 +++++++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 90 insertions(+), 12 deletions(-)
+
+diff --git a/bfd/elf32-pru.c b/bfd/elf32-pru.c
+index 4343b4ac83..1e4cad3eec 100644
+--- a/bfd/elf32-pru.c
++++ b/bfd/elf32-pru.c
+@@ -539,7 +539,7 @@ pru_elf32_do_ldi32_relocate (bfd *abfd, reloc_howto_type *howto,
+   bfd_signed_vma relocation;
+   bfd_size_type octets = offset * bfd_octets_per_byte (abfd);
+   bfd_byte *location;
+-  unsigned long in1, in2, num;
++  unsigned long in1, in2;
+ 
+   /* A hacked-up version of _bfd_final_link_relocate() follows.  */
+ 
+@@ -564,12 +564,6 @@ pru_elf32_do_ldi32_relocate (bfd *abfd, reloc_howto_type *howto,
+   in1 = bfd_get_32 (abfd, location);
+   in2 = bfd_get_32 (abfd, location + 4);
+ 
+-  /* Extract the addend - should be zero per my understanding.  */
+-  num = (GET_INSN_FIELD (IMM16, in1) << 16) | GET_INSN_FIELD (IMM16, in2);
+-  BFD_ASSERT (!num);
+-
+-  relocation += num;
+-
+   SET_INSN_FIELD (IMM16, in1, relocation >> 16);
+   SET_INSN_FIELD (IMM16, in2, relocation & 0xffff);
+ 
+@@ -594,6 +588,7 @@ pru_elf32_pmem_relocate (bfd *abfd, arelent *reloc_entry,
+     return bfd_elf_generic_reloc (abfd, reloc_entry, symbol, data,
+ 				  input_section, output_bfd, error_message);
+ 
++  BFD_ASSERT (0);
+   return pru_elf32_do_pmem_relocate (abfd, reloc_entry->howto,
+ 				     input_section,
+ 				     data, reloc_entry->address,
+@@ -681,15 +676,24 @@ pru_elf32_relocate_section (bfd *output_bfd,
+ 			    Elf_Internal_Sym *local_syms,
+ 			    asection **local_sections)
+ {
++  struct bfd_elf_section_data * esd = elf_section_data (input_section);
+   Elf_Internal_Shdr *symtab_hdr;
+   struct elf_link_hash_entry **sym_hashes;
+   Elf_Internal_Rela *rel;
+   Elf_Internal_Rela *relend;
++  bfd_boolean is_rel_reloc;
+ 
+   symtab_hdr = &elf_tdata (input_bfd)->symtab_hdr;
+   sym_hashes = elf_sym_hashes (input_bfd);
+   relend = relocs + input_section->reloc_count;
+ 
++  /* See if we have a REL type relocation.  */
++  is_rel_reloc = (esd->rel.hdr != NULL);
++  /* Sanity check - only one type of relocation per section.
++     FIXME: Theoretically it is possible to have both types,
++     but if that happens how can we distinguish between the two ?  */
++  BFD_ASSERT (! is_rel_reloc || ! esd->rela.hdr);
++
+   for (rel = relocs; rel < relend; rel++)
+     {
+       reloc_howto_type *howto;
+@@ -702,6 +706,10 @@ pru_elf32_relocate_section (bfd *output_bfd,
+       const char *name = NULL;
+       const char* msg = (const char*) NULL;
+       bfd_boolean unresolved_reloc;
++      bfd_vma addend;
++
++      /* If we are using a REL relocation then the addend should be empty.  */
++      BFD_ASSERT (! is_rel_reloc || rel->r_addend == 0);
+ 
+       r_symndx = ELF32_R_SYM (rel->r_info);
+ 
+@@ -744,15 +752,52 @@ pru_elf32_relocate_section (bfd *output_bfd,
+ 	      r = bfd_reloc_ok;
+ 	      break;
+ 
++	    case R_PRU_U16:
++	      if (is_rel_reloc)
++		{
++		  unsigned long insn;
++		  insn = bfd_get_32 (input_bfd, contents + rel->r_offset);
++		  addend = GET_INSN_FIELD (IMM16, insn);
++		}
++	      else
++		addend = rel->r_addend;
++	      r = _bfd_final_link_relocate (howto, input_bfd,
++					    input_section, contents,
++					    rel->r_offset, relocation,
++					    addend);
++	      break;
++
+ 	    case R_PRU_U16_PMEMIMM:
+ 	    case R_PRU_32_PMEM:
+ 	    case R_PRU_16_PMEM:
++	      if (is_rel_reloc && howto->type == R_PRU_U16_PMEMIMM)
++		{
++		  unsigned long insn;
++		  insn = bfd_get_32 (input_bfd, contents + rel->r_offset);
++		  addend = GET_INSN_FIELD (IMM16, insn) << 2;
++		}
++	      else if (is_rel_reloc && howto->type == R_PRU_32_PMEM)
++		{
++		  addend = bfd_get_32 (input_bfd, contents + rel->r_offset);
++		  addend <<= 2;
++		}
++	      else if (is_rel_reloc && howto->type == R_PRU_16_PMEM)
++		{
++		  addend = bfd_get_16 (input_bfd, contents + rel->r_offset);
++		  addend <<= 2;
++		}
++	      else
++		{
++		  BFD_ASSERT (!is_rel_reloc);
++		  addend = rel->r_addend;
++		}
+ 	      r = pru_elf32_do_pmem_relocate (input_bfd, howto,
+ 						input_section,
+ 						contents, rel->r_offset,
+-						relocation, rel->r_addend);
++						relocation, addend);
+ 	      break;
+ 	    case R_PRU_S10_PCREL:
++	      BFD_ASSERT (! is_rel_reloc);
+ 	      r = pru_elf32_do_s10_pcrel_relocate (input_bfd, howto,
+ 						      input_section,
+ 						      contents,
+@@ -761,6 +806,7 @@ pru_elf32_relocate_section (bfd *output_bfd,
+ 						      rel->r_addend);
+ 	      break;
+ 	    case R_PRU_U8_PCREL:
++	      BFD_ASSERT (! is_rel_reloc);
+ 	      r = pru_elf32_do_u8_pcrel_relocate (input_bfd, howto,
+ 						      input_section,
+ 						      contents,
+@@ -769,29 +815,56 @@ pru_elf32_relocate_section (bfd *output_bfd,
+ 						      rel->r_addend);
+ 	      break;
+ 	    case R_PRU_LDI32:
++	      if (is_rel_reloc)
++		{
++		  unsigned long in1, in2;
++		  in1 = bfd_get_32 (input_bfd, contents + rel->r_offset);
++		  in2 = bfd_get_32 (input_bfd, contents + rel->r_offset + 4);
++		  addend = (GET_INSN_FIELD (IMM16, in1) << 16)
++			    | GET_INSN_FIELD (IMM16, in2);
++		}
++	      else
++		{
++		  addend = rel->r_addend;
++		}
+ 	      r = pru_elf32_do_ldi32_relocate (input_bfd, howto,
+ 					       input_section,
+ 					       contents,
+ 					       rel->r_offset,
+ 					       relocation,
+-					       rel->r_addend);
++					       addend);
+ 	      break;
+ 	    case R_PRU_GNU_DIFF8:
+ 	    case R_PRU_GNU_DIFF16:
+ 	    case R_PRU_GNU_DIFF32:
+ 	    case R_PRU_GNU_DIFF16_PMEM:
+ 	    case R_PRU_GNU_DIFF32_PMEM:
++	      /* GNU extensions support only rela.  */
++	      BFD_ASSERT (! is_rel_reloc);
+ 	      /* Nothing to do here, as contents already contain the
+ 		 diff value.  */
+ 	      r = bfd_reloc_ok;
+ 	      break;
+ 
+-	    default:
++	    case R_PRU_BFD_RELOC_16:
++	    case R_PRU_BFD_RELOC_32:
+ 	      r = _bfd_final_link_relocate (howto, input_bfd,
+ 					    input_section, contents,
+ 					    rel->r_offset, relocation,
+ 					    rel->r_addend);
+ 	      break;
++
++	    case R_PRU_GNU_BFD_RELOC_8:
++	      BFD_ASSERT (! is_rel_reloc);
++	      r = _bfd_final_link_relocate (howto, input_bfd,
++					    input_section, contents,
++					    rel->r_offset, relocation,
++					    rel->r_addend);
++	      break;
++
++	    default:
++	      BFD_ASSERT (0);
++	      break;
+ 	    }
+ 	}
+       else
+@@ -1477,12 +1550,17 @@ pru_elf32_link_hash_table_create (bfd *abfd)
+ #define bfd_elf32_bfd_reloc_type_lookup	  pru_elf32_bfd_reloc_type_lookup
+ #define bfd_elf32_bfd_reloc_name_lookup	  pru_elf32_bfd_reloc_name_lookup
+ 
+-/* elf_info_to_howto (using RELA relocations).  */
+-
+ #define elf_info_to_howto		pru_elf32_info_to_howto
++#define elf_info_to_howto_rel		NULL
+ 
+ /* elf backend functions.  */
+ 
++/* TI folks like to use a mix of REL and RELA relocations.  See also
++   the MSP430 and TI C6X backends.  */
++#define elf_backend_may_use_rel_p  1
++#define elf_backend_may_use_rela_p 1
++#define elf_backend_default_use_rela_p 1
++
+ #define elf_backend_rela_normal		1
+ 
+ #define elf_backend_relocate_section	pru_elf32_relocate_section
+-- 
+2.11.0
+

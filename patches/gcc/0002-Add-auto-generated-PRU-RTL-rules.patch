@@ -1,0 +1,3397 @@
+From e38a9e211f0fac412c43af8d02541b965ab17c77 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Sat, 12 Nov 2016 19:29:55 +0200
+Subject: [PATCH 02/11] Add auto-generated PRU RTL rules
+
+Commands used to generate the files:
+  ./alu-zext.sh
+  ocaml pru-ldst-multiple.ml > pru-ldst-multiple.md
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ gcc/config/pru/alu-zext.md          |  567 +++++++
+ gcc/config/pru/pru-ldst-multiple.md | 2798 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 3365 insertions(+)
+ create mode 100644 gcc/config/pru/alu-zext.md
+ create mode 100644 gcc/config/pru/pru-ldst-multiple.md
+
+diff --git a/gcc/config/pru/alu-zext.md b/gcc/config/pru/alu-zext.md
+new file mode 100644
+index 00000000000..56707c2ceb2
+--- /dev/null
++++ b/gcc/config/pru/alu-zext.md
+@@ -0,0 +1,567 @@
++;; WARNING: This is machine generated! DO NOT EDIT!
++;;
++;;
++;; ALU operations with zero extensions
++;;
++;; <ZOP0@Operand0:SI@Operand0:Zero-extended>
++;; <ZOP1@Operand1:SI@Operand1:Zero-extended>
++;;
++;; Copyright (C) 2015 Free Software Foundation, Inc.
++;; Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++;;
++;; This file is part of GCC.
++;;
++;; GCC is free software; you can redistribute it and/or modify
++;; it under the terms of the GNU General Public License as published by
++;; the Free Software Foundation; either version 3, or (at your option)
++;; any later version.
++;;
++;; GCC is distributed in the hope that it will be useful,
++;; but WITHOUT ANY WARRANTY; without even the implied warranty of
++;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++;; GNU General Public License for more details.
++;;
++;; You should have received a copy of the GNU General Public License
++;; along with GCC; see the file COPYING3.  If not see
++;; <http://www.gnu.org/licenses/>.
++
++;; Arithmetic Operations
++
++(define_insn "add_impl<EQD:mode>_<EQS0:mode><EQS1:mode>"
++  [(set (match_operand:EQD 0 "register_operand" "=r,r,r")
++	(plus:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand"   "%r,r,r")
++	 )
++	 (zero_extend:EQD
++	  (match_operand:EQS1 2 "nonmemory_operand" "r,I,M"))
++	 ))]
++  ""
++  "@
++   add\\t%0, %1, %2
++   add\\t%0, %1, %2
++   sub\\t%0, %1, %n2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++(define_insn "sub_impl<EQD:mode>_<EQS0:mode><EQS1:mode>"
++  [(set (match_operand:EQD 0 "register_operand" "=r,r,r")
++	(minus:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "reg_or_ubyte_operand" "r,r,I")
++	 )
++	 (zero_extend:EQD
++	  (match_operand:EQS1 2 "reg_or_ubyte_operand" "r,I,r"))
++	 ))]
++  ""
++  "@
++   sub\\t%0, %1, %2
++   sub\\t%0, %1, %2
++   rsb\\t%0, %2, %1"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++
++(define_insn "neg_impl<EQD:mode>_<EQS0:mode>_dummy"
++  [(set (match_operand:EQD 0 "register_operand" "=r")
++	(neg:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand" "r")
++	 )))]
++  ""
++  "rsb\\t%0, %1, 0"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++
++(define_insn "one_cmpl_impl<EQD:mode>_<EQS0:mode>_dummy"
++  [(set (match_operand:EQD 0 "register_operand" "=r")
++	(not:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand" "r")
++	 )))]
++  ""
++  "not\\t%0, %1"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++; Specialized IOR/AND patterns for matching setbit/clearbit instructions.
++;
++; TODO - allow clrbit and setbit to support (1 << REG) constructs
++
++(define_insn "clearbit_<EQD:mode>_<EQS0:mode>_dummy"
++  [(set (match_operand:EQD 0 "register_operand"			"=r")
++	(and:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand"	"r")
++	 )
++	  (match_operand:EQD 2 "single_zero_operand" "n")))]
++  ""
++  "clr\\t%0, %1, %V2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++(define_insn "setbit_<EQD:mode>_<EQS0:mode>_dummy"
++  [(set (match_operand:EQD 0 "register_operand"			"=r")
++	(ior:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand"	"r")
++	 )
++	  (match_operand:EQD 2 "single_one_operand" "n")))]
++  ""
++  "set\\t%0, %1, %T2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++; Regular ALU ops
++(define_insn "<code>_impl<EQD:mode>_<EQS0:mode><EQS1:mode>"
++  [(set (match_operand:EQD 0 "register_operand" "=r")
++	(LOGICAL:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand"     "%r")
++	 )
++	 (zero_extend:EQD
++	  (match_operand:EQS1 2 "reg_or_ubyte_operand"  "rI"))
++	 ))]
++  ""
++  "<logical_asm>\\t%0, %1, %2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++; Shift ALU ops
++(define_insn "<shift_op>_impl<EQD:mode>_<EQS0:mode><EQS1:mode>"
++  [(set (match_operand:EQD 0 "register_operand" "=r")
++	(SHIFT:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand" "r")
++	 )
++	 (zero_extend:EQD
++	  (match_operand:EQS1 2 "shift_operand"    "rL"))
++	 ))]
++  ""
++  "<shift_asm>\\t%0, %1, %2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++;; ALU operations with zero extensions
++;;
++;; <ZOP0@Operand0:SI@Operand0:Zero-extended>
++;; <ZOP1@Operand1:SI@Operand1:Zero-extended>
++;;
++;; Copyright (C) 2015 Free Software Foundation, Inc.
++;; Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++;;
++;; This file is part of GCC.
++;;
++;; GCC is free software; you can redistribute it and/or modify
++;; it under the terms of the GNU General Public License as published by
++;; the Free Software Foundation; either version 3, or (at your option)
++;; any later version.
++;;
++;; GCC is distributed in the hope that it will be useful,
++;; but WITHOUT ANY WARRANTY; without even the implied warranty of
++;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++;; GNU General Public License for more details.
++;;
++;; You should have received a copy of the GNU General Public License
++;; along with GCC; see the file COPYING3.  If not see
++;; <http://www.gnu.org/licenses/>.
++
++;; Arithmetic Operations
++
++(define_insn "add_impl<EQD:mode>_<EQS0:mode>eqd"
++  [(set (match_operand:EQD 0 "register_operand" "=r,r,r")
++	(plus:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand"   "%r,r,r")
++	 )
++	 
++	  (match_operand:EQD 2 "nonmemory_operand" "r,I,M"))
++	 )]
++  ""
++  "@
++   add\\t%0, %1, %2
++   add\\t%0, %1, %2
++   sub\\t%0, %1, %n2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++(define_insn "sub_impl<EQD:mode>_<EQS0:mode>eqd"
++  [(set (match_operand:EQD 0 "register_operand" "=r,r,r")
++	(minus:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "reg_or_ubyte_operand" "r,r,I")
++	 )
++	 
++	  (match_operand:EQD 2 "reg_or_ubyte_operand" "r,I,r"))
++	 )]
++  ""
++  "@
++   sub\\t%0, %1, %2
++   sub\\t%0, %1, %2
++   rsb\\t%0, %2, %1"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++
++(define_insn "neg_impl<EQD:mode>_<EQS0:mode>eqd"
++  [(set (match_operand:EQD 0 "register_operand" "=r")
++	(neg:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand" "r")
++	 )))]
++  ""
++  "rsb\\t%0, %1, 0"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++
++(define_insn "one_cmpl_impl<EQD:mode>_<EQS0:mode>eqd"
++  [(set (match_operand:EQD 0 "register_operand" "=r")
++	(not:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand" "r")
++	 )))]
++  ""
++  "not\\t%0, %1"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++; Specialized IOR/AND patterns for matching setbit/clearbit instructions.
++;
++; TODO - allow clrbit and setbit to support (1 << REG) constructs
++
++(define_insn "clearbit_<EQD:mode>_<EQS0:mode>eqd"
++  [(set (match_operand:EQD 0 "register_operand"			"=r")
++	(and:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand"	"r")
++	 )
++	  (match_operand:EQD 2 "single_zero_operand" "n")))]
++  ""
++  "clr\\t%0, %1, %V2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++(define_insn "setbit_<EQD:mode>_<EQS0:mode>eqd"
++  [(set (match_operand:EQD 0 "register_operand"			"=r")
++	(ior:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand"	"r")
++	 )
++	  (match_operand:EQD 2 "single_one_operand" "n")))]
++  ""
++  "set\\t%0, %1, %T2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++; Regular ALU ops
++(define_insn "<code>_impl<EQD:mode>_<EQS0:mode>eqd"
++  [(set (match_operand:EQD 0 "register_operand" "=r")
++	(LOGICAL:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand"     "%r")
++	 )
++	 
++	  (match_operand:EQD 2 "reg_or_ubyte_operand"  "rI"))
++	 )]
++  ""
++  "<logical_asm>\\t%0, %1, %2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++; Shift ALU ops
++(define_insn "<shift_op>_impl<EQD:mode>_<EQS0:mode>eqd"
++  [(set (match_operand:EQD 0 "register_operand" "=r")
++	(SHIFT:EQD
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand" "r")
++	 )
++	 
++	  (match_operand:EQD 2 "shift_operand"    "rL"))
++	 )]
++  ""
++  "<shift_asm>\\t%0, %1, %2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++;; ALU operations with zero extensions
++;;
++;; <ZOP0@Operand0:SI@Operand0:Zero-extended>
++;; <ZOP1@Operand1:SI@Operand1:Zero-extended>
++;;
++;; Copyright (C) 2015 Free Software Foundation, Inc.
++;; Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++;;
++;; This file is part of GCC.
++;;
++;; GCC is free software; you can redistribute it and/or modify
++;; it under the terms of the GNU General Public License as published by
++;; the Free Software Foundation; either version 3, or (at your option)
++;; any later version.
++;;
++;; GCC is distributed in the hope that it will be useful,
++;; but WITHOUT ANY WARRANTY; without even the implied warranty of
++;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++;; GNU General Public License for more details.
++;;
++;; You should have received a copy of the GNU General Public License
++;; along with GCC; see the file COPYING3.  If not see
++;; <http://www.gnu.org/licenses/>.
++
++;; Arithmetic Operations
++
++(define_insn "add_impl<EQD:mode>_eqd<EQS1:mode>"
++  [(set (match_operand:EQD 0 "register_operand" "=r,r,r")
++	(plus:EQD
++	 
++	  (match_operand:EQD 1 "register_operand"   "%r,r,r")
++	 
++	 (zero_extend:EQD
++	  (match_operand:EQS1 2 "nonmemory_operand" "r,I,M"))
++	 ))]
++  ""
++  "@
++   add\\t%0, %1, %2
++   add\\t%0, %1, %2
++   sub\\t%0, %1, %n2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++(define_insn "sub_impl<EQD:mode>_eqd<EQS1:mode>"
++  [(set (match_operand:EQD 0 "register_operand" "=r,r,r")
++	(minus:EQD
++	 
++	  (match_operand:EQD 1 "reg_or_ubyte_operand" "r,r,I")
++	 
++	 (zero_extend:EQD
++	  (match_operand:EQS1 2 "reg_or_ubyte_operand" "r,I,r"))
++	 ))]
++  ""
++  "@
++   sub\\t%0, %1, %2
++   sub\\t%0, %1, %2
++   rsb\\t%0, %2, %1"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++
++(define_insn "neg_impl<EQD:mode>_eqd_dummy"
++  [(set (match_operand:EQD 0 "register_operand" "=r")
++	(neg:EQD
++	 
++	  (match_operand:EQD 1 "register_operand" "r")
++	 ))]
++  ""
++  "rsb\\t%0, %1, 0"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++
++(define_insn "one_cmpl_impl<EQD:mode>_eqd_dummy"
++  [(set (match_operand:EQD 0 "register_operand" "=r")
++	(not:EQD
++	 
++	  (match_operand:EQD 1 "register_operand" "r")
++	 ))]
++  ""
++  "not\\t%0, %1"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++; Specialized IOR/AND patterns for matching setbit/clearbit instructions.
++;
++; TODO - allow clrbit and setbit to support (1 << REG) constructs
++
++(define_insn "clearbit_<EQD:mode>_eqd_dummy"
++  [(set (match_operand:EQD 0 "register_operand"			"=r")
++	(and:EQD
++	 
++	  (match_operand:EQD 1 "register_operand"	"r")
++	 
++	  (match_operand:EQD 2 "single_zero_operand" "n")))]
++  ""
++  "clr\\t%0, %1, %V2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++(define_insn "setbit_<EQD:mode>_eqd_dummy"
++  [(set (match_operand:EQD 0 "register_operand"			"=r")
++	(ior:EQD
++	 
++	  (match_operand:EQD 1 "register_operand"	"r")
++	 
++	  (match_operand:EQD 2 "single_one_operand" "n")))]
++  ""
++  "set\\t%0, %1, %T2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++; Regular ALU ops
++(define_insn "<code>_impl<EQD:mode>_eqd<EQS1:mode>"
++  [(set (match_operand:EQD 0 "register_operand" "=r")
++	(LOGICAL:EQD
++	 
++	  (match_operand:EQD 1 "register_operand"     "%r")
++	 
++	 (zero_extend:EQD
++	  (match_operand:EQS1 2 "reg_or_ubyte_operand"  "rI"))
++	 ))]
++  ""
++  "<logical_asm>\\t%0, %1, %2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++; Shift ALU ops
++(define_insn "<shift_op>_impl<EQD:mode>_eqd<EQS1:mode>"
++  [(set (match_operand:EQD 0 "register_operand" "=r")
++	(SHIFT:EQD
++	 
++	  (match_operand:EQD 1 "register_operand" "r")
++	 
++	 (zero_extend:EQD
++	  (match_operand:EQS1 2 "shift_operand"    "rL"))
++	 ))]
++  ""
++  "<shift_asm>\\t%0, %1, %2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++;; ALU operations with zero extensions
++;;
++;; <ZOP0@Operand0:SI@Operand0:Zero-extended>
++;; <ZOP1@Operand1:SI@Operand1:Zero-extended>
++;;
++;; Copyright (C) 2015 Free Software Foundation, Inc.
++;; Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++;;
++;; This file is part of GCC.
++;;
++;; GCC is free software; you can redistribute it and/or modify
++;; it under the terms of the GNU General Public License as published by
++;; the Free Software Foundation; either version 3, or (at your option)
++;; any later version.
++;;
++;; GCC is distributed in the hope that it will be useful,
++;; but WITHOUT ANY WARRANTY; without even the implied warranty of
++;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++;; GNU General Public License for more details.
++;;
++;; You should have received a copy of the GNU General Public License
++;; along with GCC; see the file COPYING3.  If not see
++;; <http://www.gnu.org/licenses/>.
++
++;; Arithmetic Operations
++
++(define_insn "add_impl<EQD:mode>_eqdeqd"
++  [(set (match_operand:EQD 0 "register_operand" "=r,r,r")
++	(plus:EQD
++	 
++	  (match_operand:EQD 1 "register_operand"   "%r,r,r")
++	 
++	 
++	  (match_operand:EQD 2 "nonmemory_operand" "r,I,M"))
++	 )]
++  ""
++  "@
++   add\\t%0, %1, %2
++   add\\t%0, %1, %2
++   sub\\t%0, %1, %n2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++(define_insn "sub_impl<EQD:mode>_eqdeqd"
++  [(set (match_operand:EQD 0 "register_operand" "=r,r,r")
++	(minus:EQD
++	 
++	  (match_operand:EQD 1 "reg_or_ubyte_operand" "r,r,I")
++	 
++	 
++	  (match_operand:EQD 2 "reg_or_ubyte_operand" "r,I,r"))
++	 )]
++  ""
++  "@
++   sub\\t%0, %1, %2
++   sub\\t%0, %1, %2
++   rsb\\t%0, %2, %1"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++
++(define_insn "neg_impl<EQD:mode>_eqdeqd"
++  [(set (match_operand:EQD 0 "register_operand" "=r")
++	(neg:EQD
++	 
++	  (match_operand:EQD 1 "register_operand" "r")
++	 ))]
++  ""
++  "rsb\\t%0, %1, 0"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++
++(define_insn "one_cmpl_impl<EQD:mode>_eqdeqd"
++  [(set (match_operand:EQD 0 "register_operand" "=r")
++	(not:EQD
++	 
++	  (match_operand:EQD 1 "register_operand" "r")
++	 ))]
++  ""
++  "not\\t%0, %1"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++; Specialized IOR/AND patterns for matching setbit/clearbit instructions.
++;
++; TODO - allow clrbit and setbit to support (1 << REG) constructs
++
++(define_insn "clearbit_<EQD:mode>_eqdeqd"
++  [(set (match_operand:EQD 0 "register_operand"			"=r")
++	(and:EQD
++	 
++	  (match_operand:EQD 1 "register_operand"	"r")
++	 
++	  (match_operand:EQD 2 "single_zero_operand" "n")))]
++  ""
++  "clr\\t%0, %1, %V2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++(define_insn "setbit_<EQD:mode>_eqdeqd"
++  [(set (match_operand:EQD 0 "register_operand"			"=r")
++	(ior:EQD
++	 
++	  (match_operand:EQD 1 "register_operand"	"r")
++	 
++	  (match_operand:EQD 2 "single_one_operand" "n")))]
++  ""
++  "set\\t%0, %1, %T2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++; Regular ALU ops
++(define_insn "<code>_impl<EQD:mode>_eqdeqd"
++  [(set (match_operand:EQD 0 "register_operand" "=r")
++	(LOGICAL:EQD
++	 
++	  (match_operand:EQD 1 "register_operand"     "%r")
++	 
++	 
++	  (match_operand:EQD 2 "reg_or_ubyte_operand"  "rI"))
++	 )]
++  ""
++  "<logical_asm>\\t%0, %1, %2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
++
++; Shift ALU ops
++(define_insn "<shift_op>_impl<EQD:mode>_eqdeqd"
++  [(set (match_operand:EQD 0 "register_operand" "=r")
++	(SHIFT:EQD
++	 
++	  (match_operand:EQD 1 "register_operand" "r")
++	 
++	 
++	  (match_operand:EQD 2 "shift_operand"    "rL"))
++	 )]
++  ""
++  "<shift_asm>\\t%0, %1, %2"
++  [(set_attr "type" "alu")
++   (set_attr "length" "4")])
+diff --git a/gcc/config/pru/pru-ldst-multiple.md b/gcc/config/pru/pru-ldst-multiple.md
+new file mode 100644
+index 00000000000..dd8496ace93
+--- /dev/null
++++ b/gcc/config/pru/pru-ldst-multiple.md
+@@ -0,0 +1,2798 @@
++/* PRU load/store instruction patterns.  This file was automatically
++   generated using pru-ldst-multiple.ml.  Please do not edit manually.
++
++   Copyright (C) 2014 Free Software Foundation, Inc.
++   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>.
++   Based on arm-ldmstm.ml
++
++   This file is part of GCC.
++
++   GCC is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published
++   by the Free Software Foundation; either version 3, or (at your
++   option) any later version.
++
++   GCC is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
++   License for more details.
++
++   You should have received a copy of the GNU General Public License and
++   a copy of the GCC Runtime Library Exception along with this program;
++   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
++   <http://www.gnu.org/licenses/>.  */
++
++(define_insn "*lbbo_multiple_1_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 2 "register_operand" "r")
++                           (match_operand:SI 3 "const_ubyte_operand" "I"))))])]
++  "XVECLEN (operands[0], 0) == 1"
++  "lbbo\t%b1, %F2, %3, 1"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_1"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 2 "register_operand" "r")))])]
++  "XVECLEN (operands[0], 0) == 1"
++  "lbbo\t%b1, %F2, 0, 1"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_1_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 2 "register_operand" "r")
++                           (match_operand:SI 3 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 1"
++  "sbbo\t%b1, %F2, %3, 1"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_1"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 2 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 1"
++  "sbbo\t%b1, %F2, 0, 1"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_2_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 3 "register_operand" "r")
++                           (match_operand:SI 4 "const_ubyte_operand" "I"))))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 3)
++                           (match_operand:SI 5 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 2"
++  "lbbo\t%b1, %F3, %4, 2"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_2"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 3 "register_operand" "r")))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 3)
++                           (match_operand:SI 4 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 2"
++  "lbbo\t%b1, %F3, 0, 2"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_2_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 3 "register_operand" "r")
++                           (match_operand:SI 4 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 3)
++                           (match_operand:SI 5 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 2"
++  "sbbo\t%b1, %F3, %4, 2"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_2"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 3 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 3)
++                           (match_operand:SI 4 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 2"
++  "sbbo\t%b1, %F3, 0, 2"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_3_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 4 "register_operand" "r")
++                           (match_operand:SI 5 "const_ubyte_operand" "I"))))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 4)
++                           (match_operand:SI 6 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 4)
++                           (match_operand:SI 7 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 3"
++  "lbbo\t%b1, %F4, %5, 3"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_3"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 4 "register_operand" "r")))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 4)
++                           (match_operand:SI 5 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 4)
++                           (match_operand:SI 6 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 3"
++  "lbbo\t%b1, %F4, 0, 3"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_3_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 4 "register_operand" "r")
++                           (match_operand:SI 5 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 4)
++                           (match_operand:SI 6 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 4)
++                           (match_operand:SI 7 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 3"
++  "sbbo\t%b1, %F4, %5, 3"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_3"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 4 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 4)
++                           (match_operand:SI 5 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 4)
++                           (match_operand:SI 6 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 3"
++  "sbbo\t%b1, %F4, 0, 3"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_4_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 5 "register_operand" "r")
++                           (match_operand:SI 6 "const_ubyte_operand" "I"))))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 5)
++                           (match_operand:SI 7 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 5)
++                           (match_operand:SI 8 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 5)
++                           (match_operand:SI 9 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 4"
++  "lbbo\t%b1, %F5, %6, 4"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_4"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 5 "register_operand" "r")))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 5)
++                           (match_operand:SI 6 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 5)
++                           (match_operand:SI 7 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 5)
++                           (match_operand:SI 8 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 4"
++  "lbbo\t%b1, %F5, 0, 4"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_4_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 5 "register_operand" "r")
++                           (match_operand:SI 6 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 5)
++                           (match_operand:SI 7 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 5)
++                           (match_operand:SI 8 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 5)
++                           (match_operand:SI 9 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 4"
++  "sbbo\t%b1, %F5, %6, 4"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_4"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 5 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 5)
++                           (match_operand:SI 6 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 5)
++                           (match_operand:SI 7 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 5)
++                           (match_operand:SI 8 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 4"
++  "sbbo\t%b1, %F5, 0, 4"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_5_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 6 "register_operand" "r")
++                           (match_operand:SI 7 "const_ubyte_operand" "I"))))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 6)
++                           (match_operand:SI 8 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 6)
++                           (match_operand:SI 9 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 6)
++                           (match_operand:SI 10 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 6)
++                           (match_operand:SI 11 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 5"
++  "lbbo\t%b1, %F6, %7, 5"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_5"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 6 "register_operand" "r")))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 6)
++                           (match_operand:SI 7 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 6)
++                           (match_operand:SI 8 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 6)
++                           (match_operand:SI 9 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 6)
++                           (match_operand:SI 10 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 5"
++  "lbbo\t%b1, %F6, 0, 5"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_5_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 6 "register_operand" "r")
++                           (match_operand:SI 7 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 6)
++                           (match_operand:SI 8 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 6)
++                           (match_operand:SI 9 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 6)
++                           (match_operand:SI 10 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 6)
++                           (match_operand:SI 11 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 5"
++  "sbbo\t%b1, %F6, %7, 5"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_5"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 6 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 6)
++                           (match_operand:SI 7 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 6)
++                           (match_operand:SI 8 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 6)
++                           (match_operand:SI 9 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 6)
++                           (match_operand:SI 10 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 5"
++  "sbbo\t%b1, %F6, 0, 5"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_6_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 7 "register_operand" "r")
++                           (match_operand:SI 8 "const_ubyte_operand" "I"))))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 9 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 10 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 11 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 12 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 13 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 6"
++  "lbbo\t%b1, %F7, %8, 6"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_6"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 7 "register_operand" "r")))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 8 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 9 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 10 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 11 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 12 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 6"
++  "lbbo\t%b1, %F7, 0, 6"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_6_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 7 "register_operand" "r")
++                           (match_operand:SI 8 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 9 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 10 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 11 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 12 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 13 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 6"
++  "sbbo\t%b1, %F7, %8, 6"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_6"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 7 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 8 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 9 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 10 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 11 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 7)
++                           (match_operand:SI 12 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 6"
++  "sbbo\t%b1, %F7, 0, 6"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_7_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 8 "register_operand" "r")
++                           (match_operand:SI 9 "const_ubyte_operand" "I"))))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 10 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 11 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 12 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 13 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 14 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 15 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 7"
++  "lbbo\t%b1, %F8, %9, 7"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_7"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 8 "register_operand" "r")))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 9 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 10 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 11 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 12 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 13 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 14 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 7"
++  "lbbo\t%b1, %F8, 0, 7"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_7_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 8 "register_operand" "r")
++                           (match_operand:SI 9 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 10 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 11 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 12 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 13 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 14 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 15 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 7"
++  "sbbo\t%b1, %F8, %9, 7"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_7"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 8 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 9 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 10 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 11 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 12 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 13 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 8)
++                           (match_operand:SI 14 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 7"
++  "sbbo\t%b1, %F8, 0, 7"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_8_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 9 "register_operand" "r")
++                           (match_operand:SI 10 "const_ubyte_operand" "I"))))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 11 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 12 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 13 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 14 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 15 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 16 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 17 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 8"
++  "lbbo\t%b1, %F9, %10, 8"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_8"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 9 "register_operand" "r")))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 10 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 11 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 12 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 13 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 14 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 15 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 16 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 8"
++  "lbbo\t%b1, %F9, 0, 8"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_8_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 9 "register_operand" "r")
++                           (match_operand:SI 10 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 11 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 12 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 13 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 14 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 15 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 16 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 17 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 8"
++  "sbbo\t%b1, %F9, %10, 8"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_8"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 9 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 10 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 11 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 12 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 13 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 14 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 15 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 9)
++                           (match_operand:SI 16 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 8"
++  "sbbo\t%b1, %F9, 0, 8"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_9_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 10 "register_operand" "r")
++                           (match_operand:SI 11 "const_ubyte_operand" "I"))))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 12 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 13 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 14 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 15 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 16 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 17 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 18 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 19 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 9"
++  "lbbo\t%b1, %F10, %11, 9"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_9"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 10 "register_operand" "r")))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 11 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 12 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 13 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 14 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 15 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 16 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 17 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 18 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 9"
++  "lbbo\t%b1, %F10, 0, 9"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_9_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 10 "register_operand" "r")
++                           (match_operand:SI 11 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 12 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 13 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 14 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 15 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 16 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 17 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 18 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 19 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 9"
++  "sbbo\t%b1, %F10, %11, 9"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_9"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 10 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 11 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 12 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 13 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 14 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 15 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 16 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 17 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 10)
++                           (match_operand:SI 18 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 9"
++  "sbbo\t%b1, %F10, 0, 9"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_10_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 11 "register_operand" "r")
++                           (match_operand:SI 12 "const_ubyte_operand" "I"))))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 13 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 14 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 15 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 16 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 17 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 18 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 19 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 20 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 21 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 10"
++  "lbbo\t%b1, %F11, %12, 10"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_10"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 11 "register_operand" "r")))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 12 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 13 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 14 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 15 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 16 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 17 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 18 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 19 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 20 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 10"
++  "lbbo\t%b1, %F11, 0, 10"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_10_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 11 "register_operand" "r")
++                           (match_operand:SI 12 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 13 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 14 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 15 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 16 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 17 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 18 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 19 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 20 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 21 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 10"
++  "sbbo\t%b1, %F11, %12, 10"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_10"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 11 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 12 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 13 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 14 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 15 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 16 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 17 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 18 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 19 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 11)
++                           (match_operand:SI 20 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 10"
++  "sbbo\t%b1, %F11, 0, 10"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_11_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 12 "register_operand" "r")
++                           (match_operand:SI 13 "const_ubyte_operand" "I"))))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 14 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 15 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 16 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 17 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 18 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 19 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 20 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 21 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 22 "const_int_operand" "i"))))
++     (set (match_operand:QI 11 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 23 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 11"
++  "lbbo\t%b1, %F12, %13, 11"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_11"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 12 "register_operand" "r")))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 13 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 14 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 15 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 16 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 17 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 18 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 19 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 20 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 21 "const_int_operand" "i"))))
++     (set (match_operand:QI 11 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 22 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 11"
++  "lbbo\t%b1, %F12, 0, 11"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_11_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 12 "register_operand" "r")
++                           (match_operand:SI 13 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 14 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 15 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 16 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 17 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 18 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 19 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 20 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 21 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 22 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 23 "const_int_operand" "i")))
++          (match_operand:QI 11 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 11"
++  "sbbo\t%b1, %F12, %13, 11"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_11"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 12 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 13 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 14 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 15 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 16 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 17 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 18 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 19 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 20 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 21 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 12)
++                           (match_operand:SI 22 "const_int_operand" "i")))
++          (match_operand:QI 11 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 11"
++  "sbbo\t%b1, %F12, 0, 11"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_12_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 13 "register_operand" "r")
++                           (match_operand:SI 14 "const_ubyte_operand" "I"))))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 15 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 16 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 17 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 18 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 19 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 20 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 21 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 22 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 23 "const_int_operand" "i"))))
++     (set (match_operand:QI 11 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 24 "const_int_operand" "i"))))
++     (set (match_operand:QI 12 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 25 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 12"
++  "lbbo\t%b1, %F13, %14, 12"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_12"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 13 "register_operand" "r")))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 14 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 15 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 16 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 17 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 18 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 19 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 20 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 21 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 22 "const_int_operand" "i"))))
++     (set (match_operand:QI 11 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 23 "const_int_operand" "i"))))
++     (set (match_operand:QI 12 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 24 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 12"
++  "lbbo\t%b1, %F13, 0, 12"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_12_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 13 "register_operand" "r")
++                           (match_operand:SI 14 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 15 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 16 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 17 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 18 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 19 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 20 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 21 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 22 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 23 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 24 "const_int_operand" "i")))
++          (match_operand:QI 11 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 25 "const_int_operand" "i")))
++          (match_operand:QI 12 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 12"
++  "sbbo\t%b1, %F13, %14, 12"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_12"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 13 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 14 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 15 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 16 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 17 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 18 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 19 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 20 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 21 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 22 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 23 "const_int_operand" "i")))
++          (match_operand:QI 11 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 13)
++                           (match_operand:SI 24 "const_int_operand" "i")))
++          (match_operand:QI 12 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 12"
++  "sbbo\t%b1, %F13, 0, 12"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_13_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 14 "register_operand" "r")
++                           (match_operand:SI 15 "const_ubyte_operand" "I"))))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 16 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 17 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 18 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 19 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 20 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 21 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 22 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 23 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 24 "const_int_operand" "i"))))
++     (set (match_operand:QI 11 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 25 "const_int_operand" "i"))))
++     (set (match_operand:QI 12 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 26 "const_int_operand" "i"))))
++     (set (match_operand:QI 13 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 27 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 13"
++  "lbbo\t%b1, %F14, %15, 13"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_13"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 14 "register_operand" "r")))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 15 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 16 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 17 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 18 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 19 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 20 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 21 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 22 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 23 "const_int_operand" "i"))))
++     (set (match_operand:QI 11 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 24 "const_int_operand" "i"))))
++     (set (match_operand:QI 12 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 25 "const_int_operand" "i"))))
++     (set (match_operand:QI 13 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 26 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 13"
++  "lbbo\t%b1, %F14, 0, 13"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_13_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 14 "register_operand" "r")
++                           (match_operand:SI 15 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 16 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 17 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 18 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 19 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 20 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 21 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 22 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 23 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 24 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 25 "const_int_operand" "i")))
++          (match_operand:QI 11 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 26 "const_int_operand" "i")))
++          (match_operand:QI 12 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 27 "const_int_operand" "i")))
++          (match_operand:QI 13 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 13"
++  "sbbo\t%b1, %F14, %15, 13"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_13"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 14 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 15 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 16 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 17 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 18 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 19 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 20 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 21 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 22 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 23 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 24 "const_int_operand" "i")))
++          (match_operand:QI 11 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 25 "const_int_operand" "i")))
++          (match_operand:QI 12 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 14)
++                           (match_operand:SI 26 "const_int_operand" "i")))
++          (match_operand:QI 13 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 13"
++  "sbbo\t%b1, %F14, 0, 13"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_14_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 15 "register_operand" "r")
++                           (match_operand:SI 16 "const_ubyte_operand" "I"))))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 17 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 18 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 19 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 20 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 21 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 22 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 23 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 24 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 25 "const_int_operand" "i"))))
++     (set (match_operand:QI 11 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 26 "const_int_operand" "i"))))
++     (set (match_operand:QI 12 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 27 "const_int_operand" "i"))))
++     (set (match_operand:QI 13 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 28 "const_int_operand" "i"))))
++     (set (match_operand:QI 14 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 29 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 14"
++  "lbbo\t%b1, %F15, %16, 14"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_14"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 15 "register_operand" "r")))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 16 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 17 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 18 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 19 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 20 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 21 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 22 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 23 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 24 "const_int_operand" "i"))))
++     (set (match_operand:QI 11 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 25 "const_int_operand" "i"))))
++     (set (match_operand:QI 12 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 26 "const_int_operand" "i"))))
++     (set (match_operand:QI 13 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 27 "const_int_operand" "i"))))
++     (set (match_operand:QI 14 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 28 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 14"
++  "lbbo\t%b1, %F15, 0, 14"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_14_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 15 "register_operand" "r")
++                           (match_operand:SI 16 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 17 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 18 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 19 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 20 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 21 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 22 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 23 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 24 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 25 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 26 "const_int_operand" "i")))
++          (match_operand:QI 11 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 27 "const_int_operand" "i")))
++          (match_operand:QI 12 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 28 "const_int_operand" "i")))
++          (match_operand:QI 13 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 29 "const_int_operand" "i")))
++          (match_operand:QI 14 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 14"
++  "sbbo\t%b1, %F15, %16, 14"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_14"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 15 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 16 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 17 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 18 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 19 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 20 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 21 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 22 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 23 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 24 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 25 "const_int_operand" "i")))
++          (match_operand:QI 11 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 26 "const_int_operand" "i")))
++          (match_operand:QI 12 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 27 "const_int_operand" "i")))
++          (match_operand:QI 13 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 15)
++                           (match_operand:SI 28 "const_int_operand" "i")))
++          (match_operand:QI 14 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 14"
++  "sbbo\t%b1, %F15, 0, 14"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_15_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 16 "register_operand" "r")
++                           (match_operand:SI 17 "const_ubyte_operand" "I"))))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 18 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 19 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 20 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 21 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 22 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 23 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 24 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 25 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 26 "const_int_operand" "i"))))
++     (set (match_operand:QI 11 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 27 "const_int_operand" "i"))))
++     (set (match_operand:QI 12 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 28 "const_int_operand" "i"))))
++     (set (match_operand:QI 13 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 29 "const_int_operand" "i"))))
++     (set (match_operand:QI 14 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 30 "const_int_operand" "i"))))
++     (set (match_operand:QI 15 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 31 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 15"
++  "lbbo\t%b1, %F16, %17, 15"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_15"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 16 "register_operand" "r")))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 17 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 18 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 19 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 20 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 21 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 22 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 23 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 24 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 25 "const_int_operand" "i"))))
++     (set (match_operand:QI 11 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 26 "const_int_operand" "i"))))
++     (set (match_operand:QI 12 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 27 "const_int_operand" "i"))))
++     (set (match_operand:QI 13 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 28 "const_int_operand" "i"))))
++     (set (match_operand:QI 14 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 29 "const_int_operand" "i"))))
++     (set (match_operand:QI 15 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 30 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 15"
++  "lbbo\t%b1, %F16, 0, 15"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_15_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 16 "register_operand" "r")
++                           (match_operand:SI 17 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 18 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 19 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 20 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 21 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 22 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 23 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 24 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 25 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 26 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 27 "const_int_operand" "i")))
++          (match_operand:QI 11 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 28 "const_int_operand" "i")))
++          (match_operand:QI 12 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 29 "const_int_operand" "i")))
++          (match_operand:QI 13 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 30 "const_int_operand" "i")))
++          (match_operand:QI 14 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 31 "const_int_operand" "i")))
++          (match_operand:QI 15 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 15"
++  "sbbo\t%b1, %F16, %17, 15"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_15"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 16 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 17 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 18 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 19 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 20 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 21 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 22 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 23 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 24 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 25 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 26 "const_int_operand" "i")))
++          (match_operand:QI 11 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 27 "const_int_operand" "i")))
++          (match_operand:QI 12 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 28 "const_int_operand" "i")))
++          (match_operand:QI 13 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 29 "const_int_operand" "i")))
++          (match_operand:QI 14 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 16)
++                           (match_operand:SI 30 "const_int_operand" "i")))
++          (match_operand:QI 15 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 15"
++  "sbbo\t%b1, %F16, 0, 15"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_16_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 17 "register_operand" "r")
++                           (match_operand:SI 18 "const_ubyte_operand" "I"))))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 19 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 20 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 21 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 22 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 23 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 24 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 25 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 26 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 27 "const_int_operand" "i"))))
++     (set (match_operand:QI 11 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 28 "const_int_operand" "i"))))
++     (set (match_operand:QI 12 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 29 "const_int_operand" "i"))))
++     (set (match_operand:QI 13 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 30 "const_int_operand" "i"))))
++     (set (match_operand:QI 14 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 31 "const_int_operand" "i"))))
++     (set (match_operand:QI 15 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 32 "const_int_operand" "i"))))
++     (set (match_operand:QI 16 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 33 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 16"
++  "lbbo\t%b1, %F17, %18, 16"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_16"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 17 "register_operand" "r")))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 18 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 19 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 20 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 21 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 22 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 23 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 24 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 25 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 26 "const_int_operand" "i"))))
++     (set (match_operand:QI 11 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 27 "const_int_operand" "i"))))
++     (set (match_operand:QI 12 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 28 "const_int_operand" "i"))))
++     (set (match_operand:QI 13 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 29 "const_int_operand" "i"))))
++     (set (match_operand:QI 14 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 30 "const_int_operand" "i"))))
++     (set (match_operand:QI 15 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 31 "const_int_operand" "i"))))
++     (set (match_operand:QI 16 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 32 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 16"
++  "lbbo\t%b1, %F17, 0, 16"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_16_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 17 "register_operand" "r")
++                           (match_operand:SI 18 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 19 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 20 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 21 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 22 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 23 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 24 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 25 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 26 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 27 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 28 "const_int_operand" "i")))
++          (match_operand:QI 11 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 29 "const_int_operand" "i")))
++          (match_operand:QI 12 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 30 "const_int_operand" "i")))
++          (match_operand:QI 13 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 31 "const_int_operand" "i")))
++          (match_operand:QI 14 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 32 "const_int_operand" "i")))
++          (match_operand:QI 15 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 33 "const_int_operand" "i")))
++          (match_operand:QI 16 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 16"
++  "sbbo\t%b1, %F17, %18, 16"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_16"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 17 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 18 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 19 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 20 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 21 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 22 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 23 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 24 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 25 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 26 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 27 "const_int_operand" "i")))
++          (match_operand:QI 11 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 28 "const_int_operand" "i")))
++          (match_operand:QI 12 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 29 "const_int_operand" "i")))
++          (match_operand:QI 13 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 30 "const_int_operand" "i")))
++          (match_operand:QI 14 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 31 "const_int_operand" "i")))
++          (match_operand:QI 15 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 17)
++                           (match_operand:SI 32 "const_int_operand" "i")))
++          (match_operand:QI 16 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 16"
++  "sbbo\t%b1, %F17, 0, 16"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_17_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 18 "register_operand" "r")
++                           (match_operand:SI 19 "const_ubyte_operand" "I"))))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 20 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 21 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 22 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 23 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 24 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 25 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 26 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 27 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 28 "const_int_operand" "i"))))
++     (set (match_operand:QI 11 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 29 "const_int_operand" "i"))))
++     (set (match_operand:QI 12 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 30 "const_int_operand" "i"))))
++     (set (match_operand:QI 13 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 31 "const_int_operand" "i"))))
++     (set (match_operand:QI 14 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 32 "const_int_operand" "i"))))
++     (set (match_operand:QI 15 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 33 "const_int_operand" "i"))))
++     (set (match_operand:QI 16 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 34 "const_int_operand" "i"))))
++     (set (match_operand:QI 17 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 35 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 17"
++  "lbbo\t%b1, %F18, %19, 17"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_17"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 18 "register_operand" "r")))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 19 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 20 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 21 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 22 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 23 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 24 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 25 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 26 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 27 "const_int_operand" "i"))))
++     (set (match_operand:QI 11 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 28 "const_int_operand" "i"))))
++     (set (match_operand:QI 12 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 29 "const_int_operand" "i"))))
++     (set (match_operand:QI 13 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 30 "const_int_operand" "i"))))
++     (set (match_operand:QI 14 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 31 "const_int_operand" "i"))))
++     (set (match_operand:QI 15 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 32 "const_int_operand" "i"))))
++     (set (match_operand:QI 16 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 33 "const_int_operand" "i"))))
++     (set (match_operand:QI 17 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 34 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 17"
++  "lbbo\t%b1, %F18, 0, 17"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_17_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 18 "register_operand" "r")
++                           (match_operand:SI 19 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 20 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 21 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 22 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 23 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 24 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 25 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 26 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 27 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 28 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 29 "const_int_operand" "i")))
++          (match_operand:QI 11 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 30 "const_int_operand" "i")))
++          (match_operand:QI 12 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 31 "const_int_operand" "i")))
++          (match_operand:QI 13 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 32 "const_int_operand" "i")))
++          (match_operand:QI 14 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 33 "const_int_operand" "i")))
++          (match_operand:QI 15 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 34 "const_int_operand" "i")))
++          (match_operand:QI 16 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 35 "const_int_operand" "i")))
++          (match_operand:QI 17 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 17"
++  "sbbo\t%b1, %F18, %19, 17"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_17"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 18 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 19 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 20 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 21 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 22 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 23 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 24 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 25 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 26 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 27 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 28 "const_int_operand" "i")))
++          (match_operand:QI 11 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 29 "const_int_operand" "i")))
++          (match_operand:QI 12 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 30 "const_int_operand" "i")))
++          (match_operand:QI 13 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 31 "const_int_operand" "i")))
++          (match_operand:QI 14 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 32 "const_int_operand" "i")))
++          (match_operand:QI 15 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 33 "const_int_operand" "i")))
++          (match_operand:QI 16 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 18)
++                           (match_operand:SI 34 "const_int_operand" "i")))
++          (match_operand:QI 17 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 17"
++  "sbbo\t%b1, %F18, 0, 17"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_18_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 19 "register_operand" "r")
++                           (match_operand:SI 20 "const_ubyte_operand" "I"))))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 21 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 22 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 23 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 24 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 25 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 26 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 27 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 28 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 29 "const_int_operand" "i"))))
++     (set (match_operand:QI 11 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 30 "const_int_operand" "i"))))
++     (set (match_operand:QI 12 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 31 "const_int_operand" "i"))))
++     (set (match_operand:QI 13 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 32 "const_int_operand" "i"))))
++     (set (match_operand:QI 14 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 33 "const_int_operand" "i"))))
++     (set (match_operand:QI 15 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 34 "const_int_operand" "i"))))
++     (set (match_operand:QI 16 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 35 "const_int_operand" "i"))))
++     (set (match_operand:QI 17 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 36 "const_int_operand" "i"))))
++     (set (match_operand:QI 18 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 37 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 18"
++  "lbbo\t%b1, %F19, %20, 18"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_18"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 19 "register_operand" "r")))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 20 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 21 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 22 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 23 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 24 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 25 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 26 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 27 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 28 "const_int_operand" "i"))))
++     (set (match_operand:QI 11 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 29 "const_int_operand" "i"))))
++     (set (match_operand:QI 12 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 30 "const_int_operand" "i"))))
++     (set (match_operand:QI 13 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 31 "const_int_operand" "i"))))
++     (set (match_operand:QI 14 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 32 "const_int_operand" "i"))))
++     (set (match_operand:QI 15 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 33 "const_int_operand" "i"))))
++     (set (match_operand:QI 16 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 34 "const_int_operand" "i"))))
++     (set (match_operand:QI 17 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 35 "const_int_operand" "i"))))
++     (set (match_operand:QI 18 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 36 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 18"
++  "lbbo\t%b1, %F19, 0, 18"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_18_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 19 "register_operand" "r")
++                           (match_operand:SI 20 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 21 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 22 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 23 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 24 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 25 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 26 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 27 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 28 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 29 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 30 "const_int_operand" "i")))
++          (match_operand:QI 11 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 31 "const_int_operand" "i")))
++          (match_operand:QI 12 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 32 "const_int_operand" "i")))
++          (match_operand:QI 13 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 33 "const_int_operand" "i")))
++          (match_operand:QI 14 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 34 "const_int_operand" "i")))
++          (match_operand:QI 15 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 35 "const_int_operand" "i")))
++          (match_operand:QI 16 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 36 "const_int_operand" "i")))
++          (match_operand:QI 17 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 37 "const_int_operand" "i")))
++          (match_operand:QI 18 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 18"
++  "sbbo\t%b1, %F19, %20, 18"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_18"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 19 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 20 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 21 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 22 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 23 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 24 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 25 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 26 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 27 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 28 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 29 "const_int_operand" "i")))
++          (match_operand:QI 11 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 30 "const_int_operand" "i")))
++          (match_operand:QI 12 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 31 "const_int_operand" "i")))
++          (match_operand:QI 13 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 32 "const_int_operand" "i")))
++          (match_operand:QI 14 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 33 "const_int_operand" "i")))
++          (match_operand:QI 15 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 34 "const_int_operand" "i")))
++          (match_operand:QI 16 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 35 "const_int_operand" "i")))
++          (match_operand:QI 17 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 19)
++                           (match_operand:SI 36 "const_int_operand" "i")))
++          (match_operand:QI 18 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 18"
++  "sbbo\t%b1, %F19, 0, 18"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_19_offs"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (plus:SI (match_operand:SI 20 "register_operand" "r")
++                           (match_operand:SI 21 "const_ubyte_operand" "I"))))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 22 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 23 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 24 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 25 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 26 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 27 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 28 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 29 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 30 "const_int_operand" "i"))))
++     (set (match_operand:QI 11 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 31 "const_int_operand" "i"))))
++     (set (match_operand:QI 12 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 32 "const_int_operand" "i"))))
++     (set (match_operand:QI 13 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 33 "const_int_operand" "i"))))
++     (set (match_operand:QI 14 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 34 "const_int_operand" "i"))))
++     (set (match_operand:QI 15 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 35 "const_int_operand" "i"))))
++     (set (match_operand:QI 16 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 36 "const_int_operand" "i"))))
++     (set (match_operand:QI 17 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 37 "const_int_operand" "i"))))
++     (set (match_operand:QI 18 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 38 "const_int_operand" "i"))))
++     (set (match_operand:QI 19 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 39 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 19"
++  "lbbo\t%b1, %F20, %21, 19"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*lbbo_multiple_19"
++  [(match_parallel 0 "pru_load_multiple_operation"
++    [(set (match_operand:QI 1 "register_operand" "")
++          (mem:QI (match_operand:SI 20 "register_operand" "r")))
++     (set (match_operand:QI 2 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 21 "const_int_operand" "i"))))
++     (set (match_operand:QI 3 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 22 "const_int_operand" "i"))))
++     (set (match_operand:QI 4 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 23 "const_int_operand" "i"))))
++     (set (match_operand:QI 5 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 24 "const_int_operand" "i"))))
++     (set (match_operand:QI 6 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 25 "const_int_operand" "i"))))
++     (set (match_operand:QI 7 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 26 "const_int_operand" "i"))))
++     (set (match_operand:QI 8 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 27 "const_int_operand" "i"))))
++     (set (match_operand:QI 9 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 28 "const_int_operand" "i"))))
++     (set (match_operand:QI 10 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 29 "const_int_operand" "i"))))
++     (set (match_operand:QI 11 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 30 "const_int_operand" "i"))))
++     (set (match_operand:QI 12 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 31 "const_int_operand" "i"))))
++     (set (match_operand:QI 13 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 32 "const_int_operand" "i"))))
++     (set (match_operand:QI 14 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 33 "const_int_operand" "i"))))
++     (set (match_operand:QI 15 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 34 "const_int_operand" "i"))))
++     (set (match_operand:QI 16 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 35 "const_int_operand" "i"))))
++     (set (match_operand:QI 17 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 36 "const_int_operand" "i"))))
++     (set (match_operand:QI 18 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 37 "const_int_operand" "i"))))
++     (set (match_operand:QI 19 "register_operand" "")
++          (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 38 "const_int_operand" "i"))))])]
++  "XVECLEN (operands[0], 0) == 19"
++  "lbbo\t%b1, %F20, 0, 19"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_19_offs"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (plus:SI (match_operand:SI 20 "register_operand" "r")
++                           (match_operand:SI 21 "const_ubyte_operand" "I")))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 22 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 23 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 24 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 25 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 26 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 27 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 28 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 29 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 30 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 31 "const_int_operand" "i")))
++          (match_operand:QI 11 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 32 "const_int_operand" "i")))
++          (match_operand:QI 12 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 33 "const_int_operand" "i")))
++          (match_operand:QI 13 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 34 "const_int_operand" "i")))
++          (match_operand:QI 14 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 35 "const_int_operand" "i")))
++          (match_operand:QI 15 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 36 "const_int_operand" "i")))
++          (match_operand:QI 16 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 37 "const_int_operand" "i")))
++          (match_operand:QI 17 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 38 "const_int_operand" "i")))
++          (match_operand:QI 18 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 39 "const_int_operand" "i")))
++          (match_operand:QI 19 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 19"
++  "sbbo\t%b1, %F20, %21, 19"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
++(define_insn "*sbbo_multiple_19"
++  [(match_parallel 0 "pru_store_multiple_operation"
++    [(set (mem:QI (match_operand:SI 20 "register_operand" "r"))
++          (match_operand:QI 1 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 21 "const_int_operand" "i")))
++          (match_operand:QI 2 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 22 "const_int_operand" "i")))
++          (match_operand:QI 3 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 23 "const_int_operand" "i")))
++          (match_operand:QI 4 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 24 "const_int_operand" "i")))
++          (match_operand:QI 5 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 25 "const_int_operand" "i")))
++          (match_operand:QI 6 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 26 "const_int_operand" "i")))
++          (match_operand:QI 7 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 27 "const_int_operand" "i")))
++          (match_operand:QI 8 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 28 "const_int_operand" "i")))
++          (match_operand:QI 9 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 29 "const_int_operand" "i")))
++          (match_operand:QI 10 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 30 "const_int_operand" "i")))
++          (match_operand:QI 11 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 31 "const_int_operand" "i")))
++          (match_operand:QI 12 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 32 "const_int_operand" "i")))
++          (match_operand:QI 13 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 33 "const_int_operand" "i")))
++          (match_operand:QI 14 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 34 "const_int_operand" "i")))
++          (match_operand:QI 15 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 35 "const_int_operand" "i")))
++          (match_operand:QI 16 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 36 "const_int_operand" "i")))
++          (match_operand:QI 17 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 37 "const_int_operand" "i")))
++          (match_operand:QI 18 "register_operand" ""))
++     (set (mem:QI (plus:SI (match_dup 20)
++                           (match_operand:SI 38 "const_int_operand" "i")))
++          (match_operand:QI 19 "register_operand" ""))])]
++  "XVECLEN (operands[0], 0) == 19"
++  "sbbo\t%b1, %F20, 0, 19"
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
++
+-- 
+2.11.0
+

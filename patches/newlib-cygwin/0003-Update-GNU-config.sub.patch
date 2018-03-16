@@ -1,0 +1,33 @@
+From faece0753ef808f2bf675ea5fed66f0ae5e3c3a7 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Sun, 11 Mar 2018 22:23:43 +0200
+Subject: [PATCH 3/6] Update GNU config.sub
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ config.sub | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/config.sub b/config.sub
+index 6d86a1e2f..5248c5fde 100755
+--- a/config.sub
++++ b/config.sub
+@@ -301,6 +301,7 @@ case $basic_machine in
+ 	| open8 | or1k | or1knd | or32 \
+ 	| pdp10 | pdp11 | pj | pjl \
+ 	| powerpc | powerpc64 | powerpc64le | powerpcle \
++	| pru \
+ 	| pyramid \
+ 	| riscv32 | riscv64 \
+ 	| rl78 | rx \
+@@ -428,6 +429,7 @@ case $basic_machine in
+ 	| orion-* \
+ 	| pdp10-* | pdp11-* | pj-* | pjl-* | pn-* | power-* \
+ 	| powerpc-* | powerpc64-* | powerpc64le-* | powerpcle-* \
++	| pru \
+ 	| pyramid-* \
+ 	| riscv32-* | riscv64-* \
+ 	| rl78-* | romp-* | rs6000-* | rx-* \
+-- 
+2.11.0
+

@@ -1,3 +1,10 @@
+gcc-pru (8.0.1.20180310) stretch; urgency=medium
+
+  * GCC PRU port has been overhauled to better support TI ABI.
+  * When linking object files from GCC and TI toolchains, you must use the -mabi=ti option.
+
+ -- Dimitar Dimitrov <dinux@tpdeb>  Mon, 12 Mar 2018 20:59:11 +0200
+
 gcc-pru (8.0.0.20170530) stretch; urgency=medium
 
   * Optimized arithmetic shift right. Fixes github issue #25.

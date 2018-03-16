@@ -1,7 +1,7 @@
-From 850c26537be2c51cb4f206e915309ab2cfc50944 Mon Sep 17 00:00:00 2001
+From b464a058db7a2b22fe26a629dbfb30cc9a7ae7d4 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Tue, 6 Dec 2016 23:22:26 +0200
-Subject: [PATCH 2/7] Add testsuite for the PRU simulator port
+Subject: [PATCH 02/12] Add testsuite for the PRU simulator port
 
 2017-02-19  Dimitar Dimitrov <dimitar@dinux.eu>
 
@@ -14,17 +14,18 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  sim/testsuite/configure                |  3 ++
  sim/testsuite/sim/pru/ChangeLog        | 13 ++++++
- sim/testsuite/sim/pru/add.s            | 22 ++++++++++
+ sim/testsuite/sim/pru/add.s            | 22 +++++++++
  sim/testsuite/sim/pru/allinsn.exp      | 15 +++++++
  sim/testsuite/sim/pru/dmem-zero-pass.s | 11 +++++
- sim/testsuite/sim/pru/dmem-zero-trap.s | 14 +++++++
- sim/testsuite/sim/pru/dram.s           | 54 +++++++++++++++++++++++++
- sim/testsuite/sim/pru/jmp.s            | 22 ++++++++++
- sim/testsuite/sim/pru/loop-imm.s       | 25 ++++++++++++
- sim/testsuite/sim/pru/loop-reg.s       | 26 ++++++++++++
- sim/testsuite/sim/pru/subreg.s         | 22 ++++++++++
- sim/testsuite/sim/pru/testutils.inc    | 73 ++++++++++++++++++++++++++++++++++
- 12 files changed, 300 insertions(+)
+ sim/testsuite/sim/pru/dmem-zero-trap.s | 14 ++++++
+ sim/testsuite/sim/pru/dram.s           | 54 ++++++++++++++++++++++
+ sim/testsuite/sim/pru/jmp.s            | 22 +++++++++
+ sim/testsuite/sim/pru/loop-imm.s       | 25 +++++++++++
+ sim/testsuite/sim/pru/loop-reg.s       | 26 +++++++++++
+ sim/testsuite/sim/pru/mul.s            | 71 +++++++++++++++++++++++++++++
+ sim/testsuite/sim/pru/subreg.s         | 22 +++++++++
+ sim/testsuite/sim/pru/testutils.inc    | 82 ++++++++++++++++++++++++++++++++++
+ 13 files changed, 380 insertions(+)
  create mode 100644 sim/testsuite/sim/pru/ChangeLog
  create mode 100644 sim/testsuite/sim/pru/add.s
  create mode 100644 sim/testsuite/sim/pru/allinsn.exp
@@ -34,14 +35,15 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 sim/testsuite/sim/pru/jmp.s
  create mode 100644 sim/testsuite/sim/pru/loop-imm.s
  create mode 100644 sim/testsuite/sim/pru/loop-reg.s
+ create mode 100644 sim/testsuite/sim/pru/mul.s
  create mode 100644 sim/testsuite/sim/pru/subreg.s
  create mode 100644 sim/testsuite/sim/pru/testutils.inc
 
 diff --git a/sim/testsuite/configure b/sim/testsuite/configure
-index bbc3bea48d..6565debbfc 100755
+index e37bdbd8d8..ffbee1301f 100755
 --- a/sim/testsuite/configure
 +++ b/sim/testsuite/configure
-@@ -1906,6 +1906,9 @@ case "${target}" in
+@@ -1910,6 +1910,9 @@ case "${target}" in
     powerpc*-*-*)
         sim_arch=ppc
         ;;
@@ -307,6 +309,83 @@ index 0000000000..d4843e9415
 +	pass
 +
 +F:	fail
+diff --git a/sim/testsuite/sim/pru/mul.s b/sim/testsuite/sim/pru/mul.s
+new file mode 100644
+index 0000000000..a576a50b78
+--- /dev/null
++++ b/sim/testsuite/sim/pru/mul.s
+@@ -0,0 +1,71 @@
++# check that multiplication works.
++# mach: pru
++
++.include "testutils.inc"
++
++	start
++
++	# MUL: Test regular case
++	ldi r28, 1001
++	ldi r29, 4567
++	nop
++	xin 0, r26, 4
++	qbne32 2f, r26, 1001 * 4567
++
++	# MUL: Test the pipeline emulation
++	ldi r28, 1002
++	ldi r29, 1003
++	ldi r29, 4004
++	xin 0, r26, 4
++	qbne32 2f, r26, 1002 * 1003
++	xin 0, r26, 4
++	qbne32 2f, r26, 1002 * 4004
++
++	# MUL: Test 64-bit result
++	ldi32 r28, 0x12345678
++	ldi32 r29, 0xaabbccdd
++	nop
++	xin 0, r26, 8
++	qbne32 2f, r26, 0x45BE4598
++	qbne32 2f, r27, 0xC241C38
++
++	# MAC: Test regular case
++	ldi r25, 1
++	xout 0, r25, 1
++	ldi r25, 3
++	xout 0, r25, 1
++
++	ldi r25, 1
++	ldi r28, 1001
++	ldi r29, 2002
++	xout 0, r25, 1
++	ldi r28, 3003
++	ldi r29, 4004
++	xout 0, r25, 1
++
++	xin 0, r26, 4
++	qbne32 2f, r26, (1001 * 2002) + (3003 * 4004)
++
++	# MAC: Test 64-bit result
++	ldi r25, 3
++	xout 0, r25, 1
++
++	ldi r25, 1
++	ldi32 r28, 0x10203040
++	ldi32 r29, 0x50607080
++	xout 0, r25, 1
++	ldi32 r28, 0xa0b0c0d0
++	ldi32 r29, 0x11223344
++	xout 0, r25, 1
++
++	xin 0, r26, 8
++	qbne32 2f, r26, 0x8E30C740
++	qbne32 2f, r27, 0xFD156B1
++
++	jmp 1f
++
++	fail
++
++1:
++	pass
++2:	fail
 diff --git a/sim/testsuite/sim/pru/subreg.s b/sim/testsuite/sim/pru/subreg.s
 new file mode 100644
 index 0000000000..a100e411b2
@@ -337,10 +416,10 @@ index 0000000000..a100e411b2
 +F:	fail
 diff --git a/sim/testsuite/sim/pru/testutils.inc b/sim/testsuite/sim/pru/testutils.inc
 new file mode 100644
-index 0000000000..ba6f772ca0
+index 0000000000..fae386733c
 --- /dev/null
 +++ b/sim/testsuite/sim/pru/testutils.inc
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,82 @@
 +# MACRO: start
 +# All assembler tests should start with a call to "main_test"
 +	.macro start
@@ -413,6 +492,15 @@ index 0000000000..ba6f772ca0
 +# Just like the write() C function; uses system calls
 +	.macro write fd:req, str:req, len:req
 +	system_call 5, \fd, \str, \len
++	.endm
++
++# MACRO: qbne32
++# Like qbne instruction, but check a 32-bit constant value.
++	.macro qbne32 label:req, op0:req, C0:req
++	qbne \label, \op0\().b0, ((\C0) >> 0) & 0xff
++	qbne \label, \op0\().b1, ((\C0) >> 8) & 0xff
++	qbne \label, \op0\().b2, ((\C0) >> 16) & 0xff
++	qbne \label, \op0\().b3, ((\C0) >> 24) & 0xff
 +	.endm
 -- 
 2.11.0

@@ -1,3 +1,10 @@
+binutils-pru (2.30.51.20180310) stretch; urgency=medium
+
+  * ld: Switched relocations to be more compatible with TI's toolchain. YOU MUST RECOMPILE ALL YOUR SOURCE FILES - object files from old and new binutils cannot be linked together.
+  * Rebased to latest baseline.
+
+ -- Dimitar Dimitrov <dinux@tpdeb>  Mon, 12 Mar 2018 20:54:12 +0200
+
 binutils-pru (2.28.51.20170530) stretch; urgency=medium
 
   * Rebased to upstream.

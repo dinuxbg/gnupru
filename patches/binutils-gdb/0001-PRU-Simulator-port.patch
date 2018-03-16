@@ -1,7 +1,7 @@
-From d6480a1d01cfabf0324d8d4cd3e852cb36f8a476 Mon Sep 17 00:00:00 2001
+From e3246656cf3031921a86c438bb73670a92d9921f Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 22:37:01 +0300
-Subject: [PATCH 1/7] PRU Simulator port
+Subject: [PATCH 01/12] PRU Simulator port
 
 The corresponding libgloss changes have not yet been mainlined.
 The PRU patches are available here:
@@ -45,14 +45,14 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  sim/configure            |   8 +
  sim/configure.tgt        |   3 +
  sim/pru/Makefile.in      |  29 ++
- sim/pru/aclocal.m4       | 129 +++++++++
+ sim/pru/aclocal.m4       | 129 ++++++++
  sim/pru/config.in        | 248 ++++++++++++++++
  sim/pru/configure.ac     |  12 +
- sim/pru/interp.c         | 729 +++++++++++++++++++++++++++++++++++++++++++++++
+ sim/pru/interp.c         | 752 +++++++++++++++++++++++++++++++++++++++++++++++
  sim/pru/pru.h            | 101 +++++++
  sim/pru/pru.isa          | 249 ++++++++++++++++
- sim/pru/sim-main.h       |  75 +++++
- 13 files changed, 1619 insertions(+)
+ sim/pru/sim-main.h       |  80 +++++
+ 13 files changed, 1647 insertions(+)
  create mode 100644 sim/pru/Makefile.in
  create mode 100644 sim/pru/aclocal.m4
  create mode 100644 sim/pru/config.in
@@ -63,11 +63,11 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 sim/pru/sim-main.h
 
 diff --git a/sim/MAINTAINERS b/sim/MAINTAINERS
-index 62887d4bb1..875661da26 100644
+index 0991bfe9a6..08064230ff 100644
 --- a/sim/MAINTAINERS
 +++ b/sim/MAINTAINERS
-@@ -29,6 +29,7 @@ microblaze	Michael Eager <eager@eagercon.com>
- mips		Maciej W. Rozycki <macro@imgtec.com>
+@@ -30,6 +30,7 @@ microblaze	Michael Eager <eager@eagercon.com>
+ mips		Maciej W. Rozycki <macro@mips.com>
  moxie		Anthony Green <green@moxielogic.com>
  msp430		Nick Clifton <nickc@redhat.com>
 +pru		Dimitar Dimitrov <dimitar@dinux.eu>
@@ -126,20 +126,20 @@ index 3f82d47b6b..92ccc9aded 100644
 +#endif
 +#endif
 diff --git a/sim/configure b/sim/configure
-index 2729e69817..f92d310a2c 100755
+index b90152e7fb..39d6700a1f 100755
 --- a/sim/configure
 +++ b/sim/configure
-@@ -654,6 +654,7 @@ mips
- mn10300
+@@ -655,6 +655,7 @@ mn10300
  moxie
+ or1k
  msp430
 +pru
  rl78
  rx
  sh64
-@@ -3768,6 +3769,13 @@ subdirs="$subdirs aarch64"
+@@ -3779,6 +3780,13 @@ subdirs="$subdirs aarch64"
  
- 
+        sim_testsuite=yes
         ;;
 +   pru*-*-*)
 +
@@ -152,12 +152,12 @@ index 2729e69817..f92d310a2c 100755
  
    sim_arch=rl78
 diff --git a/sim/configure.tgt b/sim/configure.tgt
-index c958fb3174..357d7ac337 100644
+index a6dbd1af83..8a8e03d96f 100644
 --- a/sim/configure.tgt
 +++ b/sim/configure.tgt
-@@ -76,6 +76,9 @@ case "${target}" in
-    msp430*-*-*)
-        SIM_ARCH(msp430)
+@@ -79,6 +79,9 @@ case "${target}" in
+    or1k-*-* | or1knd-*-*)
+        SIM_ARCH(or1k)
         ;;
 +   pru*-*-*)
 +       SIM_ARCH(pru)
@@ -609,10 +609,10 @@ index 0000000000..54ac06f48e
 +SIM_AC_OUTPUT
 diff --git a/sim/pru/interp.c b/sim/pru/interp.c
 new file mode 100644
-index 0000000000..099b9c1d42
+index 0000000000..539a8ec1a2
 --- /dev/null
 +++ b/sim/pru/interp.c
-@@ -0,0 +1,729 @@
+@@ -0,0 +1,752 @@
 +/* Simulator for the Texas Instruments PRU processor
 +   Copyright 2014-2017 Free Software Foundation, Inc.
 +   Inspired by the Microblase simulator
@@ -930,16 +930,6 @@ index 0000000000..099b9c1d42
 +    sim_io_error (sd, "XIN MAC: invalid transfer regn=%u.%u, length=%u\n",
 +		  rd_regn, rdb, length);
 +
-+  if ((CPU.macregs[PRU_MACREG_MODE] & MAC_R25_MAC_MODE_MASK) == 0)
-+    {
-+      /* Per TRM, PRU auto-samples R28/R29 on every cycle.  But in fact we
-+	 calculate only when interested in the product.  */
-+      uint64_t prod;
-+      prod = (uint64_t)CPU.regs[28] * (uint64_t)CPU.regs[29];
-+      CPU.macregs[PRU_MACREG_PROD_L] = prod & 0xfffffffful;
-+      CPU.macregs[PRU_MACREG_PROD_H] = prod >> 32;
-+    }
-+
 +  /* Copy from MAC to PRU regs.  Ranges have been validated above.  */
 +  while (length--)
 +    {
@@ -986,7 +976,7 @@ index 0000000000..099b9c1d42
 +pru_sim_xout (SIM_DESC sd, SIM_CPU *cpu, unsigned int wba,
 +	      unsigned int rd_regn, unsigned int rdb, unsigned int length)
 +{
-+  const int modereg_accessed = (rd_regn == 25);	/* revise! */
++  const int modereg_accessed = (rd_regn == 25);
 +
 +  if (wba != 0)
 +    sim_io_error (sd, "XOUT: XFR device %d not supported.\n", wba);
@@ -1010,27 +1000,38 @@ index 0000000000..099b9c1d42
 +    }
 +
 +  if (modereg_accessed
-+      && (CPU.macregs[PRU_MACREG_MODE] & MAC_R25_ACC_CARRY_MASK))
-+    {
-+      /* store 1 to clear.  */
-+      CPU.macregs[PRU_MACREG_MODE] &= ~MAC_R25_ACC_CARRY_MASK;
-+    }
-+
-+  if (modereg_accessed
 +      && (CPU.macregs[PRU_MACREG_MODE] & MAC_R25_MAC_MODE_MASK))
 +    {
++      /* MUL/MAC operands are sampled every XOUT in multiply and
++	 accumulate mode.  */
 +      uint64_t prod, oldsum, sum;
-+      prod = (uint64_t)CPU.regs[28] * (uint64_t)CPU.regs[29];
-+      oldsum = CPU.macregs[PRU_MACREG_PROD_L];
-+      oldsum += (uint64_t)CPU.macregs[PRU_MACREG_PROD_H] << 32;
++      CPU.macregs[PRU_MACREG_OP_0] = CPU.regs[28];
++      CPU.macregs[PRU_MACREG_OP_1] = CPU.regs[29];
++
++      prod = CPU.macregs[PRU_MACREG_OP_0];
++      prod *= (uint64_t)CPU.macregs[PRU_MACREG_OP_1];
++
++      oldsum = CPU.macregs[PRU_MACREG_ACC_L];
++      oldsum += (uint64_t)CPU.macregs[PRU_MACREG_ACC_H] << 32;
 +      sum = oldsum + prod;
 +
 +      CPU.macregs[PRU_MACREG_PROD_L] = sum & 0xfffffffful;
 +      CPU.macregs[PRU_MACREG_PROD_H] = sum >> 32;
++      CPU.macregs[PRU_MACREG_ACC_L] = CPU.macregs[PRU_MACREG_PROD_L];
++      CPU.macregs[PRU_MACREG_ACC_H] = CPU.macregs[PRU_MACREG_PROD_H];
 +
 +      if (oldsum > sum)
 +	CPU.macregs[PRU_MACREG_MODE] |= MAC_R25_ACC_CARRY_MASK;
 +    }
++  if (modereg_accessed
++      && (CPU.macregs[PRU_MACREG_MODE] & MAC_R25_ACC_CARRY_MASK))
++    {
++      /* store 1 to clear.  */
++      CPU.macregs[PRU_MACREG_MODE] &= ~MAC_R25_ACC_CARRY_MASK;
++      CPU.macregs[PRU_MACREG_ACC_L] = 0;
++      CPU.macregs[PRU_MACREG_ACC_H] = 0;
++    }
++
 +}
 +
 +static void
@@ -1068,6 +1069,14 @@ index 0000000000..099b9c1d42
 +    {
 +      TRACE_DISASM (cpu, PC_byteaddr);
 +
++      /* In multiply-only mode, R28/R29 operands are sampled on every clock
++	 cycle.  */
++      if ((CPU.macregs[PRU_MACREG_MODE] & MAC_R25_MAC_MODE_MASK) == 0)
++	{
++	  CPU.macregs[PRU_MACREG_OP_0] = CPU.regs[28];
++	  CPU.macregs[PRU_MACREG_OP_1] = CPU.regs[29];
++	}
++
 +      switch (op->type)
 +	{
 +/* Helper macro to improve clarity of pru.isa.  The empty while is a
@@ -1100,6 +1109,20 @@ index 0000000000..099b9c1d42
 +	    LOOP_IN_PROGRESS = 0;
 +	  else
 +	    PC = LOOPTOP;
++	}
++
++      /* In multiply-only mode, MAC does multiplication every cycle.  */
++      if ((CPU.macregs[PRU_MACREG_MODE] & MAC_R25_MAC_MODE_MASK) == 0)
++	{
++	  uint64_t prod;
++	  prod = CPU.macregs[PRU_MACREG_OP_0];
++	  prod *= (uint64_t)CPU.macregs[PRU_MACREG_OP_1];
++	  CPU.macregs[PRU_MACREG_PROD_L] = prod & 0xfffffffful;
++	  CPU.macregs[PRU_MACREG_PROD_H] = prod >> 32;
++
++	  /* Clear the MAC accumulator when in normal mode.  */
++	  CPU.macregs[PRU_MACREG_ACC_L] = 0;
++	  CPU.macregs[PRU_MACREG_ACC_H] = 0;
 +	}
 +
 +      /* Update cycle counts.  */
@@ -1706,10 +1729,10 @@ index 0000000000..af72cf30c7
 +	     })
 diff --git a/sim/pru/sim-main.h b/sim/pru/sim-main.h
 new file mode 100644
-index 0000000000..5bd9742df0
+index 0000000000..12396743db
 --- /dev/null
 +++ b/sim/pru/sim-main.h
-@@ -0,0 +1,75 @@
+@@ -0,0 +1,80 @@
 +/* Copyright 2014-2017 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
@@ -1746,10 +1769,15 @@ index 0000000000..5bd9742df0
 +   the performance of the simulator.  Simulation speed is deemed more
 +   important.  */
 +
++/* Please keep the same order as the GP registers.  */
 +enum pru_macreg_id {
-+    PRU_MACREG_MODE,
-+    PRU_MACREG_PROD_L,
-+    PRU_MACREG_PROD_H,
++    PRU_MACREG_MODE,	  /* r25 */
++    PRU_MACREG_PROD_L,	  /* r26 */
++    PRU_MACREG_PROD_H,	  /* r27 */
++    PRU_MACREG_OP_0,	  /* r28 */
++    PRU_MACREG_OP_1,	  /* r29 */
++    PRU_MACREG_ACC_L,	  /* N/A */
++    PRU_MACREG_ACC_H,	  /* N/A */
 +    PRU_MAC_NREGS
 +};
 +

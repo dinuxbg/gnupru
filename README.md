@@ -5,11 +5,18 @@ This is an unofficial GCC/Binutils port for the PRU I/O CPU core that is present
 
 The release is ready for cautious usage. A simulator is used to execute the GCC C regression test suite. Results for this release are:
 
-	# of expected passes		87486
-	# of unexpected failures	17
-	# of unexpected successes	3
-	# of expected failures		151
-	# of unsupported tests		2621
+	# of expected passes		90967
+	# of unexpected failures	73
+	# of unexpected successes	9
+	# of expected failures		200
+	# of unsupported tests		2917
+
+Results from the GCC ABI test suite:
+
+	# of expected passes            686
+	# of unexpected failures        7
+	# of unresolved testcases       38
+	# of unsupported tests          18
 
 There are several examples to get started:
  * Assorted small examples: https://github.com/dinuxbg/pru-gcc-examples
@@ -27,7 +34,7 @@ If you are running Beaglebone Debian Jessie image, then installation is simple:
 
 For other Debian Jessie images, you'll need to add Robert Nelson's package repository. Open /etc/apt/sources.list and add the following line:
 
-	deb [arch=armhf] http://repos.rcn-ee.com/debian/ stretch main
+	deb [arch=armhf] http://repos.rcn-ee.com/debian/ jessie main
 
 ## Building From Sources
 The toolchain is published as a series of patches inside the patches subdirectory. The build scripts are tested on a Debian host, but should work on any recent distro.
@@ -64,8 +71,3 @@ Testing the output:
 
 ## Acknowledgements
  * GCC/Binutils Nios2 port was taken as a base for the PRU port.
-
-## TODO
-A few long term tasks:
- * Need to review the GCC function prologue handling. Current code is a direct copy of the Nios2 code. It should be correct but is not efficient for PRU.
- * Investigate feasibility of "packed" register support in GCC. PRU port may have to be rewritten to use "virtual" 8-bit registers in order to allow more efficient variable packing.
