@@ -13,6 +13,9 @@ uint32_t gcc_u32 = 0xccbbeedd;
 uint16_t gcc_u16 = 0x4532;
 uint8_t gcc_u8 = 0x25;
 
+uint32_t gcc_array16[1024];
+uint32_t gcc_array32[1024];
+
 uint64_t gcc_func_arg1(uint32_t arg1)
 {
 	return arg1 | ((uint64_t)arg1 + 1) << 32;
@@ -58,6 +61,8 @@ int main(void)
 	CHECK (gcc_u16 == *(uint16_t*)ti_relocs[1]);
 	CHECK (gcc_u8 == *(uint8_t*)ti_relocs[2]);
 	CHECK (ti_result == gcc_result);
+	CHECK (ti_ptr16 == &gcc_array16[678]);
+	CHECK (ti_ptr32 == &gcc_array32[123]);
 
 	printf("SUCCESS\n");
 	return EXIT_SUCCESS;
