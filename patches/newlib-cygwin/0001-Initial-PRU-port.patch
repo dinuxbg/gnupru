@@ -1,4 +1,4 @@
-From 4db631ebdcf050ceb57b1e517a0b51b242552ad2 Mon Sep 17 00:00:00 2001
+From 10098fb9ea393e111360425dc12d723edaf7a2ae Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 11 Mar 2018 22:23:26 +0200
 Subject: [PATCH 1/6] Initial PRU port
@@ -7,7 +7,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  configure.ac                                      |   4 +
  libgloss/configure.in                             |   2 +
- libgloss/pru/Makefile.in                          | 151 +++++
+ libgloss/pru/Makefile.in                          | 147 ++++
  libgloss/pru/close.c                              |  24 +
  libgloss/pru/configure.in                         |  66 ++
  libgloss/pru/crt0.S                               |  84 +++
@@ -28,13 +28,13 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  libgloss/pru/isatty.c                             |  26 +
  libgloss/pru/kill.c                               |  28 +
  libgloss/pru/ldscripts/gen-ld-scripts.sh          |  61 ++
- libgloss/pru/ldscripts/pruelf-am335x.pru0.x       | 203 ++++++
- libgloss/pru/ldscripts/pruelf-am335x.pru1.x       | 203 ++++++
- libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x | 203 ++++++
- libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x | 203 ++++++
- libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x | 203 ++++++
- libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x | 203 ++++++
- libgloss/pru/ldscripts/pruelf-sim.x               | 203 ++++++
+ libgloss/pru/ldscripts/pruelf-am335x.pru0.x       | 201 ++++++
+ libgloss/pru/ldscripts/pruelf-am335x.pru1.x       | 201 ++++++
+ libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x | 201 ++++++
+ libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x | 201 ++++++
+ libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x | 201 ++++++
+ libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x | 201 ++++++
+ libgloss/pru/ldscripts/pruelf-sim.x               | 201 ++++++
  libgloss/pru/lseek.c                              |  31 +
  libgloss/pru/open.c                               |  30 +
  libgloss/pru/outbyte.c                            |  24 +
@@ -52,7 +52,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  newlib/libc/machine/pru/Makefile.in               | 439 ++++++++++++
  newlib/libc/machine/pru/configure.in              |  14 +
  newlib/libc/machine/pru/setjmp.s                  |  46 ++
- 47 files changed, 3796 insertions(+), 1 deletion(-)
+ 47 files changed, 3778 insertions(+), 1 deletion(-)
  create mode 100644 libgloss/pru/Makefile.in
  create mode 100644 libgloss/pru/close.c
  create mode 100644 libgloss/pru/configure.in
@@ -125,10 +125,10 @@ index 6da164352..9f39e0517 100644
  
 diff --git a/libgloss/pru/Makefile.in b/libgloss/pru/Makefile.in
 new file mode 100644
-index 000000000..4d08a9061
+index 000000000..c944e5edd
 --- /dev/null
 +++ b/libgloss/pru/Makefile.in
-@@ -0,0 +1,151 @@
+@@ -0,0 +1,147 @@
 +# Copyright (c) 2014 Dimitar Dimitrov <dinuxbg@gmail.com>
 +#
 +# The authors hereby grant permission to use, copy, modify, distribute,
@@ -260,10 +260,6 @@ index 000000000..4d08a9061
 +	for i in ${srcdir}/include/pru/*.h; do \
 +	  b=`basename $$i`; \
 +	  $(INSTALL_DATA) $$i $(DESTDIR)$(tooldir)/include/pru/$$b ;\
-+	done
-+	for i in ${srcdir}/include/*.h; do \
-+	  b=`basename $$i`; \
-+	  $(INSTALL_DATA) $$i $(DESTDIR)$(tooldir)/include/$$b ;\
 +	done
 +	${mkinstalldirs} ${DESTDIR}${tooldir}/lib${MULTISUBDIR}/device-specs; \
 +	for s in ${srcdir}/device-specs/*; do \
@@ -1783,10 +1779,10 @@ index 000000000..575a30970
 +dump_modified 8K   8K     "32"         "512"       | tee pruelf-am437x.icss1.pru1.x
 diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru0.x b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
 new file mode 100644
-index 000000000..8ef05d211
+index 000000000..feae65881
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
-@@ -0,0 +1,203 @@
+@@ -0,0 +1,201 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -1801,8 +1797,6 @@ index 000000000..8ef05d211
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
-+/* For compatibility with TI's toolchain.  */
-+__SYSMEM_SIZE = __HEAP_SIZE;
 + PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
 +ENTRY (_start)
 +SECTIONS
@@ -1992,10 +1986,10 @@ index 000000000..8ef05d211
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru1.x b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
 new file mode 100644
-index 000000000..8ef05d211
+index 000000000..feae65881
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
-@@ -0,0 +1,203 @@
+@@ -0,0 +1,201 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -2010,8 +2004,6 @@ index 000000000..8ef05d211
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
-+/* For compatibility with TI's toolchain.  */
-+__SYSMEM_SIZE = __HEAP_SIZE;
 + PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
 +ENTRY (_start)
 +SECTIONS
@@ -2201,10 +2193,10 @@ index 000000000..8ef05d211
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
 new file mode 100644
-index 000000000..bd1f21768
+index 000000000..42489f623
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
-@@ -0,0 +1,203 @@
+@@ -0,0 +1,201 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -2219,8 +2211,6 @@ index 000000000..bd1f21768
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 256 ;
-+/* For compatibility with TI's toolchain.  */
-+__SYSMEM_SIZE = __HEAP_SIZE;
 + PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
 +ENTRY (_start)
 +SECTIONS
@@ -2410,10 +2400,10 @@ index 000000000..bd1f21768
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
 new file mode 100644
-index 000000000..bd1f21768
+index 000000000..42489f623
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
-@@ -0,0 +1,203 @@
+@@ -0,0 +1,201 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -2428,8 +2418,6 @@ index 000000000..bd1f21768
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 256 ;
-+/* For compatibility with TI's toolchain.  */
-+__SYSMEM_SIZE = __HEAP_SIZE;
 + PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
 +ENTRY (_start)
 +SECTIONS
@@ -2619,10 +2607,10 @@ index 000000000..bd1f21768
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
 new file mode 100644
-index 000000000..8ef05d211
+index 000000000..feae65881
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
-@@ -0,0 +1,203 @@
+@@ -0,0 +1,201 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -2637,8 +2625,6 @@ index 000000000..8ef05d211
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
-+/* For compatibility with TI's toolchain.  */
-+__SYSMEM_SIZE = __HEAP_SIZE;
 + PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
 +ENTRY (_start)
 +SECTIONS
@@ -2828,10 +2814,10 @@ index 000000000..8ef05d211
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
 new file mode 100644
-index 000000000..8ef05d211
+index 000000000..feae65881
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
-@@ -0,0 +1,203 @@
+@@ -0,0 +1,201 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -2846,8 +2832,6 @@ index 000000000..8ef05d211
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
-+/* For compatibility with TI's toolchain.  */
-+__SYSMEM_SIZE = __HEAP_SIZE;
 + PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
 +ENTRY (_start)
 +SECTIONS
@@ -3037,10 +3021,10 @@ index 000000000..8ef05d211
 +
 diff --git a/libgloss/pru/ldscripts/pruelf-sim.x b/libgloss/pru/ldscripts/pruelf-sim.x
 new file mode 100644
-index 000000000..e2860a37b
+index 000000000..c7d0c59c5
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-sim.x
-@@ -0,0 +1,203 @@
+@@ -0,0 +1,201 @@
 +/* WARNING: automatically generated from the default pru-ld script! */
 +
 +
@@ -3055,8 +3039,6 @@ index 000000000..e2860a37b
 +}
 +__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 * 1024 * 1024 ;
 +__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 1024 * 1024 ;
-+/* For compatibility with TI's toolchain.  */
-+__SYSMEM_SIZE = __HEAP_SIZE;
 + PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem)) ;
 +ENTRY (_start)
 +SECTIONS
@@ -3620,10 +3602,10 @@ index 000000000..a5e490404
 +  return (-1);
 +}
 diff --git a/newlib/configure.host b/newlib/configure.host
-index 5985f1376..90f94370c 100644
+index 4eebf6d95..10115c613 100644
 --- a/newlib/configure.host
 +++ b/newlib/configure.host
-@@ -80,7 +80,7 @@ case "${target_optspace}:${host}" in
+@@ -82,7 +82,7 @@ case "${target_optspace}:${host}" in
    yes:*)
      newlib_cflags="${newlib_cflags} -Os"
      ;;
@@ -3632,7 +3614,7 @@ index 5985f1376..90f94370c 100644
      newlib_cflags="${newlib_cflags} -Os"
      ;;
    no:* | :*)
-@@ -255,6 +255,14 @@ case "${host_cpu}" in
+@@ -261,6 +261,14 @@ case "${host_cpu}" in
    powerpc*)
  	machine_dir=powerpc
  	;;
@@ -3647,7 +3629,7 @@ index 5985f1376..90f94370c 100644
    riscv*)
  	libm_machine_dir=riscv
  	machine_dir=riscv
-@@ -811,6 +819,10 @@ newlib_cflags="${newlib_cflags} -DCLOCK_PROVIDED -DMALLOC_PROVIDED -DEXIT_PROVID
+@@ -817,6 +825,10 @@ newlib_cflags="${newlib_cflags} -DCLOCK_PROVIDED -DMALLOC_PROVIDED -DEXIT_PROVID
  	newlib_cflags="${newlib_cflags} -DHAVE_OPENDIR -DHAVE_RENAME -DHAVE_FCNTL -D_NO_POSIX_SPAWN"
  	syscall_dir=syscalls
  	;;
@@ -3659,10 +3641,10 @@ index 5985f1376..90f94370c 100644
  	syscall_dir=syscalls
  	;;
 diff --git a/newlib/libc/include/machine/ieeefp.h b/newlib/libc/include/machine/ieeefp.h
-index 9fbef8449..3db8c78db 100644
+index 2fb2268ce..a81a85cee 100644
 --- a/newlib/libc/include/machine/ieeefp.h
 +++ b/newlib/libc/include/machine/ieeefp.h
-@@ -405,6 +405,10 @@
+@@ -409,6 +409,10 @@
  #define __SMALL_BITFIELDS	/* 16 Bit INT */
  #endif
  
@@ -3690,11 +3672,11 @@ index 9212f840b..a3b33e372 100644
  #define _JBLEN 0x44
  #endif
 diff --git a/newlib/libc/machine/configure.in b/newlib/libc/machine/configure.in
-index bca12129d..61fb6bf61 100644
+index 8ebe68bdb..88e728b02 100644
 --- a/newlib/libc/machine/configure.in
 +++ b/newlib/libc/machine/configure.in
-@@ -63,6 +63,7 @@ if test -n "${machine_dir}"; then
- 	nios2) AC_CONFIG_SUBDIRS(nios2) ;;
+@@ -64,6 +64,7 @@ if test -n "${machine_dir}"; then
+ 	nvptx) AC_CONFIG_SUBDIRS(nvptx) ;;
  	or1k) AC_CONFIG_SUBDIRS(or1k) ;;
  	powerpc) AC_CONFIG_SUBDIRS(powerpc) ;;
 +	pru) AC_CONFIG_SUBDIRS(pru) ;;

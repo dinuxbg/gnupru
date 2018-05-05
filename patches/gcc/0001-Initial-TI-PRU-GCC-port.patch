@@ -1,31 +1,50 @@
-From 5a20299fb0a9c51de58608976f5c65335dc13427 Mon Sep 17 00:00:00 2001
+From bffcf499577e775fc04c7d6f45dc1de1e94d161c Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:53:18 +0200
-Subject: [PATCH 01/11] Initial TI PRU GCC port
-
-doloop support TODO:
-
-  - Add recognition for and handle "double-entry" loops, e.g.:
-  	for (int i = 0; i < VAR; i++)
-  - Check and fix the two ICE issues related to DWARF from the testsuite.
-  - Add testcase for the "nop" generation logic for very short loops.
+Subject: [PATCH 01/13] Initial TI PRU GCC port
 
 TI ABI TODO:
 
   - Add QI/HI/SI constraints for inline assembly.
-  - Add tests for ABI compatibility with TI's toolchain.
-  - Cleanup the code.
-  - Run the GCC testsuite.
-  - 48-bit argument (packed struct) - reg or stack?
-  - Revisit the AP pointer reg.
+
+ChangeLog:
+
+2018-04-15  Dimitar Dimitrov  <dimitar@dinux.eu>
+
+	* configure: Regenerate.
+	* configure.ac: Add PRU target.
+
+gcc/ChangeLog:
+
+2018-04-15  Dimitar Dimitrov  <dimitar@dinux.eu>
+
+	* config/pru/pru-ldst-multiple.md: Generate using pru-ldst-multiple.ml.
+	* common/config/pru/pru-common.c: New file.
+	* config.gcc: Add PRU target.
+	* config/pru/alu-zext.md: New file.
+	* config/pru/constraints.md: New file.
+	* config/pru/predicates.md: New file.
+	* config/pru/pru-ldst-multiple.ml: New file.
+	* config/pru/pru-modes.def: New file.
+	* config/pru/pru-opts.h: New file.
+	* config/pru/pru-passes.c: New file.
+	* config/pru/pru-pragma.c: New file.
+	* config/pru/pru-protos.h: New file.
+	* config/pru/pru.c: New file.
+	* config/pru/pru.h: New file.
+	* config/pru/pru.md: New file.
+	* config/pru/pru.opt: New file.
+	* config/pru/t-pru: New file.
+	* doc/extend.texi: Document PRU pragmas.
+	* doc/invoke.texi: Document PRU-specific options.
+	* doc/md.texi: Document PRU asm constraints.
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  configure.ac                        |    7 +
  gcc/common/config/pru/pru-common.c  |   36 +
  gcc/config.gcc                      |    9 +
- gcc/config/pru/alu-zext.sh          |   36 +
- gcc/config/pru/alu-zext.template.md |  141 ++
+ gcc/config/pru/alu-zext.md          |  178 ++
  gcc/config/pru/constraints.md       |   89 +
  gcc/config/pru/predicates.md        |  221 +++
  gcc/config/pru/pru-ldst-multiple.ml |  144 ++
@@ -34,41 +53,17 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  gcc/config/pru/pru-passes.c         |  230 +++
  gcc/config/pru/pru-pragma.c         |   91 ++
  gcc/config/pru/pru-protos.h         |   71 +
- gcc/config/pru/pru.c                | 3037 +++++++++++++++++++++++++++++++++++
- gcc/config/pru/pru.h                |  552 +++++++
- gcc/config/pru/pru.md               |  904 +++++++++++
- gcc/config/pru/pru.opt              |   52 +
+ gcc/config/pru/pru.c                | 3050 +++++++++++++++++++++++++++++++++++
+ gcc/config/pru/pru.h                |  551 +++++++
+ gcc/config/pru/pru.md               |  905 +++++++++++
+ gcc/config/pru/pru.opt              |   53 +
  gcc/config/pru/t-pru                |   30 +
  gcc/doc/extend.texi                 |   20 +
- gcc/doc/invoke.texi                 |   56 +
+ gcc/doc/invoke.texi                 |   55 +
  gcc/doc/md.texi                     |   22 +
- libgcc/config.host                  |    7 +
- libgcc/config/pru/asri.c            |   33 +
- libgcc/config/pru/eqd.c             |   45 +
- libgcc/config/pru/eqf.c             |   45 +
- libgcc/config/pru/ged.c             |   45 +
- libgcc/config/pru/gef.c             |   45 +
- libgcc/config/pru/gtd.c             |   45 +
- libgcc/config/pru/gtf.c             |   45 +
- libgcc/config/pru/led.c             |   45 +
- libgcc/config/pru/lef.c             |   45 +
- libgcc/config/pru/lib2bitcountHI.c  |   43 +
- libgcc/config/pru/lib2divHI.c       |   42 +
- libgcc/config/pru/lib2divQI.c       |   43 +
- libgcc/config/pru/lib2divSI.c       |   48 +
- libgcc/config/pru/libgcc-eabi.ver   |   88 +
- libgcc/config/pru/ltd.c             |   45 +
- libgcc/config/pru/ltf.c             |   45 +
- libgcc/config/pru/mpyll.S           |   57 +
- libgcc/config/pru/pru-abi.h         |  109 ++
- libgcc/config/pru/pru-asm.h         |   36 +
- libgcc/config/pru/pru-divmod.h      |  117 ++
- libgcc/config/pru/sfp-machine.h     |  125 ++
- libgcc/config/pru/t-pru             |   50 +
- 44 files changed, 7046 insertions(+)
+ 20 files changed, 5812 insertions(+)
  create mode 100644 gcc/common/config/pru/pru-common.c
- create mode 100755 gcc/config/pru/alu-zext.sh
- create mode 100644 gcc/config/pru/alu-zext.template.md
+ create mode 100644 gcc/config/pru/alu-zext.md
  create mode 100644 gcc/config/pru/constraints.md
  create mode 100644 gcc/config/pru/predicates.md
  create mode 100644 gcc/config/pru/pru-ldst-multiple.ml
@@ -82,28 +77,6 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 gcc/config/pru/pru.md
  create mode 100644 gcc/config/pru/pru.opt
  create mode 100644 gcc/config/pru/t-pru
- create mode 100644 libgcc/config/pru/asri.c
- create mode 100644 libgcc/config/pru/eqd.c
- create mode 100644 libgcc/config/pru/eqf.c
- create mode 100644 libgcc/config/pru/ged.c
- create mode 100644 libgcc/config/pru/gef.c
- create mode 100644 libgcc/config/pru/gtd.c
- create mode 100644 libgcc/config/pru/gtf.c
- create mode 100644 libgcc/config/pru/led.c
- create mode 100644 libgcc/config/pru/lef.c
- create mode 100644 libgcc/config/pru/lib2bitcountHI.c
- create mode 100644 libgcc/config/pru/lib2divHI.c
- create mode 100644 libgcc/config/pru/lib2divQI.c
- create mode 100644 libgcc/config/pru/lib2divSI.c
- create mode 100644 libgcc/config/pru/libgcc-eabi.ver
- create mode 100644 libgcc/config/pru/ltd.c
- create mode 100644 libgcc/config/pru/ltf.c
- create mode 100644 libgcc/config/pru/mpyll.S
- create mode 100644 libgcc/config/pru/pru-abi.h
- create mode 100644 libgcc/config/pru/pru-asm.h
- create mode 100644 libgcc/config/pru/pru-divmod.h
- create mode 100644 libgcc/config/pru/sfp-machine.h
- create mode 100644 libgcc/config/pru/t-pru
 
 diff --git a/configure.ac b/configure.ac
 index c3433336523..7e8c6696a63 100644
@@ -173,7 +146,7 @@ index 00000000000..f4dc8640a92
 +
 +struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index 81627d5d1c7..6914e848b47 100644
+index e58494c1c17..2487384f6b1 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
 @@ -481,6 +481,9 @@ powerpc*-*-*)
@@ -186,7 +159,7 @@ index 81627d5d1c7..6914e848b47 100644
  riscv*)
  	cpu_type=riscv
  	extra_objs="riscv-builtins.o riscv-c.o"
-@@ -2604,6 +2607,12 @@ powerpcle-*-eabi*)
+@@ -2614,6 +2617,12 @@ powerpcle-*-eabi*)
  	extra_options="${extra_options} rs6000/sysv4.opt"
  	use_gcc_stdint=wrap
  	;;
@@ -199,58 +172,13 @@ index 81627d5d1c7..6914e848b47 100644
  rs6000-ibm-aix4.[3456789]* | powerpc-ibm-aix4.[3456789]*)
  	tm_file="rs6000/biarch64.h ${tm_file} rs6000/aix.h rs6000/aix43.h rs6000/xcoff.h rs6000/aix-stdint.h"
  	tmake_file="rs6000/t-aix43 t-slibgcc"
-diff --git a/gcc/config/pru/alu-zext.sh b/gcc/config/pru/alu-zext.sh
-new file mode 100755
-index 00000000000..ce2958ffd64
---- /dev/null
-+++ b/gcc/config/pru/alu-zext.sh
-@@ -0,0 +1,36 @@
-+#!/bin/bash
-+
-+# Generate alu-zext.md with insns for matching ALU operations with
-+# various combinations of zero extensions of operands.
-+#
-+# This script takes a template definition of insns, and instantiates
-+# it multiple times.  Once with a regular SI argument, and once with
-+# a zero-extended argument.  Implemented through a straightforward
-+# text substition using the following pattern:
-+#   {ZOP0@TextWhenSI@TextWhenZeroExt}
-+#       | |          |
-+#       | |          `- Text when zero-extension is enabled for this op
-+#       | `- Text without zero-extension, i.e. regular SI
-+#       `- Operand number.  This allows per-operand mode selection.
-+#
-+# The GCC's define_subst is not suitable because there is no way to tell it
-+# to both copy the operand and its constraints, and change its size.
-+#
-+# TODO - check if define_susbt can be augmented to work for our case.
-+
-+# For ZOP$1 paste option $2
-+op ()
-+{
-+  sed -e 's/{ZOP'$1'@\([^@]*\)@\([^}]*\)}/\'$2'/g'
-+}
-+
-+(
-+  echo ';; WARNING: This is machine generated! DO NOT EDIT!'
-+  echo ';;'
-+  echo ';;'
-+  # zero_extend ops should take precedence
-+  cat alu-zext.template.md | op 0 2 | op 1 2
-+  cat alu-zext.template.md | op 0 2 | op 1 1
-+  cat alu-zext.template.md | op 0 1 | op 1 2
-+  cat alu-zext.template.md | op 0 1 | op 1 1
-+) > alu-zext.md
-diff --git a/gcc/config/pru/alu-zext.template.md b/gcc/config/pru/alu-zext.template.md
+diff --git a/gcc/config/pru/alu-zext.md b/gcc/config/pru/alu-zext.md
 new file mode 100644
-index 00000000000..45614645345
+index 00000000000..b671ecf37f3
 --- /dev/null
-+++ b/gcc/config/pru/alu-zext.template.md
-@@ -0,0 +1,141 @@
++++ b/gcc/config/pru/alu-zext.md
+@@ -0,0 +1,178 @@
 +;; ALU operations with zero extensions
-+;;
-+;; <ZOP0@Operand0:SI@Operand0:Zero-extended>
-+;; <ZOP1@Operand1:SI@Operand1:Zero-extended>
 +;;
 +;; Copyright (C) 2015 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -271,17 +199,26 @@ index 00000000000..45614645345
 +;; along with GCC; see the file COPYING3.  If not see
 +;; <http://www.gnu.org/licenses/>.
 +
++(define_subst_attr "alu2_zext"     "alu2_zext_subst"     "_z" "_noz")
++
++(define_subst_attr "alu3_zext_op1" "alu3_zext_op1_subst" "_z1" "_noz1")
++(define_subst_attr "alu3_zext_op2" "alu3_zext_op2_subst" "_z2" "_noz2")
++(define_subst_attr "alu3_zext"     "alu3_zext_subst"     "_z" "_noz")
++
++(define_subst_attr "bitalu_zext"   "bitalu_zext_subst"   "_z" "_noz")
++
++(define_code_iterator ALUOP3 [plus minus and ior xor umin umax ashift lshiftrt])
++(define_code_iterator ALUOP2 [neg not])
++
 +;; Arithmetic Operations
 +
-+(define_insn "add_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@<EQS1:mode>}"
++(define_insn "add_impl<EQD:mode><EQS0:mode><EQS1:mode>_<alu3_zext><alu3_zext_op1><alu3_zext_op2>"
 +  [(set (match_operand:EQD 0 "register_operand" "=r,r,r")
 +	(plus:EQD
-+	 {ZOP0@@(zero_extend:EQD}
-+	  (match_operand:{ZOP0@EQD@EQS0} 1 "register_operand"   "%r,r,r")
-+	 {ZOP0@@)}
-+	 {ZOP1@@(zero_extend:EQD}
-+	  (match_operand:{ZOP1@EQD@EQS1} 2 "nonmemory_operand" "r,I,M"))
-+	 {ZOP1@@)})]
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "register_operand" "%r,r,r"))
++	 (zero_extend:EQD
++	  (match_operand:EQS1 2 "nonmemory_operand" "r,I,M"))))]
 +  ""
 +  "@
 +   add\\t%0, %1, %2
@@ -290,15 +227,13 @@ index 00000000000..45614645345
 +  [(set_attr "type" "alu")
 +   (set_attr "length" "4")])
 +
-+(define_insn "sub_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@<EQS1:mode>}"
++(define_insn "sub_impl<EQD:mode><EQS0:mode><EQS1:mode>_<alu3_zext><alu3_zext_op1><alu3_zext_op2>"
 +  [(set (match_operand:EQD 0 "register_operand" "=r,r,r")
 +	(minus:EQD
-+	 {ZOP0@@(zero_extend:EQD}
-+	  (match_operand:{ZOP0@EQD@EQS0} 1 "reg_or_ubyte_operand" "r,r,I")
-+	 {ZOP0@@)}
-+	 {ZOP1@@(zero_extend:EQD}
-+	  (match_operand:{ZOP1@EQD@EQS1} 2 "reg_or_ubyte_operand" "r,I,r"))
-+	 {ZOP1@@)})]
++	 (zero_extend:EQD
++	  (match_operand:EQS0 1 "reg_or_ubyte_operand" "r,r,I"))
++	 (zero_extend:EQD
++	  (match_operand:EQS1 2 "reg_or_ubyte_operand" "r,I,r"))))]
 +  ""
 +  "@
 +   sub\\t%0, %1, %2
@@ -308,24 +243,20 @@ index 00000000000..45614645345
 +   (set_attr "length" "4")])
 +
 +
-+(define_insn "neg_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@_dummy}"
++(define_insn "neg_impl<EQD:mode><EQS0:mode>_<alu2_zext>"
 +  [(set (match_operand:EQD 0 "register_operand" "=r")
 +	(neg:EQD
-+	 {ZOP0@@(zero_extend:EQD}
-+	  (match_operand:{ZOP0@EQD@EQS0} 1 "register_operand" "r")
-+	 {ZOP0@@)}))]
++	  (zero_extend:EQD (match_operand:EQS0 1 "register_operand" "r"))))]
 +  ""
 +  "rsb\\t%0, %1, 0"
 +  [(set_attr "type" "alu")
 +   (set_attr "length" "4")])
 +
 +
-+(define_insn "one_cmpl_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@_dummy}"
++(define_insn "one_impl<EQD:mode><EQS0:mode>_<alu2_zext>"
 +  [(set (match_operand:EQD 0 "register_operand" "=r")
 +	(not:EQD
-+	 {ZOP0@@(zero_extend:EQD}
-+	  (match_operand:{ZOP0@EQD@EQS0} 1 "register_operand" "r")
-+	 {ZOP0@@)}))]
++	  (zero_extend:EQD (match_operand:EQS0 1 "register_operand" "r"))))]
 +  ""
 +  "not\\t%0, %1"
 +  [(set_attr "type" "alu")
@@ -335,24 +266,22 @@ index 00000000000..45614645345
 +;
 +; TODO - allow clrbit and setbit to support (1 << REG) constructs
 +
-+(define_insn "clearbit_<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@_dummy}"
-+  [(set (match_operand:EQD 0 "register_operand"			"=r")
++(define_insn "clearbit_<EQD:mode><EQS0:mode>_<bitalu_zext>"
++  [(set (match_operand:EQD 0 "register_operand"	"=r")
 +	(and:EQD
-+	 {ZOP0@@(zero_extend:EQD}
-+	  (match_operand:{ZOP0@EQD@EQS0} 1 "register_operand"	"r")
-+	 {ZOP0@@)}
++	  (zero_extend:EQD
++	    (match_operand:EQS0 1 "register_operand" "r"))
 +	  (match_operand:EQD 2 "single_zero_operand" "n")))]
 +  ""
 +  "clr\\t%0, %1, %V2"
 +  [(set_attr "type" "alu")
 +   (set_attr "length" "4")])
 +
-+(define_insn "setbit_<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@_dummy}"
-+  [(set (match_operand:EQD 0 "register_operand"			"=r")
++(define_insn "setbit_<EQD:mode><EQS0:mode>_<bitalu_zext>"
++  [(set (match_operand:EQD 0 "register_operand" "=r")
 +	(ior:EQD
-+	 {ZOP0@@(zero_extend:EQD}
-+	  (match_operand:{ZOP0@EQD@EQS0} 1 "register_operand"	"r")
-+	 {ZOP0@@)}
++	  (zero_extend:EQD
++	    (match_operand:EQS0 1 "register_operand" "r"))
 +	  (match_operand:EQD 2 "single_one_operand" "n")))]
 +  ""
 +  "set\\t%0, %1, %T2"
@@ -360,34 +289,73 @@ index 00000000000..45614645345
 +   (set_attr "length" "4")])
 +
 +; Regular ALU ops
-+(define_insn "<code>_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@<EQS1:mode>}"
++(define_insn "<code>_impl<EQD:mode><EQS0:mode><EQS1:mode>_<alu3_zext><alu3_zext_op1><alu3_zext_op2>"
 +  [(set (match_operand:EQD 0 "register_operand" "=r")
 +	(LOGICAL:EQD
-+	 {ZOP0@@(zero_extend:EQD}
-+	  (match_operand:{ZOP0@EQD@EQS0} 1 "register_operand"     "%r")
-+	 {ZOP0@@)}
-+	 {ZOP1@@(zero_extend:EQD}
-+	  (match_operand:{ZOP1@EQD@EQS1} 2 "reg_or_ubyte_operand"  "rI"))
-+	 {ZOP1@@)})]
++	  (zero_extend:EQD
++	    (match_operand:EQS0 1 "register_operand"     "%r"))
++	  (zero_extend:EQD
++	    (match_operand:EQS1 2 "reg_or_ubyte_operand"  "rI"))))]
 +  ""
 +  "<logical_asm>\\t%0, %1, %2"
 +  [(set_attr "type" "alu")
 +   (set_attr "length" "4")])
 +
 +; Shift ALU ops
-+(define_insn "<shift_op>_impl<EQD:mode>_{ZOP0@eqd@<EQS0:mode>}{ZOP1@eqd@<EQS1:mode>}"
++(define_insn "<shift_op>_impl<EQD:mode><EQS0:mode><EQS1:mode>_<alu3_zext><alu3_zext_op1><alu3_zext_op2>"
 +  [(set (match_operand:EQD 0 "register_operand" "=r")
 +	(SHIFT:EQD
-+	 {ZOP0@@(zero_extend:EQD}
-+	  (match_operand:{ZOP0@EQD@EQS0} 1 "register_operand" "r")
-+	 {ZOP0@@)}
-+	 {ZOP1@@(zero_extend:EQD}
-+	  (match_operand:{ZOP1@EQD@EQS1} 2 "shift_operand"    "rL"))
-+	 {ZOP1@@)})]
++	 (zero_extend:EQD (match_operand:EQS0 1 "register_operand" "r"))
++	 (zero_extend:EQD (match_operand:EQS1 2 "shift_operand"    "rL"))))]
 +  ""
 +  "<shift_asm>\\t%0, %1, %2"
 +  [(set_attr "type" "alu")
 +   (set_attr "length" "4")])
++
++;; Substitutions
++
++(define_subst "alu2_zext_subst"
++  [(set (match_operand:EQD 0 "" "")
++	(ALUOP2:EQD (zero_extend:EQD (match_operand:EQD 1 "" ""))))]
++  ""
++  [(set (match_dup 0)
++	(ALUOP2:EQD (match_dup 1)))])
++
++(define_subst "bitalu_zext_subst"
++  [(set (match_operand:EQD 0 "" "")
++	(ALUOP3:EQD (zero_extend:EQD (match_operand:EQD 1 "" ""))
++	 	    (match_operand:EQD 2 "" "")))]
++  ""
++  [(set (match_dup 0)
++	(ALUOP3:EQD (match_dup 1)
++       		    (match_dup 2)))])
++
++(define_subst "alu3_zext_subst"
++  [(set (match_operand:EQD 0 "" "")
++	(ALUOP3:EQD (zero_extend:EQD (match_operand:EQD 1 "" ""))
++		    (zero_extend:EQD (match_operand:EQD 2 "" ""))))]
++  ""
++  [(set (match_dup 0)
++	(ALUOP3:EQD (match_dup 1)
++	 	    (match_dup 2)))])
++
++(define_subst "alu3_zext_op1_subst"
++  [(set (match_operand:EQD 0 "" "")
++	(ALUOP3:EQD (zero_extend:EQD (match_operand:EQD 1 "" ""))
++		    (zero_extend:EQD (match_operand:EQS1 2 "" ""))))]
++  ""
++  [(set (match_dup 0)
++	(ALUOP3:EQD (match_dup 1)
++       		    (zero_extend:EQD (match_dup 2))))])
++
++(define_subst "alu3_zext_op2_subst"
++  [(set (match_operand:EQD 0 "" "")
++	(ALUOP3:EQD (zero_extend:EQD (match_operand:EQS0 1 "" ""))
++		    (zero_extend:EQD (match_operand:EQD 2 "" ""))))]
++  ""
++  [(set (match_dup 0)
++	(ALUOP3:EQD (zero_extend:EQD (match_dup 1))
++       		    (match_dup 2)))])
 diff --git a/gcc/config/pru/constraints.md b/gcc/config/pru/constraints.md
 new file mode 100644
 index 00000000000..6944d00868b
@@ -1334,10 +1302,10 @@ index 00000000000..bd34f5735a1
 +#endif /* GCC_PRU_PROTOS_H */
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
 new file mode 100644
-index 00000000000..61f0d27c543
+index 00000000000..adc68f74a71
 --- /dev/null
 +++ b/gcc/config/pru/pru.c
-@@ -0,0 +1,3037 @@
+@@ -0,0 +1,3050 @@
 +/* Target machine subroutines for TI PRU.
 +   Copyright (C) 2014-2017 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dimitar@dinux.eu>
@@ -2902,7 +2870,7 @@ index 00000000000..61f0d27c543
 +	  {
 +	    const int sz = (speci == 0) ? 1 : ((speci == 1) ? 2 : 4);
 +	    if ((regi + sz) > (32 * 4))
-+	      continue;	/* invalid entry */
++	      continue;	/* Invalid entry.  */
 +
 +	    /* Construct the lookup table.  */
 +	    const char *suffix = "";
@@ -3228,14 +3196,16 @@ index 00000000000..61f0d27c543
 +	rtx op1 = XEXP (op, 1);
 +
 +	if (REG_P (op0) && CONST_INT_P (op1)
-+	    && (base = pru_get_ctable_exact_base_index (INTVAL (op1))) >= 0)
++	    && pru_get_ctable_exact_base_index (INTVAL (op1)) >= 0)
 +	  {
++	    base = pru_get_ctable_exact_base_index (INTVAL (op1));
 +	    fprintf (file, "%d, %s", base, pru_asm_regname (op0));
 +	    return;
 +	  }
 +	else if (REG_P (op1) && CONST_INT_P (op0)
-+		 && (base = pru_get_ctable_exact_base_index (INTVAL (op0))) >= 0)
++		 && pru_get_ctable_exact_base_index (INTVAL (op0)) >= 0)
 +	  {
++	    base = pru_get_ctable_exact_base_index (INTVAL (op0));
 +	    fprintf (file, "%d, %s", base, pru_asm_regname (op1));
 +	    return;
 +	  }
@@ -3384,7 +3354,8 @@ index 00000000000..61f0d27c543
 +    return -1;
 +
 +  /* Find the first available slot that fits.  Yes, that's the PRU ABI.  */
-+  for (i = 0; regi < 0 && i < ARRAY_SIZE (cum->regs_used); i++) {
++  for (i = 0; regi < 0 && i < ARRAY_SIZE (cum->regs_used); i++)
++    {
 +      if (mode == BLKmode)
 +	{
 +	  /* Structs are passed, beginning at a full register.  */
@@ -3407,13 +3378,14 @@ index 00000000000..61f0d27c543
 +
 +      for (bi = 0;
 +	   bi < argsize && (bi + i) < ARRAY_SIZE (cum->regs_used);
-+	   bi++) {
++	   bi++)
++	{
 +	  if (cum->regs_used[bi + i])
 +	    break;
-+      }
++	}
 +      if (bi == argsize)
 +	regi = FIRST_ARG_REGNO + i;
-+  }
++    }
 +
 +  return regi;
 +}
@@ -3675,7 +3647,9 @@ index 00000000000..61f0d27c543
 +
 +
 +/* Code for converting doloop_begins and doloop_ends into valid
-+   PRU instructions.  A doloop_begin is just a placeholder:
++   PRU instructions.  Idea and code snippets borrowed from mep port.
++
++   A doloop_begin is just a placeholder:
 +
 +	$count = unspec ($count)
 +
@@ -3844,13 +3818,15 @@ index 00000000000..61f0d27c543
 +  struct pru_doloop *loops, *loop;
 +  struct pru_doloop_begin *begin;
 +  struct pru_doloop_end *end;
++  size_t tmpsz;
 +
 +  /* Quick exit if we haven't created any loops.  */
 +  if (cfun->machine->doloop_tags == 0)
 +    return;
 +
 +  /* Create an array of pru_doloop structures.  */
-+  loops = (struct pru_doloop *) alloca (sizeof (loops[0]) * cfun->machine->doloop_tags);
++  tmpsz = sizeof (loops[0]) * cfun->machine->doloop_tags;
++  loops = (struct pru_doloop *) alloca (tmpsz);
 +  memset (loops, 0, sizeof (loops[0]) * cfun->machine->doloop_tags);
 +
 +  /* Search the function for do-while insns and group them by loop tag.  */
@@ -3863,7 +3839,8 @@ index 00000000000..61f0d27c543
 +	  insn_extract (insn);
 +	  loop = &loops[INTVAL (recog_data.operand[2])];
 +
-+	  begin = (struct pru_doloop_begin *) alloca (sizeof (struct pru_doloop_begin));
++	  tmpsz = sizeof (struct pru_doloop_begin);
++	  begin = (struct pru_doloop_begin *) alloca (tmpsz);
 +	  begin->next = loop->begin;
 +	  begin->insn = insn;
 +	  begin->loop_count = recog_data.operand[1];
@@ -3877,7 +3854,8 @@ index 00000000000..61f0d27c543
 +	  insn_extract (insn);
 +	  loop = &loops[INTVAL (recog_data.operand[2])];
 +
-+	  end = (struct pru_doloop_end *) alloca (sizeof (struct pru_doloop_end));
++	  tmpsz = sizeof (struct pru_doloop_end);
++	  end = (struct pru_doloop_end *) alloca (tmpsz);
 +	  end->insn = insn;
 +	  end->fallthrough = next_real_insn (insn);
 +	  end->counter = recog_data.operand[0];
@@ -3922,15 +3900,15 @@ index 00000000000..61f0d27c543
 +			    loop->begin->insn);
 +	else if (loop_mode == SImode)
 +	  {
-+	    emit_insn_before (gen_pruloopsi (loop->begin->loop_count, label_ref),
-+			      loop->begin->insn);
++	    rtx loop_rtx = gen_pruloopsi (loop->begin->loop_count, label_ref);
++	    emit_insn_before (loop_rtx, loop->begin->insn);
 +	  }
 +	else if (loop_mode == VOIDmode)
 +	  {
 +	    gcc_assert (CONST_INT_P (loop->begin->loop_count));
 +	    gcc_assert (UBYTE_INT ( INTVAL (loop->begin->loop_count)));
-+	    emit_insn_before (gen_pruloopsi (loop->begin->loop_count, label_ref),
-+			      loop->begin->insn);
++	    rtx loop_rtx = gen_pruloopsi (loop->begin->loop_count, label_ref);
++	    emit_insn_before (loop_rtx, loop->begin->insn);
 +	  }
 +	else
 +	  gcc_unreachable ();
@@ -4062,12 +4040,15 @@ index 00000000000..61f0d27c543
 +static void
 +pru_init_builtins (void)
 +{
-+  tree void_ftype_longlong = build_function_type_list (void_type_node, long_long_integer_type_node, NULL);
++  tree void_ftype_longlong
++    = build_function_type_list (void_type_node,
++				long_long_integer_type_node,
++				NULL);
 +
-+  pru_builtins[PRU_BUILTIN_DELAY_CYCLES] =
-+    add_builtin_function ( "__delay_cycles", void_ftype_longlong,
-+			   PRU_BUILTIN_DELAY_CYCLES, BUILT_IN_MD, NULL,
-+			   NULL_TREE);
++  pru_builtins[PRU_BUILTIN_DELAY_CYCLES]
++    = add_builtin_function ( "__delay_cycles", void_ftype_longlong,
++			    PRU_BUILTIN_DELAY_CYCLES, BUILT_IN_MD, NULL,
++			    NULL_TREE);
 +}
 +
 +/* Implement TARGET_BUILTIN_DECL.  */
@@ -4377,10 +4358,10 @@ index 00000000000..61f0d27c543
 +#include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
 new file mode 100644
-index 00000000000..88932241f9c
+index 00000000000..99ac29f5749
 --- /dev/null
 +++ b/gcc/config/pru/pru.h
-@@ -0,0 +1,552 @@
+@@ -0,0 +1,551 @@
 +/* Definitions of target machine for TI PRU.
 +   Copyright (C) 2014 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -4554,28 +4535,27 @@ index 00000000000..88932241f9c
 +/*  32 */  1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1	\
 +  }
 +
-+/* Try to allocate r14-r29 first.  Use r0 and r1 only if necessary.  */
-+
-+#define __pru_REGSEQ(X)  (X) * 4 + 0, (X) * 4 + 1, (X) * 4 + 2, (X) * 4 + 3
++#define __pru_RSEQ(X)  (X) * 4 + 0, (X) * 4 + 1, (X) * 4 + 2, (X) * 4 + 3
 +#define REG_ALLOC_ORDER							    \
 +  {									    \
 +    /* Call-clobbered, yet not used for parameters.  */			    \
-+    __pru_REGSEQ(0), __pru_REGSEQ( 1),					    \
++    __pru_RSEQ (0),  __pru_RSEQ ( 1),					    \
 +									    \
-+    __pru_REGSEQ(14), __pru_REGSEQ(15), __pru_REGSEQ(16), __pru_REGSEQ(17), \
-+    __pru_REGSEQ(18), __pru_REGSEQ(19), __pru_REGSEQ(20), __pru_REGSEQ(21), \
-+    __pru_REGSEQ(22), __pru_REGSEQ(23), __pru_REGSEQ(24), __pru_REGSEQ(25), \
-+    __pru_REGSEQ(26), __pru_REGSEQ(27), __pru_REGSEQ(28), __pru_REGSEQ(29), \
++    __pru_RSEQ (14), __pru_RSEQ (15), __pru_RSEQ (16), __pru_RSEQ (17),	    \
++    __pru_RSEQ (18), __pru_RSEQ (19), __pru_RSEQ (20), __pru_RSEQ (21),	    \
++    __pru_RSEQ (22), __pru_RSEQ (23), __pru_RSEQ (24), __pru_RSEQ (25),	    \
++    __pru_RSEQ (26), __pru_RSEQ (27), __pru_RSEQ (28), __pru_RSEQ (29),	    \
 +									    \
-+    __pru_REGSEQ( 5), __pru_REGSEQ( 6), __pru_REGSEQ( 7), __pru_REGSEQ( 8), \
-+    __pru_REGSEQ( 9), __pru_REGSEQ(10), __pru_REGSEQ(11), __pru_REGSEQ(12), \
-+    __pru_REGSEQ(13),							    \
++    __pru_RSEQ ( 5), __pru_RSEQ ( 6), __pru_RSEQ ( 7), __pru_RSEQ ( 8),	    \
++    __pru_RSEQ ( 9), __pru_RSEQ (10), __pru_RSEQ (11), __pru_RSEQ (12),	    \
++    __pru_RSEQ (13),							    \
 +									    \
-+    __pru_REGSEQ(4),							    \
-+    __pru_REGSEQ(2), __pru_REGSEQ( 3),					    \
++    __pru_RSEQ ( 4),							    \
++    __pru_RSEQ ( 2), __pru_RSEQ ( 3),					    \
 +									    \
-+    __pru_REGSEQ(30), __pru_REGSEQ(31), __pru_REGSEQ(32), __pru_REGSEQ(33), \
-+    __pru_REGSEQ(34), __pru_REGSEQ(35)					    \
++    /* I/O and virtual registers.  */					    \
++    __pru_RSEQ (30), __pru_RSEQ (31), __pru_RSEQ (32), __pru_RSEQ (33),	    \
++    __pru_RSEQ (34), __pru_RSEQ (35)					    \
 +  }
 +
 +/* Register Classes.  */
@@ -4691,7 +4671,7 @@ index 00000000000..88932241f9c
 +
 +#define INIT_CUMULATIVE_ARGS(CUM, FNTYPE, LIBNAME, FNDECL, N_NAMED_ARGS)  \
 +  do {									  \
-+      memset((CUM).regs_used, 0, sizeof((CUM).regs_used));		  \
++      memset ((CUM).regs_used, 0, sizeof ((CUM).regs_used));		  \
 +  } while (0)
 +
 +#define FUNCTION_ARG_REGNO_P(REGNO) \
@@ -4744,42 +4724,42 @@ index 00000000000..88932241f9c
 +#define __pru_name_R(X)  X".b0", X".b1", X".b2", X".b3"
 +#define REGISTER_NAMES		  \
 +  {				  \
-+    __pru_name_R("r0"),		  \
-+    __pru_name_R("r1"),		  \
-+    __pru_name_R("r2"),		  \
-+    __pru_name_R("r3"),		  \
-+    __pru_name_R("r4"),		  \
-+    __pru_name_R("r5"),		  \
-+    __pru_name_R("r6"),		  \
-+    __pru_name_R("r7"),		  \
-+    __pru_name_R("r8"),		  \
-+    __pru_name_R("r9"),		  \
-+    __pru_name_R("r10"),	  \
-+    __pru_name_R("r11"),	  \
-+    __pru_name_R("r12"),	  \
-+    __pru_name_R("r13"),	  \
-+    __pru_name_R("r14"),	  \
-+    __pru_name_R("r15"),	  \
-+    __pru_name_R("r16"),	  \
-+    __pru_name_R("r17"),	  \
-+    __pru_name_R("r18"),	  \
-+    __pru_name_R("r19"),	  \
-+    __pru_name_R("r20"),	  \
-+    __pru_name_R("r21"),	  \
-+    __pru_name_R("r22"),	  \
-+    __pru_name_R("r23"),	  \
-+    __pru_name_R("r24"),	  \
-+    __pru_name_R("r25"),	  \
-+    __pru_name_R("r26"),	  \
-+    __pru_name_R("r27"),	  \
-+    __pru_name_R("r28"),	  \
-+    __pru_name_R("r29"),	  \
-+    __pru_name_R("r30"),	  \
-+    __pru_name_R("r31"),	  \
-+    __pru_name_R("loopcntr_reg"), \
-+    __pru_name_R("pc"),		  \
-+    __pru_name_R("fake_fp"),	  \
-+    __pru_name_R("fake_ap"),	  \
++    __pru_name_R ("r0"),	  \
++    __pru_name_R ("r1"),	  \
++    __pru_name_R ("r2"),	  \
++    __pru_name_R ("r3"),	  \
++    __pru_name_R ("r4"),	  \
++    __pru_name_R ("r5"),	  \
++    __pru_name_R ("r6"),	  \
++    __pru_name_R ("r7"),	  \
++    __pru_name_R ("r8"),	  \
++    __pru_name_R ("r9"),	  \
++    __pru_name_R ("r10"),	  \
++    __pru_name_R ("r11"),	  \
++    __pru_name_R ("r12"),	  \
++    __pru_name_R ("r13"),	  \
++    __pru_name_R ("r14"),	  \
++    __pru_name_R ("r15"),	  \
++    __pru_name_R ("r16"),	  \
++    __pru_name_R ("r17"),	  \
++    __pru_name_R ("r18"),	  \
++    __pru_name_R ("r19"),	  \
++    __pru_name_R ("r20"),	  \
++    __pru_name_R ("r21"),	  \
++    __pru_name_R ("r22"),	  \
++    __pru_name_R ("r23"),	  \
++    __pru_name_R ("r24"),	  \
++    __pru_name_R ("r25"),	  \
++    __pru_name_R ("r26"),	  \
++    __pru_name_R ("r27"),	  \
++    __pru_name_R ("r28"),	  \
++    __pru_name_R ("r29"),	  \
++    __pru_name_R ("r30"),	  \
++    __pru_name_R ("r31"),	  \
++    __pru_name_R ("loopcntr_reg"), \
++    __pru_name_R ("pc"),	  \
++    __pru_name_R ("fake_fp"),	  \
++    __pru_name_R ("fake_ap"),	  \
 +}
 +
 +#define __pru_overlap_R(X)	      \
@@ -4794,38 +4774,38 @@ index 00000000000..88932241f9c
 +    { "sp", 2 * 4, 4 },		    \
 +    { "ra", 3 * 4, 2 },		    \
 +    { "fp", 4 * 4, 4 },		    \
-+    __pru_overlap_R(0),		    \
-+    __pru_overlap_R(1),		    \
-+    __pru_overlap_R(2),		    \
-+    __pru_overlap_R(3),		    \
-+    __pru_overlap_R(4),		    \
-+    __pru_overlap_R(5),		    \
-+    __pru_overlap_R(6),		    \
-+    __pru_overlap_R(7),		    \
-+    __pru_overlap_R(8),		    \
-+    __pru_overlap_R(9),		    \
-+    __pru_overlap_R(10),	    \
-+    __pru_overlap_R(11),	    \
-+    __pru_overlap_R(12),	    \
-+    __pru_overlap_R(13),	    \
-+    __pru_overlap_R(14),	    \
-+    __pru_overlap_R(15),	    \
-+    __pru_overlap_R(16),	    \
-+    __pru_overlap_R(17),	    \
-+    __pru_overlap_R(18),	    \
-+    __pru_overlap_R(19),	    \
-+    __pru_overlap_R(20),	    \
-+    __pru_overlap_R(21),	    \
-+    __pru_overlap_R(22),	    \
-+    __pru_overlap_R(23),	    \
-+    __pru_overlap_R(24),	    \
-+    __pru_overlap_R(25),	    \
-+    __pru_overlap_R(26),	    \
-+    __pru_overlap_R(27),	    \
-+    __pru_overlap_R(28),	    \
-+    __pru_overlap_R(29),	    \
-+    __pru_overlap_R(30),	    \
-+    __pru_overlap_R(31),	    \
++    __pru_overlap_R (0),	    \
++    __pru_overlap_R (1),	    \
++    __pru_overlap_R (2),	    \
++    __pru_overlap_R (3),	    \
++    __pru_overlap_R (4),	    \
++    __pru_overlap_R (5),	    \
++    __pru_overlap_R (6),	    \
++    __pru_overlap_R (7),	    \
++    __pru_overlap_R (8),	    \
++    __pru_overlap_R (9),	    \
++    __pru_overlap_R (10),	    \
++    __pru_overlap_R (11),	    \
++    __pru_overlap_R (12),	    \
++    __pru_overlap_R (13),	    \
++    __pru_overlap_R (14),	    \
++    __pru_overlap_R (15),	    \
++    __pru_overlap_R (16),	    \
++    __pru_overlap_R (17),	    \
++    __pru_overlap_R (18),	    \
++    __pru_overlap_R (19),	    \
++    __pru_overlap_R (20),	    \
++    __pru_overlap_R (21),	    \
++    __pru_overlap_R (22),	    \
++    __pru_overlap_R (23),	    \
++    __pru_overlap_R (24),	    \
++    __pru_overlap_R (25),	    \
++    __pru_overlap_R (26),	    \
++    __pru_overlap_R (27),	    \
++    __pru_overlap_R (28),	    \
++    __pru_overlap_R (29),	    \
++    __pru_overlap_R (30),	    \
++    __pru_overlap_R (31),	    \
 +}
 +
 +#define ASM_OUTPUT_ADDR_VEC_ELT(FILE, VALUE)				    \
@@ -4907,8 +4887,8 @@ index 00000000000..88932241f9c
 +  if (!flag_inhibit_size_directive)					\
 +    ASM_OUTPUT_SIZE_DIRECTIVE (FILE, NAME, SIZE);			\
 +  ASM_OUTPUT_ALIGN ((FILE), exact_log2 ((ALIGN) / BITS_PER_UNIT));      \
-+  ASM_OUTPUT_LABEL(FILE, NAME);						\
-+  ASM_OUTPUT_SKIP((FILE), (SIZE) ? (SIZE) : 1);				\
++  ASM_OUTPUT_LABEL (FILE, NAME);					\
++  ASM_OUTPUT_SKIP ((FILE), (SIZE) ? (SIZE) : 1);			\
 +} while (0)
 +
 +/* Misc parameters.  */
@@ -4935,10 +4915,10 @@ index 00000000000..88932241f9c
 +#endif /* GCC_PRU_H */
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
 new file mode 100644
-index 00000000000..a62664d52c3
+index 00000000000..bb6c2422e1f
 --- /dev/null
 +++ b/gcc/config/pru/pru.md
-@@ -0,0 +1,904 @@
+@@ -0,0 +1,905 @@
 +;; Machine Description for TI PRU.
 +;; Copyright (C) 2014 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -5026,9 +5006,9 @@ index 00000000000..a62664d52c3
 +
 +;; All supported direct move-modes
 +(define_mode_iterator MOVMODE [QI QQ UQQ
-+                               HI HQ UHQ HA UHA
-+                               SI SQ USQ SA USA
-+                               SF])
++			       HI HQ UHQ HA UHA
++			       SI SQ USQ SA USA
++			       SF])
 +
 +(define_mode_iterator MOV32 [SI SF SD SQ USQ])
 +(define_mode_iterator MOV64 [DI DF DD DQ UDQ])
@@ -5084,7 +5064,7 @@ index 00000000000..a62664d52c3
 +;; Note: Assume that Program Mem (T constraint) can fit in 16 bits!
 +(define_insn "prumov_ldi<mode>"
 +  [(set (match_operand:QIHI 0 "register_operand"	"=r,r,r")
-+	(match_operand:QIHI 1 "immediate_operand"       "T,J,N"))]
++	(match_operand:VOID 1 "immediate_operand"       "T,J,N"))]
 +  ""
 +  "@
 +    ldi\\t%0, %%pmem(%1)
@@ -5151,7 +5131,7 @@ index 00000000000..a62664d52c3
 +;;   op2: number of consecutive registers
 +(define_expand "load_multiple"
 +  [(match_par_dup 3 [(set (match_operand:QI 0 "" "")
-+			  (match_operand:SI 1 "" ""))
++			  (match_operand:QI 1 "" ""))
 +		     (use (match_operand:SI 2 "" ""))])]
 +  ""
 +  "
@@ -5264,10 +5244,11 @@ index 00000000000..a62664d52c3
 +;; Check how combine.c:make_extraction() uses
 +;; get_best_reg_extraction_insn() to select the op size.
 +(define_insn "extzv<mode>"
-+  [(set (match_operand:QISI 0 "register_operand" "=r")
-+        (zero_extract:QISI (match_operand:QISI 1 "register_operand" "r")
-+                      (match_operand:QISI 2 "const_int_operand" "i")
-+                      (match_operand:QISI 3 "const_int_operand" "i")))]
++  [(set (match_operand:QISI 0 "register_operand"	"=r")
++	  (zero_extract:QISI
++	   (match_operand:QISI 1 "register_operand"	"r")
++	   (match_operand:QISI 2 "const_int_operand" 	"i")
++	   (match_operand:QISI 3 "const_int_operand" 	"i")))]
 +  ""
 +  "lsl\\t%0, %1, (%S0 * 8 - %2 - %3)\;lsr\\t%0, %0, (%S0 * 8 - %2)"
 +  [(set_attr "type" "complex")
@@ -5387,9 +5368,9 @@ index 00000000000..a62664d52c3
 +; LRA cannot cope with clobbered op2, hence the scratch register.
 +(define_insn "ashr<mode>3"
 +  [(set (match_operand:QISI 0 "register_operand" "=&r,r")
-+        (ashiftrt:QISI
-+          (match_operand:QISI 1 "register_operand" "0,r")
-+          (match_operand:QISI 2 "reg_or_const_1_operand" "r,P")))
++	  (ashiftrt:QISI
++	   (match_operand:QISI 1 "register_operand" "0,r")
++	   (match_operand:QISI 2 "reg_or_const_1_operand" "r,P")))
 +    (clobber (match_scratch:QISI 3 "=r,X"))]
 +  ""
 +  "@
@@ -5406,9 +5387,9 @@ index 00000000000..a62664d52c3
 +
 +(define_insn "<code>di3"
 +  [(set (match_operand:DI 0 "register_operand" "=&r,&r")
-+        (LOGICAL_BITOP:DI
-+          (match_operand:DI 1 "register_operand"     "%r,r")
-+          (match_operand:DI 2 "reg_or_ubyte_operand"  "r,I")))]
++	  (LOGICAL_BITOP:DI
++	   (match_operand:DI 1 "register_operand"     "%r,r")
++	   (match_operand:DI 2 "reg_or_ubyte_operand" "r,I")))]
 +  ""
 +  "@
 +   <logical_bitop_asm>\\t%F0, %F1, %F2\;<logical_asm>\\t%N0, %N1, %N2
@@ -5845,10 +5826,10 @@ index 00000000000..a62664d52c3
 +  [(set_attr "type" "alu")])
 diff --git a/gcc/config/pru/pru.opt b/gcc/config/pru/pru.opt
 new file mode 100644
-index 00000000000..8c03e4dfa0f
+index 00000000000..100b289cb4d
 --- /dev/null
 +++ b/gcc/config/pru/pru.opt
-@@ -0,0 +1,52 @@
+@@ -0,0 +1,53 @@
 +; Options for the TI PRU port of the compiler.
 +; Copyright (C) 2012-2014 Free Software Foundation, Inc.
 +; Contributed by Altera and Mentor Graphics, Inc.
@@ -5874,7 +5855,8 @@ index 00000000000..8c03e4dfa0f
 +
 +minrt
 +Target Report Mask(MINRT) RejectNegative
-+Use a minimum runtime (no static initializers or ctors) for memory-constrained devices.
++Use a minimum runtime (no static initializers or ctors) for memory-constrained
++devices.
 +
 +mmcu=
 +Target RejectNegative Joined
@@ -5903,7 +5885,7 @@ index 00000000000..8c03e4dfa0f
 +Enum(pru_abi_t) String(ti) Value(PRU_ABI_TI)
 diff --git a/gcc/config/pru/t-pru b/gcc/config/pru/t-pru
 new file mode 100644
-index 00000000000..3f3094fa126
+index 00000000000..74068e32ef8
 --- /dev/null
 +++ b/gcc/config/pru/t-pru
 @@ -0,0 +1,30 @@
@@ -5930,18 +5912,18 @@ index 00000000000..3f3094fa126
 +# Unfortunately mabi=ti is not feature-complete enough to build newlib.
 +# MULTILIB_OPTIONS    = mabi=gnu/mabi=ti
 +
-+pru-pragma.o: $(srcdir)/config/pru/pru-pragma.c $(RTL_H) $(TREE_H) $(CONFIG_H) $(TM_H) \
-+		$(srcdir)/config/pru/pru-protos.h
++pru-pragma.o: $(srcdir)/config/pru/pru-pragma.c $(RTL_H) $(TREE_H) \
++		$(CONFIG_H) $(TM_H) $(srcdir)/config/pru/pru-protos.h
 +	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $<
 +
-+pru-passes.o: $(srcdir)/config/pru/pru-passes.c $(RTL_H) $(TREE_H) $(CONFIG_H) $(TM_H) \
-+		$(srcdir)/config/pru/pru-protos.h
++pru-passes.o: $(srcdir)/config/pru/pru-passes.c $(RTL_H) $(TREE_H) \
++		$(CONFIG_H) $(TM_H) $(srcdir)/config/pru/pru-protos.h
 +	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $<
 diff --git a/gcc/doc/extend.texi b/gcc/doc/extend.texi
-index 1379502ebbb..877d2795ae0 100644
+index 5571d05d93b..38ef1e8ef19 100644
 --- a/gcc/doc/extend.texi
 +++ b/gcc/doc/extend.texi
-@@ -21992,6 +21992,7 @@ for further explanation.
+@@ -22005,6 +22005,7 @@ for further explanation.
  * ARM Pragmas::
  * M32C Pragmas::
  * MeP Pragmas::
@@ -5949,7 +5931,7 @@ index 1379502ebbb..877d2795ae0 100644
  * RS/6000 and PowerPC Pragmas::
  * S/390 Pragmas::
  * Darwin Pragmas::
-@@ -22143,6 +22144,25 @@ extern int foo ();
+@@ -22156,6 +22157,25 @@ extern int foo ();
  
  @end table
  
@@ -5976,7 +5958,7 @@ index 1379502ebbb..877d2795ae0 100644
  @subsection RS/6000 and PowerPC Pragmas
  
 diff --git a/gcc/doc/invoke.texi b/gcc/doc/invoke.texi
-index 2492148b30f..dd7483e69e4 100644
+index 444159178a7..35db81151ee 100644
 --- a/gcc/doc/invoke.texi
 +++ b/gcc/doc/invoke.texi
 @@ -1029,6 +1029,10 @@ See RS/6000 and PowerPC Options.
@@ -5990,7 +5972,7 @@ index 2492148b30f..dd7483e69e4 100644
  @emph{RISC-V Options}
  @gccoptlist{-mbranch-cost=@var{N-instruction} @gol
  -mplt  -mno-plt @gol
-@@ -14522,6 +14526,7 @@ platform.
+@@ -14540,6 +14544,7 @@ platform.
  * picoChip Options::
  * PowerPC Options::
  * PowerPC SPE Options::
@@ -5998,7 +5980,7 @@ index 2492148b30f..dd7483e69e4 100644
  * RISC-V Options::
  * RL78 Options::
  * RS/6000 and PowerPC Options::
-@@ -22992,6 +22997,57 @@ the offset with a symbol reference to a canary in the TLS block.
+@@ -23010,6 +23015,56 @@ the offset with a symbol reference to a canary in the TLS block.
  @end table
  
  
@@ -6017,13 +5999,12 @@ index 2492148b30f..dd7483e69e4 100644
 +
 +@item -mmcu=@var{mcu}
 +@opindex mmcu
-+Specify the PRU MCU variant to use. Check the C library for exact
-+list of options.
++Specify the PRU MCU variant to use.  Check newlib for exact list of options.
 +
 +@item -mno-relax
 +@opindex mno-relax
 +Pass on (or do not pass on) the @option{-mrelax} command-line option
-+to the assembler.
++to the linker.
 +
 +@item -mloop
 +@opindex mloop
@@ -6031,8 +6012,8 @@ index 2492148b30f..dd7483e69e4 100644
 +
 +@item -mabi=@var{variant}
 +@opindex mabi
-+Specify the ABI variant to output code for. Permissible values are @samp{gnu}
-+for GCC, and @samp{ti} for fully conformant TI ABI. These are the differences:
++Specify the ABI variant to output code for.  Permissible values are @samp{gnu}
++for GCC, and @samp{ti} for fully conformant TI ABI.  These are the differences:
 +
 +@table @samp
 +@item Function Pointer Size
@@ -6041,9 +6022,9 @@ index 2492148b30f..dd7483e69e4 100644
 +
 +@item Optional Return Value Pointer
 +Function return values larger than 64-bits are passed by using a hidden
-+pointer as the first argument of the function. TI ABI, though, mandates that
++pointer as the first argument of the function.  TI ABI, though, mandates that
 +the pointer can be NULL in case the caller is not using the returned value.
-+GCC always passes a valid return value pointer.
++GCC always passes and expects a valid return value pointer.
 +
 +@end table
 +
@@ -6057,7 +6038,7 @@ index 2492148b30f..dd7483e69e4 100644
  @subsection RISC-V Options
  @cindex RISC-V Options
 diff --git a/gcc/doc/md.texi b/gcc/doc/md.texi
-index f5167a16155..ad45724d782 100644
+index 30f1e09a310..0c77269eb73 100644
 --- a/gcc/doc/md.texi
 +++ b/gcc/doc/md.texi
 @@ -3298,6 +3298,28 @@ Vector constant that is all zeros.
@@ -6089,1404 +6070,6 @@ index f5167a16155..ad45724d782 100644
  @item RL78---@file{config/rl78/constraints.md}
  @table @code
  
-diff --git a/libgcc/config.host b/libgcc/config.host
-index 96d55a4aaa8..60282f50450 100644
---- a/libgcc/config.host
-+++ b/libgcc/config.host
-@@ -165,6 +165,9 @@ nios2*-*-*)
- powerpc*-*-*)
- 	cpu_type=rs6000
- 	;;
-+pru-*-*)
-+	cpu_type=pru
-+	;;
- rs6000*-*-*)
- 	;;
- riscv*-*-*)
-@@ -1123,6 +1126,10 @@ powerpcle-*-eabi*)
- 	tmake_file="${tmake_file} rs6000/t-ppccomm rs6000/t-crtstuff t-crtstuff-pic t-fdpbit"
- 	extra_parts="$extra_parts crtbegin.o crtend.o crtbeginS.o crtendS.o crtbeginT.o ecrti.o ecrtn.o ncrti.o ncrtn.o"
- 	;;
-+pru-*-*)
-+	tmake_file="${tmake_file} t-softfp-sfdf t-softfp-excl t-softfp t-gnu-prefix pru/t-pru"
-+	tm_file="$tm_file pru/pru-abi.h"
-+	;;
- riscv*-*-linux*)
- 	tmake_file="${tmake_file} riscv/t-softfp${host_address} t-softfp riscv/t-elf riscv/t-elf${host_address}"
- 	extra_parts="$extra_parts crtbegin.o crtend.o crti.o crtn.o crtendS.o crtbeginT.o"
-diff --git a/libgcc/config/pru/asri.c b/libgcc/config/pru/asri.c
-new file mode 100644
-index 00000000000..a56a1c80b65
---- /dev/null
-+++ b/libgcc/config/pru/asri.c
-@@ -0,0 +1,33 @@
-+/* PRU ABI compatibility functions
-+   Arithmetic right shift
-+   Copyright (C) 2017 Free Software Foundation, Inc.
-+   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
-+
-+   This file is free software; you can redistribute it and/or
-+   modify it under the terms of the GNU Lesser General Public
-+   License as published by the Free Software Foundation; either
-+   version 2.1 of the License, or (at your option) any later version.
-+
-+   In addition to the permissions in the GNU Lesser General Public
-+   License, the Free Software Foundation gives you unlimited
-+   permission to link the compiled version of this file into
-+   combinations with other programs, and to distribute those
-+   combinations without any restriction coming from the use of this
-+   file.  (The Lesser General Public License restrictions do apply in
-+   other respects; for example, they cover modification of the file,
-+   and distribution when not linked into a combine executable.)
-+
-+   This file is distributed in the hope that it will be useful,
-+   but WITHOUT ANY WARRANTY; without even the implied warranty of
-+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+   Lesser General Public License for more details.
-+
-+   You should have received a copy of the GNU Lesser General Public
-+   License along with GCC; see the file COPYING.LIB.  If not see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+int __pruabi_asri(int a, unsigned char shift)
-+{
-+  /* GCC has a built-in op.  */
-+  return a >> shift;
-+}
-diff --git a/libgcc/config/pru/eqd.c b/libgcc/config/pru/eqd.c
-new file mode 100644
-index 00000000000..f12b650bc3f
---- /dev/null
-+++ b/libgcc/config/pru/eqd.c
-@@ -0,0 +1,45 @@
-+/* Software floating-point emulation.
-+   Return 1 iff a == b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
-+   Contributed by Richard Henderson (rth@cygnus.com) and
-+		  Jakub Jelinek (jj@ultra.linux.cz).
-+
-+   This file is free software; you can redistribute it and/or
-+   modify it under the terms of the GNU Lesser General Public
-+   License as published by the Free Software Foundation; either
-+   version 2.1 of the License, or (at your option) any later version.
-+
-+   In addition to the permissions in the GNU Lesser General Public
-+   License, the Free Software Foundation gives you unlimited
-+   permission to link the compiled version of this file into
-+   combinations with other programs, and to distribute those
-+   combinations without any restriction coming from the use of this
-+   file.  (The Lesser General Public License restrictions do apply in
-+   other respects; for example, they cover modification of the file,
-+   and distribution when not linked into a combine executable.)
-+
-+   This file is distributed in the hope that it will be useful,
-+   but WITHOUT ANY WARRANTY; without even the implied warranty of
-+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+   Lesser General Public License for more details.
-+
-+   You should have received a copy of the GNU Lesser General Public
-+   License along with GCC; see the file COPYING.LIB.  If not see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+#include <soft-fp/soft-fp.h>
-+#include <soft-fp/double.h>
-+
-+CMPtype __pruabi_eqd(DFtype a, DFtype b)
-+{
-+  FP_DECL_EX;
-+  FP_DECL_D(A); FP_DECL_D(B);
-+  CMPtype r;
-+
-+  FP_UNPACK_RAW_D(A, a);
-+  FP_UNPACK_RAW_D(B, b);
-+  FP_CMP_EQ_D(r, A, B, 1);
-+  FP_HANDLE_EXCEPTIONS;
-+
-+  return !r;
-+}
-diff --git a/libgcc/config/pru/eqf.c b/libgcc/config/pru/eqf.c
-new file mode 100644
-index 00000000000..7150eb680ae
---- /dev/null
-+++ b/libgcc/config/pru/eqf.c
-@@ -0,0 +1,45 @@
-+/* Software floating-point emulation.
-+   Return 1 iff a == b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
-+   Contributed by Richard Henderson (rth@cygnus.com) and
-+		  Jakub Jelinek (jj@ultra.linux.cz).
-+
-+   This file is free software; you can redistribute it and/or
-+   modify it under the terms of the GNU Lesser General Public
-+   License as published by the Free Software Foundation; either
-+   version 2.1 of the License, or (at your option) any later version.
-+
-+   In addition to the permissions in the GNU Lesser General Public
-+   License, the Free Software Foundation gives you unlimited
-+   permission to link the compiled version of this file into
-+   combinations with other programs, and to distribute those
-+   combinations without any restriction coming from the use of this
-+   file.  (The Lesser General Public License restrictions do apply in
-+   other respects; for example, they cover modification of the file,
-+   and distribution when not linked into a combine executable.)
-+
-+   This file is distributed in the hope that it will be useful,
-+   but WITHOUT ANY WARRANTY; without even the implied warranty of
-+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+   Lesser General Public License for more details.
-+
-+   You should have received a copy of the GNU Lesser General Public
-+   License along with GCC; see the file COPYING.LIB.  If not see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+#include <soft-fp/soft-fp.h>
-+#include <soft-fp/single.h>
-+
-+CMPtype __pruabi_eqf(SFtype a, SFtype b)
-+{
-+  FP_DECL_EX;
-+  FP_DECL_S(A); FP_DECL_S(B);
-+  CMPtype r;
-+
-+  FP_UNPACK_RAW_S(A, a);
-+  FP_UNPACK_RAW_S(B, b);
-+  FP_CMP_EQ_S(r, A, B, 1);
-+  FP_HANDLE_EXCEPTIONS;
-+
-+  return !r;
-+}
-diff --git a/libgcc/config/pru/ged.c b/libgcc/config/pru/ged.c
-new file mode 100644
-index 00000000000..662226d2fa5
---- /dev/null
-+++ b/libgcc/config/pru/ged.c
-@@ -0,0 +1,45 @@
-+/* Software floating-point emulation.
-+   Return 1 iff a >= b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
-+   Contributed by Richard Henderson (rth@cygnus.com) and
-+		  Jakub Jelinek (jj@ultra.linux.cz).
-+
-+   This file is free software; you can redistribute it and/or
-+   modify it under the terms of the GNU Lesser General Public
-+   License as published by the Free Software Foundation; either
-+   version 2.1 of the License, or (at your option) any later version.
-+
-+   In addition to the permissions in the GNU Lesser General Public
-+   License, the Free Software Foundation gives you unlimited
-+   permission to link the compiled version of this file into
-+   combinations with other programs, and to distribute those
-+   combinations without any restriction coming from the use of this
-+   file.  (The Lesser General Public License restrictions do apply in
-+   other respects; for example, they cover modification of the file,
-+   and distribution when not linked into a combine executable.)
-+
-+   This file is distributed in the hope that it will be useful,
-+   but WITHOUT ANY WARRANTY; without even the implied warranty of
-+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+   Lesser General Public License for more details.
-+
-+   You should have received a copy of the GNU Lesser General Public
-+   License along with GCC; see the file COPYING.LIB.  If not see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+#include <soft-fp/soft-fp.h>
-+#include <soft-fp/double.h>
-+
-+CMPtype __pruabi_ged(DFtype a, DFtype b)
-+{
-+  FP_DECL_EX;
-+  FP_DECL_D(A); FP_DECL_D(B);
-+  CMPtype r;
-+
-+  FP_UNPACK_RAW_D(A, a);
-+  FP_UNPACK_RAW_D(B, b);
-+  FP_CMP_D(r, A, B, -2, 2);
-+  FP_HANDLE_EXCEPTIONS;
-+
-+  return r >= 0;
-+}
-diff --git a/libgcc/config/pru/gef.c b/libgcc/config/pru/gef.c
-new file mode 100644
-index 00000000000..51c4f7061ca
---- /dev/null
-+++ b/libgcc/config/pru/gef.c
-@@ -0,0 +1,45 @@
-+/* Software floating-point emulation.
-+   Return 1 iff a >= b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
-+   Contributed by Richard Henderson (rth@cygnus.com) and
-+		  Jakub Jelinek (jj@ultra.linux.cz).
-+
-+   This file is free software; you can redistribute it and/or
-+   modify it under the terms of the GNU Lesser General Public
-+   License as published by the Free Software Foundation; either
-+   version 2.1 of the License, or (at your option) any later version.
-+
-+   In addition to the permissions in the GNU Lesser General Public
-+   License, the Free Software Foundation gives you unlimited
-+   permission to link the compiled version of this file into
-+   combinations with other programs, and to distribute those
-+   combinations without any restriction coming from the use of this
-+   file.  (The Lesser General Public License restrictions do apply in
-+   other respects; for example, they cover modification of the file,
-+   and distribution when not linked into a combine executable.)
-+
-+   This file is distributed in the hope that it will be useful,
-+   but WITHOUT ANY WARRANTY; without even the implied warranty of
-+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+   Lesser General Public License for more details.
-+
-+   You should have received a copy of the GNU Lesser General Public
-+   License along with GCC; see the file COPYING.LIB.  If not see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+#include <soft-fp/soft-fp.h>
-+#include <soft-fp/single.h>
-+
-+CMPtype __pruabi_gef(SFtype a, SFtype b)
-+{
-+  FP_DECL_EX;
-+  FP_DECL_S(A); FP_DECL_S(B);
-+  CMPtype r;
-+
-+  FP_UNPACK_RAW_S(A, a);
-+  FP_UNPACK_RAW_S(B, b);
-+  FP_CMP_S(r, A, B, -2, 2);
-+  FP_HANDLE_EXCEPTIONS;
-+
-+  return r >= 0;
-+}
-diff --git a/libgcc/config/pru/gtd.c b/libgcc/config/pru/gtd.c
-new file mode 100644
-index 00000000000..d2ca7fa1455
---- /dev/null
-+++ b/libgcc/config/pru/gtd.c
-@@ -0,0 +1,45 @@
-+/* Software floating-point emulation.
-+   Return 1 iff a > b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
-+   Contributed by Richard Henderson (rth@cygnus.com) and
-+		  Jakub Jelinek (jj@ultra.linux.cz).
-+
-+   This file is free software; you can redistribute it and/or
-+   modify it under the terms of the GNU Lesser General Public
-+   License as published by the Free Software Foundation; either
-+   version 2.1 of the License, or (at your option) any later version.
-+
-+   In addition to the permissions in the GNU Lesser General Public
-+   License, the Free Software Foundation gives you unlimited
-+   permission to link the compiled version of this file into
-+   combinations with other programs, and to distribute those
-+   combinations without any restriction coming from the use of this
-+   file.  (The Lesser General Public License restrictions do apply in
-+   other respects; for example, they cover modification of the file,
-+   and distribution when not linked into a combine executable.)
-+
-+   This file is distributed in the hope that it will be useful,
-+   but WITHOUT ANY WARRANTY; without even the implied warranty of
-+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+   Lesser General Public License for more details.
-+
-+   You should have received a copy of the GNU Lesser General Public
-+   License along with GCC; see the file COPYING.LIB.  If not see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+#include <soft-fp/soft-fp.h>
-+#include <soft-fp/double.h>
-+
-+CMPtype __pruabi_gtd(DFtype a, DFtype b)
-+{
-+  FP_DECL_EX;
-+  FP_DECL_D(A); FP_DECL_D(B);
-+  CMPtype r;
-+
-+  FP_UNPACK_RAW_D(A, a);
-+  FP_UNPACK_RAW_D(B, b);
-+  FP_CMP_D(r, A, B, -2, 2);
-+  FP_HANDLE_EXCEPTIONS;
-+
-+  return r > 0;
-+}
-diff --git a/libgcc/config/pru/gtf.c b/libgcc/config/pru/gtf.c
-new file mode 100644
-index 00000000000..0a98c6e283f
---- /dev/null
-+++ b/libgcc/config/pru/gtf.c
-@@ -0,0 +1,45 @@
-+/* Software floating-point emulation.
-+   Return 1 iff a > b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
-+   Contributed by Richard Henderson (rth@cygnus.com) and
-+		  Jakub Jelinek (jj@ultra.linux.cz).
-+
-+   This file is free software; you can redistribute it and/or
-+   modify it under the terms of the GNU Lesser General Public
-+   License as published by the Free Software Foundation; either
-+   version 2.1 of the License, or (at your option) any later version.
-+
-+   In addition to the permissions in the GNU Lesser General Public
-+   License, the Free Software Foundation gives you unlimited
-+   permission to link the compiled version of this file into
-+   combinations with other programs, and to distribute those
-+   combinations without any restriction coming from the use of this
-+   file.  (The Lesser General Public License restrictions do apply in
-+   other respects; for example, they cover modification of the file,
-+   and distribution when not linked into a combine executable.)
-+
-+   This file is distributed in the hope that it will be useful,
-+   but WITHOUT ANY WARRANTY; without even the implied warranty of
-+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+   Lesser General Public License for more details.
-+
-+   You should have received a copy of the GNU Lesser General Public
-+   License along with GCC; see the file COPYING.LIB.  If not see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+#include <soft-fp/soft-fp.h>
-+#include <soft-fp/single.h>
-+
-+CMPtype __pruabi_gtf(SFtype a, SFtype b)
-+{
-+  FP_DECL_EX;
-+  FP_DECL_S(A); FP_DECL_S(B);
-+  CMPtype r;
-+
-+  FP_UNPACK_RAW_S(A, a);
-+  FP_UNPACK_RAW_S(B, b);
-+  FP_CMP_S(r, A, B, -2, 2);
-+  FP_HANDLE_EXCEPTIONS;
-+
-+  return r > 0;
-+}
-diff --git a/libgcc/config/pru/led.c b/libgcc/config/pru/led.c
-new file mode 100644
-index 00000000000..f3e28f6844a
---- /dev/null
-+++ b/libgcc/config/pru/led.c
-@@ -0,0 +1,45 @@
-+/* Software floating-point emulation.
-+   Return 1 iff a <= b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
-+   Contributed by Richard Henderson (rth@cygnus.com) and
-+		  Jakub Jelinek (jj@ultra.linux.cz).
-+
-+   This file is free software; you can redistribute it and/or
-+   modify it under the terms of the GNU Lesser General Public
-+   License as published by the Free Software Foundation; either
-+   version 2.1 of the License, or (at your option) any later version.
-+
-+   In addition to the permissions in the GNU Lesser General Public
-+   License, the Free Software Foundation gives you unlimited
-+   permission to link the compiled version of this file into
-+   combinations with other programs, and to distribute those
-+   combinations without any restriction coming from the use of this
-+   file.  (The Lesser General Public License restrictions do apply in
-+   other respects; for example, they cover modification of the file,
-+   and distribution when not linked into a combine executable.)
-+
-+   This file is distributed in the hope that it will be useful,
-+   but WITHOUT ANY WARRANTY; without even the implied warranty of
-+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+   Lesser General Public License for more details.
-+
-+   You should have received a copy of the GNU Lesser General Public
-+   License along with GCC; see the file COPYING.LIB.  If not see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+#include <soft-fp/soft-fp.h>
-+#include <soft-fp/double.h>
-+
-+CMPtype __pruabi_led(DFtype a, DFtype b)
-+{
-+  FP_DECL_EX;
-+  FP_DECL_D(A); FP_DECL_D(B);
-+  CMPtype r;
-+
-+  FP_UNPACK_RAW_D(A, a);
-+  FP_UNPACK_RAW_D(B, b);
-+  FP_CMP_D(r, A, B, 2, 2);
-+  FP_HANDLE_EXCEPTIONS;
-+
-+  return r <= 0;
-+}
-diff --git a/libgcc/config/pru/lef.c b/libgcc/config/pru/lef.c
-new file mode 100644
-index 00000000000..8bcb4d558e9
---- /dev/null
-+++ b/libgcc/config/pru/lef.c
-@@ -0,0 +1,45 @@
-+/* Software floating-point emulation.
-+   Return 1 iff a <= b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
-+   Contributed by Richard Henderson (rth@cygnus.com) and
-+		  Jakub Jelinek (jj@ultra.linux.cz).
-+
-+   This file is free software; you can redistribute it and/or
-+   modify it under the terms of the GNU Lesser General Public
-+   License as published by the Free Software Foundation; either
-+   version 2.1 of the License, or (at your option) any later version.
-+
-+   In addition to the permissions in the GNU Lesser General Public
-+   License, the Free Software Foundation gives you unlimited
-+   permission to link the compiled version of this file into
-+   combinations with other programs, and to distribute those
-+   combinations without any restriction coming from the use of this
-+   file.  (The Lesser General Public License restrictions do apply in
-+   other respects; for example, they cover modification of the file,
-+   and distribution when not linked into a combine executable.)
-+
-+   This file is distributed in the hope that it will be useful,
-+   but WITHOUT ANY WARRANTY; without even the implied warranty of
-+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+   Lesser General Public License for more details.
-+
-+   You should have received a copy of the GNU Lesser General Public
-+   License along with GCC; see the file COPYING.LIB.  If not see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+#include <soft-fp/soft-fp.h>
-+#include <soft-fp/single.h>
-+
-+CMPtype __pruabi_lef(SFtype a, SFtype b)
-+{
-+  FP_DECL_EX;
-+  FP_DECL_S(A); FP_DECL_S(B);
-+  CMPtype r;
-+
-+  FP_UNPACK_RAW_S(A, a);
-+  FP_UNPACK_RAW_S(B, b);
-+  FP_CMP_S(r, A, B, 2, 2);
-+  FP_HANDLE_EXCEPTIONS;
-+
-+  return r <= 0;
-+}
-diff --git a/libgcc/config/pru/lib2bitcountHI.c b/libgcc/config/pru/lib2bitcountHI.c
-new file mode 100644
-index 00000000000..f9d43f48b7a
---- /dev/null
-+++ b/libgcc/config/pru/lib2bitcountHI.c
-@@ -0,0 +1,43 @@
-+/* libgcc routines for PRU
-+   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Red Hat.
-+
-+   This file is part of GCC.
-+
-+   GCC is free software; you can redistribute it and/or modify it
-+   under the terms of the GNU General Public License as published
-+   by the Free Software Foundation; either version 3, or (at your
-+   option) any later version.
-+
-+   GCC is distributed in the hope that it will be useful, but WITHOUT
-+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-+   License for more details.
-+
-+   Under Section 7 of GPL version 3, you are granted additional
-+   permissions described in the GCC Runtime Library Exception, version
-+   3.1, as published by the Free Software Foundation.
-+
-+   You should have received a copy of the GNU General Public License and
-+   a copy of the GCC Runtime Library Exception along with this program;
-+   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+typedef		  int sint32_type   __attribute__ ((mode (SI)));
-+typedef unsigned  int uint32_type   __attribute__ ((mode (SI)));
-+typedef		  int sint16_type   __attribute__ ((mode (HI)));
-+typedef unsigned  int uint16_type   __attribute__ ((mode (HI)));
-+typedef		  int sint08_type   __attribute__ ((mode (QI)));
-+typedef unsigned  int uint08_type   __attribute__ ((mode (QI)));
-+typedef		  int word_type     __attribute__ ((mode (__word__)));
-+
-+#define C3B(a,b,c) a##b##c
-+#define C3(a,b,c) C3B(a,b,c)
-+
-+#define L_clzsi2
-+#define L_ctzsi2
-+#define L_ffssi2
-+#define L_paritysi2
-+#define L_popcountsi2
-+
-+#include "libgcc2.c"
-diff --git a/libgcc/config/pru/lib2divHI.c b/libgcc/config/pru/lib2divHI.c
-new file mode 100644
-index 00000000000..bbc6857738f
---- /dev/null
-+++ b/libgcc/config/pru/lib2divHI.c
-@@ -0,0 +1,42 @@
-+/* HI mode divide routines for libgcc for PRU
-+   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Red Hat.
-+
-+   This file is part of GCC.
-+
-+   GCC is free software; you can redistribute it and/or modify it
-+   under the terms of the GNU General Public License as published
-+   by the Free Software Foundation; either version 3, or (at your
-+   option) any later version.
-+
-+   GCC is distributed in the hope that it will be useful, but WITHOUT
-+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-+   License for more details.
-+
-+   Under Section 7 of GPL version 3, you are granted additional
-+   permissions described in the GCC Runtime Library Exception, version
-+   3.1, as published by the Free Software Foundation.
-+
-+   You should have received a copy of the GNU General Public License and
-+   a copy of the GCC Runtime Library Exception along with this program;
-+   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+typedef		  int sint32_type   __attribute__ ((mode (SI)));
-+typedef unsigned  int uint32_type   __attribute__ ((mode (SI)));
-+typedef		  int sint16_type   __attribute__ ((mode (HI)));
-+typedef unsigned  int uint16_type   __attribute__ ((mode (HI)));
-+typedef		  int sint08_type   __attribute__ ((mode (QI)));
-+typedef unsigned  int uint08_type   __attribute__ ((mode (QI)));
-+typedef		  int word_type     __attribute__ ((mode (__word__)));
-+
-+#define C3B(a,b,c) a##b##c
-+#define C3(a,b,c) C3B(a,b,c)
-+
-+#define UINT_TYPE	uint16_type
-+#define SINT_TYPE	sint16_type
-+#define BITS_MINUS_1	15
-+#define NAME_MODE	hi
-+
-+#include "pru-divmod.h"
-diff --git a/libgcc/config/pru/lib2divQI.c b/libgcc/config/pru/lib2divQI.c
-new file mode 100644
-index 00000000000..7ae6b713576
---- /dev/null
-+++ b/libgcc/config/pru/lib2divQI.c
-@@ -0,0 +1,43 @@
-+/* QI mode divide routines for libgcc for PRU
-+   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Red Hat.
-+
-+   This file is part of GCC.
-+
-+   GCC is free software; you can redistribute it and/or modify it
-+   under the terms of the GNU General Public License as published
-+   by the Free Software Foundation; either version 3, or (at your
-+   option) any later version.
-+
-+   GCC is distributed in the hope that it will be useful, but WITHOUT
-+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-+   License for more details.
-+
-+   Under Section 7 of GPL version 3, you are granted additional
-+   permissions described in the GCC Runtime Library Exception, version
-+   3.1, as published by the Free Software Foundation.
-+
-+   You should have received a copy of the GNU General Public License and
-+   a copy of the GCC Runtime Library Exception along with this program;
-+   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+typedef		  int sint32_type   __attribute__ ((mode (SI)));
-+typedef unsigned  int uint32_type   __attribute__ ((mode (SI)));
-+typedef		  int sint16_type   __attribute__ ((mode (HI)));
-+typedef unsigned  int uint16_type   __attribute__ ((mode (HI)));
-+typedef		  int sint08_type   __attribute__ ((mode (QI)));
-+typedef unsigned  int uint08_type   __attribute__ ((mode (QI)));
-+typedef		  int word_type     __attribute__ ((mode (__word__)));
-+
-+#define C3B(a,b,c) a##b##c
-+#define C3(a,b,c) C3B(a,b,c)
-+
-+#define UINT_TYPE	uint08_type
-+#define SINT_TYPE	sint08_type
-+#define BITS_MINUS_1	7
-+#define NAME_MODE	qi
-+
-+#include "pru-divmod.h"
-+
-diff --git a/libgcc/config/pru/lib2divSI.c b/libgcc/config/pru/lib2divSI.c
-new file mode 100644
-index 00000000000..3d45244928f
---- /dev/null
-+++ b/libgcc/config/pru/lib2divSI.c
-@@ -0,0 +1,48 @@
-+/* SI mode divide routines for libgcc for PRU
-+   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Red Hat.
-+
-+   This file is part of GCC.
-+
-+   GCC is free software; you can redistribute it and/or modify it
-+   under the terms of the GNU General Public License as published
-+   by the Free Software Foundation; either version 3, or (at your
-+   option) any later version.
-+
-+   GCC is distributed in the hope that it will be useful, but WITHOUT
-+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-+   License for more details.
-+
-+   Under Section 7 of GPL version 3, you are granted additional
-+   permissions described in the GCC Runtime Library Exception, version
-+   3.1, as published by the Free Software Foundation.
-+
-+   You should have received a copy of the GNU General Public License and
-+   a copy of the GCC Runtime Library Exception along with this program;
-+   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+typedef		  int sint32_type   __attribute__ ((mode (SI)));
-+typedef unsigned  int uint32_type   __attribute__ ((mode (SI)));
-+typedef		  int sint16_type   __attribute__ ((mode (HI)));
-+typedef unsigned  int uint16_type   __attribute__ ((mode (HI)));
-+typedef		  int sint08_type   __attribute__ ((mode (QI)));
-+typedef unsigned  int uint08_type   __attribute__ ((mode (QI)));
-+typedef		  int word_type     __attribute__ ((mode (__word__)));
-+
-+#define C3B(a,b,c) a##b##c
-+#define C3(a,b,c) C3B(a,b,c)
-+
-+/* PRU ABI dictates the library function names.  */
-+#define __gnu_divsi3 __pruabi_divi
-+#define __gnu_modsi3 __pruabi_remi
-+#define __gnu_udivsi3 __pruabi_divu
-+#define __gnu_umodsi3 __pruabi_remu
-+
-+#define UINT_TYPE	uint32_type
-+#define SINT_TYPE	sint32_type
-+#define BITS_MINUS_1	31
-+#define NAME_MODE	si
-+
-+#include "pru-divmod.h"
-diff --git a/libgcc/config/pru/libgcc-eabi.ver b/libgcc/config/pru/libgcc-eabi.ver
-new file mode 100644
-index 00000000000..bc823f7cb07
---- /dev/null
-+++ b/libgcc/config/pru/libgcc-eabi.ver
-@@ -0,0 +1,88 @@
-+# Copyright (C) 2017 Free Software Foundation, Inc.
-+#
-+# This file is part of GCC.
-+#
-+# GCC is free software; you can redistribute it and/or modify
-+# it under the terms of the GNU General Public License as published by
-+# the Free Software Foundation; either version 3, or (at your option)
-+# any later version.
-+#
-+# GCC is distributed in the hope that it will be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with GCC; see the file COPYING3.  If not see
-+# <http://www.gnu.org/licenses/>.
-+
-+GCC_8.0.0 {
-+  __pruabi_asri
-+  __pruabi_asrll
-+  __pruabi_mpyll
-+  __pruabi_negll
-+  __pruabi_lslll
-+  __pruabi_lsrll
-+  __pruabi_fixfu
-+  __pruabi_fixdu
-+  __pruabi_fixflli
-+  __pruabi_fixdlli
-+  __pruabi_fixfull
-+  __pruabi_fixdull
-+  __pruabi_fltllif
-+  __pruabi_fltllid
-+  __pruabi_fltullf
-+  __pruabi_fltulld
-+  __pruabi_divlli
-+  __pruabi_remlli
-+  __pruabi_divull
-+  __pruabi_remull
-+  __pruabi_divremull
-+  __pruabi_gef
-+  __pruabi_gtf
-+  __pruabi_lef
-+  __pruabi_ltf
-+  __pruabi_eqf
-+  __pruabi_ged
-+  __pruabi_gtd
-+  __pruabi_led
-+  __pruabi_ltd
-+  __pruabi_eqd
-+  __pruabi_addf
-+  __pruabi_divf
-+  __pruabi_neqf
-+  __pruabi_cmpf
-+  __pruabi_mpyf
-+  __pruabi_negf
-+  __pruabi_subf
-+  __pruabi_unordf
-+  __pruabi_fixfi
-+  __pruabi_fltif
-+  __pruabi_fltuf
-+  __pruabi_addd
-+  __pruabi_divd
-+  __pruabi_neqd
-+  __pruabi_cmpd
-+  __pruabi_mpyd
-+  __pruabi_negd
-+  __pruabi_subd
-+  __pruabi_unordd
-+  __pruabi_fixdi
-+  __pruabi_fltid
-+  __pruabi_fltud
-+  __pruabi_cvtfd
-+  __pruabi_cvtdf
-+  __pruabi_mulcf
-+  __pruabi_mulcd
-+  __pruabi_divcf
-+  __pruabi_divcd
-+
-+  __gnu_ltsf2
-+  __gnu_ltdf2
-+  __gnu_gesf2
-+  __gnu_gedf2
-+  __gnu_gtsf2
-+  __gnu_gtdf2
-+  __gnu_eqsf2
-+  __gnu_eqdf2
-+}
-diff --git a/libgcc/config/pru/ltd.c b/libgcc/config/pru/ltd.c
-new file mode 100644
-index 00000000000..b31cbe087b9
---- /dev/null
-+++ b/libgcc/config/pru/ltd.c
-@@ -0,0 +1,45 @@
-+/* Software floating-point emulation.
-+   Return 1 iff a < b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
-+   Contributed by Richard Henderson (rth@cygnus.com) and
-+		  Jakub Jelinek (jj@ultra.linux.cz).
-+
-+   This file is free software; you can redistribute it and/or
-+   modify it under the terms of the GNU Lesser General Public
-+   License as published by the Free Software Foundation; either
-+   version 2.1 of the License, or (at your option) any later version.
-+
-+   In addition to the permissions in the GNU Lesser General Public
-+   License, the Free Software Foundation gives you unlimited
-+   permission to link the compiled version of this file into
-+   combinations with other programs, and to distribute those
-+   combinations without any restriction coming from the use of this
-+   file.  (The Lesser General Public License restrictions do apply in
-+   other respects; for example, they cover modification of the file,
-+   and distribution when not linked into a combine executable.)
-+
-+   This file is distributed in the hope that it will be useful,
-+   but WITHOUT ANY WARRANTY; without even the implied warranty of
-+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+   Lesser General Public License for more details.
-+
-+   You should have received a copy of the GNU Lesser General Public
-+   License along with GCC; see the file COPYING.LIB.  If not see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+#include <soft-fp/soft-fp.h>
-+#include <soft-fp/double.h>
-+
-+CMPtype __pruabi_ltd(DFtype a, DFtype b)
-+{
-+  FP_DECL_EX;
-+  FP_DECL_D(A); FP_DECL_D(B);
-+  CMPtype r;
-+
-+  FP_UNPACK_RAW_D(A, a);
-+  FP_UNPACK_RAW_D(B, b);
-+  FP_CMP_D(r, A, B, 2, 2);
-+  FP_HANDLE_EXCEPTIONS;
-+
-+  return r < 0;
-+}
-diff --git a/libgcc/config/pru/ltf.c b/libgcc/config/pru/ltf.c
-new file mode 100644
-index 00000000000..be56dfa63ed
---- /dev/null
-+++ b/libgcc/config/pru/ltf.c
-@@ -0,0 +1,45 @@
-+/* Software floating-point emulation.
-+   Return 1 iff a < b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
-+   Contributed by Richard Henderson (rth@cygnus.com) and
-+		  Jakub Jelinek (jj@ultra.linux.cz).
-+
-+   This file is free software; you can redistribute it and/or
-+   modify it under the terms of the GNU Lesser General Public
-+   License as published by the Free Software Foundation; either
-+   version 2.1 of the License, or (at your option) any later version.
-+
-+   In addition to the permissions in the GNU Lesser General Public
-+   License, the Free Software Foundation gives you unlimited
-+   permission to link the compiled version of this file into
-+   combinations with other programs, and to distribute those
-+   combinations without any restriction coming from the use of this
-+   file.  (The Lesser General Public License restrictions do apply in
-+   other respects; for example, they cover modification of the file,
-+   and distribution when not linked into a combine executable.)
-+
-+   This file is distributed in the hope that it will be useful,
-+   but WITHOUT ANY WARRANTY; without even the implied warranty of
-+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+   Lesser General Public License for more details.
-+
-+   You should have received a copy of the GNU Lesser General Public
-+   License along with GCC; see the file COPYING.LIB.  If not see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+#include <soft-fp/soft-fp.h>
-+#include <soft-fp/single.h>
-+
-+CMPtype __pruabi_ltf(SFtype a, SFtype b)
-+{
-+  FP_DECL_EX;
-+  FP_DECL_S(A); FP_DECL_S(B);
-+  CMPtype r;
-+
-+  FP_UNPACK_RAW_S(A, a);
-+  FP_UNPACK_RAW_S(B, b);
-+  FP_CMP_S(r, A, B, 2, 2);
-+  FP_HANDLE_EXCEPTIONS;
-+
-+  return r < 0;
-+}
-diff --git a/libgcc/config/pru/mpyll.S b/libgcc/config/pru/mpyll.S
-new file mode 100644
-index 00000000000..d3f2b6ed6e4
---- /dev/null
-+++ b/libgcc/config/pru/mpyll.S
-@@ -0,0 +1,57 @@
-+/*  Copyright (C) 2014 Free Software Foundation, Inc.
-+    Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
-+
-+  This file is free software; you can redistribute it and/or modify it
-+  under the terms of the GNU General Public License as published by the
-+  Free Software Foundation; either version 3, or (at your option) any
-+  later version.
-+
-+  This file is distributed in the hope that it will be useful, but
-+  WITHOUT ANY WARRANTY; without even the implied warranty of
-+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+  General Public License for more details.
-+
-+  Under Section 7 of GPL version 3, you are granted additional
-+  permissions described in the GCC Runtime Library Exception, version
-+  3.1, as published by the Free Software Foundation.
-+
-+  You should have received a copy of the GNU General Public License and
-+  a copy of the GCC Runtime Library Exception along with this program;
-+  see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
-+  <http://www.gnu.org/licenses/>.
-+
-+      (al + C * ah) * (bl + C * bh) =    al * bl
-+				       + C * ah * bl
-+				       + C * al * bh
-+				       + C * C * ah * bh  -> discard, overflow
-+	Where C=(1 << 32)
-+  */
-+
-+#include "pru-asm.h"
-+
-+	.global	SYM(__pruabi_mpyll)
-+	FUNC(__pruabi_mpyll)
-+SYM(__pruabi_mpyll):
-+	/* + C * ah * bl */
-+	mov	r28, r15
-+	mov	r29, r16
-+	nop
-+	xin	0, r26, 8
-+
-+	/* + C * al * bh */
-+	mov	r28, r14
-+	mov	r29, r17
-+	mov	r15, r26		/* "loose" ah, record only reslo */
-+	xin	0, r26, 8
-+
-+	/* + al * bl */
-+	/* mov	r28, r14		-> no need, already loaded */
-+	mov	r29, r16
-+	add	r15, r15, r26
-+	xin	0, r26, 8
-+	mov	r14, r26
-+	add	r15, r15, r27
-+
-+	ret
-+
-+	ENDFUNC(__pruabi_mpyll)
-diff --git a/libgcc/config/pru/pru-abi.h b/libgcc/config/pru/pru-abi.h
-new file mode 100644
-index 00000000000..12cf4188e61
---- /dev/null
-+++ b/libgcc/config/pru/pru-abi.h
-@@ -0,0 +1,109 @@
-+/* Header file for PRU ABI versions of libgcc functions.
-+   Copyright (C) 2011-2017 Free Software Foundation, Inc.
-+   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
-+   Based on c6x/c6x-abi.h
-+
-+   This file is part of GCC.
-+
-+   GCC is free software; you can redistribute it and/or modify it
-+   under the terms of the GNU General Public License as published
-+   by the Free Software Foundation; either version 3, or (at your
-+   option) any later version.
-+
-+   GCC is distributed in the hope that it will be useful, but WITHOUT
-+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-+   License for more details.
-+
-+   Under Section 7 of GPL version 3, you are granted additional
-+   permissions described in the GCC Runtime Library Exception, version
-+   3.1, as published by the Free Software Foundation.
-+
-+   You should have received a copy of the GNU General Public License
-+   along with GCC; see the file COPYING3.  If not see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+/* Make __pruabi_AEABI_NAME an alias for __GCC_NAME.  */
-+#define RENAME_LIBRARY(GCC_NAME, AEABI_NAME)			\
-+  __asm__ (".globl\t__pruabi_" #AEABI_NAME "\n"		\
-+	   ".set\t__pruabi_" #AEABI_NAME			\
-+	   ", __gnu_" #GCC_NAME "\n");
-+
-+/* Rename helper functions to the names specified in the PRU ELF ABI.  */
-+#ifdef L_divsi3
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (divsi3, divi)
-+#endif
-+#ifdef L_divdi3
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (divdi3, divlli)
-+#endif
-+#ifdef L_udivsi3
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (udivsi3, divu)
-+#endif
-+#ifdef L_udivdi3
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (udivdi3, divull)
-+#endif
-+#ifdef L_udivmoddi4
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (udivmoddi4, divremull)
-+#endif
-+#ifdef L_modsi3
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (modsi3, remi)
-+#endif
-+#ifdef L_moddi3
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (moddi3, remlli)
-+#endif
-+#ifdef L_umodsi3
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (umodsi3, remu)
-+#endif
-+#ifdef L_umoddi3
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (umoddi3, remull)
-+#endif
-+#ifdef L_negdi2
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (negdi2, negll)
-+#endif
-+#ifdef L_muldi3
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (muldi3, mpyll)
-+#endif
-+#ifdef L_ashrdi3
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (ashrdi3, asrll)
-+#endif
-+#ifdef L_lshrdi3
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (lshrdi3, lsrll)
-+#endif
-+#ifdef L_ashldi3
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (ashldi3, lslll)
-+#endif
-+
-+/* The following are excluded from softfp due to softfp_exclude_libgcc2,
-+   so we rename them here rather than in sfp-machine.h.  */
-+#ifdef L_fixdfdi
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (fixdfdi, fixdlli)
-+#endif
-+#ifdef L_fixunsdfsi
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (fixunsdfsi, fixdu)
-+#endif
-+#ifdef L_fixunsdfdi
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (fixunsdfdi, fixdull)
-+#endif
-+#ifdef L_fixsfdi
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (fixsfdi, fixflli)
-+#endif
-+#ifdef L_fixunssfsi
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (fixunssfsi, fixfu)
-+#endif
-+#ifdef L_fixunssfdi
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (fixunssfdi, fixfull)
-+#endif
-+#ifdef L_floatdidf
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (floatdidf, fltllid)
-+#endif
-+#ifdef L_floatundidf
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (floatundidf, fltulld)
-+#endif
-+#ifdef L_floatdisf
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (floatdisf, fltllif)
-+#endif
-+#ifdef L_floatundisf
-+#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (floatundisf, fltullf)
-+#endif
-+
-+#define LIBGCC2_GNU_PREFIX
-diff --git a/libgcc/config/pru/pru-asm.h b/libgcc/config/pru/pru-asm.h
-new file mode 100644
-index 00000000000..fb252b78663
---- /dev/null
-+++ b/libgcc/config/pru/pru-asm.h
-@@ -0,0 +1,36 @@
-+/*  Copyright (C) 2014 Free Software Foundation, Inc.
-+    Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
-+
-+  This file is free software; you can redistribute it and/or modify it
-+  under the terms of the GNU General Public License as published by the
-+  Free Software Foundation; either version 3, or (at your option) any
-+  later version.
-+
-+  This file is distributed in the hope that it will be useful, but
-+  WITHOUT ANY WARRANTY; without even the implied warranty of
-+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+  General Public License for more details.
-+
-+  Under Section 7 of GPL version 3, you are granted additional
-+  permissions described in the GCC Runtime Library Exception, version
-+  3.1, as published by the Free Software Foundation.
-+
-+  You should have received a copy of the GNU General Public License and
-+  a copy of the GCC Runtime Library Exception along with this program;
-+  see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
-+  <http://www.gnu.org/licenses/>.  */
-+
-+/* ANSI concatenation macros.  */
-+
-+#define CONCAT1(a, b) CONCAT2(a, b)
-+#define CONCAT2(a, b) a ## b
-+
-+/* Use the right prefix for global labels.  */
-+
-+#define SYM(x) CONCAT1 (__USER_LABEL_PREFIX__, x)
-+
-+#define FUNC(X)		.type SYM(X),@function
-+#define HIDDEN_FUNC(X)	FUNC(X)` .hidden SYM(X)
-+#define ENDFUNC0(X)	CONCAT1(.Lfe_,X): .size X,CONCAT1(.Lfe_,X)-X
-+#define ENDFUNC(X)	ENDFUNC0(SYM(X))
-+
-diff --git a/libgcc/config/pru/pru-divmod.h b/libgcc/config/pru/pru-divmod.h
-new file mode 100644
-index 00000000000..942539c5704
---- /dev/null
-+++ b/libgcc/config/pru/pru-divmod.h
-@@ -0,0 +1,117 @@
-+/* libgcc routines for PRU
-+   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Red Hat.
-+
-+   This file is part of GCC.
-+
-+   GCC is free software; you can redistribute it and/or modify it
-+   under the terms of the GNU General Public License as published
-+   by the Free Software Foundation; either version 3, or (at your
-+   option) any later version.
-+
-+   GCC is distributed in the hope that it will be useful, but WITHOUT
-+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-+   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-+   License for more details.
-+
-+   Under Section 7 of GPL version 3, you are granted additional
-+   permissions described in the GCC Runtime Library Exception, version
-+   3.1, as published by the Free Software Foundation.
-+
-+   You should have received a copy of the GNU General Public License and
-+   a copy of the GCC Runtime Library Exception along with this program;
-+   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+UINT_TYPE C3(udivmod,NAME_MODE,4) (UINT_TYPE, UINT_TYPE, word_type);
-+SINT_TYPE C3(__gnu_div,NAME_MODE,3)   (SINT_TYPE, SINT_TYPE);
-+SINT_TYPE C3(__gnu_mod,NAME_MODE,3)   (SINT_TYPE, SINT_TYPE);
-+UINT_TYPE C3(__gnu_udiv,NAME_MODE,3)  (UINT_TYPE, UINT_TYPE);
-+UINT_TYPE C3(__gnu_umod,NAME_MODE,3)  (UINT_TYPE, UINT_TYPE);
-+
-+UINT_TYPE
-+C3(udivmod,NAME_MODE,4) (UINT_TYPE num, UINT_TYPE den, word_type modwanted)
-+{
-+  UINT_TYPE bit = 1;
-+  UINT_TYPE res = 0;
-+
-+  while (den < num && bit && !(den & (1L << BITS_MINUS_1)))
-+    {
-+      den <<= 1;
-+      bit <<= 1;
-+    }
-+  while (bit)
-+    {
-+      if (num >= den)
-+	{
-+	  num -= den;
-+	  res |= bit;
-+	}
-+      bit >>= 1;
-+      den >>= 1;
-+    }
-+  if (modwanted)
-+    return num;
-+  return res;
-+}
-+
-+SINT_TYPE
-+C3(__gnu_div,NAME_MODE,3) (SINT_TYPE a, SINT_TYPE b)
-+{
-+  word_type neg = 0;
-+  SINT_TYPE res;
-+
-+  if (a < 0)
-+    {
-+      a = -a;
-+      neg = !neg;
-+    }
-+
-+  if (b < 0)
-+    {
-+      b = -b;
-+      neg = !neg;
-+    }
-+
-+  res = C3(udivmod,NAME_MODE,4) (a, b, 0);
-+
-+  if (neg)
-+    res = -res;
-+
-+  return res;
-+}
-+
-+SINT_TYPE
-+C3(__gnu_mod,NAME_MODE,3) (SINT_TYPE a, SINT_TYPE b)
-+{
-+  word_type neg = 0;
-+  SINT_TYPE res;
-+
-+  if (a < 0)
-+    {
-+      a = -a;
-+      neg = 1;
-+    }
-+
-+  if (b < 0)
-+    b = -b;
-+
-+  res = C3(udivmod,NAME_MODE,4) (a, b, 1);
-+
-+  if (neg)
-+    res = -res;
-+
-+  return res;
-+}
-+
-+UINT_TYPE
-+C3(__gnu_udiv,NAME_MODE,3) (UINT_TYPE a, UINT_TYPE b)
-+{
-+  return C3(udivmod,NAME_MODE,4) (a, b, 0);
-+}
-+
-+UINT_TYPE
-+C3(__gnu_umod,NAME_MODE,3) (UINT_TYPE a, UINT_TYPE b)
-+{
-+  return C3(udivmod,NAME_MODE,4) (a, b, 1);
-+}
-diff --git a/libgcc/config/pru/sfp-machine.h b/libgcc/config/pru/sfp-machine.h
-new file mode 100644
-index 00000000000..a94163267a1
---- /dev/null
-+++ b/libgcc/config/pru/sfp-machine.h
-@@ -0,0 +1,125 @@
-+/* Soft-FP definitions for TI PRU.
-+   Copyright (C) 2010-2017 Free Software Foundation, Inc.
-+   Based on C6X soft-fp header.
-+
-+   This files is free software; you can redistribute it and/or
-+   modify it under the terms of the GNU Lesser General Public
-+   License as published by the Free Software Foundation; either
-+   version 2.1 of the License, or (at your option) any later version.
-+
-+   In addition to the permissions in the GNU Lesser General Public
-+   License, the Free Software Foundation gives you unlimited
-+   permission to link the compiled version of this file into
-+   combinations with other programs, and to distribute those
-+   combinations without any restriction coming from the use of this
-+   file.  (The Lesser General Public License restrictions do apply in
-+   other respects; for example, they cover modification of the file,
-+   and distribution when not linked into a combine executable.)
-+
-+   This file is distributed in the hope that it will be useful,
-+   but WITHOUT ANY WARRANTY; without even the implied warranty of
-+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+   Lesser General Public License for more details.
-+
-+   You should have received a copy of the GNU Lesser General Public
-+   License along with GCC; see the file COPYING.LIB.  If not see
-+   <http://www.gnu.org/licenses/>.  */
-+
-+#define _FP_W_TYPE_SIZE		32
-+#define _FP_W_TYPE		unsigned long
-+#define _FP_WS_TYPE		signed long
-+#define _FP_I_TYPE		long
-+
-+#define _FP_MUL_MEAT_S(R,X,Y)				\
-+  _FP_MUL_MEAT_1_wide(_FP_WFRACBITS_S,R,X,Y,umul_ppmm)
-+#define _FP_MUL_MEAT_D(R,X,Y)				\
-+  _FP_MUL_MEAT_2_wide(_FP_WFRACBITS_D,R,X,Y,umul_ppmm)
-+#define _FP_MUL_MEAT_Q(R,X,Y)				\
-+  _FP_MUL_MEAT_4_wide(_FP_WFRACBITS_Q,R,X,Y,umul_ppmm)
-+
-+#define _FP_DIV_MEAT_S(R,X,Y)	_FP_DIV_MEAT_1_loop(S,R,X,Y)
-+#define _FP_DIV_MEAT_D(R,X,Y)	_FP_DIV_MEAT_2_udiv(D,R,X,Y)
-+#define _FP_DIV_MEAT_Q(R,X,Y)	_FP_DIV_MEAT_4_udiv(Q,R,X,Y)
-+
-+#define _FP_NANFRAC_H		((_FP_QNANBIT_H << 1) - 1)
-+#define _FP_NANFRAC_S		((_FP_QNANBIT_S << 1) - 1)
-+#define _FP_NANFRAC_D		((_FP_QNANBIT_D << 1) - 1), -1
-+#define _FP_NANFRAC_Q		((_FP_QNANBIT_Q << 1) - 1), -1, -1, -1
-+#define _FP_NANSIGN_H		0
-+#define _FP_NANSIGN_S		0
-+#define _FP_NANSIGN_D		0
-+#define _FP_NANSIGN_Q		0
-+
-+#define _FP_KEEPNANFRACP 1
-+#define _FP_QNANNEGATEDP 0
-+
-+/* Someone please check this.  */
-+#define _FP_CHOOSENAN(fs, wc, R, X, Y, OP)			\
-+  do {								\
-+    if ((_FP_FRAC_HIGH_RAW_##fs(X) & _FP_QNANBIT_##fs)		\
-+	&& !(_FP_FRAC_HIGH_RAW_##fs(Y) & _FP_QNANBIT_##fs))	\
-+      {								\
-+	R##_s = Y##_s;						\
-+	_FP_FRAC_COPY_##wc(R,Y);				\
-+      }								\
-+    else							\
-+      {								\
-+	R##_s = X##_s;						\
-+	_FP_FRAC_COPY_##wc(R,X);				\
-+      }								\
-+    R##_c = FP_CLS_NAN;						\
-+  } while (0)
-+
-+#define	__LITTLE_ENDIAN	1234
-+#define	__BIG_ENDIAN	4321
-+
-+#if defined _BIG_ENDIAN
-+# define __BYTE_ORDER __BIG_ENDIAN
-+#else
-+# define __BYTE_ORDER __LITTLE_ENDIAN
-+#endif
-+
-+/* Not checked.  */
-+#define _FP_TININESS_AFTER_ROUNDING 0
-+
-+
-+/* Define ALIASNAME as a strong alias for NAME.  */
-+# define strong_alias(name, aliasname) _strong_alias(name, aliasname)
-+# define _strong_alias(name, aliasname) \
-+  extern __typeof (name) aliasname __attribute__ ((alias (#name)));
-+
-+/* Rename helper functions to the names specified in the PRU ELF ABI.  */
-+#define __fixdfsi     __pruabi_fixdi
-+#define __fixsfsi     __pruabi_fixfi
-+#define __floatsidf   __pruabi_fltid
-+#define __floatunsidf __pruabi_fltud
-+#define __floatsisf   __pruabi_fltif
-+#define __floatunsisf __pruabi_fltuf
-+#define __truncdfsf2  __pruabi_cvtdf
-+#define __extendsfdf2 __pruabi_cvtfd
-+#define __adddf3      __pruabi_addd
-+#define __subdf3      __pruabi_subd
-+#define __muldf3      __pruabi_mpyd
-+#define __divdf3      __pruabi_divd
-+#define __negdf2      __pruabi_negd
-+#define __absdf2      __pruabi_absd
-+#define __addsf3      __pruabi_addf
-+#define __subsf3      __pruabi_subf
-+#define __mulsf3      __pruabi_mpyf
-+#define __divsf3      __pruabi_divf
-+#define __negsf2      __pruabi_negf
-+#define __abssf2      __pruabi_absf
-+#define __lesf2       __pruabi_cmpf
-+#define __ledf2       __pruabi_cmpd
-+#define __ltsf2       __gnu_ltsf2
-+#define __ltdf2       __gnu_ltdf2
-+#define __gesf2       __gnu_gesf2
-+#define __gedf2       __gnu_gedf2
-+#define __gtsf2       __gnu_gtsf2
-+#define __gtdf2       __gnu_gtdf2
-+#define __eqsf2       __gnu_eqsf2
-+#define __eqdf2       __gnu_eqdf2
-+#define __nesf2       __pruabi_neqf
-+#define __nedf2       __pruabi_neqd
-+#define __unordsf2    __pruabi_unordf
-+#define __unorddf2    __pruabi_unordd
-diff --git a/libgcc/config/pru/t-pru b/libgcc/config/pru/t-pru
-new file mode 100644
-index 00000000000..4f17f6fe31e
---- /dev/null
-+++ b/libgcc/config/pru/t-pru
-@@ -0,0 +1,50 @@
-+# Makefile fragment for building LIBGCC for the TI PRU processor.
-+# Copyright (C) 2011 Free Software Foundation, Inc.
-+# Contributed by Red Hat.
-+#
-+# This file is part of GCC.
-+#
-+# GCC is free software; you can redistribute it and/or modify it
-+# under the terms of the GNU General Public License as published
-+# by the Free Software Foundation; either version 3, or (at your
-+# option) any later version.
-+#
-+# GCC is distributed in the hope that it will be useful, but
-+# WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
-+# the GNU General Public License for more details.
-+#
-+# You should have received a copy of the  GNU General Public
-+# License along with GCC; see the file COPYING3.  If not see
-+# <http://www.gnu.org/licenses/>.
-+
-+# Note - we have separate versions of the lib2div<mode> files
-+# as the functions are quite large and we do not want to pull
-+# in unneeded division routines.
-+
-+LIB2ADD += \
-+	$(srcdir)/config/pru/lib2divQI.c \
-+	$(srcdir)/config/pru/lib2divHI.c \
-+	$(srcdir)/config/pru/lib2divSI.c \
-+	$(srcdir)/config/pru/lib2bitcountHI.c \
-+	$(srcdir)/config/pru/mpyll.S \
-+	$(srcdir)/config/pru/gef.c \
-+	$(srcdir)/config/pru/gtf.c \
-+	$(srcdir)/config/pru/lef.c \
-+	$(srcdir)/config/pru/ltf.c \
-+	$(srcdir)/config/pru/eqf.c \
-+	$(srcdir)/config/pru/ged.c \
-+	$(srcdir)/config/pru/gtd.c \
-+	$(srcdir)/config/pru/led.c \
-+	$(srcdir)/config/pru/ltd.c \
-+	$(srcdir)/config/pru/eqd.c \
-+	$(srcdir)/config/pru/asri.c
-+
-+HOST_LIBGCC2_CFLAGS += -Os -ffunction-sections -fdata-sections
-+
-+LIB2FUNCS_EXCLUDE = _muldi3
-+
-+SHLIB_MAPFILES += $(srcdir)/config/pru/libgcc-eabi.ver
-+# Local Variables:
-+# mode: Makefile
-+# End:
 -- 
 2.11.0
 

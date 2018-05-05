@@ -1,7 +1,53 @@
-From 81c80933acb3acaacdd7f6358b03f099f7b7decb Mon Sep 17 00:00:00 2001
+From 807faf727a6a833510b42d3eff26dabfdf324cd7 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:56:38 +0200
-Subject: [PATCH 03/11] testsuite: Add PRU tests
+Subject: [PATCH 03/13] testsuite: Add PRU tests
+
+gcc/testsuite/ChangeLog:
+
+2018-04-15  Dimitar Dimitrov  <dimitar@dinux.eu>
+
+	* gcc.target/pru/abi-arg-struct.c: New test.
+	* gcc.target/pru/ashiftrt.c: New test.
+	* gcc.target/pru/builtins-1.c: New test.
+	* gcc.target/pru/builtins-error.c: New test.
+	* gcc.target/pru/clearbit.c: New test.
+	* gcc.target/pru/loop-asm.c: New test.
+	* gcc.target/pru/loop-dowhile.c: New test.
+	* gcc.target/pru/loop-hi-1.c: New test.
+	* gcc.target/pru/loop-hi-2.c: New test.
+	* gcc.target/pru/loop-qi-1.c: New test.
+	* gcc.target/pru/loop-qi-2.c: New test.
+	* gcc.target/pru/loop-short-1.c: New test.
+	* gcc.target/pru/loop-short-2.c: New test.
+	* gcc.target/pru/loop-si-1.c: New test.
+	* gcc.target/pru/loop-si-2.c: New test.
+	* gcc.target/pru/loop-u8_pcrel_overflow.c: New test.
+	* gcc.target/pru/loop-ubyte-1.c: New test.
+	* gcc.target/pru/loop-ubyte-2.c: New test.
+	* gcc.target/pru/mabi-ti-1.c: New test.
+	* gcc.target/pru/mabi-ti-2.c: New test.
+	* gcc.target/pru/mabi-ti-3.c: New test.
+	* gcc.target/pru/mabi-ti-4.c: New test.
+	* gcc.target/pru/mabi-ti-5.c: New test.
+	* gcc.target/pru/mabi-ti-6.c: New test.
+	* gcc.target/pru/mabi-ti-7.c: New test.
+	* gcc.target/pru/pr64366.c: New test.
+	* gcc.target/pru/pragma-ctable_entry.c: New test.
+	* gcc.target/pru/pru.exp: New file.
+	* gcc.target/pru/qbbc-1.c: New test.
+	* gcc.target/pru/qbbc-2.c: New test.
+	* gcc.target/pru/qbbc-3.c: New test.
+	* gcc.target/pru/qbbs-1.c: New test.
+	* gcc.target/pru/qbbs-2.c: New test.
+	* gcc.target/pru/setbit.c: New test.
+	* gcc.target/pru/zero_extend-and-hisi.c: New test.
+	* gcc.target/pru/zero_extend-and-qihi.c: New test.
+	* gcc.target/pru/zero_extend-and-qisi.c: New test.
+	* gcc.target/pru/zero_extend-hisi.c: New test.
+	* gcc.target/pru/zero_extend-qihi.c: New test.
+	* gcc.target/pru/zero_extend-qisi.c: New test.
+	* lib/target-supports.exp: Ditto.
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -45,10 +91,8 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  gcc/testsuite/gcc.target/pru/zero_extend-hisi.c    |  43 ++++++
  gcc/testsuite/gcc.target/pru/zero_extend-qihi.c    |  43 ++++++
  gcc/testsuite/gcc.target/pru/zero_extend-qisi.c    |  43 ++++++
- gcc/testsuite/lib/gcc-dg.exp                       |  11 ++
  gcc/testsuite/lib/target-supports.exp              |   7 +-
- gcc/testsuite/lib/target-utils.exp                 |  10 ++
- 43 files changed, 1234 insertions(+), 2 deletions(-)
+ 41 files changed, 1213 insertions(+), 2 deletions(-)
  create mode 100644 gcc/testsuite/gcc.target/pru/abi-arg-struct.c
  create mode 100644 gcc/testsuite/gcc.target/pru/ashiftrt.c
  create mode 100644 gcc/testsuite/gcc.target/pru/builtins-1.c
@@ -1538,30 +1582,8 @@ index 00000000000..0e9ae4cf01e
 +  return val1 << val2;
 +}
 +
-diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
-index 3770f698c46..1dfe02c4e39 100644
---- a/gcc/testsuite/lib/gcc-dg.exp
-+++ b/gcc/testsuite/lib/gcc-dg.exp
-@@ -381,6 +381,17 @@ proc gcc-dg-prune { system text } {
- 	return "::unsupported::memory full"
-     }
- 
-+    if {[string match "pru-*" $system] && \
-+	    [string match "*error: function pointers not supported with -mabi=ti option*" $text]} {
-+	# The format here is important.  See dg.exp.
-+	return "::unsupported::abi"
-+    }
-+    if {[string match "pru-*" $system] && \
-+	    [string match "*error: large return values not supported with -mabi=ti option*" $text]} {
-+	# The format here is important.  See dg.exp.
-+	return "::unsupported::abi"
-+    }
-+
-     return $text
- }
- 
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index a3ce690efa8..ab4356c7c42 100644
+index 50665dfd30e..5869132b64d 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
 @@ -512,7 +512,8 @@ proc check_effective_target_trampolines { } {
@@ -1591,7 +1613,7 @@ index a3ce690efa8..ab4356c7c42 100644
  	return 0
      }
      return [check_runtime tls_runtime {
-@@ -8781,6 +8783,7 @@ proc check_effective_target_logical_op_short_circuit {} {
+@@ -8772,6 +8774,7 @@ proc check_effective_target_logical_op_short_circuit {} {
  	 || [istarget nios2*-*-*]
  	 || [istarget riscv*-*-*]
  	 || [istarget visium-*-*]
@@ -1599,26 +1621,6 @@ index a3ce690efa8..ab4356c7c42 100644
  	 || [check_effective_target_arm_cortex_m] } {
  	return 1
      }
-diff --git a/gcc/testsuite/lib/target-utils.exp b/gcc/testsuite/lib/target-utils.exp
-index bd39cc5bc79..75999fce8c2 100644
---- a/gcc/testsuite/lib/target-utils.exp
-+++ b/gcc/testsuite/lib/target-utils.exp
-@@ -40,5 +40,15 @@ proc ${tool}_check_unsupported_p { output } {
- 	     [string match "*exceeds local store*" $output] } {
- 	return "memory full"
-     }
-+    if {[istarget pru-*] && \
-+	    [string match "*error: large return values not supported with -mabi=ti option*" $output]} {
-+	# The format here is important.  See dg.exp.
-+	return "abi not supported"
-+    }
-+    if {[istarget pru-*] && \
-+	    [string match "*error: function pointers not supported with -mabi=ti option*" $output]} {
-+	# The format here is important.  See dg.exp.
-+	return "abi not supported"
-+    }
-     return ""
- }
 -- 
 2.11.0
 

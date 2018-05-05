@@ -1,0 +1,75 @@
+From e3078bd5b0e5df7b530454b5cce3f2f62ae6bee2 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Mon, 1 Jan 2018 16:30:44 +0200
+Subject: [PATCH 05/13] ld:pru: Switch to init_array linker script
+
+The TI toolchain uses init_array, so let's make this the default
+to be compatible. The not-yet-mainlined newlib/libgloss port has
+been updated accordingly.
+
+2018-05-02  Dimitar Dimitrov  <dimitar@dinux.eu>
+
+        * scripttempl/pru.sc: Switch to init_array.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ ld/scripttempl/pru.sc | 36 ++++++++++++++++++------------------
+ 1 file changed, 18 insertions(+), 18 deletions(-)
+
+diff --git a/ld/scripttempl/pru.sc b/ld/scripttempl/pru.sc
+index 7e87e20191..f64e0b791e 100644
+--- a/ld/scripttempl/pru.sc
++++ b/ld/scripttempl/pru.sc
+@@ -72,16 +72,16 @@ SECTIONS
+       ${RELOCATING+*(.rela.data:*)}
+       ${RELOCATING+*(.rela.gnu.linkonce.d*)}
+     }
+-  .rel.ctors   ${RELOCATING-0} : { *(.rel.ctors)	}
+-  .rela.ctors  ${RELOCATING-0} : { *(.rela.ctors)	}
+-  .rel.dtors   ${RELOCATING-0} : { *(.rel.dtors)	}
+-  .rela.dtors  ${RELOCATING-0} : { *(.rela.dtors)	}
+-  .rel.got     ${RELOCATING-0} : { *(.rel.got)		}
+-  .rela.got    ${RELOCATING-0} : { *(.rela.got)		}
+-  .rel.bss     ${RELOCATING-0} : { *(.rel.bss)		}
+-  .rela.bss    ${RELOCATING-0} : { *(.rela.bss)		}
+-  .rel.plt     ${RELOCATING-0} : { *(.rel.plt)		}
+-  .rela.plt    ${RELOCATING-0} : { *(.rela.plt)		}
++  .rel.init_array   	${RELOCATING-0} : { *(.rel.init_array)	}
++  .rela.init_array  	${RELOCATING-0} : { *(.rela.init_array)	}
++  .rel.fini_array   	${RELOCATING-0} : { *(.rel.fini_array)	}
++  .rela.fini_array  	${RELOCATING-0} : { *(.rela.fini_array)	}
++  .rel.got     		${RELOCATING-0} : { *(.rel.got)		}
++  .rela.got    		${RELOCATING-0} : { *(.rela.got)	}
++  .rel.bss     		${RELOCATING-0} : { *(.rel.bss)		}
++  .rela.bss    		${RELOCATING-0} : { *(.rela.bss)	}
++  .rel.plt     		${RELOCATING-0} : { *(.rel.plt)		}
++  .rela.plt    		${RELOCATING-0} : { *(.rela.plt)	}
+ 
+   /* Internal text space.  */
+   .text ${RELOCATING-0} :
+@@ -113,14 +113,14 @@ SECTIONS
+ 
+     /* CRT is prepared for constructor/destructor table to have
+        a "valid" NULL address.  */
+-    ${CONSTRUCTING+ _ctors_start = . ; }
+-    ${CONSTRUCTING+ KEEP (*(SORT_BY_INIT_PRIORITY(.ctors.*)))}
+-    ${CONSTRUCTING+ KEEP (*(.ctors))}
+-    ${CONSTRUCTING+ _ctors_end = . ; }
+-    ${CONSTRUCTING+ _dtors_start = . ; }
+-    ${CONSTRUCTING+ KEEP (*(SORT_BY_INIT_PRIORITY(.dtors.*)))}
+-    ${CONSTRUCTING+ KEEP (*(.dtors))}
+-    ${CONSTRUCTING+ _dtors_end = . ; }
++    ${CONSTRUCTING+ __init_array_begin = . ; }
++    ${CONSTRUCTING+ KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))}
++    ${CONSTRUCTING+ KEEP (*(.init_array))}
++    ${CONSTRUCTING+ __init_array_end = . ; }
++    ${CONSTRUCTING+ __fini_array_begin = . ; }
++    ${CONSTRUCTING+ KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))}
++    ${CONSTRUCTING+ KEEP (*(.fini_array))}
++    ${CONSTRUCTING+ __fini_array_end = . ; }
+ 
+     /* DATA memory starts at address 0.  So to avoid placing a valid static
+        variable at the invalid NULL address, we introduce the .data.atzero
+-- 
+2.11.0
+

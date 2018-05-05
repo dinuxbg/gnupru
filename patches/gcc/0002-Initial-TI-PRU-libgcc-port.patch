@@ -1,0 +1,1486 @@
+From 2896bbc27bf04b8a8c88002a4bcec70eefe6f9fd Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Fri, 23 Mar 2018 22:24:22 +0200
+Subject: [PATCH 02/13] Initial TI PRU libgcc port
+
+The floating point support has been borrowed from C6X libgcc port
+to help with TI PRU toolchain ABI compatibility.
+
+libgcc/ChangeLog:
+
+2018-04-15  Dimitar Dimitrov  <dimitar@dinux.eu>
+
+	* config.host: Add PRU target.
+	* config/pru/asri.c: New file.
+	* config/pru/eqd.c: New file.
+	* config/pru/eqf.c: New file.
+	* config/pru/ged.c: New file.
+	* config/pru/gef.c: New file.
+	* config/pru/gtd.c: New file.
+	* config/pru/gtf.c: New file.
+	* config/pru/led.c: New file.
+	* config/pru/lef.c: New file.
+	* config/pru/lib2bitcountHI.c: New file.
+	* config/pru/lib2divHI.c: New file.
+	* config/pru/lib2divQI.c: New file.
+	* config/pru/lib2divSI.c: New file.
+	* config/pru/libgcc-eabi.ver: New file.
+	* config/pru/ltd.c: New file.
+	* config/pru/ltf.c: New file.
+	* config/pru/mpyll.S: New file.
+	* config/pru/pru-abi.h: New file.
+	* config/pru/pru-asm.h: New file.
+	* config/pru/pru-divmod.h: New file.
+	* config/pru/sfp-machine.h: New file.
+	* config/pru/t-pru: New file.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ libgcc/config.host                 |   7 +++
+ libgcc/config/pru/asri.c           |  33 ++++++++++
+ libgcc/config/pru/eqd.c            |  45 +++++++++++++
+ libgcc/config/pru/eqf.c            |  45 +++++++++++++
+ libgcc/config/pru/ged.c            |  45 +++++++++++++
+ libgcc/config/pru/gef.c            |  45 +++++++++++++
+ libgcc/config/pru/gtd.c            |  45 +++++++++++++
+ libgcc/config/pru/gtf.c            |  45 +++++++++++++
+ libgcc/config/pru/led.c            |  45 +++++++++++++
+ libgcc/config/pru/lef.c            |  45 +++++++++++++
+ libgcc/config/pru/lib2bitcountHI.c |  43 +++++++++++++
+ libgcc/config/pru/lib2divHI.c      |  42 +++++++++++++
+ libgcc/config/pru/lib2divQI.c      |  43 +++++++++++++
+ libgcc/config/pru/lib2divSI.c      |  48 ++++++++++++++
+ libgcc/config/pru/libgcc-eabi.ver  |  88 ++++++++++++++++++++++++++
+ libgcc/config/pru/ltd.c            |  45 +++++++++++++
+ libgcc/config/pru/ltf.c            |  45 +++++++++++++
+ libgcc/config/pru/mpyll.S          |  57 +++++++++++++++++
+ libgcc/config/pru/pru-abi.h        | 109 ++++++++++++++++++++++++++++++++
+ libgcc/config/pru/pru-asm.h        |  36 +++++++++++
+ libgcc/config/pru/pru-divmod.h     | 117 ++++++++++++++++++++++++++++++++++
+ libgcc/config/pru/sfp-machine.h    | 125 +++++++++++++++++++++++++++++++++++++
+ libgcc/config/pru/t-pru            |  50 +++++++++++++++
+ 23 files changed, 1248 insertions(+)
+ create mode 100644 libgcc/config/pru/asri.c
+ create mode 100644 libgcc/config/pru/eqd.c
+ create mode 100644 libgcc/config/pru/eqf.c
+ create mode 100644 libgcc/config/pru/ged.c
+ create mode 100644 libgcc/config/pru/gef.c
+ create mode 100644 libgcc/config/pru/gtd.c
+ create mode 100644 libgcc/config/pru/gtf.c
+ create mode 100644 libgcc/config/pru/led.c
+ create mode 100644 libgcc/config/pru/lef.c
+ create mode 100644 libgcc/config/pru/lib2bitcountHI.c
+ create mode 100644 libgcc/config/pru/lib2divHI.c
+ create mode 100644 libgcc/config/pru/lib2divQI.c
+ create mode 100644 libgcc/config/pru/lib2divSI.c
+ create mode 100644 libgcc/config/pru/libgcc-eabi.ver
+ create mode 100644 libgcc/config/pru/ltd.c
+ create mode 100644 libgcc/config/pru/ltf.c
+ create mode 100644 libgcc/config/pru/mpyll.S
+ create mode 100644 libgcc/config/pru/pru-abi.h
+ create mode 100644 libgcc/config/pru/pru-asm.h
+ create mode 100644 libgcc/config/pru/pru-divmod.h
+ create mode 100644 libgcc/config/pru/sfp-machine.h
+ create mode 100644 libgcc/config/pru/t-pru
+
+diff --git a/libgcc/config.host b/libgcc/config.host
+index 11b4acaff55..b2eda415877 100644
+--- a/libgcc/config.host
++++ b/libgcc/config.host
+@@ -165,6 +165,9 @@ nios2*-*-*)
+ powerpc*-*-*)
+ 	cpu_type=rs6000
+ 	;;
++pru-*-*)
++	cpu_type=pru
++	;;
+ rs6000*-*-*)
+ 	;;
+ riscv*-*-*)
+@@ -1123,6 +1126,10 @@ powerpcle-*-eabi*)
+ 	tmake_file="${tmake_file} rs6000/t-ppccomm rs6000/t-crtstuff t-crtstuff-pic t-fdpbit"
+ 	extra_parts="$extra_parts crtbegin.o crtend.o crtbeginS.o crtendS.o crtbeginT.o ecrti.o ecrtn.o ncrti.o ncrtn.o"
+ 	;;
++pru-*-*)
++	tmake_file="${tmake_file} t-softfp-sfdf t-softfp-excl t-softfp t-gnu-prefix pru/t-pru"
++	tm_file="$tm_file pru/pru-abi.h"
++	;;
+ riscv*-*-linux*)
+ 	tmake_file="${tmake_file} riscv/t-softfp${host_address} t-softfp riscv/t-elf riscv/t-elf${host_address}"
+ 	extra_parts="$extra_parts crtbegin.o crtend.o crti.o crtn.o crtendS.o crtbeginT.o"
+diff --git a/libgcc/config/pru/asri.c b/libgcc/config/pru/asri.c
+new file mode 100644
+index 00000000000..a56a1c80b65
+--- /dev/null
++++ b/libgcc/config/pru/asri.c
+@@ -0,0 +1,33 @@
++/* PRU ABI compatibility functions
++   Arithmetic right shift
++   Copyright (C) 2017 Free Software Foundation, Inc.
++   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++
++   This file is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   In addition to the permissions in the GNU Lesser General Public
++   License, the Free Software Foundation gives you unlimited
++   permission to link the compiled version of this file into
++   combinations with other programs, and to distribute those
++   combinations without any restriction coming from the use of this
++   file.  (The Lesser General Public License restrictions do apply in
++   other respects; for example, they cover modification of the file,
++   and distribution when not linked into a combine executable.)
++
++   This file is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with GCC; see the file COPYING.LIB.  If not see
++   <http://www.gnu.org/licenses/>.  */
++
++int __pruabi_asri(int a, unsigned char shift)
++{
++  /* GCC has a built-in op.  */
++  return a >> shift;
++}
+diff --git a/libgcc/config/pru/eqd.c b/libgcc/config/pru/eqd.c
+new file mode 100644
+index 00000000000..f12b650bc3f
+--- /dev/null
++++ b/libgcc/config/pru/eqd.c
+@@ -0,0 +1,45 @@
++/* Software floating-point emulation.
++   Return 1 iff a == b, 0 otherwise.
++   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Contributed by Richard Henderson (rth@cygnus.com) and
++		  Jakub Jelinek (jj@ultra.linux.cz).
++
++   This file is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   In addition to the permissions in the GNU Lesser General Public
++   License, the Free Software Foundation gives you unlimited
++   permission to link the compiled version of this file into
++   combinations with other programs, and to distribute those
++   combinations without any restriction coming from the use of this
++   file.  (The Lesser General Public License restrictions do apply in
++   other respects; for example, they cover modification of the file,
++   and distribution when not linked into a combine executable.)
++
++   This file is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with GCC; see the file COPYING.LIB.  If not see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <soft-fp/soft-fp.h>
++#include <soft-fp/double.h>
++
++CMPtype __pruabi_eqd(DFtype a, DFtype b)
++{
++  FP_DECL_EX;
++  FP_DECL_D(A); FP_DECL_D(B);
++  CMPtype r;
++
++  FP_UNPACK_RAW_D(A, a);
++  FP_UNPACK_RAW_D(B, b);
++  FP_CMP_EQ_D(r, A, B, 1);
++  FP_HANDLE_EXCEPTIONS;
++
++  return !r;
++}
+diff --git a/libgcc/config/pru/eqf.c b/libgcc/config/pru/eqf.c
+new file mode 100644
+index 00000000000..7150eb680ae
+--- /dev/null
++++ b/libgcc/config/pru/eqf.c
+@@ -0,0 +1,45 @@
++/* Software floating-point emulation.
++   Return 1 iff a == b, 0 otherwise.
++   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Contributed by Richard Henderson (rth@cygnus.com) and
++		  Jakub Jelinek (jj@ultra.linux.cz).
++
++   This file is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   In addition to the permissions in the GNU Lesser General Public
++   License, the Free Software Foundation gives you unlimited
++   permission to link the compiled version of this file into
++   combinations with other programs, and to distribute those
++   combinations without any restriction coming from the use of this
++   file.  (The Lesser General Public License restrictions do apply in
++   other respects; for example, they cover modification of the file,
++   and distribution when not linked into a combine executable.)
++
++   This file is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with GCC; see the file COPYING.LIB.  If not see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <soft-fp/soft-fp.h>
++#include <soft-fp/single.h>
++
++CMPtype __pruabi_eqf(SFtype a, SFtype b)
++{
++  FP_DECL_EX;
++  FP_DECL_S(A); FP_DECL_S(B);
++  CMPtype r;
++
++  FP_UNPACK_RAW_S(A, a);
++  FP_UNPACK_RAW_S(B, b);
++  FP_CMP_EQ_S(r, A, B, 1);
++  FP_HANDLE_EXCEPTIONS;
++
++  return !r;
++}
+diff --git a/libgcc/config/pru/ged.c b/libgcc/config/pru/ged.c
+new file mode 100644
+index 00000000000..662226d2fa5
+--- /dev/null
++++ b/libgcc/config/pru/ged.c
+@@ -0,0 +1,45 @@
++/* Software floating-point emulation.
++   Return 1 iff a >= b, 0 otherwise.
++   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Contributed by Richard Henderson (rth@cygnus.com) and
++		  Jakub Jelinek (jj@ultra.linux.cz).
++
++   This file is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   In addition to the permissions in the GNU Lesser General Public
++   License, the Free Software Foundation gives you unlimited
++   permission to link the compiled version of this file into
++   combinations with other programs, and to distribute those
++   combinations without any restriction coming from the use of this
++   file.  (The Lesser General Public License restrictions do apply in
++   other respects; for example, they cover modification of the file,
++   and distribution when not linked into a combine executable.)
++
++   This file is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with GCC; see the file COPYING.LIB.  If not see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <soft-fp/soft-fp.h>
++#include <soft-fp/double.h>
++
++CMPtype __pruabi_ged(DFtype a, DFtype b)
++{
++  FP_DECL_EX;
++  FP_DECL_D(A); FP_DECL_D(B);
++  CMPtype r;
++
++  FP_UNPACK_RAW_D(A, a);
++  FP_UNPACK_RAW_D(B, b);
++  FP_CMP_D(r, A, B, -2, 2);
++  FP_HANDLE_EXCEPTIONS;
++
++  return r >= 0;
++}
+diff --git a/libgcc/config/pru/gef.c b/libgcc/config/pru/gef.c
+new file mode 100644
+index 00000000000..51c4f7061ca
+--- /dev/null
++++ b/libgcc/config/pru/gef.c
+@@ -0,0 +1,45 @@
++/* Software floating-point emulation.
++   Return 1 iff a >= b, 0 otherwise.
++   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Contributed by Richard Henderson (rth@cygnus.com) and
++		  Jakub Jelinek (jj@ultra.linux.cz).
++
++   This file is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   In addition to the permissions in the GNU Lesser General Public
++   License, the Free Software Foundation gives you unlimited
++   permission to link the compiled version of this file into
++   combinations with other programs, and to distribute those
++   combinations without any restriction coming from the use of this
++   file.  (The Lesser General Public License restrictions do apply in
++   other respects; for example, they cover modification of the file,
++   and distribution when not linked into a combine executable.)
++
++   This file is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with GCC; see the file COPYING.LIB.  If not see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <soft-fp/soft-fp.h>
++#include <soft-fp/single.h>
++
++CMPtype __pruabi_gef(SFtype a, SFtype b)
++{
++  FP_DECL_EX;
++  FP_DECL_S(A); FP_DECL_S(B);
++  CMPtype r;
++
++  FP_UNPACK_RAW_S(A, a);
++  FP_UNPACK_RAW_S(B, b);
++  FP_CMP_S(r, A, B, -2, 2);
++  FP_HANDLE_EXCEPTIONS;
++
++  return r >= 0;
++}
+diff --git a/libgcc/config/pru/gtd.c b/libgcc/config/pru/gtd.c
+new file mode 100644
+index 00000000000..d2ca7fa1455
+--- /dev/null
++++ b/libgcc/config/pru/gtd.c
+@@ -0,0 +1,45 @@
++/* Software floating-point emulation.
++   Return 1 iff a > b, 0 otherwise.
++   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Contributed by Richard Henderson (rth@cygnus.com) and
++		  Jakub Jelinek (jj@ultra.linux.cz).
++
++   This file is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   In addition to the permissions in the GNU Lesser General Public
++   License, the Free Software Foundation gives you unlimited
++   permission to link the compiled version of this file into
++   combinations with other programs, and to distribute those
++   combinations without any restriction coming from the use of this
++   file.  (The Lesser General Public License restrictions do apply in
++   other respects; for example, they cover modification of the file,
++   and distribution when not linked into a combine executable.)
++
++   This file is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with GCC; see the file COPYING.LIB.  If not see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <soft-fp/soft-fp.h>
++#include <soft-fp/double.h>
++
++CMPtype __pruabi_gtd(DFtype a, DFtype b)
++{
++  FP_DECL_EX;
++  FP_DECL_D(A); FP_DECL_D(B);
++  CMPtype r;
++
++  FP_UNPACK_RAW_D(A, a);
++  FP_UNPACK_RAW_D(B, b);
++  FP_CMP_D(r, A, B, -2, 2);
++  FP_HANDLE_EXCEPTIONS;
++
++  return r > 0;
++}
+diff --git a/libgcc/config/pru/gtf.c b/libgcc/config/pru/gtf.c
+new file mode 100644
+index 00000000000..0a98c6e283f
+--- /dev/null
++++ b/libgcc/config/pru/gtf.c
+@@ -0,0 +1,45 @@
++/* Software floating-point emulation.
++   Return 1 iff a > b, 0 otherwise.
++   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Contributed by Richard Henderson (rth@cygnus.com) and
++		  Jakub Jelinek (jj@ultra.linux.cz).
++
++   This file is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   In addition to the permissions in the GNU Lesser General Public
++   License, the Free Software Foundation gives you unlimited
++   permission to link the compiled version of this file into
++   combinations with other programs, and to distribute those
++   combinations without any restriction coming from the use of this
++   file.  (The Lesser General Public License restrictions do apply in
++   other respects; for example, they cover modification of the file,
++   and distribution when not linked into a combine executable.)
++
++   This file is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with GCC; see the file COPYING.LIB.  If not see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <soft-fp/soft-fp.h>
++#include <soft-fp/single.h>
++
++CMPtype __pruabi_gtf(SFtype a, SFtype b)
++{
++  FP_DECL_EX;
++  FP_DECL_S(A); FP_DECL_S(B);
++  CMPtype r;
++
++  FP_UNPACK_RAW_S(A, a);
++  FP_UNPACK_RAW_S(B, b);
++  FP_CMP_S(r, A, B, -2, 2);
++  FP_HANDLE_EXCEPTIONS;
++
++  return r > 0;
++}
+diff --git a/libgcc/config/pru/led.c b/libgcc/config/pru/led.c
+new file mode 100644
+index 00000000000..f3e28f6844a
+--- /dev/null
++++ b/libgcc/config/pru/led.c
+@@ -0,0 +1,45 @@
++/* Software floating-point emulation.
++   Return 1 iff a <= b, 0 otherwise.
++   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Contributed by Richard Henderson (rth@cygnus.com) and
++		  Jakub Jelinek (jj@ultra.linux.cz).
++
++   This file is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   In addition to the permissions in the GNU Lesser General Public
++   License, the Free Software Foundation gives you unlimited
++   permission to link the compiled version of this file into
++   combinations with other programs, and to distribute those
++   combinations without any restriction coming from the use of this
++   file.  (The Lesser General Public License restrictions do apply in
++   other respects; for example, they cover modification of the file,
++   and distribution when not linked into a combine executable.)
++
++   This file is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with GCC; see the file COPYING.LIB.  If not see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <soft-fp/soft-fp.h>
++#include <soft-fp/double.h>
++
++CMPtype __pruabi_led(DFtype a, DFtype b)
++{
++  FP_DECL_EX;
++  FP_DECL_D(A); FP_DECL_D(B);
++  CMPtype r;
++
++  FP_UNPACK_RAW_D(A, a);
++  FP_UNPACK_RAW_D(B, b);
++  FP_CMP_D(r, A, B, 2, 2);
++  FP_HANDLE_EXCEPTIONS;
++
++  return r <= 0;
++}
+diff --git a/libgcc/config/pru/lef.c b/libgcc/config/pru/lef.c
+new file mode 100644
+index 00000000000..8bcb4d558e9
+--- /dev/null
++++ b/libgcc/config/pru/lef.c
+@@ -0,0 +1,45 @@
++/* Software floating-point emulation.
++   Return 1 iff a <= b, 0 otherwise.
++   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Contributed by Richard Henderson (rth@cygnus.com) and
++		  Jakub Jelinek (jj@ultra.linux.cz).
++
++   This file is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   In addition to the permissions in the GNU Lesser General Public
++   License, the Free Software Foundation gives you unlimited
++   permission to link the compiled version of this file into
++   combinations with other programs, and to distribute those
++   combinations without any restriction coming from the use of this
++   file.  (The Lesser General Public License restrictions do apply in
++   other respects; for example, they cover modification of the file,
++   and distribution when not linked into a combine executable.)
++
++   This file is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with GCC; see the file COPYING.LIB.  If not see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <soft-fp/soft-fp.h>
++#include <soft-fp/single.h>
++
++CMPtype __pruabi_lef(SFtype a, SFtype b)
++{
++  FP_DECL_EX;
++  FP_DECL_S(A); FP_DECL_S(B);
++  CMPtype r;
++
++  FP_UNPACK_RAW_S(A, a);
++  FP_UNPACK_RAW_S(B, b);
++  FP_CMP_S(r, A, B, 2, 2);
++  FP_HANDLE_EXCEPTIONS;
++
++  return r <= 0;
++}
+diff --git a/libgcc/config/pru/lib2bitcountHI.c b/libgcc/config/pru/lib2bitcountHI.c
+new file mode 100644
+index 00000000000..f9d43f48b7a
+--- /dev/null
++++ b/libgcc/config/pru/lib2bitcountHI.c
+@@ -0,0 +1,43 @@
++/* libgcc routines for PRU
++   Copyright (C) 2014 Free Software Foundation, Inc.
++   Contributed by Red Hat.
++
++   This file is part of GCC.
++
++   GCC is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published
++   by the Free Software Foundation; either version 3, or (at your
++   option) any later version.
++
++   GCC is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
++   License for more details.
++
++   Under Section 7 of GPL version 3, you are granted additional
++   permissions described in the GCC Runtime Library Exception, version
++   3.1, as published by the Free Software Foundation.
++
++   You should have received a copy of the GNU General Public License and
++   a copy of the GCC Runtime Library Exception along with this program;
++   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
++   <http://www.gnu.org/licenses/>.  */
++
++typedef		  int sint32_type   __attribute__ ((mode (SI)));
++typedef unsigned  int uint32_type   __attribute__ ((mode (SI)));
++typedef		  int sint16_type   __attribute__ ((mode (HI)));
++typedef unsigned  int uint16_type   __attribute__ ((mode (HI)));
++typedef		  int sint08_type   __attribute__ ((mode (QI)));
++typedef unsigned  int uint08_type   __attribute__ ((mode (QI)));
++typedef		  int word_type     __attribute__ ((mode (__word__)));
++
++#define C3B(a,b,c) a##b##c
++#define C3(a,b,c) C3B(a,b,c)
++
++#define L_clzsi2
++#define L_ctzsi2
++#define L_ffssi2
++#define L_paritysi2
++#define L_popcountsi2
++
++#include "libgcc2.c"
+diff --git a/libgcc/config/pru/lib2divHI.c b/libgcc/config/pru/lib2divHI.c
+new file mode 100644
+index 00000000000..bbc6857738f
+--- /dev/null
++++ b/libgcc/config/pru/lib2divHI.c
+@@ -0,0 +1,42 @@
++/* HI mode divide routines for libgcc for PRU
++   Copyright (C) 2014 Free Software Foundation, Inc.
++   Contributed by Red Hat.
++
++   This file is part of GCC.
++
++   GCC is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published
++   by the Free Software Foundation; either version 3, or (at your
++   option) any later version.
++
++   GCC is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
++   License for more details.
++
++   Under Section 7 of GPL version 3, you are granted additional
++   permissions described in the GCC Runtime Library Exception, version
++   3.1, as published by the Free Software Foundation.
++
++   You should have received a copy of the GNU General Public License and
++   a copy of the GCC Runtime Library Exception along with this program;
++   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
++   <http://www.gnu.org/licenses/>.  */
++
++typedef		  int sint32_type   __attribute__ ((mode (SI)));
++typedef unsigned  int uint32_type   __attribute__ ((mode (SI)));
++typedef		  int sint16_type   __attribute__ ((mode (HI)));
++typedef unsigned  int uint16_type   __attribute__ ((mode (HI)));
++typedef		  int sint08_type   __attribute__ ((mode (QI)));
++typedef unsigned  int uint08_type   __attribute__ ((mode (QI)));
++typedef		  int word_type     __attribute__ ((mode (__word__)));
++
++#define C3B(a,b,c) a##b##c
++#define C3(a,b,c) C3B(a,b,c)
++
++#define UINT_TYPE	uint16_type
++#define SINT_TYPE	sint16_type
++#define BITS_MINUS_1	15
++#define NAME_MODE	hi
++
++#include "pru-divmod.h"
+diff --git a/libgcc/config/pru/lib2divQI.c b/libgcc/config/pru/lib2divQI.c
+new file mode 100644
+index 00000000000..7ae6b713576
+--- /dev/null
++++ b/libgcc/config/pru/lib2divQI.c
+@@ -0,0 +1,43 @@
++/* QI mode divide routines for libgcc for PRU
++   Copyright (C) 2014 Free Software Foundation, Inc.
++   Contributed by Red Hat.
++
++   This file is part of GCC.
++
++   GCC is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published
++   by the Free Software Foundation; either version 3, or (at your
++   option) any later version.
++
++   GCC is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
++   License for more details.
++
++   Under Section 7 of GPL version 3, you are granted additional
++   permissions described in the GCC Runtime Library Exception, version
++   3.1, as published by the Free Software Foundation.
++
++   You should have received a copy of the GNU General Public License and
++   a copy of the GCC Runtime Library Exception along with this program;
++   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
++   <http://www.gnu.org/licenses/>.  */
++
++typedef		  int sint32_type   __attribute__ ((mode (SI)));
++typedef unsigned  int uint32_type   __attribute__ ((mode (SI)));
++typedef		  int sint16_type   __attribute__ ((mode (HI)));
++typedef unsigned  int uint16_type   __attribute__ ((mode (HI)));
++typedef		  int sint08_type   __attribute__ ((mode (QI)));
++typedef unsigned  int uint08_type   __attribute__ ((mode (QI)));
++typedef		  int word_type     __attribute__ ((mode (__word__)));
++
++#define C3B(a,b,c) a##b##c
++#define C3(a,b,c) C3B(a,b,c)
++
++#define UINT_TYPE	uint08_type
++#define SINT_TYPE	sint08_type
++#define BITS_MINUS_1	7
++#define NAME_MODE	qi
++
++#include "pru-divmod.h"
++
+diff --git a/libgcc/config/pru/lib2divSI.c b/libgcc/config/pru/lib2divSI.c
+new file mode 100644
+index 00000000000..3d45244928f
+--- /dev/null
++++ b/libgcc/config/pru/lib2divSI.c
+@@ -0,0 +1,48 @@
++/* SI mode divide routines for libgcc for PRU
++   Copyright (C) 2014 Free Software Foundation, Inc.
++   Contributed by Red Hat.
++
++   This file is part of GCC.
++
++   GCC is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published
++   by the Free Software Foundation; either version 3, or (at your
++   option) any later version.
++
++   GCC is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
++   License for more details.
++
++   Under Section 7 of GPL version 3, you are granted additional
++   permissions described in the GCC Runtime Library Exception, version
++   3.1, as published by the Free Software Foundation.
++
++   You should have received a copy of the GNU General Public License and
++   a copy of the GCC Runtime Library Exception along with this program;
++   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
++   <http://www.gnu.org/licenses/>.  */
++
++typedef		  int sint32_type   __attribute__ ((mode (SI)));
++typedef unsigned  int uint32_type   __attribute__ ((mode (SI)));
++typedef		  int sint16_type   __attribute__ ((mode (HI)));
++typedef unsigned  int uint16_type   __attribute__ ((mode (HI)));
++typedef		  int sint08_type   __attribute__ ((mode (QI)));
++typedef unsigned  int uint08_type   __attribute__ ((mode (QI)));
++typedef		  int word_type     __attribute__ ((mode (__word__)));
++
++#define C3B(a,b,c) a##b##c
++#define C3(a,b,c) C3B(a,b,c)
++
++/* PRU ABI dictates the library function names.  */
++#define __gnu_divsi3 __pruabi_divi
++#define __gnu_modsi3 __pruabi_remi
++#define __gnu_udivsi3 __pruabi_divu
++#define __gnu_umodsi3 __pruabi_remu
++
++#define UINT_TYPE	uint32_type
++#define SINT_TYPE	sint32_type
++#define BITS_MINUS_1	31
++#define NAME_MODE	si
++
++#include "pru-divmod.h"
+diff --git a/libgcc/config/pru/libgcc-eabi.ver b/libgcc/config/pru/libgcc-eabi.ver
+new file mode 100644
+index 00000000000..bc823f7cb07
+--- /dev/null
++++ b/libgcc/config/pru/libgcc-eabi.ver
+@@ -0,0 +1,88 @@
++# Copyright (C) 2017 Free Software Foundation, Inc.
++#
++# This file is part of GCC.
++#
++# GCC is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3, or (at your option)
++# any later version.
++#
++# GCC is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with GCC; see the file COPYING3.  If not see
++# <http://www.gnu.org/licenses/>.
++
++GCC_8.0.0 {
++  __pruabi_asri
++  __pruabi_asrll
++  __pruabi_mpyll
++  __pruabi_negll
++  __pruabi_lslll
++  __pruabi_lsrll
++  __pruabi_fixfu
++  __pruabi_fixdu
++  __pruabi_fixflli
++  __pruabi_fixdlli
++  __pruabi_fixfull
++  __pruabi_fixdull
++  __pruabi_fltllif
++  __pruabi_fltllid
++  __pruabi_fltullf
++  __pruabi_fltulld
++  __pruabi_divlli
++  __pruabi_remlli
++  __pruabi_divull
++  __pruabi_remull
++  __pruabi_divremull
++  __pruabi_gef
++  __pruabi_gtf
++  __pruabi_lef
++  __pruabi_ltf
++  __pruabi_eqf
++  __pruabi_ged
++  __pruabi_gtd
++  __pruabi_led
++  __pruabi_ltd
++  __pruabi_eqd
++  __pruabi_addf
++  __pruabi_divf
++  __pruabi_neqf
++  __pruabi_cmpf
++  __pruabi_mpyf
++  __pruabi_negf
++  __pruabi_subf
++  __pruabi_unordf
++  __pruabi_fixfi
++  __pruabi_fltif
++  __pruabi_fltuf
++  __pruabi_addd
++  __pruabi_divd
++  __pruabi_neqd
++  __pruabi_cmpd
++  __pruabi_mpyd
++  __pruabi_negd
++  __pruabi_subd
++  __pruabi_unordd
++  __pruabi_fixdi
++  __pruabi_fltid
++  __pruabi_fltud
++  __pruabi_cvtfd
++  __pruabi_cvtdf
++  __pruabi_mulcf
++  __pruabi_mulcd
++  __pruabi_divcf
++  __pruabi_divcd
++
++  __gnu_ltsf2
++  __gnu_ltdf2
++  __gnu_gesf2
++  __gnu_gedf2
++  __gnu_gtsf2
++  __gnu_gtdf2
++  __gnu_eqsf2
++  __gnu_eqdf2
++}
+diff --git a/libgcc/config/pru/ltd.c b/libgcc/config/pru/ltd.c
+new file mode 100644
+index 00000000000..b31cbe087b9
+--- /dev/null
++++ b/libgcc/config/pru/ltd.c
+@@ -0,0 +1,45 @@
++/* Software floating-point emulation.
++   Return 1 iff a < b, 0 otherwise.
++   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Contributed by Richard Henderson (rth@cygnus.com) and
++		  Jakub Jelinek (jj@ultra.linux.cz).
++
++   This file is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   In addition to the permissions in the GNU Lesser General Public
++   License, the Free Software Foundation gives you unlimited
++   permission to link the compiled version of this file into
++   combinations with other programs, and to distribute those
++   combinations without any restriction coming from the use of this
++   file.  (The Lesser General Public License restrictions do apply in
++   other respects; for example, they cover modification of the file,
++   and distribution when not linked into a combine executable.)
++
++   This file is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with GCC; see the file COPYING.LIB.  If not see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <soft-fp/soft-fp.h>
++#include <soft-fp/double.h>
++
++CMPtype __pruabi_ltd(DFtype a, DFtype b)
++{
++  FP_DECL_EX;
++  FP_DECL_D(A); FP_DECL_D(B);
++  CMPtype r;
++
++  FP_UNPACK_RAW_D(A, a);
++  FP_UNPACK_RAW_D(B, b);
++  FP_CMP_D(r, A, B, 2, 2);
++  FP_HANDLE_EXCEPTIONS;
++
++  return r < 0;
++}
+diff --git a/libgcc/config/pru/ltf.c b/libgcc/config/pru/ltf.c
+new file mode 100644
+index 00000000000..be56dfa63ed
+--- /dev/null
++++ b/libgcc/config/pru/ltf.c
+@@ -0,0 +1,45 @@
++/* Software floating-point emulation.
++   Return 1 iff a < b, 0 otherwise.
++   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Contributed by Richard Henderson (rth@cygnus.com) and
++		  Jakub Jelinek (jj@ultra.linux.cz).
++
++   This file is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   In addition to the permissions in the GNU Lesser General Public
++   License, the Free Software Foundation gives you unlimited
++   permission to link the compiled version of this file into
++   combinations with other programs, and to distribute those
++   combinations without any restriction coming from the use of this
++   file.  (The Lesser General Public License restrictions do apply in
++   other respects; for example, they cover modification of the file,
++   and distribution when not linked into a combine executable.)
++
++   This file is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with GCC; see the file COPYING.LIB.  If not see
++   <http://www.gnu.org/licenses/>.  */
++
++#include <soft-fp/soft-fp.h>
++#include <soft-fp/single.h>
++
++CMPtype __pruabi_ltf(SFtype a, SFtype b)
++{
++  FP_DECL_EX;
++  FP_DECL_S(A); FP_DECL_S(B);
++  CMPtype r;
++
++  FP_UNPACK_RAW_S(A, a);
++  FP_UNPACK_RAW_S(B, b);
++  FP_CMP_S(r, A, B, 2, 2);
++  FP_HANDLE_EXCEPTIONS;
++
++  return r < 0;
++}
+diff --git a/libgcc/config/pru/mpyll.S b/libgcc/config/pru/mpyll.S
+new file mode 100644
+index 00000000000..628614e0b1f
+--- /dev/null
++++ b/libgcc/config/pru/mpyll.S
+@@ -0,0 +1,57 @@
++/*  Copyright (C) 2014 Free Software Foundation, Inc.
++    Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++
++  This file is free software; you can redistribute it and/or modify it
++  under the terms of the GNU General Public License as published by the
++  Free Software Foundation; either version 3, or (at your option) any
++  later version.
++
++  This file is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++  General Public License for more details.
++
++  Under Section 7 of GPL version 3, you are granted additional
++  permissions described in the GCC Runtime Library Exception, version
++  3.1, as published by the Free Software Foundation.
++
++  You should have received a copy of the GNU General Public License and
++  a copy of the GCC Runtime Library Exception along with this program;
++  see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
++  <http://www.gnu.org/licenses/>.
++
++      (al + C * ah) * (bl + C * bh) =    al * bl
++				       + C * ah * bl
++				       + C * al * bh
++				       + C * C * ah * bh  -> discard, overflow
++	Where C=(1 << 32)
++  */
++
++#include "pru-asm.h"
++
++	.global	SYM(__pruabi_mpyll)
++	FUNC(__pruabi_mpyll)
++SYM(__pruabi_mpyll):
++	/* + C * ah * bl */
++	mov	r28, r15
++	mov	r29, r16
++	nop
++	xin	0, r26, 8
++
++	/* + C * al * bh */
++	mov	r28, r14
++	mov	r29, r17
++	mov	r15, r26		/* "Loose" ah, record only reslo.  */
++	xin	0, r26, 8
++
++	/* + al * bl */
++	/* mov	r28, r14		-> No need, already loaded.  */
++	mov	r29, r16
++	add	r15, r15, r26
++	xin	0, r26, 8
++	mov	r14, r26
++	add	r15, r15, r27
++
++	ret
++
++	ENDFUNC(__pruabi_mpyll)
+diff --git a/libgcc/config/pru/pru-abi.h b/libgcc/config/pru/pru-abi.h
+new file mode 100644
+index 00000000000..12cf4188e61
+--- /dev/null
++++ b/libgcc/config/pru/pru-abi.h
+@@ -0,0 +1,109 @@
++/* Header file for PRU ABI versions of libgcc functions.
++   Copyright (C) 2011-2017 Free Software Foundation, Inc.
++   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++   Based on c6x/c6x-abi.h
++
++   This file is part of GCC.
++
++   GCC is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published
++   by the Free Software Foundation; either version 3, or (at your
++   option) any later version.
++
++   GCC is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
++   License for more details.
++
++   Under Section 7 of GPL version 3, you are granted additional
++   permissions described in the GCC Runtime Library Exception, version
++   3.1, as published by the Free Software Foundation.
++
++   You should have received a copy of the GNU General Public License
++   along with GCC; see the file COPYING3.  If not see
++   <http://www.gnu.org/licenses/>.  */
++
++/* Make __pruabi_AEABI_NAME an alias for __GCC_NAME.  */
++#define RENAME_LIBRARY(GCC_NAME, AEABI_NAME)			\
++  __asm__ (".globl\t__pruabi_" #AEABI_NAME "\n"		\
++	   ".set\t__pruabi_" #AEABI_NAME			\
++	   ", __gnu_" #GCC_NAME "\n");
++
++/* Rename helper functions to the names specified in the PRU ELF ABI.  */
++#ifdef L_divsi3
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (divsi3, divi)
++#endif
++#ifdef L_divdi3
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (divdi3, divlli)
++#endif
++#ifdef L_udivsi3
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (udivsi3, divu)
++#endif
++#ifdef L_udivdi3
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (udivdi3, divull)
++#endif
++#ifdef L_udivmoddi4
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (udivmoddi4, divremull)
++#endif
++#ifdef L_modsi3
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (modsi3, remi)
++#endif
++#ifdef L_moddi3
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (moddi3, remlli)
++#endif
++#ifdef L_umodsi3
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (umodsi3, remu)
++#endif
++#ifdef L_umoddi3
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (umoddi3, remull)
++#endif
++#ifdef L_negdi2
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (negdi2, negll)
++#endif
++#ifdef L_muldi3
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (muldi3, mpyll)
++#endif
++#ifdef L_ashrdi3
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (ashrdi3, asrll)
++#endif
++#ifdef L_lshrdi3
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (lshrdi3, lsrll)
++#endif
++#ifdef L_ashldi3
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (ashldi3, lslll)
++#endif
++
++/* The following are excluded from softfp due to softfp_exclude_libgcc2,
++   so we rename them here rather than in sfp-machine.h.  */
++#ifdef L_fixdfdi
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (fixdfdi, fixdlli)
++#endif
++#ifdef L_fixunsdfsi
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (fixunsdfsi, fixdu)
++#endif
++#ifdef L_fixunsdfdi
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (fixunsdfdi, fixdull)
++#endif
++#ifdef L_fixsfdi
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (fixsfdi, fixflli)
++#endif
++#ifdef L_fixunssfsi
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (fixunssfsi, fixfu)
++#endif
++#ifdef L_fixunssfdi
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (fixunssfdi, fixfull)
++#endif
++#ifdef L_floatdidf
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (floatdidf, fltllid)
++#endif
++#ifdef L_floatundidf
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (floatundidf, fltulld)
++#endif
++#ifdef L_floatdisf
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (floatdisf, fltllif)
++#endif
++#ifdef L_floatundisf
++#define DECLARE_LIBRARY_RENAMES RENAME_LIBRARY (floatundisf, fltullf)
++#endif
++
++#define LIBGCC2_GNU_PREFIX
+diff --git a/libgcc/config/pru/pru-asm.h b/libgcc/config/pru/pru-asm.h
+new file mode 100644
+index 00000000000..fb252b78663
+--- /dev/null
++++ b/libgcc/config/pru/pru-asm.h
+@@ -0,0 +1,36 @@
++/*  Copyright (C) 2014 Free Software Foundation, Inc.
++    Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++
++  This file is free software; you can redistribute it and/or modify it
++  under the terms of the GNU General Public License as published by the
++  Free Software Foundation; either version 3, or (at your option) any
++  later version.
++
++  This file is distributed in the hope that it will be useful, but
++  WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++  General Public License for more details.
++
++  Under Section 7 of GPL version 3, you are granted additional
++  permissions described in the GCC Runtime Library Exception, version
++  3.1, as published by the Free Software Foundation.
++
++  You should have received a copy of the GNU General Public License and
++  a copy of the GCC Runtime Library Exception along with this program;
++  see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
++  <http://www.gnu.org/licenses/>.  */
++
++/* ANSI concatenation macros.  */
++
++#define CONCAT1(a, b) CONCAT2(a, b)
++#define CONCAT2(a, b) a ## b
++
++/* Use the right prefix for global labels.  */
++
++#define SYM(x) CONCAT1 (__USER_LABEL_PREFIX__, x)
++
++#define FUNC(X)		.type SYM(X),@function
++#define HIDDEN_FUNC(X)	FUNC(X)` .hidden SYM(X)
++#define ENDFUNC0(X)	CONCAT1(.Lfe_,X): .size X,CONCAT1(.Lfe_,X)-X
++#define ENDFUNC(X)	ENDFUNC0(SYM(X))
++
+diff --git a/libgcc/config/pru/pru-divmod.h b/libgcc/config/pru/pru-divmod.h
+new file mode 100644
+index 00000000000..942539c5704
+--- /dev/null
++++ b/libgcc/config/pru/pru-divmod.h
+@@ -0,0 +1,117 @@
++/* libgcc routines for PRU
++   Copyright (C) 2014 Free Software Foundation, Inc.
++   Contributed by Red Hat.
++
++   This file is part of GCC.
++
++   GCC is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published
++   by the Free Software Foundation; either version 3, or (at your
++   option) any later version.
++
++   GCC is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
++   License for more details.
++
++   Under Section 7 of GPL version 3, you are granted additional
++   permissions described in the GCC Runtime Library Exception, version
++   3.1, as published by the Free Software Foundation.
++
++   You should have received a copy of the GNU General Public License and
++   a copy of the GCC Runtime Library Exception along with this program;
++   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
++   <http://www.gnu.org/licenses/>.  */
++
++UINT_TYPE C3(udivmod,NAME_MODE,4) (UINT_TYPE, UINT_TYPE, word_type);
++SINT_TYPE C3(__gnu_div,NAME_MODE,3)   (SINT_TYPE, SINT_TYPE);
++SINT_TYPE C3(__gnu_mod,NAME_MODE,3)   (SINT_TYPE, SINT_TYPE);
++UINT_TYPE C3(__gnu_udiv,NAME_MODE,3)  (UINT_TYPE, UINT_TYPE);
++UINT_TYPE C3(__gnu_umod,NAME_MODE,3)  (UINT_TYPE, UINT_TYPE);
++
++UINT_TYPE
++C3(udivmod,NAME_MODE,4) (UINT_TYPE num, UINT_TYPE den, word_type modwanted)
++{
++  UINT_TYPE bit = 1;
++  UINT_TYPE res = 0;
++
++  while (den < num && bit && !(den & (1L << BITS_MINUS_1)))
++    {
++      den <<= 1;
++      bit <<= 1;
++    }
++  while (bit)
++    {
++      if (num >= den)
++	{
++	  num -= den;
++	  res |= bit;
++	}
++      bit >>= 1;
++      den >>= 1;
++    }
++  if (modwanted)
++    return num;
++  return res;
++}
++
++SINT_TYPE
++C3(__gnu_div,NAME_MODE,3) (SINT_TYPE a, SINT_TYPE b)
++{
++  word_type neg = 0;
++  SINT_TYPE res;
++
++  if (a < 0)
++    {
++      a = -a;
++      neg = !neg;
++    }
++
++  if (b < 0)
++    {
++      b = -b;
++      neg = !neg;
++    }
++
++  res = C3(udivmod,NAME_MODE,4) (a, b, 0);
++
++  if (neg)
++    res = -res;
++
++  return res;
++}
++
++SINT_TYPE
++C3(__gnu_mod,NAME_MODE,3) (SINT_TYPE a, SINT_TYPE b)
++{
++  word_type neg = 0;
++  SINT_TYPE res;
++
++  if (a < 0)
++    {
++      a = -a;
++      neg = 1;
++    }
++
++  if (b < 0)
++    b = -b;
++
++  res = C3(udivmod,NAME_MODE,4) (a, b, 1);
++
++  if (neg)
++    res = -res;
++
++  return res;
++}
++
++UINT_TYPE
++C3(__gnu_udiv,NAME_MODE,3) (UINT_TYPE a, UINT_TYPE b)
++{
++  return C3(udivmod,NAME_MODE,4) (a, b, 0);
++}
++
++UINT_TYPE
++C3(__gnu_umod,NAME_MODE,3) (UINT_TYPE a, UINT_TYPE b)
++{
++  return C3(udivmod,NAME_MODE,4) (a, b, 1);
++}
+diff --git a/libgcc/config/pru/sfp-machine.h b/libgcc/config/pru/sfp-machine.h
+new file mode 100644
+index 00000000000..a94163267a1
+--- /dev/null
++++ b/libgcc/config/pru/sfp-machine.h
+@@ -0,0 +1,125 @@
++/* Soft-FP definitions for TI PRU.
++   Copyright (C) 2010-2017 Free Software Foundation, Inc.
++   Based on C6X soft-fp header.
++
++   This files is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   In addition to the permissions in the GNU Lesser General Public
++   License, the Free Software Foundation gives you unlimited
++   permission to link the compiled version of this file into
++   combinations with other programs, and to distribute those
++   combinations without any restriction coming from the use of this
++   file.  (The Lesser General Public License restrictions do apply in
++   other respects; for example, they cover modification of the file,
++   and distribution when not linked into a combine executable.)
++
++   This file is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with GCC; see the file COPYING.LIB.  If not see
++   <http://www.gnu.org/licenses/>.  */
++
++#define _FP_W_TYPE_SIZE		32
++#define _FP_W_TYPE		unsigned long
++#define _FP_WS_TYPE		signed long
++#define _FP_I_TYPE		long
++
++#define _FP_MUL_MEAT_S(R,X,Y)				\
++  _FP_MUL_MEAT_1_wide(_FP_WFRACBITS_S,R,X,Y,umul_ppmm)
++#define _FP_MUL_MEAT_D(R,X,Y)				\
++  _FP_MUL_MEAT_2_wide(_FP_WFRACBITS_D,R,X,Y,umul_ppmm)
++#define _FP_MUL_MEAT_Q(R,X,Y)				\
++  _FP_MUL_MEAT_4_wide(_FP_WFRACBITS_Q,R,X,Y,umul_ppmm)
++
++#define _FP_DIV_MEAT_S(R,X,Y)	_FP_DIV_MEAT_1_loop(S,R,X,Y)
++#define _FP_DIV_MEAT_D(R,X,Y)	_FP_DIV_MEAT_2_udiv(D,R,X,Y)
++#define _FP_DIV_MEAT_Q(R,X,Y)	_FP_DIV_MEAT_4_udiv(Q,R,X,Y)
++
++#define _FP_NANFRAC_H		((_FP_QNANBIT_H << 1) - 1)
++#define _FP_NANFRAC_S		((_FP_QNANBIT_S << 1) - 1)
++#define _FP_NANFRAC_D		((_FP_QNANBIT_D << 1) - 1), -1
++#define _FP_NANFRAC_Q		((_FP_QNANBIT_Q << 1) - 1), -1, -1, -1
++#define _FP_NANSIGN_H		0
++#define _FP_NANSIGN_S		0
++#define _FP_NANSIGN_D		0
++#define _FP_NANSIGN_Q		0
++
++#define _FP_KEEPNANFRACP 1
++#define _FP_QNANNEGATEDP 0
++
++/* Someone please check this.  */
++#define _FP_CHOOSENAN(fs, wc, R, X, Y, OP)			\
++  do {								\
++    if ((_FP_FRAC_HIGH_RAW_##fs(X) & _FP_QNANBIT_##fs)		\
++	&& !(_FP_FRAC_HIGH_RAW_##fs(Y) & _FP_QNANBIT_##fs))	\
++      {								\
++	R##_s = Y##_s;						\
++	_FP_FRAC_COPY_##wc(R,Y);				\
++      }								\
++    else							\
++      {								\
++	R##_s = X##_s;						\
++	_FP_FRAC_COPY_##wc(R,X);				\
++      }								\
++    R##_c = FP_CLS_NAN;						\
++  } while (0)
++
++#define	__LITTLE_ENDIAN	1234
++#define	__BIG_ENDIAN	4321
++
++#if defined _BIG_ENDIAN
++# define __BYTE_ORDER __BIG_ENDIAN
++#else
++# define __BYTE_ORDER __LITTLE_ENDIAN
++#endif
++
++/* Not checked.  */
++#define _FP_TININESS_AFTER_ROUNDING 0
++
++
++/* Define ALIASNAME as a strong alias for NAME.  */
++# define strong_alias(name, aliasname) _strong_alias(name, aliasname)
++# define _strong_alias(name, aliasname) \
++  extern __typeof (name) aliasname __attribute__ ((alias (#name)));
++
++/* Rename helper functions to the names specified in the PRU ELF ABI.  */
++#define __fixdfsi     __pruabi_fixdi
++#define __fixsfsi     __pruabi_fixfi
++#define __floatsidf   __pruabi_fltid
++#define __floatunsidf __pruabi_fltud
++#define __floatsisf   __pruabi_fltif
++#define __floatunsisf __pruabi_fltuf
++#define __truncdfsf2  __pruabi_cvtdf
++#define __extendsfdf2 __pruabi_cvtfd
++#define __adddf3      __pruabi_addd
++#define __subdf3      __pruabi_subd
++#define __muldf3      __pruabi_mpyd
++#define __divdf3      __pruabi_divd
++#define __negdf2      __pruabi_negd
++#define __absdf2      __pruabi_absd
++#define __addsf3      __pruabi_addf
++#define __subsf3      __pruabi_subf
++#define __mulsf3      __pruabi_mpyf
++#define __divsf3      __pruabi_divf
++#define __negsf2      __pruabi_negf
++#define __abssf2      __pruabi_absf
++#define __lesf2       __pruabi_cmpf
++#define __ledf2       __pruabi_cmpd
++#define __ltsf2       __gnu_ltsf2
++#define __ltdf2       __gnu_ltdf2
++#define __gesf2       __gnu_gesf2
++#define __gedf2       __gnu_gedf2
++#define __gtsf2       __gnu_gtsf2
++#define __gtdf2       __gnu_gtdf2
++#define __eqsf2       __gnu_eqsf2
++#define __eqdf2       __gnu_eqdf2
++#define __nesf2       __pruabi_neqf
++#define __nedf2       __pruabi_neqd
++#define __unordsf2    __pruabi_unordf
++#define __unorddf2    __pruabi_unordd
+diff --git a/libgcc/config/pru/t-pru b/libgcc/config/pru/t-pru
+new file mode 100644
+index 00000000000..4f17f6fe31e
+--- /dev/null
++++ b/libgcc/config/pru/t-pru
+@@ -0,0 +1,50 @@
++# Makefile fragment for building LIBGCC for the TI PRU processor.
++# Copyright (C) 2011 Free Software Foundation, Inc.
++# Contributed by Red Hat.
++#
++# This file is part of GCC.
++#
++# GCC is free software; you can redistribute it and/or modify it
++# under the terms of the GNU General Public License as published
++# by the Free Software Foundation; either version 3, or (at your
++# option) any later version.
++#
++# GCC is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
++# the GNU General Public License for more details.
++#
++# You should have received a copy of the  GNU General Public
++# License along with GCC; see the file COPYING3.  If not see
++# <http://www.gnu.org/licenses/>.
++
++# Note - we have separate versions of the lib2div<mode> files
++# as the functions are quite large and we do not want to pull
++# in unneeded division routines.
++
++LIB2ADD += \
++	$(srcdir)/config/pru/lib2divQI.c \
++	$(srcdir)/config/pru/lib2divHI.c \
++	$(srcdir)/config/pru/lib2divSI.c \
++	$(srcdir)/config/pru/lib2bitcountHI.c \
++	$(srcdir)/config/pru/mpyll.S \
++	$(srcdir)/config/pru/gef.c \
++	$(srcdir)/config/pru/gtf.c \
++	$(srcdir)/config/pru/lef.c \
++	$(srcdir)/config/pru/ltf.c \
++	$(srcdir)/config/pru/eqf.c \
++	$(srcdir)/config/pru/ged.c \
++	$(srcdir)/config/pru/gtd.c \
++	$(srcdir)/config/pru/led.c \
++	$(srcdir)/config/pru/ltd.c \
++	$(srcdir)/config/pru/eqd.c \
++	$(srcdir)/config/pru/asri.c
++
++HOST_LIBGCC2_CFLAGS += -Os -ffunction-sections -fdata-sections
++
++LIB2FUNCS_EXCLUDE = _muldi3
++
++SHLIB_MAPFILES += $(srcdir)/config/pru/libgcc-eabi.ver
++# Local Variables:
++# mode: Makefile
++# End:
+-- 
+2.11.0
+

@@ -1,0 +1,127 @@
+From 2a12d22b9c3a745976dd3cac810277de1438c34c Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Sun, 4 Mar 2018 22:42:14 +0200
+Subject: [PATCH 01/13] bfd:pru: Fix LDI32 relocation to conform to TI ABI
+
+My original implementation for LDI32 pseudo does not conform to
+the TI ABI.  I wrongly documented my TI PRU ELF inspection, which
+got propagated into the binutils implementation.
+
+Issue was exposed when running the GCC ABI testsuite against TI toolchain.
+According to TI ABI, LDI32 must use first LDI instruction to load
+the MSB 16bits, and second LDI instruction for the LSB 16bits.
+
+This patch will break binary compatibility with previously released
+binutils versions for PRU. Still, I think it is better to fix
+binutils to conform to the chip vendor ABI.
+
+When an old object file link is attempted, the new LD will refuse to
+link it with the following error:
+   ld: error: x.o: old incompatible object file detected
+
+Patch version 2: Added checks for old unsupported object files.
+
+2018-05-02  Dimitar Dimitrov  <dimitar@dinux.eu>
+
+        * elf32-pru.c (pru_elf32_do_ldi32_relocate): Make LDI32 relocation
+          conformant to TI ABI.
+        (pru_elf32_relax_section): Ditto.
+        (pru_elf_relax_delete_bytes): Fix offsets for new LDI32 code.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ bfd/elf32-pru.c | 49 +++++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 41 insertions(+), 8 deletions(-)
+
+diff --git a/bfd/elf32-pru.c b/bfd/elf32-pru.c
+index a3c431ba7e..99ac8ade0c 100644
+--- a/bfd/elf32-pru.c
++++ b/bfd/elf32-pru.c
+@@ -565,17 +565,28 @@ pru_elf32_do_ldi32_relocate (bfd *abfd, reloc_howto_type *howto,
+   in2 = bfd_get_32 (abfd, location + 4);
+ 
+   /* Extract the addend - should be zero per my understanding.  */
+-  num = GET_INSN_FIELD (IMM16, in1) | (GET_INSN_FIELD (IMM16, in2) << 16);
++  num = (GET_INSN_FIELD (IMM16, in1) << 16) | GET_INSN_FIELD (IMM16, in2);
+   BFD_ASSERT (!num);
+ 
+   relocation += num;
+ 
+-  SET_INSN_FIELD (IMM16, in1, relocation & 0xffff);
+-  SET_INSN_FIELD (IMM16, in2, relocation >> 16);
++  SET_INSN_FIELD (IMM16, in1, relocation >> 16);
++  SET_INSN_FIELD (IMM16, in2, relocation & 0xffff);
+ 
+   bfd_put_32 (abfd, in1, location);
+   bfd_put_32 (abfd, in2, location + 4);
+ 
++  /* Old GAS and LD versions have a bug, where the two
++     LDI instructions are swapped.  Detect such object
++     files and bail.  */
++  if (GET_INSN_FIELD (RDSEL, in1) != RSEL_31_16)
++    {
++      /* xgettext:c-format */
++      _bfd_error_handler (_("error: %pB: old incompatible object file detected"),
++			  abfd);
++      return bfd_reloc_notsupported;
++    }
++
+   return bfd_reloc_ok;
+ }
+ 
+@@ -1094,7 +1105,7 @@ pru_elf_relax_delete_bytes (bfd *abfd,
+ 	 continue;
+ 
+        shrinked_insn_address = (sec->output_section->vma
+-				+ sec->output_offset + addr - count);
++				+ sec->output_offset + addr);
+ 
+        irel = elf_section_data (isec)->relocs;
+        /* PR 12161: Read in the relocs for this section if necessary.  */
+@@ -1354,17 +1365,39 @@ pru_elf32_relax_section (bfd * abfd, asection * sec,
+ 
+ 	  if ((long) value >> 16 == 0)
+ 	    {
++	      unsigned long insn;
++
+ 	      /* Note that we've changed the relocs, section contents.  */
+ 	      elf_section_data (sec)->relocs = internal_relocs;
+ 	      elf_section_data (sec)->this_hdr.contents = contents;
+ 	      symtab_hdr->contents = (unsigned char *) isymbuf;
+ 
+-	      /* Delete bytes.  */
+-	      if (!pru_elf_relax_delete_bytes (abfd, sec, irel->r_offset + 4, 4))
++	      /* Make the second instruction load the 16-bit constant
++		 into the full 32-bit register.  */
++	      insn = bfd_get_32 (abfd, contents + irel->r_offset + 4);
++
++	      /* Old GAS and LD versions have a bug, where the two
++		 LDI instructions are swapped.  Detect such object
++		 files and bail.  */
++	      if (GET_INSN_FIELD (RDSEL, insn) != RSEL_15_0)
++		{
++		  /* xgettext:c-format */
++		  _bfd_error_handler (_("error: %pB: old incompatible object file detected"),
++				      abfd);
++		  goto error_return;
++		}
++
++	      SET_INSN_FIELD (RDSEL, insn, RSEL_31_0);
++	      bfd_put_32 (abfd, insn, contents + irel->r_offset + 4);
++
++	      /* Delete the first LDI instruction.  Note that there should
++		 be no relocations or symbols pointing to the second LDI
++		 instruction.  */
++	      if (!pru_elf_relax_delete_bytes (abfd, sec, irel->r_offset, 4))
+ 		goto error_return;
+ 
+-	      /* We're done with deletion of the second instruction.
+-		 Set a regular LDI relocation for the first instruction
++	      /* We're done with deletion of the first instruction.
++		 Set a regular LDI relocation for the second instruction
+ 		 we left to load the 16-bit value into the 32-bit
+ 		 register.  */
+ 	      irel->r_info = ELF32_R_INFO (ELF32_R_SYM (irel->r_info),
+-- 
+2.11.0
+

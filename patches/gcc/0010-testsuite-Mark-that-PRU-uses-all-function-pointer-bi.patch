@@ -1,0 +1,32 @@
+From 743f48ec4730bb3b6cf00709637b856739b914eb Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Tue, 20 Feb 2018 02:41:12 +0200
+Subject: [PATCH 10/13] testsuite: Mark that PRU uses all function pointer bits
+
+gcc/testsuite/ChangeLog:
+
+2018-04-15  Dimitar Dimitrov  <dimitar@dinux.eu>
+
+	* g++.old-deja/g++.abi/ptrmem.C: Add PRU to list.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ gcc/testsuite/g++.old-deja/g++.abi/ptrmem.C | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gcc/testsuite/g++.old-deja/g++.abi/ptrmem.C b/gcc/testsuite/g++.old-deja/g++.abi/ptrmem.C
+index 341735879c5..bda7960d8a2 100644
+--- a/gcc/testsuite/g++.old-deja/g++.abi/ptrmem.C
++++ b/gcc/testsuite/g++.old-deja/g++.abi/ptrmem.C
+@@ -7,7 +7,7 @@
+    function.  However, some platforms use all bits to encode a
+    function pointer.  Such platforms use the lowest bit of the delta,
+    that is shifted left by one bit.  */
+-#if defined __MN10300__ || defined __SH5__ || defined __arm__ || defined __thumb__ || defined __mips__ || defined __aarch64__
++#if defined __MN10300__ || defined __SH5__ || defined __arm__ || defined __thumb__ || defined __mips__ || defined __aarch64__ || defined __PRU__
+ #define ADJUST_PTRFN(func, virt) ((void (*)())(func))
+ #define ADJUST_DELTA(delta, virt) (((delta) << 1) + !!(virt))
+ #else
+-- 
+2.11.0
+

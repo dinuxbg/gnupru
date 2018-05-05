@@ -1,45 +1,71 @@
-From 1865e4e2be26a45fbcb07d999e44f9f852df6705 Mon Sep 17 00:00:00 2001
+From 7af43300b251c4963e330090217403ba1542ca2e Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:57:14 +0200
-Subject: [PATCH 04/11] testsuite: Add check for overflowed IMEM region to
+Subject: [PATCH 04/13] testsuite: Add check for overflowed IMEM region to
  testsuite
+
+gcc/testsuite/ChangeLog:
+
+2018-04-15  Dimitar Dimitrov  <dimitar@dinux.eu>
+
+	* lib/gcc-dg.exp: Bail on region overflow for tiny targets.
+	* lib/target-utils.exp: Ditto.
+	* lib/target-supports.exp: Declare PRU target as tiny.
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
- gcc/testsuite/lib/gcc-dg.exp       | 5 +++++
- gcc/testsuite/lib/target-utils.exp | 3 +++
- 2 files changed, 8 insertions(+)
+ gcc/testsuite/lib/gcc-dg.exp          | 5 +++++
+ gcc/testsuite/lib/target-supports.exp | 5 +++++
+ gcc/testsuite/lib/target-utils.exp    | 4 ++++
+ 3 files changed, 14 insertions(+)
 
 diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
-index 1dfe02c4e39..52ce2129e07 100644
+index 3770f698c46..81ca017604d 100644
 --- a/gcc/testsuite/lib/gcc-dg.exp
 +++ b/gcc/testsuite/lib/gcc-dg.exp
-@@ -368,6 +368,11 @@ proc gcc-dg-prune { system text } {
- 	return "::unsupported::memory full"
+@@ -373,6 +373,11 @@ proc gcc-dg-prune { system text } {
+         return "::unsupported::memory full"
      }
  
-+    if [regexp "(^|\n)\[^\n\]*: region \[^\n\]* overflowed by \[^\n\]* bytes" $text] {
-+	# The format here is important.  See dg.exp.
++    if { [regexp "(^|\n)\[^\n\]*: region \[^\n\]* overflowed" $text] 
++          && [check_effective_target_tiny] } {
 +	return "::unsupported::memory full"
 +    }
 +
-     if { [regexp "(^|\n)\[^\n\]*: relocation truncated to fit" $text]
-           && [check_effective_target_tiny] } {
-         return "::unsupported::memory full"
+     # Likewise, if we see ".text exceeds local store range" or
+     # similar.
+     if {[string match "spu-*" $system] && \
+diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
+index 5869132b64d..3ab145dc629 100644
+--- a/gcc/testsuite/lib/target-supports.exp
++++ b/gcc/testsuite/lib/target-supports.exp
+@@ -8756,6 +8756,11 @@ proc check_effective_target_tiny {} {
+              && [check_effective_target_avr_tiny] } {
+          set et_target_tiny_saved 1
+        }
++       # PRU Program Counter is 16-bits, and trampolines are not supported.
++       # Hence directly declare as a tiny target.
++       if [istarget pru-*-*] {
++         set et_target_tiny_saved 1
++       }
+     }
+ 
+     return $et_target_tiny_saved
 diff --git a/gcc/testsuite/lib/target-utils.exp b/gcc/testsuite/lib/target-utils.exp
-index 75999fce8c2..d22696fe7d8 100644
+index bd39cc5bc79..732a1827a02 100644
 --- a/gcc/testsuite/lib/target-utils.exp
 +++ b/gcc/testsuite/lib/target-utils.exp
-@@ -28,6 +28,9 @@
- load_lib target-supports.exp
- 
- proc ${tool}_check_unsupported_p { output } {
-+    if [regexp "(^|\n)\[^\n\]*: region \[^\n\]* overflowed by \[^\n\]* bytes" $output] {
+@@ -35,6 +35,10 @@ proc ${tool}_check_unsupported_p { output } {
+           && [check_effective_target_tiny] } {
+         return "memory full"
+      }
++    if { [regexp "(^|\n)\[^\n\]*: region \[^\n\]* overflowed" $output]
++          && [check_effective_target_tiny] } {
 +	return "memory full"
 +    }
-     if [regexp "(^|\n)\[^\n\]*: region \[^\n\]* is full" $output] {
- 	return "memory full"
-     }
+ 
+     if { [istarget spu-*-*] && \
+ 	     [string match "*exceeds local store*" $output] } {
 -- 
 2.11.0
 

@@ -1,4 +1,4 @@
-From 0acdbe653a301d53ab745fddd1afbe5388df739c Mon Sep 17 00:00:00 2001
+From afa87086968d4555b31fd2c35ad235edf45dd972 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 11 Mar 2018 22:15:05 +0200
 Subject: [PATCH 2/6] PRU: Align libmath to PRU ABI
@@ -34,10 +34,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 newlib/libm/machine/pru/isnormalf.c
 
 diff --git a/newlib/configure.host b/newlib/configure.host
-index 90f94370c..d45bbed5e 100644
+index 10115c613..48f997fbc 100644
 --- a/newlib/configure.host
 +++ b/newlib/configure.host
-@@ -262,6 +262,7 @@ case "${host_cpu}" in
+@@ -268,6 +268,7 @@ case "${host_cpu}" in
  	default_newlib_nano_malloc="yes"
  	default_newlib_atexit_dynamic_alloc="no"
  	machine_dir=pru

@@ -1,17 +1,18 @@
-From 868070608565187fd4e11ba4519844630c701c27 Mon Sep 17 00:00:00 2001
+From dc4f893f69c8b58d27177073a578472772226c89 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sun, 11 Oct 2015 11:52:38 +0300
 Subject: [PATCH 6/6] Add TI remoteproc headers
 
 Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---
+ libgloss/pru/Makefile.in               |   4 +
  libgloss/pru/include/pru_rpmsg.h       | 223 +++++++++++++++++++++
  libgloss/pru/include/pru_types.h       |  83 ++++++++
  libgloss/pru/include/pru_virtio_ids.h  |  42 ++++
  libgloss/pru/include/pru_virtio_ring.h | 159 +++++++++++++++
  libgloss/pru/include/pru_virtqueue.h   | 218 +++++++++++++++++++++
  libgloss/pru/include/rsc_types.h       | 347 +++++++++++++++++++++++++++++++++
- 6 files changed, 1072 insertions(+)
+ 7 files changed, 1076 insertions(+)
  create mode 100644 libgloss/pru/include/pru_rpmsg.h
  create mode 100644 libgloss/pru/include/pru_types.h
  create mode 100644 libgloss/pru/include/pru_virtio_ids.h
@@ -19,6 +20,21 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 libgloss/pru/include/pru_virtqueue.h
  create mode 100644 libgloss/pru/include/rsc_types.h
 
+diff --git a/libgloss/pru/Makefile.in b/libgloss/pru/Makefile.in
+index c944e5edd..4d08a9061 100644
+--- a/libgloss/pru/Makefile.in
++++ b/libgloss/pru/Makefile.in
+@@ -130,6 +130,10 @@ install: $(OUTPUTS) $(srcdir)/ldscripts/gen-ld-scripts.sh
+ 	  b=`basename $$i`; \
+ 	  $(INSTALL_DATA) $$i $(DESTDIR)$(tooldir)/include/pru/$$b ;\
+ 	done
++	for i in ${srcdir}/include/*.h; do \
++	  b=`basename $$i`; \
++	  $(INSTALL_DATA) $$i $(DESTDIR)$(tooldir)/include/$$b ;\
++	done
+ 	${mkinstalldirs} ${DESTDIR}${tooldir}/lib${MULTISUBDIR}/device-specs; \
+ 	for s in ${srcdir}/device-specs/*; do \
+ 	  b=`basename $$s`; \
 diff --git a/libgloss/pru/include/pru_rpmsg.h b/libgloss/pru/include/pru_rpmsg.h
 new file mode 100644
 index 000000000..d5ed79c3e
