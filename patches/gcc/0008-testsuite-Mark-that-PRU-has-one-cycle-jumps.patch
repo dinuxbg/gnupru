@@ -1,0 +1,89 @@
+From 89930cf846a0393f2d3d21e711be5e9bb89077af Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Thu, 10 Nov 2016 22:07:17 +0200
+Subject: [PATCH 08/13] testsuite: Mark that PRU has one-cycle jumps
+
+gcc/testsuite/ChangeLog:
+
+2018-04-15  Dimitar Dimitrov  <dimitar@dinux.eu>
+
+	* gcc.dg/tree-ssa/20040204-1.c: XFAIL on pru.
+	* gcc.dg/tree-ssa/reassoc-33.c: Ditto.
+	* gcc.dg/tree-ssa/reassoc-34.c: Ditto.
+	* gcc.dg/tree-ssa/reassoc-35.c: Ditto.
+	* gcc.dg/tree-ssa/reassoc-36.c: Ditto.
+	* gcc.dg/tree-ssa/ssa-thread-14.c: Ditto.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ gcc/testsuite/gcc.dg/tree-ssa/20040204-1.c    | 2 +-
+ gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c    | 2 +-
+ gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c    | 2 +-
+ gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c    | 2 +-
+ gcc/testsuite/gcc.dg/tree-ssa/reassoc-36.c    | 2 +-
+ gcc/testsuite/gcc.dg/tree-ssa/ssa-thread-14.c | 2 +-
+ 6 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/gcc/testsuite/gcc.dg/tree-ssa/20040204-1.c b/gcc/testsuite/gcc.dg/tree-ssa/20040204-1.c
+index a1237cf839b..06b83029fd3 100644
+--- a/gcc/testsuite/gcc.dg/tree-ssa/20040204-1.c
++++ b/gcc/testsuite/gcc.dg/tree-ssa/20040204-1.c
+@@ -33,4 +33,4 @@ void test55 (int x, int y)
+    that the && should be emitted (based on BRANCH_COST).  Fix this
+    by teaching dom to look through && and register all components
+    as true.  */
+-/* { dg-final { scan-tree-dump-times "link_error" 0 "optimized" { xfail { ! "alpha*-*-* arm*-*-* aarch64*-*-* powerpc*-*-* cris-*-* crisv32-*-* hppa*-*-* i?86-*-* mmix-*-* mips*-*-* m68k*-*-* moxie-*-* nds32*-*-* s390*-*-* sh*-*-* sparc*-*-* spu-*-* visium-*-* x86_64-*-* riscv*-*-*" } } } } */
++/* { dg-final { scan-tree-dump-times "link_error" 0 "optimized" { xfail { ! "alpha*-*-* arm*-*-* aarch64*-*-* powerpc*-*-* cris-*-* crisv32-*-* hppa*-*-* i?86-*-* mmix-*-* mips*-*-* m68k*-*-* moxie-*-* nds32*-*-* s390*-*-* sh*-*-* sparc*-*-* spu-*-* visium-*-* x86_64-*-* riscv*-*-* pru*-*-*" } } } } */
+diff --git a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c
+index 5572df4ae24..5e1cd1a6fa7 100644
+--- a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c
++++ b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-33.c
+@@ -1,4 +1,4 @@
+-/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-*"} } } */
++/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-* pru*-*-*"} } } */
+ 
+ /* { dg-options "-O2 -fno-inline -fdump-tree-reassoc1-details" } */
+ /* { dg-additional-options "-mbranch-cost=2" { target branch_cost } } */
+diff --git a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c
+index 9b45f1cd9be..a59df6a7244 100644
+--- a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c
++++ b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-34.c
+@@ -1,4 +1,4 @@
+-/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-*"} } } */
++/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-* pru*-*-*"} } } */
+ 
+ /* { dg-options "-O2 -fno-inline -fdump-tree-reassoc1-details" } */
+ /* { dg-additional-options "-mbranch-cost=2" { target branch_cost } } */
+diff --git a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c
+index 9ee3abca04e..21239372709 100644
+--- a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c
++++ b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-35.c
+@@ -1,4 +1,4 @@
+-/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-*"} } } */
++/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-* pru*-*-*"} } } */
+ 
+ /* { dg-options "-O2 -fno-inline -fdump-tree-reassoc1-details" } */
+ /* { dg-additional-options "-mbranch-cost=2" { target branch_cost } } */
+diff --git a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-36.c b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-36.c
+index ac3a04291b7..f8eb0954ae7 100644
+--- a/gcc/testsuite/gcc.dg/tree-ssa/reassoc-36.c
++++ b/gcc/testsuite/gcc.dg/tree-ssa/reassoc-36.c
+@@ -1,4 +1,4 @@
+-/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-*"} } } */
++/* { dg-do run { target { ! "m68k*-*-* mmix*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-* pru*-*-*"} } } */
+ 
+ /* { dg-options "-O2 -fno-inline -fdump-tree-reassoc1-details" } */
+ /* { dg-additional-options "-mbranch-cost=2" { target branch_cost } } */
+diff --git a/gcc/testsuite/gcc.dg/tree-ssa/ssa-thread-14.c b/gcc/testsuite/gcc.dg/tree-ssa/ssa-thread-14.c
+index f12fb07e604..71e299578cc 100644
+--- a/gcc/testsuite/gcc.dg/tree-ssa/ssa-thread-14.c
++++ b/gcc/testsuite/gcc.dg/tree-ssa/ssa-thread-14.c
+@@ -1,4 +1,4 @@
+-/* { dg-do compile { target { ! { logical_op_short_circuit || { m68k*-*-* mmix*-*-* mep*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-* riscv*-*-* } } } } }  */
++/* { dg-do compile { target { ! { logical_op_short_circuit || { m68k*-*-* mmix*-*-* mep*-*-* bfin*-*-* v850*-*-* moxie*-*-* cris*-*-* m32c*-*-* fr30*-*-* mcore*-*-* powerpc*-*-* xtensa*-*-* hppa*-*-* nios2*-*-* riscv*-*-* pru*-*-* } } } } }  */
+ /* { dg-additional-options "-O2 -fdump-tree-vrp-details" }  */
+ /* { dg-additional-options "-mbranch-cost=2" { target i?86-*-* x86_64-*-* } }  */
+ /* { dg-final { scan-tree-dump-times "Threaded jump" 8 "vrp1" } }  */
+-- 
+2.11.0
+

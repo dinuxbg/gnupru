@@ -30,7 +30,7 @@ build_test_gcc()
   cd ${BUILDDIR} || die
   ${SRC}/configure --disable-multilib --enable-languages=c,c++ || die
   make -j5 || die
-  make check || die
+  make check-gcc-c check-gcc-c++  || die
   local FILES="gcc/testsuite/gcc/gcc.log gcc/testsuite/gcc/gcc.sum gcc/testsuite/g++/g++.log gcc/testsuite/g++/g++.sum"
   for i in ${FILES}
   do

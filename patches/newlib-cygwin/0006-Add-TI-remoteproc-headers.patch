@@ -1,7 +1,7 @@
-From dc4f893f69c8b58d27177073a578472772226c89 Mon Sep 17 00:00:00 2001
+From be6ccfd8526c42aab28745bf1fe68484df2f1e4a Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dinuxbg@gmail.com>
 Date: Sun, 11 Oct 2015 11:52:38 +0300
-Subject: [PATCH 6/6] Add TI remoteproc headers
+Subject: [PATCH 6/8] Add TI remoteproc headers
 
 Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
 ---
@@ -21,7 +21,7 @@ Signed-off-by: Dimitar Dimitrov <dinuxbg@gmail.com>
  create mode 100644 libgloss/pru/include/rsc_types.h
 
 diff --git a/libgloss/pru/Makefile.in b/libgloss/pru/Makefile.in
-index c944e5edd..4d08a9061 100644
+index 4baa5c387..0920da85c 100644
 --- a/libgloss/pru/Makefile.in
 +++ b/libgloss/pru/Makefile.in
 @@ -130,6 +130,10 @@ install: $(OUTPUTS) $(srcdir)/ldscripts/gen-ld-scripts.sh

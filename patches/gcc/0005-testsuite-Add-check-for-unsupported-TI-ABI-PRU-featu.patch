@@ -1,4 +1,4 @@
-From df1e519ea69c85ba2d0ca373bfc7bded6cbddc0d Mon Sep 17 00:00:00 2001
+From bccdcc4e491e33e1e006f4c1a443913065f07f24 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 15 Apr 2018 15:03:27 +0300
 Subject: [PATCH 05/13] testsuite: Add check for unsupported TI ABI PRU
@@ -17,14 +17,14 @@ gcc/testsuite/ChangeLog:
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  gcc/testsuite/lib/gcc-dg.exp       | 11 +++++++++++
- gcc/testsuite/lib/target-utils.exp | 10 ++++++++++
- 2 files changed, 21 insertions(+)
+ gcc/testsuite/lib/target-utils.exp |  8 ++++++++
+ 2 files changed, 19 insertions(+)
 
 diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
-index 81ca017604d..80d3916d55c 100644
+index c5ab850c840..f4976520282 100644
 --- a/gcc/testsuite/lib/gcc-dg.exp
 +++ b/gcc/testsuite/lib/gcc-dg.exp
-@@ -386,6 +386,17 @@ proc gcc-dg-prune { system text } {
+@@ -388,6 +388,17 @@ proc gcc-dg-prune { system text } {
  	return "::unsupported::memory full"
      }
  
@@ -43,21 +43,19 @@ index 81ca017604d..80d3916d55c 100644
  }
  
 diff --git a/gcc/testsuite/lib/target-utils.exp b/gcc/testsuite/lib/target-utils.exp
-index 732a1827a02..15de111d2f6 100644
+index 732a1827a02..e288447ef1d 100644
 --- a/gcc/testsuite/lib/target-utils.exp
 +++ b/gcc/testsuite/lib/target-utils.exp
-@@ -44,5 +44,15 @@ proc ${tool}_check_unsupported_p { output } {
+@@ -44,5 +44,13 @@ proc ${tool}_check_unsupported_p { output } {
  	     [string match "*exceeds local store*" $output] } {
  	return "memory full"
      }
 +    if {[istarget pru-*] && \
 +	    [string match "*error: large return values not supported with -mabi=ti option*" $output]} {
-+	# The format here is important.  See dg.exp.
 +	return "abi not supported"
 +    }
 +    if {[istarget pru-*] && \
 +	    [string match "*error: function pointers not supported with -mabi=ti option*" $output]} {
-+	# The format here is important.  See dg.exp.
 +	return "abi not supported"
 +    }
      return ""

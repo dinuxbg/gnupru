@@ -1,8 +1,11 @@
-From 7af43300b251c4963e330090217403ba1542ca2e Mon Sep 17 00:00:00 2001
+From a1e9a17c629ac5507de82ba467cb1c0c4e708683 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:57:14 +0200
 Subject: [PATCH 04/13] testsuite: Add check for overflowed IMEM region to
  testsuite
+
+PRU architecture supports maximum 256k program memory (IMEM). Some GCC
+test cases manage to produce executables bigger than that.
 
 gcc/testsuite/ChangeLog:
 
@@ -20,10 +23,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  3 files changed, 14 insertions(+)
 
 diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
-index 3770f698c46..81ca017604d 100644
+index a15c5d5e2a6..c5ab850c840 100644
 --- a/gcc/testsuite/lib/gcc-dg.exp
 +++ b/gcc/testsuite/lib/gcc-dg.exp
-@@ -373,6 +373,11 @@ proc gcc-dg-prune { system text } {
+@@ -375,6 +375,11 @@ proc gcc-dg-prune { system text } {
          return "::unsupported::memory full"
      }
  
@@ -36,10 +39,10 @@ index 3770f698c46..81ca017604d 100644
      # similar.
      if {[string match "spu-*" $system] && \
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index 5869132b64d..3ab145dc629 100644
+index b92e54b6ec3..8d5f7e0720c 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
-@@ -8756,6 +8756,11 @@ proc check_effective_target_tiny {} {
+@@ -8786,6 +8786,11 @@ proc check_effective_target_tiny {} {
               && [check_effective_target_avr_tiny] } {
           set et_target_tiny_saved 1
         }

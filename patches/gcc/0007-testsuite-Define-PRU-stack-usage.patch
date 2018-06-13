@@ -1,4 +1,4 @@
-From 84c1a0e3f7cd3635e4fdafc12f9a7f5a8a533ce2 Mon Sep 17 00:00:00 2001
+From 6665810ae14f87b30f6bc3539c66d49bab9a46cf Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 22:00:47 +0200
 Subject: [PATCH 07/13] testsuite: Define PRU stack usage
@@ -15,10 +15,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  1 file changed, 2 insertions(+)
 
 diff --git a/gcc/testsuite/gcc.dg/stack-usage-1.c b/gcc/testsuite/gcc.dg/stack-usage-1.c
-index 45d2c7b6aae..5487fbef318 100644
+index 038bd4ec05c..ffa97da6c32 100644
 --- a/gcc/testsuite/gcc.dg/stack-usage-1.c
 +++ b/gcc/testsuite/gcc.dg/stack-usage-1.c
-@@ -89,6 +89,8 @@
+@@ -93,6 +93,8 @@
  #  define SIZE 254
  #elif defined (__nios2__)
  #  define SIZE 252

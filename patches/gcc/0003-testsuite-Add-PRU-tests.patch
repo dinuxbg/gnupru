@@ -1,4 +1,4 @@
-From 807faf727a6a833510b42d3eff26dabfdf324cd7 Mon Sep 17 00:00:00 2001
+From 791134ed8de0dfe0aa9772dd647c2d557317178c Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:56:38 +0200
 Subject: [PATCH 03/13] testsuite: Add PRU tests
@@ -47,7 +47,7 @@ gcc/testsuite/ChangeLog:
 	* gcc.target/pru/zero_extend-hisi.c: New test.
 	* gcc.target/pru/zero_extend-qihi.c: New test.
 	* gcc.target/pru/zero_extend-qisi.c: New test.
-	* lib/target-supports.exp: Ditto.
+	* lib/target-supports.exp: Add PRU to feature filters.
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -1172,11 +1172,11 @@ index 00000000000..2c5ea375505
 +/* { dg-final { scan-assembler "lbco\\tr14.b0, 12, 16, 4" } } */
 diff --git a/gcc/testsuite/gcc.target/pru/pru.exp b/gcc/testsuite/gcc.target/pru/pru.exp
 new file mode 100644
-index 00000000000..122a2b3a503
+index 00000000000..966620d78ec
 --- /dev/null
 +++ b/gcc/testsuite/gcc.target/pru/pru.exp
 @@ -0,0 +1,41 @@
-+# Copyright (C) 2015 Free Software Foundation, Inc.
++# Copyright (C) 2015-2018 Free Software Foundation, Inc.
 +
 +# This program is free software; you can redistribute it and/or modify
 +# it under the terms of the GNU General Public License as published by
@@ -1583,7 +1583,7 @@ index 00000000000..0e9ae4cf01e
 +}
 +
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index 50665dfd30e..5869132b64d 100644
+index 3c2c62a5800..b92e54b6ec3 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
 @@ -512,7 +512,8 @@ proc check_effective_target_trampolines { } {
@@ -1613,7 +1613,7 @@ index 50665dfd30e..5869132b64d 100644
  	return 0
      }
      return [check_runtime tls_runtime {
-@@ -8772,6 +8774,7 @@ proc check_effective_target_logical_op_short_circuit {} {
+@@ -8802,6 +8804,7 @@ proc check_effective_target_logical_op_short_circuit {} {
  	 || [istarget nios2*-*-*]
  	 || [istarget riscv*-*-*]
  	 || [istarget visium-*-*]

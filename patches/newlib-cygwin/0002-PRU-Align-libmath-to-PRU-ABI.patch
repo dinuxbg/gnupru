@@ -1,7 +1,11 @@
-From afa87086968d4555b31fd2c35ad235edf45dd972 Mon Sep 17 00:00:00 2001
+From 3cd31dce9b231db5943e00df6475b20469f5abe3 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 11 Mar 2018 22:15:05 +0200
-Subject: [PATCH 2/6] PRU: Align libmath to PRU ABI
+Subject: [PATCH 2/8] PRU: Align libmath to PRU ABI
+
+The TI proprietary toolchain uses nonstandard names for some math
+library functions. In order to achieve ABI compatibility between
+GNU and TI toolchains, add support for the TI function names.
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -101,12 +105,12 @@ index 000000000..7a22fa31c
 +AC_OUTPUT
 diff --git a/newlib/libm/machine/pru/fpclassify.c b/newlib/libm/machine/pru/fpclassify.c
 new file mode 100644
-index 000000000..4cc166531
+index 000000000..53e22f0fa
 --- /dev/null
 +++ b/newlib/libm/machine/pru/fpclassify.c
 @@ -0,0 +1,43 @@
 +/*
-+  (c) Copyright 2017 Dimitar Dimitrov <dimitar@dinux.eu>
++  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
 +  All rights reserved.
 +
 +  Redistribution and use in source and binary forms, with or without
@@ -150,12 +154,12 @@ index 000000000..4cc166531
 +}
 diff --git a/newlib/libm/machine/pru/fpclassifyf.c b/newlib/libm/machine/pru/fpclassifyf.c
 new file mode 100644
-index 000000000..6705659d9
+index 000000000..01c06aeef
 --- /dev/null
 +++ b/newlib/libm/machine/pru/fpclassifyf.c
 @@ -0,0 +1,43 @@
 +/*
-+  (c) Copyright 2017 Dimitar Dimitrov <dimitar@dinux.eu>
++  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
 +  All rights reserved.
 +
 +  Redistribution and use in source and binary forms, with or without
@@ -199,12 +203,12 @@ index 000000000..6705659d9
 +}
 diff --git a/newlib/libm/machine/pru/isfinite.c b/newlib/libm/machine/pru/isfinite.c
 new file mode 100644
-index 000000000..25505bae1
+index 000000000..305d6bc0e
 --- /dev/null
 +++ b/newlib/libm/machine/pru/isfinite.c
 @@ -0,0 +1,43 @@
 +/*
-+  (c) Copyright 2017 Dimitar Dimitrov <dimitar@dinux.eu>
++  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
 +  All rights reserved.
 +
 +  Redistribution and use in source and binary forms, with or without
@@ -248,12 +252,12 @@ index 000000000..25505bae1
 +}
 diff --git a/newlib/libm/machine/pru/isfinitef.c b/newlib/libm/machine/pru/isfinitef.c
 new file mode 100644
-index 000000000..bc93f9e15
+index 000000000..fcd7247cc
 --- /dev/null
 +++ b/newlib/libm/machine/pru/isfinitef.c
 @@ -0,0 +1,43 @@
 +/*
-+  (c) Copyright 2017 Dimitar Dimitrov <dimitar@dinux.eu>
++  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
 +  All rights reserved.
 +
 +  Redistribution and use in source and binary forms, with or without
@@ -297,12 +301,12 @@ index 000000000..bc93f9e15
 +}
 diff --git a/newlib/libm/machine/pru/isinf.c b/newlib/libm/machine/pru/isinf.c
 new file mode 100644
-index 000000000..0be77386a
+index 000000000..2a2ca7339
 --- /dev/null
 +++ b/newlib/libm/machine/pru/isinf.c
 @@ -0,0 +1,43 @@
 +/*
-+  (c) Copyright 2017 Dimitar Dimitrov <dimitar@dinux.eu>
++  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
 +  All rights reserved.
 +
 +  Redistribution and use in source and binary forms, with or without
@@ -346,12 +350,12 @@ index 000000000..0be77386a
 +}
 diff --git a/newlib/libm/machine/pru/isinff.c b/newlib/libm/machine/pru/isinff.c
 new file mode 100644
-index 000000000..324727984
+index 000000000..ffbf23b54
 --- /dev/null
 +++ b/newlib/libm/machine/pru/isinff.c
 @@ -0,0 +1,43 @@
 +/*
-+  (c) Copyright 2017 Dimitar Dimitrov <dimitar@dinux.eu>
++  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
 +  All rights reserved.
 +
 +  Redistribution and use in source and binary forms, with or without
@@ -395,12 +399,12 @@ index 000000000..324727984
 +}
 diff --git a/newlib/libm/machine/pru/isnan.c b/newlib/libm/machine/pru/isnan.c
 new file mode 100644
-index 000000000..fedcfcdd2
+index 000000000..a0ea651b1
 --- /dev/null
 +++ b/newlib/libm/machine/pru/isnan.c
 @@ -0,0 +1,43 @@
 +/*
-+  (c) Copyright 2017 Dimitar Dimitrov <dimitar@dinux.eu>
++  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
 +  All rights reserved.
 +
 +  Redistribution and use in source and binary forms, with or without
@@ -444,12 +448,12 @@ index 000000000..fedcfcdd2
 +}
 diff --git a/newlib/libm/machine/pru/isnanf.c b/newlib/libm/machine/pru/isnanf.c
 new file mode 100644
-index 000000000..48b5d2f52
+index 000000000..cba350e6f
 --- /dev/null
 +++ b/newlib/libm/machine/pru/isnanf.c
 @@ -0,0 +1,43 @@
 +/*
-+  (c) Copyright 2017 Dimitar Dimitrov <dimitar@dinux.eu>
++  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
 +  All rights reserved.
 +
 +  Redistribution and use in source and binary forms, with or without
@@ -493,12 +497,12 @@ index 000000000..48b5d2f52
 +}
 diff --git a/newlib/libm/machine/pru/isnormal.c b/newlib/libm/machine/pru/isnormal.c
 new file mode 100644
-index 000000000..da2871fa2
+index 000000000..c1463e4c6
 --- /dev/null
 +++ b/newlib/libm/machine/pru/isnormal.c
 @@ -0,0 +1,43 @@
 +/*
-+  (c) Copyright 2017 Dimitar Dimitrov <dimitar@dinux.eu>
++  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
 +  All rights reserved.
 +
 +  Redistribution and use in source and binary forms, with or without
@@ -542,12 +546,12 @@ index 000000000..da2871fa2
 +}
 diff --git a/newlib/libm/machine/pru/isnormalf.c b/newlib/libm/machine/pru/isnormalf.c
 new file mode 100644
-index 000000000..73b37213d
+index 000000000..e7023f52a
 --- /dev/null
 +++ b/newlib/libm/machine/pru/isnormalf.c
 @@ -0,0 +1,43 @@
 +/*
-+  (c) Copyright 2017 Dimitar Dimitrov <dimitar@dinux.eu>
++  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
 +  All rights reserved.
 +
 +  Redistribution and use in source and binary forms, with or without

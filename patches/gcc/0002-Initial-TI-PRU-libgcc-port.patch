@@ -1,4 +1,4 @@
-From 2896bbc27bf04b8a8c88002a4bcec70eefe6f9fd Mon Sep 17 00:00:00 2001
+From b66590c4ea11d725e44c673188d7a22241268f82 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 23 Mar 2018 22:24:22 +0200
 Subject: [PATCH 02/13] Initial TI PRU libgcc port
@@ -48,18 +48,18 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  libgcc/config/pru/lef.c            |  45 +++++++++++++
  libgcc/config/pru/lib2bitcountHI.c |  43 +++++++++++++
  libgcc/config/pru/lib2divHI.c      |  42 +++++++++++++
- libgcc/config/pru/lib2divQI.c      |  43 +++++++++++++
+ libgcc/config/pru/lib2divQI.c      |  42 +++++++++++++
  libgcc/config/pru/lib2divSI.c      |  48 ++++++++++++++
  libgcc/config/pru/libgcc-eabi.ver  |  88 ++++++++++++++++++++++++++
  libgcc/config/pru/ltd.c            |  45 +++++++++++++
  libgcc/config/pru/ltf.c            |  45 +++++++++++++
  libgcc/config/pru/mpyll.S          |  57 +++++++++++++++++
  libgcc/config/pru/pru-abi.h        | 109 ++++++++++++++++++++++++++++++++
- libgcc/config/pru/pru-asm.h        |  36 +++++++++++
+ libgcc/config/pru/pru-asm.h        |  35 +++++++++++
  libgcc/config/pru/pru-divmod.h     | 117 ++++++++++++++++++++++++++++++++++
  libgcc/config/pru/sfp-machine.h    | 125 +++++++++++++++++++++++++++++++++++++
  libgcc/config/pru/t-pru            |  50 +++++++++++++++
- 23 files changed, 1248 insertions(+)
+ 23 files changed, 1246 insertions(+)
  create mode 100644 libgcc/config/pru/asri.c
  create mode 100644 libgcc/config/pru/eqd.c
  create mode 100644 libgcc/config/pru/eqf.c
@@ -84,7 +84,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 libgcc/config/pru/t-pru
 
 diff --git a/libgcc/config.host b/libgcc/config.host
-index 11b4acaff55..b2eda415877 100644
+index 18cabaf24f6..ff229c38f0c 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
 @@ -165,6 +165,9 @@ nios2*-*-*)
@@ -97,7 +97,7 @@ index 11b4acaff55..b2eda415877 100644
  rs6000*-*-*)
  	;;
  riscv*-*-*)
-@@ -1123,6 +1126,10 @@ powerpcle-*-eabi*)
+@@ -1145,6 +1148,10 @@ powerpcle-*-eabi*)
  	tmake_file="${tmake_file} rs6000/t-ppccomm rs6000/t-crtstuff t-crtstuff-pic t-fdpbit"
  	extra_parts="$extra_parts crtbegin.o crtend.o crtbeginS.o crtendS.o crtbeginT.o ecrti.o ecrtn.o ncrti.o ncrtn.o"
  	;;
@@ -110,13 +110,13 @@ index 11b4acaff55..b2eda415877 100644
  	extra_parts="$extra_parts crtbegin.o crtend.o crti.o crtn.o crtendS.o crtbeginT.o"
 diff --git a/libgcc/config/pru/asri.c b/libgcc/config/pru/asri.c
 new file mode 100644
-index 00000000000..a56a1c80b65
+index 00000000000..591d660f227
 --- /dev/null
 +++ b/libgcc/config/pru/asri.c
 @@ -0,0 +1,33 @@
 +/* PRU ABI compatibility functions
 +   Arithmetic right shift
-+   Copyright (C) 2017 Free Software Foundation, Inc.
++   Copyright (C) 2017-2018 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
 +   This file is free software; you can redistribute it and/or
@@ -149,13 +149,13 @@ index 00000000000..a56a1c80b65
 +}
 diff --git a/libgcc/config/pru/eqd.c b/libgcc/config/pru/eqd.c
 new file mode 100644
-index 00000000000..f12b650bc3f
+index 00000000000..cce5c9ec119
 --- /dev/null
 +++ b/libgcc/config/pru/eqd.c
 @@ -0,0 +1,45 @@
 +/* Software floating-point emulation.
 +   Return 1 iff a == b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Copyright (C) 1997-2018 Free Software Foundation, Inc.
 +   Contributed by Richard Henderson (rth@cygnus.com) and
 +		  Jakub Jelinek (jj@ultra.linux.cz).
 +
@@ -200,13 +200,13 @@ index 00000000000..f12b650bc3f
 +}
 diff --git a/libgcc/config/pru/eqf.c b/libgcc/config/pru/eqf.c
 new file mode 100644
-index 00000000000..7150eb680ae
+index 00000000000..701b54e06ba
 --- /dev/null
 +++ b/libgcc/config/pru/eqf.c
 @@ -0,0 +1,45 @@
 +/* Software floating-point emulation.
 +   Return 1 iff a == b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Copyright (C) 1997-2018 Free Software Foundation, Inc.
 +   Contributed by Richard Henderson (rth@cygnus.com) and
 +		  Jakub Jelinek (jj@ultra.linux.cz).
 +
@@ -251,13 +251,13 @@ index 00000000000..7150eb680ae
 +}
 diff --git a/libgcc/config/pru/ged.c b/libgcc/config/pru/ged.c
 new file mode 100644
-index 00000000000..662226d2fa5
+index 00000000000..91b84ea2639
 --- /dev/null
 +++ b/libgcc/config/pru/ged.c
 @@ -0,0 +1,45 @@
 +/* Software floating-point emulation.
 +   Return 1 iff a >= b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Copyright (C) 1997-2018 Free Software Foundation, Inc.
 +   Contributed by Richard Henderson (rth@cygnus.com) and
 +		  Jakub Jelinek (jj@ultra.linux.cz).
 +
@@ -302,13 +302,13 @@ index 00000000000..662226d2fa5
 +}
 diff --git a/libgcc/config/pru/gef.c b/libgcc/config/pru/gef.c
 new file mode 100644
-index 00000000000..51c4f7061ca
+index 00000000000..042786a459d
 --- /dev/null
 +++ b/libgcc/config/pru/gef.c
 @@ -0,0 +1,45 @@
 +/* Software floating-point emulation.
 +   Return 1 iff a >= b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Copyright (C) 1997-2018 Free Software Foundation, Inc.
 +   Contributed by Richard Henderson (rth@cygnus.com) and
 +		  Jakub Jelinek (jj@ultra.linux.cz).
 +
@@ -353,13 +353,13 @@ index 00000000000..51c4f7061ca
 +}
 diff --git a/libgcc/config/pru/gtd.c b/libgcc/config/pru/gtd.c
 new file mode 100644
-index 00000000000..d2ca7fa1455
+index 00000000000..3f536254dde
 --- /dev/null
 +++ b/libgcc/config/pru/gtd.c
 @@ -0,0 +1,45 @@
 +/* Software floating-point emulation.
 +   Return 1 iff a > b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Copyright (C) 1997-2018 Free Software Foundation, Inc.
 +   Contributed by Richard Henderson (rth@cygnus.com) and
 +		  Jakub Jelinek (jj@ultra.linux.cz).
 +
@@ -404,13 +404,13 @@ index 00000000000..d2ca7fa1455
 +}
 diff --git a/libgcc/config/pru/gtf.c b/libgcc/config/pru/gtf.c
 new file mode 100644
-index 00000000000..0a98c6e283f
+index 00000000000..ae5b734fbbb
 --- /dev/null
 +++ b/libgcc/config/pru/gtf.c
 @@ -0,0 +1,45 @@
 +/* Software floating-point emulation.
 +   Return 1 iff a > b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Copyright (C) 1997-2018 Free Software Foundation, Inc.
 +   Contributed by Richard Henderson (rth@cygnus.com) and
 +		  Jakub Jelinek (jj@ultra.linux.cz).
 +
@@ -455,13 +455,13 @@ index 00000000000..0a98c6e283f
 +}
 diff --git a/libgcc/config/pru/led.c b/libgcc/config/pru/led.c
 new file mode 100644
-index 00000000000..f3e28f6844a
+index 00000000000..d7d1a51ddc3
 --- /dev/null
 +++ b/libgcc/config/pru/led.c
 @@ -0,0 +1,45 @@
 +/* Software floating-point emulation.
 +   Return 1 iff a <= b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Copyright (C) 1997-2018 Free Software Foundation, Inc.
 +   Contributed by Richard Henderson (rth@cygnus.com) and
 +		  Jakub Jelinek (jj@ultra.linux.cz).
 +
@@ -506,13 +506,13 @@ index 00000000000..f3e28f6844a
 +}
 diff --git a/libgcc/config/pru/lef.c b/libgcc/config/pru/lef.c
 new file mode 100644
-index 00000000000..8bcb4d558e9
+index 00000000000..b50e624f62f
 --- /dev/null
 +++ b/libgcc/config/pru/lef.c
 @@ -0,0 +1,45 @@
 +/* Software floating-point emulation.
 +   Return 1 iff a <= b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Copyright (C) 1997-2018 Free Software Foundation, Inc.
 +   Contributed by Richard Henderson (rth@cygnus.com) and
 +		  Jakub Jelinek (jj@ultra.linux.cz).
 +
@@ -557,13 +557,13 @@ index 00000000000..8bcb4d558e9
 +}
 diff --git a/libgcc/config/pru/lib2bitcountHI.c b/libgcc/config/pru/lib2bitcountHI.c
 new file mode 100644
-index 00000000000..f9d43f48b7a
+index 00000000000..7f07069152a
 --- /dev/null
 +++ b/libgcc/config/pru/lib2bitcountHI.c
 @@ -0,0 +1,43 @@
 +/* libgcc routines for PRU
-+   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Red Hat.
++   Copyright (C) 2014-2018 Free Software Foundation, Inc.
++   Based on lib2bitcountHI.c from MSP430 port.
 +
 +   This file is part of GCC.
 +
@@ -606,13 +606,13 @@ index 00000000000..f9d43f48b7a
 +#include "libgcc2.c"
 diff --git a/libgcc/config/pru/lib2divHI.c b/libgcc/config/pru/lib2divHI.c
 new file mode 100644
-index 00000000000..bbc6857738f
+index 00000000000..ae99db718f0
 --- /dev/null
 +++ b/libgcc/config/pru/lib2divHI.c
 @@ -0,0 +1,42 @@
 +/* HI mode divide routines for libgcc for PRU
-+   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Red Hat.
++   Copyright (C) 2014-2018 Free Software Foundation, Inc.
++   Based on lib2divHI.c from MSP430 port.
 +
 +   This file is part of GCC.
 +
@@ -654,13 +654,13 @@ index 00000000000..bbc6857738f
 +#include "pru-divmod.h"
 diff --git a/libgcc/config/pru/lib2divQI.c b/libgcc/config/pru/lib2divQI.c
 new file mode 100644
-index 00000000000..7ae6b713576
+index 00000000000..b271d483dcb
 --- /dev/null
 +++ b/libgcc/config/pru/lib2divQI.c
-@@ -0,0 +1,43 @@
+@@ -0,0 +1,42 @@
 +/* QI mode divide routines for libgcc for PRU
-+   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Red Hat.
++   Copyright (C) 2014-2018 Free Software Foundation, Inc.
++   Based on lib2divQI.c from MSP430 port.
 +
 +   This file is part of GCC.
 +
@@ -700,16 +700,15 @@ index 00000000000..7ae6b713576
 +#define NAME_MODE	qi
 +
 +#include "pru-divmod.h"
-+
 diff --git a/libgcc/config/pru/lib2divSI.c b/libgcc/config/pru/lib2divSI.c
 new file mode 100644
-index 00000000000..3d45244928f
+index 00000000000..6b49649a62d
 --- /dev/null
 +++ b/libgcc/config/pru/lib2divSI.c
 @@ -0,0 +1,48 @@
 +/* SI mode divide routines for libgcc for PRU
-+   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Red Hat.
++   Copyright (C) 2014-2018 Free Software Foundation, Inc.
++   Based on lib2divSI.c from MSP430 port.
 +
 +   This file is part of GCC.
 +
@@ -757,11 +756,11 @@ index 00000000000..3d45244928f
 +#include "pru-divmod.h"
 diff --git a/libgcc/config/pru/libgcc-eabi.ver b/libgcc/config/pru/libgcc-eabi.ver
 new file mode 100644
-index 00000000000..bc823f7cb07
+index 00000000000..969d35fe18c
 --- /dev/null
 +++ b/libgcc/config/pru/libgcc-eabi.ver
 @@ -0,0 +1,88 @@
-+# Copyright (C) 2017 Free Software Foundation, Inc.
++# Copyright (C) 2017-2018 Free Software Foundation, Inc.
 +#
 +# This file is part of GCC.
 +#
@@ -779,7 +778,7 @@ index 00000000000..bc823f7cb07
 +# along with GCC; see the file COPYING3.  If not see
 +# <http://www.gnu.org/licenses/>.
 +
-+GCC_8.0.0 {
++GCC_9.0.0 {
 +  __pruabi_asri
 +  __pruabi_asrll
 +  __pruabi_mpyll
@@ -851,13 +850,13 @@ index 00000000000..bc823f7cb07
 +}
 diff --git a/libgcc/config/pru/ltd.c b/libgcc/config/pru/ltd.c
 new file mode 100644
-index 00000000000..b31cbe087b9
+index 00000000000..7be20686e1a
 --- /dev/null
 +++ b/libgcc/config/pru/ltd.c
 @@ -0,0 +1,45 @@
 +/* Software floating-point emulation.
 +   Return 1 iff a < b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Copyright (C) 1997-2018 Free Software Foundation, Inc.
 +   Contributed by Richard Henderson (rth@cygnus.com) and
 +		  Jakub Jelinek (jj@ultra.linux.cz).
 +
@@ -902,13 +901,13 @@ index 00000000000..b31cbe087b9
 +}
 diff --git a/libgcc/config/pru/ltf.c b/libgcc/config/pru/ltf.c
 new file mode 100644
-index 00000000000..be56dfa63ed
+index 00000000000..7b81dbd2ca1
 --- /dev/null
 +++ b/libgcc/config/pru/ltf.c
 @@ -0,0 +1,45 @@
 +/* Software floating-point emulation.
 +   Return 1 iff a < b, 0 otherwise.
-+   Copyright (C) 1997-2017 Free Software Foundation, Inc.
++   Copyright (C) 1997-2018 Free Software Foundation, Inc.
 +   Contributed by Richard Henderson (rth@cygnus.com) and
 +		  Jakub Jelinek (jj@ultra.linux.cz).
 +
@@ -953,11 +952,11 @@ index 00000000000..be56dfa63ed
 +}
 diff --git a/libgcc/config/pru/mpyll.S b/libgcc/config/pru/mpyll.S
 new file mode 100644
-index 00000000000..628614e0b1f
+index 00000000000..d384b54515a
 --- /dev/null
 +++ b/libgcc/config/pru/mpyll.S
 @@ -0,0 +1,57 @@
-+/*  Copyright (C) 2014 Free Software Foundation, Inc.
++/*  Copyright (C) 2014-2018 Free Software Foundation, Inc.
 +    Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
 +  This file is free software; you can redistribute it and/or modify it
@@ -1016,12 +1015,12 @@ index 00000000000..628614e0b1f
 +	ENDFUNC(__pruabi_mpyll)
 diff --git a/libgcc/config/pru/pru-abi.h b/libgcc/config/pru/pru-abi.h
 new file mode 100644
-index 00000000000..12cf4188e61
+index 00000000000..79d7be76a5d
 --- /dev/null
 +++ b/libgcc/config/pru/pru-abi.h
 @@ -0,0 +1,109 @@
 +/* Header file for PRU ABI versions of libgcc functions.
-+   Copyright (C) 2011-2017 Free Software Foundation, Inc.
++   Copyright (C) 2011-2018 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +   Based on c6x/c6x-abi.h
 +
@@ -1131,11 +1130,11 @@ index 00000000000..12cf4188e61
 +#define LIBGCC2_GNU_PREFIX
 diff --git a/libgcc/config/pru/pru-asm.h b/libgcc/config/pru/pru-asm.h
 new file mode 100644
-index 00000000000..fb252b78663
+index 00000000000..28272a13937
 --- /dev/null
 +++ b/libgcc/config/pru/pru-asm.h
-@@ -0,0 +1,36 @@
-+/*  Copyright (C) 2014 Free Software Foundation, Inc.
+@@ -0,0 +1,35 @@
++/*  Copyright (C) 2014-2018 Free Software Foundation, Inc.
 +    Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
 +  This file is free software; you can redistribute it and/or modify it
@@ -1170,16 +1169,15 @@ index 00000000000..fb252b78663
 +#define HIDDEN_FUNC(X)	FUNC(X)` .hidden SYM(X)
 +#define ENDFUNC0(X)	CONCAT1(.Lfe_,X): .size X,CONCAT1(.Lfe_,X)-X
 +#define ENDFUNC(X)	ENDFUNC0(SYM(X))
-+
 diff --git a/libgcc/config/pru/pru-divmod.h b/libgcc/config/pru/pru-divmod.h
 new file mode 100644
-index 00000000000..942539c5704
+index 00000000000..40577eaa956
 --- /dev/null
 +++ b/libgcc/config/pru/pru-divmod.h
 @@ -0,0 +1,117 @@
 +/* libgcc routines for PRU
-+   Copyright (C) 2014 Free Software Foundation, Inc.
-+   Contributed by Red Hat.
++   Copyright (C) 2014-2018 Free Software Foundation, Inc.
++   Based on msp430-divmod.h from MSP430 port.
 +
 +   This file is part of GCC.
 +
@@ -1296,12 +1294,12 @@ index 00000000000..942539c5704
 +}
 diff --git a/libgcc/config/pru/sfp-machine.h b/libgcc/config/pru/sfp-machine.h
 new file mode 100644
-index 00000000000..a94163267a1
+index 00000000000..0079823d425
 --- /dev/null
 +++ b/libgcc/config/pru/sfp-machine.h
 @@ -0,0 +1,125 @@
 +/* Soft-FP definitions for TI PRU.
-+   Copyright (C) 2010-2017 Free Software Foundation, Inc.
++   Copyright (C) 2010-2018 Free Software Foundation, Inc.
 +   Based on C6X soft-fp header.
 +
 +   This files is free software; you can redistribute it and/or
@@ -1427,13 +1425,13 @@ index 00000000000..a94163267a1
 +#define __unorddf2    __pruabi_unordd
 diff --git a/libgcc/config/pru/t-pru b/libgcc/config/pru/t-pru
 new file mode 100644
-index 00000000000..4f17f6fe31e
+index 00000000000..35ae44f719b
 --- /dev/null
 +++ b/libgcc/config/pru/t-pru
 @@ -0,0 +1,50 @@
 +# Makefile fragment for building LIBGCC for the TI PRU processor.
-+# Copyright (C) 2011 Free Software Foundation, Inc.
-+# Contributed by Red Hat.
++# Copyright (C) 2014-2018 Free Software Foundation, Inc.
++# Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +#
 +# This file is part of GCC.
 +#

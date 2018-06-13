@@ -1,0 +1,185 @@
+From b7bd4990f44f897ea0cfe6d9fff8408085475d4d Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dddimitrov@mm-sol.com>
+Date: Sun, 23 Jul 2017 20:59:53 -0700
+Subject: [PATCH 10/13] Fix LRA to handle multi-word eliminable registers
+
+For some targets, Pmode != UNITS_PER_WORD. Take this into account
+when marking hard registers as being used.
+
+I tested C and C++ testsuits for x86_64 with and without this
+patch. There was no regression, i.e. gcc.sum and g++.sum matched
+exactly.
+
+gcc/ChangeLog:
+
+2018-04-15  Dimitar Dimitrov  <dimitar@dinux.eu>
+
+	* lra-eliminations.c (set_ptr_hard_reg_bits): New function.
+	(update_reg_eliminate): Mark all spanning hw registers.
+
+gcc/testsuite/ChangeLog:
+
+2018-04-29  Dimitar Dimitrov  <dimitar@dinux.eu>
+
+	* gcc.target/pru/lra-framepointer-fragmentation-1.c: New test.
+	* gcc.target/pru/lra-framepointer-fragmentation-2.c: New test.
+
+Cc: Vladimir Makarov <vmakarov@redhat.com>
+Cc: Peter Bergner <bergner@vnet.ibm.com>
+Cc: Kenneth Zadeck <zadeck@naturalbridge.com>
+Cc: Seongbae Park <seongbae.park@gmail.com>
+Signed-off-by: Dimitar Dimitrov <dddimitrov@mm-sol.com>
+---
+ gcc/lra-eliminations.c                             | 14 ++++-
+ .../pru/lra-framepointer-fragmentation-1.c         | 33 ++++++++++++
+ .../pru/lra-framepointer-fragmentation-2.c         | 61 ++++++++++++++++++++++
+ 3 files changed, 106 insertions(+), 2 deletions(-)
+ create mode 100644 gcc/testsuite/gcc.target/pru/lra-framepointer-fragmentation-1.c
+ create mode 100644 gcc/testsuite/gcc.target/pru/lra-framepointer-fragmentation-2.c
+
+diff --git a/gcc/lra-eliminations.c b/gcc/lra-eliminations.c
+index 21d8d5f8018..566cc2c8248 100644
+--- a/gcc/lra-eliminations.c
++++ b/gcc/lra-eliminations.c
+@@ -1180,6 +1180,16 @@ spill_pseudos (HARD_REG_SET set)
+   bitmap_clear (&to_process);
+ }
+ 
++static void set_ptr_hard_reg_bits (HARD_REG_SET *hard_reg_set, int r)
++{
++  int w;
++
++  for (w = 0; w < GET_MODE_SIZE (Pmode); w += UNITS_PER_WORD, r++)
++    {
++	  SET_HARD_REG_BIT (*hard_reg_set, r);
++    }
++}
++
+ /* Update all offsets and possibility for elimination on eliminable
+    registers.  Spill pseudos assigned to registers which are
+    uneliminable, update LRA_NO_ALLOC_REGS and ELIMINABLE_REG_SET.  Add
+@@ -1264,13 +1274,13 @@ update_reg_eliminate (bitmap insns_with_changed_offsets)
+   CLEAR_HARD_REG_SET (temp_hard_reg_set);
+   for (ep = reg_eliminate; ep < &reg_eliminate[NUM_ELIMINABLE_REGS]; ep++)
+     if (elimination_map[ep->from] == NULL)
+-      SET_HARD_REG_BIT (temp_hard_reg_set, ep->from);
++      set_ptr_hard_reg_bits (&temp_hard_reg_set, ep->from);
+     else if (elimination_map[ep->from] == ep)
+       {
+ 	/* Prevent the hard register into which we eliminate from
+ 	   the usage for pseudos.  */
+         if (ep->from != ep->to)
+-	  SET_HARD_REG_BIT (temp_hard_reg_set, ep->to);
++	  set_ptr_hard_reg_bits (&temp_hard_reg_set, ep->to);
+ 	if (maybe_ne (ep->previous_offset, ep->offset))
+ 	  {
+ 	    bitmap_ior_into (insns_with_changed_offsets,
+diff --git a/gcc/testsuite/gcc.target/pru/lra-framepointer-fragmentation-1.c b/gcc/testsuite/gcc.target/pru/lra-framepointer-fragmentation-1.c
+new file mode 100644
+index 00000000000..ee1288fc2ae
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/lra-framepointer-fragmentation-1.c
+@@ -0,0 +1,33 @@
++/* { dg-do assemble } */
++/* { dg-options "-O1 -fno-omit-frame-pointer" } */
++#include <stdint.h>
++
++extern uint64_t global;
++
++uint64_t __attribute__((noinline)) test(uint64_t a, uint64_t b,
++                                         uint64_t c, uint64_t d,
++                                         uint64_t e, uint64_t f,
++                                         uint64_t g, uint64_t h)
++{
++  uint64_t l1 = 0x12345678, l2 = 0x87654321, l3 = 1001, l4 = 1002;
++  uint64_t l5 = 1004;
++  uint32_t l6 = 2005;
++  uint8_t c1 = 101, c2 = 102;
++
++  /* The numerous dummy asm input operands create just
++   * enough register pressure to resort to using
++   * FP.b1 (r4.b1).
++   */
++
++  asm ("nop" /* { dg-error "'asm' operand has impossible constraints" } */
++       : "=r" (l1)
++       : "0" (l1), "r" (a), "r"(b),
++       "r"(c), "r"(d), "r"(e), "r"(f),
++       "r"(g), "r"(h), "r"(l2),
++       "r"(c1), "r"(c2),
++       "r"(l3), "r"(l4), "r"(l5), "r"(l6));
++
++  global = a+b+c+d+e+f+g+h + c1+c2 + l2;
++
++  return l1;
++}
+diff --git a/gcc/testsuite/gcc.target/pru/lra-framepointer-fragmentation-2.c b/gcc/testsuite/gcc.target/pru/lra-framepointer-fragmentation-2.c
+new file mode 100644
+index 00000000000..6c98e9bf13b
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/pru/lra-framepointer-fragmentation-2.c
+@@ -0,0 +1,61 @@
++/* { dg-do run } */
++/* { dg-options "-O1 -fomit-frame-pointer" } */
++#include <stdint.h>
++
++extern void abort (void);
++
++uint64_t global = 5;
++
++uint64_t __attribute__((noinline)) test(uint64_t a, uint64_t b,
++                                         uint64_t c, uint64_t d,
++                                         uint64_t e, uint64_t f,
++                                         uint64_t g, uint64_t h)
++{
++  uint64_t l1 = 0x12345678, l2 = 0x87654321, l3 = 1001, l4 = 1002;
++  uint64_t l5 = 1004;
++  uint32_t l6 = 2005;
++  uint8_t c1 = 101, c2 = 102;
++
++  /* The numerous dummy asm input operands create just
++   * enough register pressure to resort to using FP (r4).
++   */
++
++  asm ("ldi32 %0, 0x11223344\n\t"
++       "add %0, %0, %2\n\t"
++       "add %0, %0, %3\n\t"
++       "add %0, %0, %4\n\t"
++       "add %0, %0, %5\n\t"
++       "add %0, %0, %6\n\t"
++       "add %0, %0, %7\n\t"
++       "add %0, %0, %8\n\t"
++       "add %0, %0, %9\n\t"
++       "add %0, %0, %10\n\t"
++       "add %0, %0, %11\n\t"
++       "add %0, %0, %12\n\t"
++       "add %0, %0, %13\n\t"
++       "add %0, %0, %14\n\t"
++       "add %0, %0, %15\n\t"
++       "add %0, %0, %16\n\t"
++       : "=r" (l1)
++       : "0" (l1), "r" (a), "r"(b),
++       "r"(c), "r"(d), "r"(e), "r"(f),
++       "r"(g), "r"(h), "r"(c1), "r"(c2),
++       "r"(l2), "r"(l3), "r"(l4), "r"(l5), "r"(l6));
++
++  global = a+b+c+d+e+f+g+h + c1+c2 + l2+l3+l4+l5+l6;
++
++  return l1;
++}
++
++int main()
++{
++  uint64_t a = test(1, 2, 3, 4, 5, 6, 7, 8);
++
++  if (a != 0x98878ae8) {
++    abort();
++  }
++  if (global != 0x876557a4) {
++    abort();
++  }
++  return 0;
++}
+-- 
+2.11.0
+

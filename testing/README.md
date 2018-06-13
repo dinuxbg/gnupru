@@ -40,11 +40,16 @@ To execute the GCC ABI regression test suite against the TI toolchain do:
 	find . -name site.exp | xargs rm -f
 	make check-gcc-c RUNTESTFLAGS="--target_board=pru-sim compat.exp" COMPAT_OPTIONS="[list [list {-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,`pru-gcc -print-libgcc-file-name` -DSKIP_COMPLEX -DSKIP_ATTRIBUTE} {-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE}]]" ALT_CC_UNDER_TEST=`which clpru.sh`
 
+	# Cleanup and check C++
+	find . -name site.exp | xargs rm -f
+	make check-gcc-c++ RUNTESTFLAGS="--target_board=pru-sim compat.exp" COMPAT_OPTIONS="[list [list {-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE} {-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE}]]" ALT_CC_UNDER_TEST=`which clpru.sh`
+
 A few notes about the options:
 * --hardware_mac=on is needed since GCC does not currently support turning off MAC instruction generation. Please let me know if you see a real usecase for this feature, and I may reconsider.
 * --symdebug:none is needed since the binutils linker does not yet support the debug relocations output by TI toolchain.
 * -mmcu=sim is needed by the GNU LD to provide sufficient memory for test execution.
 * The libgcc is forcefully included with -mabi=ti when performing ABI testing. Libgcc as a whole is not really TI ABI compatible, but the parts used by the testsuite are. Multilib is not an option since GCC PRU port does not support some C constructs when -mabi=ti.
+* For C++ we do not pass -mabi=ti since the vptr object tables are 4-byte aligned by TI CGT. Current GCC C++ ABI testsuite does not use C function pointers, which allows us to skip -mabi=ti and increase test coverage.
 * ABI test case pr83487 is failing due to a bug in TI CGT. See [CODEGEN-4180](https://e2e.ti.com/support/development_tools/compiler/f/343/t/652777)
 * ABI test case struct-by-value-22 is failing due to a bug in TI CGT. Stack space is not allocated for a locally defined structure.
 
