@@ -1,4 +1,4 @@
-From a1e9a17c629ac5507de82ba467cb1c0c4e708683 Mon Sep 17 00:00:00 2001
+From 0a558557faf9596af228edf99acf55a82e2a8e06 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:57:14 +0200
 Subject: [PATCH 04/13] testsuite: Add check for overflowed IMEM region to
@@ -23,10 +23,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  3 files changed, 14 insertions(+)
 
 diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
-index a15c5d5e2a6..c5ab850c840 100644
+index f5e6bef5dd9..c26d1c73aa0 100644
 --- a/gcc/testsuite/lib/gcc-dg.exp
 +++ b/gcc/testsuite/lib/gcc-dg.exp
-@@ -375,6 +375,11 @@ proc gcc-dg-prune { system text } {
+@@ -392,6 +392,11 @@ proc gcc-dg-prune { system text } {
          return "::unsupported::memory full"
      }
  
@@ -39,10 +39,10 @@ index a15c5d5e2a6..c5ab850c840 100644
      # similar.
      if {[string match "spu-*" $system] && \
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index b92e54b6ec3..8d5f7e0720c 100644
+index 60105eb9fd7..5299aaefcc3 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
-@@ -8786,6 +8786,11 @@ proc check_effective_target_tiny {} {
+@@ -8833,6 +8833,11 @@ proc check_effective_target_tiny {} {
               && [check_effective_target_avr_tiny] } {
           set et_target_tiny_saved 1
         }

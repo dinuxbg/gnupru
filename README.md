@@ -5,11 +5,11 @@ This is an unofficial GCC/Binutils port for the PRU I/O CPU core that is present
 
 The release is ready for cautious usage. A simulator is used to execute the GCC C regression test suite. Results for this release are:
 
-	# of expected passes		92180
-	# of unexpected failures	85
-	# of unexpected successes	2
-	# of expected failures		208
-	# of unsupported tests		2967
+	# of expected passes            91572
+	# of unexpected failures        97
+	# of unexpected successes       2
+	# of expected failures          218
+	# of unsupported tests          2900
 
 Results from the GCC ABI test suite:
 

@@ -1,4 +1,4 @@
-From b66590c4ea11d725e44c673188d7a22241268f82 Mon Sep 17 00:00:00 2001
+From 8f50eeec88a73a59d6d86e1de27b1d92d116e597 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 23 Mar 2018 22:24:22 +0200
 Subject: [PATCH 02/13] Initial TI PRU libgcc port

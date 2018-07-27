@@ -1,31 +1,58 @@
-From d912dd850c311d7d1fb29bfcb63a2211a2f41fbf Mon Sep 17 00:00:00 2001
+From dbd42aeba24cdfc1d71df6423095a063c250035c Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 22:37:01 +0300
-Subject: [PATCH 1/6] PRU Simulator port
+Subject: [PATCH 1/7] PRU Simulator port
 
-The corresponding libgloss changes have not yet been mainlined.
-The PRU patches are available here:
-   https://github.com/dinuxbg/gnupru/tree/for-next/patches/newlib-cygwin
+I'd like to contribute a sim port for the TI PRU I/O processor. I did not
+receive feedback for my v3 patch series. So after a bit of waiting I rebased
+and I'm sending it again, with a few small fixes I've made meanwhile.
 
-Since the PRU sim port uses the standard libgloss system call numbers,
-the gennltvals.sh script can safely be run on a newlib source without
-patches for PRU support.
+Changes since patch series v3:
+  - A few corner case fixes in MUL/MAC emulation.
+  - Rebase to latest top-of-tree.
+
+Changes since patch series v2:
+  - Moved RD macro to sim_step_once().
+  - Reworded changelog to point that nltvals.def can safely be generated with
+    vanilla libgloss sources.
+  - Switched to the more standard ARRAY_SIZE, bfb_boolean, sim_io_eprintf.
+  - Do not check "standalone" flag when abort_on_dmem_zero_access is checked.
+  - Check memory map before defining a memory region.
+  - Pass sd to RAISE_SIGILL macro.
+  - Whitespace fixes.
+
+Changes since patch series v1:
+  - Added sim testsuite.
+  - Added myself to MAINTAINERS
+  - Regenerated sim/configure.
+  - Updated C comments per review suggestions.
+  - Forced LITTLE endian mode.
+  - Switched to SIM_ASSERT/ASSERT/sim_io_error/sim_io_eprintf.
+  - Added --error-null-deref command line option.
+  - Switched to using sim_syscall and updated libgloss accordingly.
+  - Switched to standard libgloss syscall IDs.
+  - Made IMEM address space access checks depend on SIM_OPEN_STANDALONE, in
+    order to prevent GDB breaking.
+
+v1: https://sourceware.org/ml/gdb-patches/2016-12/msg00143.html
+v2: https://sourceware.org/ml/gdb-patches/2017-02/msg00397.html
+v3: https://sourceware.org/ml/gdb-patches/2017-02/msg00516.html
 
 sim/
-2017-02-19  Dimitar Dimitrov <dimitar@dinux.eu>
+2018-06-19  Dimitar Dimitrov <dimitar@dinux.eu>
 
 	* MAINTAINERS: Add myself as PRU maintainer.
 	* configure: Regenerate.
 	* configure.tgt: Add PRU.
 
 sim/common/
-2017-02-19  Dimitar Dimitrov <dimitar@dinux.eu>
+2018-06-19  Dimitar Dimitrov <dimitar@dinux.eu>
 
 	* gennltvals.sh: Add PRU libgloss target.
 	* nltvals.def: Regenerate from the latest libgloss sources.
 
 sim/pru/
-2017-02-19  Dimitar Dimitrov <dimitar@dinux.eu>
+2018-06-19  Dimitar Dimitrov <dimitar@dinux.eu>
 
 	* Makefile.in: New file.
 	* aclocal.m4: New file.
@@ -63,17 +90,17 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 sim/pru/sim-main.h
 
 diff --git a/sim/MAINTAINERS b/sim/MAINTAINERS
-index 0991bfe9a6..08064230ff 100644
+index ccd5a9c3cd..942f0b0e23 100644
 --- a/sim/MAINTAINERS
 +++ b/sim/MAINTAINERS
-@@ -30,6 +30,7 @@ microblaze	Michael Eager <eager@eagercon.com>
- mips		Maciej W. Rozycki <macro@mips.com>
+@@ -29,6 +29,7 @@ mips I-IV	Maciej W. Rozycki <macro@linux-mips.org>
  moxie		Anthony Green <green@moxielogic.com>
  msp430		Nick Clifton <nickc@redhat.com>
+ or1k		Stafford Horne <shorne@gmail.com>
 +pru		Dimitar Dimitrov <dimitar@dinux.eu>
- rx		DJ Delorie <dj@redhat.com>
  sh		(global maintainers)
  sh64		Dave Brolley <brolley@redhat.com>
+ common		Frank Ch. Eigler <fche@redhat.com>
 diff --git a/sim/common/gennltvals.sh b/sim/common/gennltvals.sh
 index 7027c35ad4..79180335b6 100755
 --- a/sim/common/gennltvals.sh
@@ -126,20 +153,20 @@ index 3f82d47b6b..92ccc9aded 100644
 +#endif
 +#endif
 diff --git a/sim/configure b/sim/configure
-index b90152e7fb..39d6700a1f 100755
+index ca3fd673ab..72f95cd5c7 100755
 --- a/sim/configure
 +++ b/sim/configure
-@@ -655,6 +655,7 @@ mn10300
+@@ -686,6 +686,7 @@ mn10300
  moxie
- or1k
  msp430
+ or1k
 +pru
  rl78
  rx
  sh64
-@@ -3779,6 +3780,13 @@ subdirs="$subdirs aarch64"
+@@ -3838,6 +3839,13 @@ subdirs="$subdirs aarch64"
  
-        sim_testsuite=yes
+ 
         ;;
 +   pru*-*-*)
 +
@@ -167,12 +194,12 @@ index a6dbd1af83..8a8e03d96f 100644
         ;;
 diff --git a/sim/pru/Makefile.in b/sim/pru/Makefile.in
 new file mode 100644
-index 0000000000..3b5ca5392f
+index 0000000000..9a62ab9c33
 --- /dev/null
 +++ b/sim/pru/Makefile.in
 @@ -0,0 +1,29 @@
 +#    Makefile template for Configure for the PRU sim library.
-+#    Copyright (C) 2014-2017 Free Software Foundation, Inc.
++#    Copyright (C) 2014-2018 Free Software Foundation, Inc.
 +#    Written by Dimitar Dimitrov <dimitar@dinux.eu>
 +#
 +#    Based on the MCore sim library
@@ -609,12 +636,12 @@ index 0000000000..54ac06f48e
 +SIM_AC_OUTPUT
 diff --git a/sim/pru/interp.c b/sim/pru/interp.c
 new file mode 100644
-index 0000000000..539a8ec1a2
+index 0000000000..187e9ab3cb
 --- /dev/null
 +++ b/sim/pru/interp.c
 @@ -0,0 +1,752 @@
 +/* Simulator for the Texas Instruments PRU processor
-+   Copyright 2014-2017 Free Software Foundation, Inc.
++   Copyright 2014-2018 Free Software Foundation, Inc.
 +   Inspired by the Microblase simulator
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
@@ -1367,11 +1394,11 @@ index 0000000000..539a8ec1a2
 +}
 diff --git a/sim/pru/pru.h b/sim/pru/pru.h
 new file mode 100644
-index 0000000000..2c55e7196a
+index 0000000000..b50854d580
 --- /dev/null
 +++ b/sim/pru/pru.h
 @@ -0,0 +1,101 @@
-+/* Copyright 2014-2017 Free Software Foundation, Inc.
++/* Copyright 2014-2018 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
 +   This file is part of the PRU simulator.
@@ -1474,11 +1501,11 @@ index 0000000000..2c55e7196a
 +#endif /* PRU_H */
 diff --git a/sim/pru/pru.isa b/sim/pru/pru.isa
 new file mode 100644
-index 0000000000..af72cf30c7
+index 0000000000..2eefb0fee9
 --- /dev/null
 +++ b/sim/pru/pru.isa
 @@ -0,0 +1,249 @@
-+/* Copyright 2014-2017 Free Software Foundation, Inc.
++/* Copyright 2014-2018 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
 +   This file is part of the PRU simulator.
@@ -1729,11 +1756,11 @@ index 0000000000..af72cf30c7
 +	     })
 diff --git a/sim/pru/sim-main.h b/sim/pru/sim-main.h
 new file mode 100644
-index 0000000000..12396743db
+index 0000000000..6b3bd20d59
 --- /dev/null
 +++ b/sim/pru/sim-main.h
 @@ -0,0 +1,80 @@
-+/* Copyright 2014-2017 Free Software Foundation, Inc.
++/* Copyright 2014-2018 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
 +   This file is part of the PRU simulator.

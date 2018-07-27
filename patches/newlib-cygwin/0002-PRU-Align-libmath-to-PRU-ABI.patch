@@ -1,7 +1,7 @@
-From 3cd31dce9b231db5943e00df6475b20469f5abe3 Mon Sep 17 00:00:00 2001
+From 0333ee92a3716aff95fbd170a7dacb35bb023402 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 11 Mar 2018 22:15:05 +0200
-Subject: [PATCH 2/8] PRU: Align libmath to PRU ABI
+Subject: [PATCH 2/7] PRU: Align libmath to PRU ABI
 
 The TI proprietary toolchain uses nonstandard names for some math
 library functions. In order to achieve ABI compatibility between

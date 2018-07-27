@@ -1,4 +1,4 @@
-Test run by dinux on Tue Jun 12 13:35:39 2018
+Test run by dinux on Fri Jul 27 01:14:13 2018
 Target is pru-unknown-elf
 Host   is x86_64-pc-linux-gnu
 
@@ -12,8 +12,8 @@ Running /home/dinux/projects/pru/local-workspace/gcc/gcc/testsuite/gcc.dg/compat
 PASS: gcc.dg/compat/fnptr-by-value-1 c_compat_x_alt.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/fnptr-by-value-1 c_compat_y_alt.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/fnptr-by-value-1 c_compat_main_tst.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-UNSUPPORTED: gcc.dg/compat/fnptr-by-value-1 c_compat_x_tst.o compile: abi
-UNSUPPORTED: gcc.dg/compat/fnptr-by-value-1 c_compat_y_tst.o compile: abi
+UNSUPPORTED: gcc.dg/compat/fnptr-by-value-1 c_compat_x_tst.o compile: funcptr
+UNSUPPORTED: gcc.dg/compat/fnptr-by-value-1 c_compat_y_tst.o compile: funcptr
 UNRESOLVED: gcc.dg/compat/fnptr-by-value-1 c_compat_x_tst.o-c_compat_y_tst.o link "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 UNRESOLVED: gcc.dg/compat/fnptr-by-value-1 c_compat_x_tst.o-c_compat_y_tst.o execute "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 UNRESOLVED: gcc.dg/compat/fnptr-by-value-1 c_compat_x_tst.o-c_compat_y_alt.o link "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
@@ -197,7 +197,7 @@ PASS: gcc.dg/compat/sdata-1 c_compat_x_alt.o-c_compat_y_alt.o execute "-O2 -mmcu
 PASS: gcc.dg/compat/struct-align-1 c_compat_x_alt.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-align-1 c_compat_y_alt.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-align-1 c_compat_main_tst.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-UNSUPPORTED: gcc.dg/compat/struct-align-1 c_compat_x_tst.o compile: abi
+UNSUPPORTED: gcc.dg/compat/struct-align-1 c_compat_x_tst.o compile: large return values
 PASS: gcc.dg/compat/struct-align-1 c_compat_y_tst.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 UNRESOLVED: gcc.dg/compat/struct-align-1 c_compat_x_tst.o-c_compat_y_tst.o link "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 UNRESOLVED: gcc.dg/compat/struct-align-1 c_compat_x_tst.o-c_compat_y_tst.o execute "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
@@ -210,7 +210,7 @@ PASS: gcc.dg/compat/struct-align-1 c_compat_x_alt.o-c_compat_y_alt.o execute "-O
 PASS: gcc.dg/compat/struct-align-2 c_compat_x_alt.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-align-2 c_compat_y_alt.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-align-2 c_compat_main_tst.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-UNSUPPORTED: gcc.dg/compat/struct-align-2 c_compat_x_tst.o compile: abi
+UNSUPPORTED: gcc.dg/compat/struct-align-2 c_compat_x_tst.o compile: large return values
 PASS: gcc.dg/compat/struct-align-2 c_compat_y_tst.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 UNRESOLVED: gcc.dg/compat/struct-align-2 c_compat_x_tst.o-c_compat_y_tst.o link "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 UNRESOLVED: gcc.dg/compat/struct-align-2 c_compat_x_tst.o-c_compat_y_tst.o execute "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
@@ -627,7 +627,7 @@ PASS: gcc.dg/compat/struct-return-10 c_compat_x_alt.o compile, "-O2 -mmcu=sim -m
 PASS: gcc.dg/compat/struct-return-10 c_compat_y_alt.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-return-10 c_compat_main_tst.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-return-10 c_compat_x_tst.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-UNSUPPORTED: gcc.dg/compat/struct-return-10 c_compat_y_tst.o compile: abi
+UNSUPPORTED: gcc.dg/compat/struct-return-10 c_compat_y_tst.o compile: large return values
 UNRESOLVED: gcc.dg/compat/struct-return-10 c_compat_x_tst.o-c_compat_y_tst.o link "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 UNRESOLVED: gcc.dg/compat/struct-return-10 c_compat_x_tst.o-c_compat_y_tst.o execute "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-return-10 c_compat_x_tst.o-c_compat_y_alt.o link
@@ -640,7 +640,7 @@ PASS: gcc.dg/compat/struct-return-19 c_compat_x_alt.o compile, "-O2 -mmcu=sim -m
 PASS: gcc.dg/compat/struct-return-19 c_compat_y_alt.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-return-19 c_compat_main_tst.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-return-19 c_compat_x_tst.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-UNSUPPORTED: gcc.dg/compat/struct-return-19 c_compat_y_tst.o compile: abi
+UNSUPPORTED: gcc.dg/compat/struct-return-19 c_compat_y_tst.o compile: large return values
 UNRESOLVED: gcc.dg/compat/struct-return-19 c_compat_x_tst.o-c_compat_y_tst.o link "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 UNRESOLVED: gcc.dg/compat/struct-return-19 c_compat_x_tst.o-c_compat_y_tst.o execute "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-return-19 c_compat_x_tst.o-c_compat_y_alt.o link
@@ -653,7 +653,7 @@ PASS: gcc.dg/compat/struct-return-20 c_compat_x_alt.o compile, "-O2 -mmcu=sim -m
 PASS: gcc.dg/compat/struct-return-20 c_compat_y_alt.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-return-20 c_compat_main_tst.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-return-20 c_compat_x_tst.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-UNSUPPORTED: gcc.dg/compat/struct-return-20 c_compat_y_tst.o compile: abi
+UNSUPPORTED: gcc.dg/compat/struct-return-20 c_compat_y_tst.o compile: large return values
 UNRESOLVED: gcc.dg/compat/struct-return-20 c_compat_x_tst.o-c_compat_y_tst.o link "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 UNRESOLVED: gcc.dg/compat/struct-return-20 c_compat_x_tst.o-c_compat_y_tst.o execute "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-return-20 c_compat_x_tst.o-c_compat_y_alt.o link
@@ -666,7 +666,7 @@ PASS: gcc.dg/compat/struct-return-21 c_compat_x_alt.o compile, "-O2 -mmcu=sim -m
 PASS: gcc.dg/compat/struct-return-21 c_compat_y_alt.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-return-21 c_compat_main_tst.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-return-21 c_compat_x_tst.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-UNSUPPORTED: gcc.dg/compat/struct-return-21 c_compat_y_tst.o compile: abi
+UNSUPPORTED: gcc.dg/compat/struct-return-21 c_compat_y_tst.o compile: large return values
 UNRESOLVED: gcc.dg/compat/struct-return-21 c_compat_x_tst.o-c_compat_y_tst.o link "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 UNRESOLVED: gcc.dg/compat/struct-return-21 c_compat_x_tst.o-c_compat_y_tst.o execute "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-return-21 c_compat_x_tst.o-c_compat_y_alt.o link
@@ -679,7 +679,7 @@ PASS: gcc.dg/compat/struct-return-2 c_compat_x_alt.o compile, "-O2 -mmcu=sim -ma
 PASS: gcc.dg/compat/struct-return-2 c_compat_y_alt.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-return-2 c_compat_main_tst.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-return-2 c_compat_x_tst.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-UNSUPPORTED: gcc.dg/compat/struct-return-2 c_compat_y_tst.o compile: abi
+UNSUPPORTED: gcc.dg/compat/struct-return-2 c_compat_y_tst.o compile: large return values
 UNRESOLVED: gcc.dg/compat/struct-return-2 c_compat_x_tst.o-c_compat_y_tst.o link "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 UNRESOLVED: gcc.dg/compat/struct-return-2 c_compat_x_tst.o-c_compat_y_tst.o execute "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-return-2 c_compat_x_tst.o-c_compat_y_alt.o link
@@ -692,7 +692,7 @@ PASS: gcc.dg/compat/struct-return-3 c_compat_x_alt.o compile, "-O2 -mmcu=sim -ma
 PASS: gcc.dg/compat/struct-return-3 c_compat_y_alt.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-return-3 c_compat_main_tst.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-return-3 c_compat_x_tst.o compile, "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-UNSUPPORTED: gcc.dg/compat/struct-return-3 c_compat_y_tst.o compile: abi
+UNSUPPORTED: gcc.dg/compat/struct-return-3 c_compat_y_tst.o compile: large return values
 UNRESOLVED: gcc.dg/compat/struct-return-3 c_compat_x_tst.o-c_compat_y_tst.o link "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 UNRESOLVED: gcc.dg/compat/struct-return-3 c_compat_x_tst.o-c_compat_y_tst.o execute "-O2 -mmcu=sim -mabi=ti -Wl,-lc -Wl,-lgloss -Wl,/home/dinux/bin/opt/pru-gcc/lib/gcc/pru/9.0.0/libgcc.a -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: gcc.dg/compat/struct-return-3 c_compat_x_tst.o-c_compat_y_alt.o link
@@ -765,5 +765,5 @@ UNSUPPORTED: gcc.dg/compat/vector-2b_main.c
 # of unexpected failures	7
 # of unresolved testcases	38
 # of unsupported tests		18
-/home/dinux/projects/pru/local-workspace/gcc-pru-build/gcc/xgcc  version 9.0.0 20180611 (experimental) (GCC) 
+/home/dinux/projects/pru/local-workspace/gcc-pru-build/gcc/xgcc  version 9.0.0 20180726 (experimental) (GCC) 
 

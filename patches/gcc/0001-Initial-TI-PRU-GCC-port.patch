@@ -1,26 +1,24 @@
-From 430247bb0f81c7cfe936634ca964fcf46fbbaa0c Mon Sep 17 00:00:00 2001
+From 83f38287057a1eebfabad6557322f97f0f4ec4a6 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:53:18 +0200
 Subject: [PATCH 01/13] Initial TI PRU GCC port
 
 ChangeLog:
 
-2018-04-15  Dimitar Dimitrov  <dimitar@dinux.eu>
+2018-07-19  Dimitar Dimitrov  <dimitar@dinux.eu>
 
 	* configure: Regenerate.
 	* configure.ac: Add PRU target.
 
 gcc/ChangeLog:
 
-2018-04-15  Dimitar Dimitrov  <dimitar@dinux.eu>
+2018-07-19  Dimitar Dimitrov  <dimitar@dinux.eu>
 
-	* config/pru/pru-ldst-multiple.md: Generate using pru-ldst-multiple.ml.
 	* common/config/pru/pru-common.c: New file.
 	* config.gcc: Add PRU target.
 	* config/pru/alu-zext.md: New file.
 	* config/pru/constraints.md: New file.
 	* config/pru/predicates.md: New file.
-	* config/pru/pru-ldst-multiple.ml: New file.
 	* config/pru/pru-opts.h: New file.
 	* config/pru/pru-passes.c: New file.
 	* config/pru/pru-pragma.c: New file.
@@ -36,31 +34,29 @@ gcc/ChangeLog:
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
- configure.ac                        |    7 +
- gcc/common/config/pru/pru-common.c  |   36 +
- gcc/config.gcc                      |    9 +
- gcc/config/pru/alu-zext.md          |  178 +++
- gcc/config/pru/constraints.md       |   88 ++
- gcc/config/pru/predicates.md        |  220 +++
- gcc/config/pru/pru-ldst-multiple.ml |  144 ++
- gcc/config/pru/pru-opts.h           |   31 +
- gcc/config/pru/pru-passes.c         |  230 +++
- gcc/config/pru/pru-pragma.c         |   90 ++
- gcc/config/pru/pru-protos.h         |   70 +
- gcc/config/pru/pru.c                | 2985 +++++++++++++++++++++++++++++++++++
- gcc/config/pru/pru.h                |  551 +++++++
- gcc/config/pru/pru.md               |  905 +++++++++++
- gcc/config/pru/pru.opt              |   53 +
- gcc/config/pru/t-pru                |   31 +
- gcc/doc/extend.texi                 |   20 +
- gcc/doc/invoke.texi                 |   55 +
- gcc/doc/md.texi                     |   22 +
- 19 files changed, 5725 insertions(+)
+ configure.ac                       |    7 +
+ gcc/common/config/pru/pru-common.c |   36 +
+ gcc/config.gcc                     |    9 +
+ gcc/config/pru/alu-zext.md         |  178 +++
+ gcc/config/pru/constraints.md      |   88 ++
+ gcc/config/pru/predicates.md       |  224 +++
+ gcc/config/pru/pru-opts.h          |   31 +
+ gcc/config/pru/pru-passes.c        |  234 +++
+ gcc/config/pru/pru-pragma.c        |   90 ++
+ gcc/config/pru/pru-protos.h        |   72 +
+ gcc/config/pru/pru.c               | 2997 ++++++++++++++++++++++++++++++++++++
+ gcc/config/pru/pru.h               |  551 +++++++
+ gcc/config/pru/pru.md              |  956 ++++++++++++
+ gcc/config/pru/pru.opt             |   53 +
+ gcc/config/pru/t-pru               |   31 +
+ gcc/doc/extend.texi                |   20 +
+ gcc/doc/invoke.texi                |   55 +
+ gcc/doc/md.texi                    |   22 +
+ 18 files changed, 5654 insertions(+)
  create mode 100644 gcc/common/config/pru/pru-common.c
  create mode 100644 gcc/config/pru/alu-zext.md
  create mode 100644 gcc/config/pru/constraints.md
  create mode 100644 gcc/config/pru/predicates.md
- create mode 100644 gcc/config/pru/pru-ldst-multiple.ml
  create mode 100644 gcc/config/pru/pru-opts.h
  create mode 100644 gcc/config/pru/pru-passes.c
  create mode 100644 gcc/config/pru/pru-pragma.c
@@ -72,7 +68,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 gcc/config/pru/t-pru
 
 diff --git a/configure.ac b/configure.ac
-index 28155a0e593..684a7f58515 100644
+index a0b0917dd55..11c9f72fc64 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -640,6 +640,10 @@ case "${target}" in
@@ -139,7 +135,7 @@ index 00000000000..e87d70ce9ca
 +
 +struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index 8b2fd908c38..d1cddb86c36 100644
+index 78e84c2b864..818949f9119 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
 @@ -493,6 +493,9 @@ powerpc*-*-*)
@@ -152,12 +148,12 @@ index 8b2fd908c38..d1cddb86c36 100644
  riscv*)
  	cpu_type=riscv
  	extra_objs="riscv-builtins.o riscv-c.o"
-@@ -2638,6 +2641,12 @@ powerpcle-*-eabi*)
+@@ -2635,6 +2638,12 @@ powerpcle-*-eabi*)
  	extra_options="${extra_options} rs6000/sysv4.opt"
  	use_gcc_stdint=wrap
  	;;
 +pru*-*-*)
-+	tm_file="dbxelf.h elfos.h newlib-stdint.h ${tm_file}"
++	tm_file="elfos.h newlib-stdint.h ${tm_file}"
 +	tmake_file="${tmake_file} pru/t-pru"
 +	extra_objs="pru-pragma.o pru-passes.o"
 +	use_gcc_stdint=wrap
@@ -445,10 +441,10 @@ index 00000000000..326c8e9907c
 +       (match_test "ival == 0")))
 diff --git a/gcc/config/pru/predicates.md b/gcc/config/pru/predicates.md
 new file mode 100644
-index 00000000000..0015220c022
+index 00000000000..78fdb8a25b7
 --- /dev/null
 +++ b/gcc/config/pru/predicates.md
-@@ -0,0 +1,220 @@
+@@ -0,0 +1,224 @@
 +;; Predicate definitions for TI PRU.
 +;; Copyright (C) 2014-2018 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -561,264 +557,118 @@ index 00000000000..0015220c022
 +    }
 +})
 +
-+;; Return 1 if OP is a load multiple operation.  It is known to be a
++;; Return true if OP is a load multiple operation.  It is known to be a
 +;; PARALLEL and the first section will be tested.
 +
-+(define_predicate "pru_load_multiple_operation"
++(define_special_predicate "load_multiple_operation"
 +  (match_code "parallel")
 +{
++  machine_mode elt_mode;
 +  int count = XVECLEN (op, 0);
-+  int base_offset = 0;
-+  int dest_regno;
++  unsigned int dest_regno;
 +  rtx src_addr;
-+  int i;
++  int i, off;
 +
 +  /* Perform a quick check so we don't blow up below.  */
-+  if (count < 1
-+      || GET_CODE (XVECEXP (op, 0, 0)) != SET
++  if (GET_CODE (XVECEXP (op, 0, 0)) != SET
 +      || GET_CODE (SET_DEST (XVECEXP (op, 0, 0))) != REG
 +      || GET_CODE (SET_SRC (XVECEXP (op, 0, 0))) != MEM)
-+    return 0;
++    return false;
 +
 +  dest_regno = REGNO (SET_DEST (XVECEXP (op, 0, 0)));
 +  src_addr = XEXP (SET_SRC (XVECEXP (op, 0, 0)), 0);
++  elt_mode = GET_MODE (SET_DEST (XVECEXP (op, 0, 0)));
 +
-+  /* Zero memory offset will be optimized, so handle both PLUS and REG here.
-+     Note that subsequent registers in the sequence will always have
-+     non-zero offsets because we can't have negative offsets, and
-+     we always increment while going forward.  */
-+  if (GET_CODE (src_addr) == PLUS
-+      && GET_CODE (XEXP (src_addr, 1)) == CONST_INT)
++  /* Check, is base, or base + displacement.  */
++
++  if (GET_CODE (src_addr) == REG)
++    off = 0;
++  else if (GET_CODE (src_addr) == PLUS
++	   && GET_CODE (XEXP (src_addr, 0)) == REG
++	   && GET_CODE (XEXP (src_addr, 1)) == CONST_INT)
 +    {
-+      base_offset = INTVAL (XEXP (src_addr, 1));
++      off = INTVAL (XEXP (src_addr, 1));
 +      src_addr = XEXP (src_addr, 0);
 +    }
-+
-+  if (GET_CODE (src_addr) != REG)
-+    return 0;
++  else
++    return false;
 +
 +  for (i = 1; i < count; i++)
 +    {
 +      rtx elt = XVECEXP (op, 0, i);
-+      int offset = i * UNITS_PER_WORD + base_offset;
 +
 +      if (GET_CODE (elt) != SET
 +	  || GET_CODE (SET_DEST (elt)) != REG
-+	  || GET_MODE (SET_DEST (elt)) != QImode
-+	  || REGNO (SET_DEST (elt))    != (unsigned) (dest_regno + i)
-+	  || GET_CODE (SET_SRC (elt))  != MEM
-+	  || GET_MODE (SET_SRC (elt))  != QImode
++	  || GET_MODE (SET_DEST (elt)) != elt_mode
++	  || REGNO (SET_DEST (elt)) != dest_regno + i
++	  || GET_CODE (SET_SRC (elt)) != MEM
++	  || GET_MODE (SET_SRC (elt)) != elt_mode
 +	  || GET_CODE (XEXP (SET_SRC (elt), 0)) != PLUS
 +	  || ! rtx_equal_p (XEXP (XEXP (SET_SRC (elt), 0), 0), src_addr)
 +	  || GET_CODE (XEXP (XEXP (SET_SRC (elt), 0), 1)) != CONST_INT
-+	  || INTVAL (XEXP (XEXP (SET_SRC (elt), 0), 1)) != offset)
-+	return 0;
++	  || INTVAL (XEXP (XEXP (SET_SRC (elt), 0), 1))
++	     != off + i * GET_MODE_SIZE (elt_mode))
++	return false;
 +    }
 +
-+  return 1;
++  return true;
 +})
 +
-+;; Similar, but tests for store multiple.
++;; Return true if OP is a store multiple operation.  It is known to be a
++;; PARALLEL and the first section will be tested.
 +
-+(define_predicate "pru_store_multiple_operation"
++(define_special_predicate "store_multiple_operation"
 +  (match_code "parallel")
 +{
++  machine_mode elt_mode;
 +  int count = XVECLEN (op, 0);
-+  int base_offset = 0;
-+  int src_regno;
++  unsigned int src_regno;
 +  rtx dest_addr;
-+  int i;
++  int i, off;
 +
 +  /* Perform a quick check so we don't blow up below.  */
-+  if (count < 1
-+      || GET_CODE (XVECEXP (op, 0, 0)) != SET
++  if (GET_CODE (XVECEXP (op, 0, 0)) != SET
 +      || GET_CODE (SET_DEST (XVECEXP (op, 0, 0))) != MEM
 +      || GET_CODE (SET_SRC (XVECEXP (op, 0, 0))) != REG)
-+    return 0;
++    return false;
 +
 +  src_regno = REGNO (SET_SRC (XVECEXP (op, 0, 0)));
 +  dest_addr = XEXP (SET_DEST (XVECEXP (op, 0, 0)), 0);
++  elt_mode = GET_MODE (SET_SRC (XVECEXP (op, 0, 0)));
 +
-+  if (GET_CODE (dest_addr) == PLUS
-+      && GET_CODE (XEXP (dest_addr, 1)) == CONST_INT)
++  /* Check, is base, or base + displacement.  */
++
++  if (GET_CODE (dest_addr) == REG)
++    off = 0;
++  else if (GET_CODE (dest_addr) == PLUS
++	   && GET_CODE (XEXP (dest_addr, 0)) == REG
++	   && GET_CODE (XEXP (dest_addr, 1)) == CONST_INT)
 +    {
-+      base_offset = INTVAL (XEXP (dest_addr, 1));
++      off = INTVAL (XEXP (dest_addr, 1));
 +      dest_addr = XEXP (dest_addr, 0);
 +    }
-+
-+  if (GET_CODE (dest_addr) != REG)
-+    return 0;
++  else
++    return false;
 +
 +  for (i = 1; i < count; i++)
 +    {
 +      rtx elt = XVECEXP (op, 0, i);
-+      int offset = i * UNITS_PER_WORD + base_offset;
 +
 +      if (GET_CODE (elt) != SET
 +	  || GET_CODE (SET_SRC (elt)) != REG
-+	  || GET_MODE (SET_SRC (elt)) != QImode
-+	  || REGNO (SET_SRC (elt)) != (unsigned) (src_regno + i)
++	  || GET_MODE (SET_SRC (elt)) != elt_mode
++	  || REGNO (SET_SRC (elt)) != src_regno + i
 +	  || GET_CODE (SET_DEST (elt)) != MEM
-+	  || GET_MODE (SET_DEST (elt)) != QImode
++	  || GET_MODE (SET_DEST (elt)) != elt_mode
 +	  || GET_CODE (XEXP (SET_DEST (elt), 0)) != PLUS
 +	  || ! rtx_equal_p (XEXP (XEXP (SET_DEST (elt), 0), 0), dest_addr)
 +	  || GET_CODE (XEXP (XEXP (SET_DEST (elt), 0), 1)) != CONST_INT
-+	  || INTVAL (XEXP (XEXP (SET_DEST (elt), 0), 1)) != offset)
-+	return 0;
++	  || INTVAL (XEXP (XEXP (SET_DEST (elt), 0), 1))
++	     != off + i * GET_MODE_SIZE (elt_mode))
++	return false;
 +    }
-+
-+  return 1;
++  return true;
 +})
-diff --git a/gcc/config/pru/pru-ldst-multiple.ml b/gcc/config/pru/pru-ldst-multiple.ml
-new file mode 100644
-index 00000000000..961a9fb33e6
---- /dev/null
-+++ b/gcc/config/pru/pru-ldst-multiple.ml
-@@ -0,0 +1,144 @@
-+(* Auto-generate PRU load/store-multiple patterns
-+   Copyright (C) 2014-2018 Free Software Foundation, Inc.
-+   Based on arm-ldmstm.ml
-+
-+   This file is part of GCC.
-+
-+   GCC is free software; you can redistribute it and/or modify it under
-+   the terms of the GNU General Public License as published by the Free
-+   Software Foundation; either version 3, or (at your option) any later
-+   version.
-+
-+   GCC is distributed in the hope that it will be useful, but WITHOUT ANY
-+   WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+   FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-+   for more details.
-+
-+   You should have received a copy of the GNU General Public License
-+   along with GCC; see the file COPYING3.  If not see
-+   <http://www.gnu.org/licenses/>.
-+
-+   This is an O'Caml program.  The O'Caml compiler is available from:
-+   http://caml.inria.fr/
-+
-+   Or from your favourite OS's friendly packaging system.  Tested with version
-+   4.01.0, though other versions will probably work too.
-+
-+   Run with:
-+     ocaml pru-ldst-multiple.ml >/path/to/gcc/config/pru/ldst-multiple.md
-+*)
-+
-+let write_addr_reg nregs first =
-+  if not first then
-+    Printf.sprintf "(match_dup %d)" (nregs + 1)
-+  else
-+    Printf.sprintf ("(match_operand:SI %d \"register_operand\" \"r\")")
-+      (nregs + 1)
-+
-+let write_ldm_set nregs opnr first do_first_offs =
-+  let indent = "     " in
-+  Printf.printf "%s" (if first then "    [" else indent);
-+  Printf.printf "(set (match_operand:QI %d \"register_operand\" \"\")\n" opnr;
-+  Printf.printf "%s     (mem:QI " indent;
-+  if (first && not do_first_offs) then begin
-+    Printf.printf "%s" (write_addr_reg nregs first);
-+  end else begin
-+    Printf.printf "(plus:SI %s" (write_addr_reg nregs first);
-+    Printf.printf "\n%s                      (match_operand:SI %d "
-+      indent
-+      (if do_first_offs then (nregs + 1 + opnr) else (nregs + opnr));
-+    if first then
-+      Printf.printf "\"const_ubyte_operand\" \"I\"))"
-+    else
-+      Printf.printf "\"const_int_operand\" \"i\"))"
-+  end;
-+  Printf.printf "))"
-+
-+let write_stm_set nregs opnr first do_first_offs =
-+  let indent = "     " in
-+  Printf.printf "%s" (if first then "    [" else indent);
-+  Printf.printf "(set (mem:QI ";
-+  if (first && not do_first_offs) then begin
-+    Printf.printf "%s" (write_addr_reg nregs first);
-+  end else begin
-+    Printf.printf "(plus:SI ";
-+    Printf.printf "%s" (write_addr_reg nregs first);
-+    Printf.printf "\n%s                      (match_operand:SI %d "
-+      indent
-+      (if do_first_offs then (nregs + 1 + opnr) else (nregs + opnr));
-+    begin if first then
-+      Printf.printf "\"const_ubyte_operand\" \"I\"))"
-+    else
-+      Printf.printf "\"const_int_operand\" \"i\"))"
-+    end;
-+  end;
-+  Printf.printf ")\n%s     (match_operand:QI %d \"register_operand\" \"\"))" indent opnr
-+
-+let rec write_pat_sets func opnr first n_left do_first_offs =
-+  func opnr first do_first_offs;
-+  begin
-+    if n_left > 1 then begin
-+      Printf.printf "\n";
-+      write_pat_sets func (opnr + 1) false (n_left - 1) do_first_offs;
-+    end else
-+      Printf.printf "]"
-+  end
-+
-+exception InvalidAddrMode of string;;
-+
-+let write_pattern_1 name ls nregs do_first_offs write_set_fn =
-+  Printf.printf "(define_insn \"*%s_multiple_%d%s\"\n" name nregs
-+    (if do_first_offs then "_offs" else "");
-+  Printf.printf "  [(match_parallel 0 \"pru_%s_multiple_operation\"\n" ls;
-+  write_pat_sets (write_set_fn nregs) 1 true nregs do_first_offs;
-+  Printf.printf ")]\n  \"XVECLEN (operands[0], 0) == %d\"\n" nregs;
-+  if do_first_offs then begin
-+    Printf.printf "  \"%s\\t%%b1, %%F%d, %%%d, %d\"\n" name (nregs + 1) (nregs + 2) (nregs * 1);
-+  end else begin
-+    Printf.printf "  \"%s\\t%%b1, %%F%d, 0, %d\"\n" name (nregs + 1) (nregs * 1);
-+  end;
-+  Printf.printf "  [(set_attr \"type\" \"ld\")\n";
-+  Printf.printf "   (set_attr \"length\" \"4\")";
-+  Printf.printf "])\n\n"
-+
-+let patterns () =
-+  (* The rule for load-multiple of a single register greatly simplifies
-+     the prologue/epilogue code.  *)
-+  for nregs = 1 to 29; do
-+    write_pattern_1 "lbbo" "load" nregs true write_ldm_set;
-+    write_pattern_1 "lbbo" "load" nregs false write_ldm_set;
-+    write_pattern_1 "sbbo" "store" nregs true write_stm_set;
-+    write_pattern_1 "sbbo" "store" nregs false write_stm_set;
-+  done
-+
-+let print_lines = List.iter (fun s -> Format.printf "%s@\n" s)
-+
-+(* Do it.  *)
-+
-+let _ =
-+  print_lines [
-+"/* PRU load/store instruction patterns.  This file was automatically";
-+"   generated using pru-ldst-multiple.ml.  Please do not edit manually.";
-+"";
-+"   Copyright (C) 2018 Free Software Foundation, Inc.";
-+"   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>.";
-+"   Based on arm-ldmstm.ml";
-+"";
-+"   This file is part of GCC.";
-+"";
-+"   GCC is free software; you can redistribute it and/or modify it";
-+"   under the terms of the GNU General Public License as published";
-+"   by the Free Software Foundation; either version 3, or (at your";
-+"   option) any later version.";
-+"";
-+"   GCC is distributed in the hope that it will be useful, but WITHOUT";
-+"   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY";
-+"   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public";
-+"   License for more details.";
-+"";
-+"   You should have received a copy of the GNU General Public License and";
-+"   a copy of the GCC Runtime Library Exception along with this program;";
-+"   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see";
-+"   <http://www.gnu.org/licenses/>.  */";
-+""];
-+  patterns ();
 diff --git a/gcc/config/pru/pru-opts.h b/gcc/config/pru/pru-opts.h
 new file mode 100644
 index 00000000000..1c1514cb2a3
@@ -858,10 +708,10 @@ index 00000000000..1c1514cb2a3
 +#endif
 diff --git a/gcc/config/pru/pru-passes.c b/gcc/config/pru/pru-passes.c
 new file mode 100644
-index 00000000000..be327299672
+index 00000000000..c95dc877722
 --- /dev/null
 +++ b/gcc/config/pru/pru-passes.c
-@@ -0,0 +1,230 @@
+@@ -0,0 +1,234 @@
 +/* PRU target specific passes
 +   Copyright (C) 2017-2018 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dimitar@dinux.eu>
@@ -922,6 +772,7 @@ index 00000000000..be327299672
 +  0, /* todo_flags_finish */
 +};
 +
++/* Implementation class for the TI ABI compliance-check pass.  */
 +class pass_tiabi_check : public gimple_opt_pass
 +{
 +public:
@@ -963,7 +814,7 @@ index 00000000000..be327299672
 +  return res;
 +}
 +
-+/* Check the function declaration for TI ABI compatibility.  */
++/* Check the function declaration FNTYPE for TI ABI compatibility.  */
 +static void
 +chk_function_decl (const_tree fntype, location_t call_location)
 +{
@@ -972,7 +823,7 @@ index 00000000000..be327299672
 +  if (!VOID_TYPE_P (TREE_TYPE (fntype))
 +      && pru_return_in_memory (TREE_TYPE (fntype), fntype))
 +    error_at (call_location,
-+	      "large return values not supported with -mabi=ti option");
++	      "large return values not supported with %<-mabi=ti%> option");
 +
 +  /* Check this function's arguments.  */
 +  for (tree p = TYPE_ARG_TYPES (fntype); p; p = TREE_CHAIN (p))
@@ -981,11 +832,12 @@ index 00000000000..be327299672
 +      if (chkp_type_has_function_pointer (arg_type))
 +	{
 +	  error_at (call_location,
-+		    "function pointers not supported with -mabi=ti option");
++		    "function pointers not supported with %<-mabi=ti%> option");
 +	}
 +    }
 +}
 +
++/* Callback for walk_gimple_seq that checks TP tree for TI ABI compliance.  */
 +static tree
 +check_op_callback (tree *tp, int *walk_subtrees, void *data)
 +{
@@ -1028,7 +880,7 @@ index 00000000000..be327299672
 +	      if (chkp_type_has_function_pointer (arg_type))
 +		{
 +		  error_at (gimple_location (wi->stmt), "function pointers "
-+			    "not supported with -mabi=ti option");
++			    "not supported with %<-mabi=ti%> option");
 +		}
 +	    }
 +	  break;
@@ -1041,7 +893,8 @@ index 00000000000..be327299672
 +	  if (chkp_type_has_function_pointer (type))
 +	    {
 +	      error_at (gimple_location (wi->stmt),
-+			"function pointers not supported with -mabi=ti option");
++			"function pointers not supported with "
++			"%<-mabi=ti%> option");
 +	      *walk_subtrees = false;
 +	    }
 +	  break;
@@ -1052,6 +905,7 @@ index 00000000000..be327299672
 +  return NULL;
 +}
 +
++/* Pass implementation.  */
 +unsigned
 +pass_tiabi_check::execute (function *fun)
 +{
@@ -1094,7 +948,7 @@ index 00000000000..be327299672
 +}
 diff --git a/gcc/config/pru/pru-pragma.c b/gcc/config/pru/pru-pragma.c
 new file mode 100644
-index 00000000000..f2f045b13a5
+index 00000000000..11cb5bd625c
 --- /dev/null
 +++ b/gcc/config/pru/pru-pragma.c
 @@ -0,0 +1,90 @@
@@ -1157,20 +1011,20 @@ index 00000000000..f2f045b13a5
 +	  type = pragma_lex (&base_addr);
 +	  if (type != CPP_EOF)
 +	    {
-+	      error ("junk at end of #pragma CTABLE_ENTRY");
++	      error ("junk at end of %<#pragma CTABLE_ENTRY%>");
 +	    }
 +	  else if (i >= ARRAY_SIZE (pru_ctable))
 +	    {
-+	      error ("CTABLE_ENTRY index %d is not valid", i);
++	      error ("%<CTABLE_ENTRY%> index %d is not valid", i);
 +	    }
 +	  else if (pru_ctable[i].valid && pru_ctable[i].base != base)
 +	    {
-+	      error ("redefinition of CTABLE_ENTRY %d", i);
++	      error ("redefinition of %<CTABLE_ENTRY %d%>", i);
 +	    }
 +	  else
 +	    {
 +	      if (base & 0xff)
-+		warning (0, "CTABLE_ENTRY base address is not "
++		warning (0, "%<CTABLE_ENTRY%> base address is not "
 +			    "a multiple of 256");
 +	      pru_ctable[i].base = base;
 +	      pru_ctable[i].valid = true;
@@ -1178,7 +1032,7 @@ index 00000000000..f2f045b13a5
 +	  return;
 +	}
 +    }
-+  error ("malformed #pragma CTABLE_ENTRY variable address");
++  error ("malformed %<#pragma CTABLE_ENTRY%> variable address");
 +}
 +
 +/* Implements REGISTER_TARGET_PRAGMAS.  */
@@ -1190,10 +1044,10 @@ index 00000000000..f2f045b13a5
 +}
 diff --git a/gcc/config/pru/pru-protos.h b/gcc/config/pru/pru-protos.h
 new file mode 100644
-index 00000000000..a082ede7b1e
+index 00000000000..73ab76e076c
 --- /dev/null
 +++ b/gcc/config/pru/pru-protos.h
-@@ -0,0 +1,70 @@
+@@ -0,0 +1,72 @@
 +/* Subroutine declarations for TI PRU target support.
 +   Copyright (C) 2014-2018 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -1246,7 +1100,9 @@ index 00000000000..a082ede7b1e
 +extern void pru_emit_doloop (rtx *, int);
 +
 +extern bool pru_regno_ok_for_base_p (int, bool);
-+static inline bool pru_regno_ok_for_index_p (int regno, bool strict_p)
++
++static inline bool
++pru_regno_ok_for_index_p (int regno, bool strict_p)
 +{
 +  /* Selection logic is the same - PRU instructions are quite orthogonal.  */
 +  return pru_regno_ok_for_base_p (regno, strict_p);
@@ -1266,10 +1122,10 @@ index 00000000000..a082ede7b1e
 +#endif /* GCC_PRU_PROTOS_H */
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
 new file mode 100644
-index 00000000000..41b0a283d44
+index 00000000000..52ebda942c5
 --- /dev/null
 +++ b/gcc/config/pru/pru.c
-@@ -0,0 +1,2985 @@
+@@ -0,0 +1,2997 @@
 +/* Target machine subroutines for TI PRU.
 +   Copyright (C) 2014-2018 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dimitar@dinux.eu>
@@ -1334,7 +1190,7 @@ index 00000000000..41b0a283d44
 +struct pru_ctable_entry pru_ctable[32];
 +
 +/* Forward function declarations.  */
-+static bool prologue_saved_reg_p (unsigned);
++static bool prologue_saved_reg_p (int);
 +static void pru_reorg_loop (rtx_insn *);
 +
 +struct GTY (()) machine_function
@@ -1373,7 +1229,7 @@ index 00000000000..41b0a283d44
 +static int
 +pru_compute_frame_layout (void)
 +{
-+  unsigned int regno;
++  int regno;
 +  HARD_REG_SET *save_mask;
 +  int total_size;
 +  int var_size;
@@ -1487,7 +1343,8 @@ index 00000000000..41b0a283d44
 +xbbo_next_reg_cluster (int regno_start, int *sp_offset, bool do_store)
 +{
 +  int regno, nregs, i;
-+  rtx addr, insn, pat;
++  rtx addr;
++  rtx_insn *insn;
 +
 +  nregs = 0;
 +
@@ -1499,7 +1356,7 @@ index 00000000000..41b0a283d44
 +      regno_start++;
 +
 +  /* Find the largest consecutive group of registers to save.  */
-+  for (regno = regno_start; regno <= LAST_GP_REG && nregs < MAX_XBBO_BURST_LEN;)
++  for (regno = regno_start; regno <= LAST_GP_REG;)
 +    if (TEST_HARD_REG_BIT (cfun->machine->save_mask, regno))
 +      {
 +	regno++;
@@ -1518,30 +1375,27 @@ index 00000000000..41b0a283d44
 +		       gen_int_mode (*sp_offset, Pmode));
 +
 +  if (do_store)
-+    insn = gen_store_multiple (gen_frame_mem (Pmode, addr),
-+			       gen_rtx_REG (QImode, regno_start),
-+			       GEN_INT (nregs));
++    insn = targetm.gen_store_multiple (gen_frame_mem (BLKmode, addr),
++				       gen_rtx_REG (QImode, regno_start),
++				       GEN_INT (nregs));
 +  else
-+    insn = gen_load_multiple (gen_rtx_REG (QImode, regno_start),
-+			      gen_frame_mem (Pmode, addr),
-+			      GEN_INT (nregs));
++    insn = targetm.gen_load_multiple (gen_rtx_REG (QImode, regno_start),
++				      gen_frame_mem (BLKmode, addr),
++				      GEN_INT (nregs));
 +
++  gcc_assert (reload_completed);
 +  gcc_assert (insn);
 +  emit_insn (insn);
 +
 +  /* Tag as frame-related.  */
-+  pat = PATTERN (insn);
-+  for (i = 0; i < XVECLEN (pat, 0); i++)
-+    if (GET_CODE (XVECEXP (pat, 0, i)) == SET)
-+      {
-+	RTX_FRAME_RELATED_P (XVECEXP (pat, 0, i)) = 1;
-+	if (do_store)
-+	  {
-+	    /* Tag epilogue unwind note.  */
-+	    rtx reg = SET_SRC (XVECEXP (pat, 0, i));
-+	    add_reg_note (insn, REG_CFA_RESTORE, copy_rtx (reg));
-+	  }
-+      }
++  RTX_FRAME_RELATED_P (insn) = 1;
++
++  if (!do_store)
++    {
++      /* Tag epilogue unwind notes.  */
++      for (i = regno_start; i < (regno_start + nregs); i++)
++	add_reg_note (insn, REG_CFA_RESTORE, gen_rtx_REG (QImode, i));
++    }
 +
 +  /* Increment and save offset in anticipation of the next register group.  */
 +  *sp_offset += nregs * UNITS_PER_WORD;
@@ -1549,6 +1403,7 @@ index 00000000000..41b0a283d44
 +  return regno_start + nregs;
 +}
 +
++/* Emit function prologue.  */
 +void
 +pru_expand_prologue (void)
 +{
@@ -1611,6 +1466,7 @@ index 00000000000..41b0a283d44
 +    emit_insn (gen_blockage ());
 +}
 +
++/* Emit function epilogue.  */
 +void
 +pru_expand_epilogue (bool sibcall_p)
 +{
@@ -1716,7 +1572,7 @@ index 00000000000..41b0a283d44
 +
 +/* Return true if REGNO should be saved in the prologue.  */
 +static bool
-+prologue_saved_reg_p (unsigned regno)
++prologue_saved_reg_p (int regno)
 +{
 +  gcc_assert (GP_REG_P (regno));
 +
@@ -1815,9 +1671,9 @@ index 00000000000..41b0a283d44
 +    }
 +}
 +
-+/* Implement `TARGET_HARD_REGNO_SCRATCH_OK'.  */
-+/* Returns true if SCRATCH are safe to be allocated as a scratch
-+   registers (for a define_peephole2) in the current function.  */
++/* Implement `TARGET_HARD_REGNO_SCRATCH_OK'.
++   Returns true if REGNO is safe to be allocated as a scratch
++   register (for a define_peephole2) in the current function.  */
 +
 +static bool
 +pru_hard_regno_scratch_ok (unsigned int regno)
@@ -1839,8 +1695,8 @@ index 00000000000..41b0a283d44
 +}
 +
 +
-+/* Worker function for `HARD_REGNO_RENAME_OK'.  */
-+/* Return nonzero if register OLD_REG can be renamed to register NEW_REG.  */
++/* Worker function for `HARD_REGNO_RENAME_OK'.
++   Return nonzero if register OLD_REG can be renamed to register NEW_REG.  */
 +
 +int
 +pru_hard_regno_rename_ok (unsigned int old_reg,
@@ -1865,15 +1721,6 @@ index 00000000000..41b0a283d44
 +  return 1;
 +}
 +
-+static void
-+pru_init (void)
-+{
-+  /* Due to difficulties in implementing the TI ABI with GCC,
-+     at least check and error-out if GCC cannot compile a
-+     compliant output.  */
-+  pru_register_abicheck_pass ();
-+}
-+
 +/* Allocate a chunk of memory for per-function machine-dependent data.  */
 +static struct machine_function *
 +pru_init_machine_status (void)
@@ -1889,32 +1736,21 @@ index 00000000000..41b0a283d44
 +  SUBTARGET_OVERRIDE_OPTIONS;
 +#endif
 +
-+  /* Unwind tables currently require a frame pointer for correctness,
-+     see toplev.c:process_options().  */
-+
-+  if ((flag_unwind_tables
-+       || flag_non_call_exceptions
-+       || flag_asynchronous_unwind_tables)
-+      && !ACCUMULATE_OUTGOING_ARGS)
-+    {
-+      flag_omit_frame_pointer = 0;
-+    }
-+
 +  /* Check for unsupported options.  */
 +  if (flag_pic == 1)
-+    warning (OPT_fpic, "-fpic is not supported");
++    warning (OPT_fpic, "%<-fpic%> is not supported");
 +  if (flag_pic == 2)
-+    warning (OPT_fPIC, "-fPIC is not supported");
++    warning (OPT_fPIC, "%<-fPIC%> is not supported");
 +  if (flag_pie == 1)
-+    warning (OPT_fpie, "-fpie is not supported");
++    warning (OPT_fpie, "%<-fpie%> is not supported");
 +  if (flag_pie == 2)
-+    warning (OPT_fPIE, "-fPIE is not supported");
++    warning (OPT_fPIE, "%<-fPIE%> is not supported");
 +
 +  /* QBxx conditional branching cannot cope with block reordering.  */
 +  if (flag_reorder_blocks_and_partition)
 +    {
-+      inform (input_location, "-freorder-blocks-and-partition not supported "
-+			      "on this architecture");
++      inform (input_location, "%<-freorder-blocks-and-partition%> "
++			      "not supported on this architecture");
 +      flag_reorder_blocks_and_partition = 0;
 +      flag_reorder_blocks = 1;
 +    }
@@ -1927,8 +1763,10 @@ index 00000000000..41b0a283d44
 +  target_option_default_node = target_option_current_node
 +    = build_target_option_node (&global_options);
 +
-+  /* This needs to be done at start up.  It's convenient to do it here.  */
-+  pru_init ();
++  /* Due to difficulties in implementing the TI ABI with GCC,
++     at least check and error-out if GCC cannot compile a
++     compliant output.  */
++  pru_register_abicheck_pass ();
 +}
 +
 +/* Compute a (partial) cost for rtx X.  Return true if the complete
@@ -2251,8 +2089,7 @@ index 00000000000..41b0a283d44
 +  return gen_rtx_fmt_ee (jump_code, mode, cmp, const0_rtx);
 +}
 +
-+/* Sign extension.  */
-+
++/* Return the sign bit position for given OP's mode.  */
 +static int sign_bit_position (const rtx op)
 +{
 +  const int sz = GET_MODE_SIZE (GET_MODE (op));
@@ -2260,6 +2097,7 @@ index 00000000000..41b0a283d44
 +  return  sz * 8 - 1;
 +}
 +
++/* Output asm code for sign_extend operation.  */
 +const char *
 +pru_output_sign_extend (rtx *operands)
 +{
@@ -2334,6 +2172,7 @@ index 00000000000..41b0a283d44
 +
 +*/
 +
++/* Output asm code for a signed-compare LT/LE conditional branch.  */
 +static const char *
 +pru_output_ltle_signed_cbranch (rtx *operands, bool is_near)
 +{
@@ -2394,6 +2233,7 @@ index 00000000000..41b0a283d44
 +  return buf;
 +}
 +
++/* Output asm code for a signed-compare GT/GE conditional branch.  */
 +static const char *
 +pru_output_gtge_signed_cbranch (rtx *operands, bool is_near)
 +{
@@ -2454,6 +2294,11 @@ index 00000000000..41b0a283d44
 +  return buf;
 +}
 +
++/* Output asm code for a signed-compare conditional branch.
++
++   If IS_NEAR is true, then QBBx instructions may be used for reaching
++   the destination label.  Otherwise JMP is used, at the expense of
++   increased code size.  */
 +const char *
 +pru_output_signed_cbranch (rtx *operands, bool is_near)
 +{
@@ -2608,6 +2453,7 @@ index 00000000000..41b0a283d44
 +	  || regno == ARG_POINTER_REGNUM);
 +}
 +
++/* Return true if given xbbo constant OFFSET is valid.  */
 +static bool
 +pru_valid_const_ubyte_offset (machine_mode mode, HOST_WIDE_INT offset)
 +{
@@ -2623,7 +2469,8 @@ index 00000000000..41b0a283d44
 +
 +/* Recognize a CTABLE base address.  Return CTABLE entry index, or -1 if
 + * base was not found in the pragma-filled pru_ctable.  */
-+int pru_get_ctable_exact_base_index (unsigned HOST_WIDE_INT caddr)
++int
++pru_get_ctable_exact_base_index (unsigned HOST_WIDE_INT caddr)
 +{
 +  unsigned int i;
 +
@@ -2638,7 +2485,8 @@ index 00000000000..41b0a283d44
 +
 +/* Check if the given address can be addressed via CTABLE_BASE + UBYTE_OFFS,
 +   and return the base CTABLE index if possible.  */
-+int pru_get_ctable_base_index (unsigned HOST_WIDE_INT caddr)
++int
++pru_get_ctable_base_index (unsigned HOST_WIDE_INT caddr)
 +{
 +  unsigned int i;
 +
@@ -2654,7 +2502,8 @@ index 00000000000..41b0a283d44
 +
 +
 +/* Return the offset from some CTABLE base for this address.  */
-+int pru_get_ctable_base_offset (unsigned HOST_WIDE_INT caddr)
++int
++pru_get_ctable_base_offset (unsigned HOST_WIDE_INT caddr)
 +{
 +  int i;
 +
@@ -2746,6 +2595,7 @@ index 00000000000..41b0a283d44
 +
 +/* Output assembly language related definitions.  */
 +
++/* Implement TARGET_ASM_CONSTRUCTOR.  */
 +static void
 +pru_elf_asm_constructor (rtx symbol, int priority)
 +{
@@ -2766,6 +2616,7 @@ index 00000000000..41b0a283d44
 +  assemble_aligned_integer (INIT_ARRAY_ENTRY_BYTES, symbol);
 +}
 +
++/* Implement TARGET_ASM_DESTRUCTOR.  */
 +static void
 +pru_elf_asm_destructor (rtx symbol, int priority)
 +{
@@ -2786,6 +2637,8 @@ index 00000000000..41b0a283d44
 +  assemble_aligned_integer (INIT_ARRAY_ENTRY_BYTES, symbol);
 +}
 +
++/* Map rtx_code to unsigned PRU branch op suffix.  Callers must
++   handle sign comparison themselves for signed operations.  */
 +static const char *
 +pru_comparison_str (enum rtx_code cond)
 +{
@@ -3226,8 +3079,8 @@ index 00000000000..41b0a283d44
 +    }
 +}
 +
-+/* Implement `TARGET_ASM_INTEGER'.  */
-+/* Target hook for assembling integer objects.  PRU version needs
++/* Implement `TARGET_ASM_INTEGER'.
++   Target hook for assembling integer objects.  PRU version needs
 +   special handling for references to pmem.  Code copied from AVR.  */
 +
 +static bool
@@ -3273,6 +3126,8 @@ index 00000000000..41b0a283d44
 +
 +/* Function argument related.  */
 +
++/* Return the number of bytes needed for storing an argument with
++   the given MODE and TYPE.  */
 +static int
 +pru_function_arg_size (machine_mode mode, const_tree type)
 +{
@@ -3303,6 +3158,8 @@ index 00000000000..41b0a283d44
 +  return sz == 1 || sz == 2 || sz == 3 || sz == 4 || sz == 8;
 +}
 +
++/* Helper function to get the starting storage HW register for an argument,
++   or -1 if it must be passed on stack.  The cum_v state is not changed.  */
 +static int
 +pru_function_arg_regi (cumulative_args_t cum_v,
 +		       machine_mode mode, const_tree type,
@@ -3356,6 +3213,9 @@ index 00000000000..41b0a283d44
 +  return regi;
 +}
 +
++/* Mark CUM_V that a function argument will occupy HW register slot starting
++   at REGI.  The number of consecutive 8-bit HW registers marked as occupied
++   depends on the MODE and TYPE of the argument.  */
 +static void
 +pru_function_arg_regi_mark_slot (int regi,
 +				 cumulative_args_t cum_v,
@@ -3570,7 +3430,9 @@ index 00000000000..41b0a283d44
 +  return last_insn;
 +}
 +
-+
++/* If IS_END is false, expand a canonical doloop_begin RTL into the
++   PRU-specific doloop_begin_internal.  Otherwise expand doloop_end to
++   doloop_end_internal.  */
 +void
 +pru_emit_doloop (rtx *operands, int is_end)
 +{
@@ -3741,7 +3603,7 @@ index 00000000000..41b0a283d44
 +pru_repeat_loop_p (struct pru_doloop *loop)
 +{
 +  struct pru_doloop_end *end;
-+  rtx fallthrough;
++  rtx_insn *fallthrough;
 +
 +  /* There must be exactly one doloop_begin and at least one doloop_end.  */
 +  if (loop->begin == 0 || loop->end == 0 || loop->begin->next != 0)
@@ -3764,7 +3626,8 @@ index 00000000000..41b0a283d44
 +  for (end = loop->end->next; end != 0; end = end->next)
 +    if (end->label != loop->end->label
 +	|| !simplejump_p (end->fallthrough)
-+	|| next_real_insn (JUMP_LABEL (end->fallthrough)) != fallthrough)
++	|| fallthrough
++	   != next_real_insn (JUMP_LABEL_AS_INSN (end->fallthrough)))
 +      return false;
 +
 +  return true;
@@ -3966,6 +3829,7 @@ index 00000000000..41b0a283d44
 +      }
 +}
 +
++/* Implement TARGET_MACHINE_DEPENDENT_REORG.  */
 +static void
 +pru_reorg (void)
 +{
@@ -3974,7 +3838,7 @@ index 00000000000..41b0a283d44
 +  compute_bb_for_insn ();
 +  df_analyze ();
 +
-+  /* need correct insn lengths for allowing LOOP instruction
++  /* Need correct insn lengths for allowing LOOP instruction
 +     emitting due to U8_PCREL limitations.  */
 +  shorten_branches (get_insns ());
 +
@@ -3988,6 +3852,7 @@ index 00000000000..41b0a283d44
 +  df_finish_pass (false);
 +}
 +
++/* Enumerate all PRU-specific builtins.  */
 +enum pru_builtin
 +{
 +  PRU_BUILTIN_DELAY_CYCLES,
@@ -3997,6 +3862,7 @@ index 00000000000..41b0a283d44
 +static GTY(()) tree pru_builtins [(int) PRU_BUILTIN_max];
 +
 +/* Implement TARGET_INIT_BUILTINS.  */
++
 +static void
 +pru_init_builtins (void)
 +{
@@ -4012,6 +3878,7 @@ index 00000000000..41b0a283d44
 +}
 +
 +/* Implement TARGET_BUILTIN_DECL.  */
++
 +static tree
 +pru_builtin_decl (unsigned code, bool initialize_p ATTRIBUTE_UNUSED)
 +{
@@ -4024,6 +3891,9 @@ index 00000000000..41b0a283d44
 +    }
 +}
 +
++/* Emit a sequence of one or more delay_cycles_X insns, in order to generate
++   code that delays exactly ARG cycles.  */
++
 +static rtx
 +pru_expand_delay_cycles (rtx arg)
 +{
@@ -4031,7 +3901,7 @@ index 00000000000..41b0a283d44
 +
 +  if (GET_CODE (arg) != CONST_INT)
 +    {
-+      error ("__delay_cycles() only takes constant arguments");
++      error ("%<__delay_cycles%> only takes constant arguments");
 +      return NULL_RTX;
 +    }
 +
@@ -4041,7 +3911,7 @@ index 00000000000..41b0a283d44
 +    {
 +      if (c < 0)
 +	{
-+	  error ("__delay_cycles only takes non-negative cycle counts.");
++	  error ("%<__delay_cycles%> only takes non-negative cycle counts");
 +	  return NULL_RTX;
 +	}
 +    }
@@ -4055,7 +3925,7 @@ index 00000000000..41b0a283d44
 +      c -= (n * 2) + 2;
 +      if ((unsigned long long) n > 0xffffffffULL)
 +	{
-+	  error ("__delay_cycles is limited to 32-bit loop counts.");
++	  error ("%<__delay_cycles%> is limited to 32-bit loop counts");
 +	  return NULL_RTX;
 +	}
 +      emit_insn (gen_delay_cycles_2x_plus2_si (GEN_INT (n)));
@@ -4147,7 +4017,9 @@ index 00000000000..41b0a283d44
 +    }
 +}
 +
++/* Implement TARGET_UNWIND_WORD_MODE.
 +
++   Since PRU is really a 32-bit CPU, the default word_mode is not suitable.  */
 +static scalar_int_mode
 +pru_unwind_word_mode (void)
 +{
@@ -4244,10 +4116,6 @@ index 00000000000..41b0a283d44
 +
 +#undef TARGET_INVALID_WITHIN_DOLOOP
 +#define TARGET_INVALID_WITHIN_DOLOOP  pru_invalid_within_doloop
-+
-+/* There are no shared libraries envisioned for PRU.  */
-+//#undef TARGET_CXX_USE_ATEXIT_FOR_CXA_ATEXIT
-+//#define TARGET_CXX_USE_ATEXIT_FOR_CXA_ATEXIT hook_bool_void_true
 +
 +#undef  TARGET_UNWIND_WORD_MODE
 +#define TARGET_UNWIND_WORD_MODE pru_unwind_word_mode
@@ -4814,10 +4682,10 @@ index 00000000000..de1b9100209
 +#endif /* GCC_PRU_H */
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
 new file mode 100644
-index 00000000000..328fb484847
+index 00000000000..4be1958e6c9
 --- /dev/null
 +++ b/gcc/config/pru/pru.md
-@@ -0,0 +1,905 @@
+@@ -0,0 +1,956 @@
 +;; Machine Description for TI PRU.
 +;; Copyright (C) 2014-2018 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -4861,12 +4729,6 @@ index 00000000000..328fb484847
 +   (FRAME_POINTER_REGNUM	136)
 +   (ARG_POINTER_REGNUM		140)
 +   (FIRST_PSEUDO_REGISTER	144)
-+
-+   ;; Misc
-+   (MAX_XBBO_BURST_LEN	    29)	; Artificially limited by GCC - see how
-+				; genextract.c uses [a-zA-Z] to record
-+				; "path to a vector".  Also see the check
-+				; for MAX_RECOG_OPERANDS in regrename.c
 +  ]
 +)
 +
@@ -5024,84 +4886,158 @@ index 00000000000..328fb484847
 +  [(set_attr "type" "st,ld,alu,alu,alu,alu")
 +   (set_attr "length" "4,4,8,8,8,16")])
 +
-+;; Load multiple
-+;;   op0: first of the consecutive registers
-+;;   op1: first memory location
-+;;   op2: number of consecutive registers
++;
++; load_multiple pattern(s).
++;
++; ??? Due to reload problems with replacing registers inside match_parallel
++; we currently support load_multiple/store_multiple only after reload.
++;
++; Idea taken from the s390 port.
++
 +(define_expand "load_multiple"
-+  [(match_par_dup 3 [(set (match_operand:QI 0 "" "")
-+			  (match_operand:QI 1 "" ""))
-+		     (use (match_operand:SI 2 "" ""))])]
-+  ""
-+  "
++  [(match_par_dup 3 [(set (match_operand 0 "" "")
++			  (match_operand 1 "" ""))
++		     (use (match_operand 2 "" ""))])]
++  "reload_completed"
 +{
-+  int first_regno, count, i;
++  machine_mode mode;
++  int regno;
++  int count;
++  rtx from;
++  int i, off;
 +
-+  /* Support only loading a constant number of registers from memory and
-+     only if at least one register.  */
++  /* Support only loading a constant number of fixed-point registers from
++     memory.  */
 +  if (GET_CODE (operands[2]) != CONST_INT
-+      || INTVAL (operands[2]) < 1
-+      || INTVAL (operands[2]) > MAX_XBBO_BURST_LEN
 +      || GET_CODE (operands[1]) != MEM
-+      || GET_CODE (operands[0]) != REG
-+      || (REGNO (operands[0]) + INTVAL (operands[2]) - 1) > LAST_NONIO_GP_REG)
++      || GET_CODE (operands[0]) != REG)
 +    FAIL;
 +
 +  count = INTVAL (operands[2]);
-+  first_regno = REGNO (operands[0]);
++  regno = REGNO (operands[0]);
++  mode = GET_MODE (operands[0]);
++  if (mode != QImode)
++    FAIL;
 +
 +  operands[3] = gen_rtx_PARALLEL (VOIDmode, rtvec_alloc (count));
++  if (!can_create_pseudo_p ())
++    {
++      if (GET_CODE (XEXP (operands[1], 0)) == REG)
++	{
++	  from = XEXP (operands[1], 0);
++	  off = 0;
++	}
++      else if (GET_CODE (XEXP (operands[1], 0)) == PLUS
++	       && GET_CODE (XEXP (XEXP (operands[1], 0), 0)) == REG
++	       && GET_CODE (XEXP (XEXP (operands[1], 0), 1)) == CONST_INT)
++	{
++	  from = XEXP (XEXP (operands[1], 0), 0);
++	  off = INTVAL (XEXP (XEXP (operands[1], 0), 1));
++	}
++      else
++	FAIL;
++    }
++  else
++    {
++      from = force_reg (Pmode, XEXP (operands[1], 0));
++      off = 0;
++    }
 +
 +  for (i = 0; i < count; i++)
 +    XVECEXP (operands[3], 0, i)
-+      = gen_rtx_SET (gen_rtx_REG (QImode, first_regno + i),
-+		     gen_rtx_MEM (QImode,
-+				  plus_constant (Pmode,
-+						 XEXP (operands[1], 0),
-+						 i * UNITS_PER_WORD)));
-+}")
++      = gen_rtx_SET (gen_rtx_REG (mode, regno + i),
++		     change_address (operands[1], mode,
++		       plus_constant (Pmode, from,
++				      off + i * GET_MODE_SIZE (mode))));
++})
 +
-+;; Store multiple
-+;;   op0: first memory location
-+;;   op1: first of the consecutive registers
-+;;   op2: number of consecutive registers
-+(define_expand "store_multiple"
-+  [(match_par_dup 3 [(set (match_operand:QI 0 "" "")
-+			  (match_operand:QI 1 "" ""))
-+		     (use (match_operand:SI 2 "" ""))])]
-+  ""
-+  "
++(define_insn "*pru_load_multiple"
++  [(match_parallel 0 "load_multiple_operation"
++		   [(set (match_operand:QI 1 "register_operand" "=r")
++			 (match_operand:QI 2 "memory_operand" "m"))])]
++  "reload_completed"
 +{
-+  int first_regno, count, i;
++  int nregs = XVECLEN (operands[0], 0);
++  operands[0] = GEN_INT (nregs);
++  return "lb%B2o\\t%b1, %2, %0";
++}
++  [(set_attr "type" "ld")
++   (set_attr "length" "4")])
 +
-+  /* Support only storing a constant number of registers to memory and
-+     only if at least one register.  */
++;
++; store multiple pattern(s).
++;
++
++(define_expand "store_multiple"
++  [(match_par_dup 3 [(set (match_operand 0 "" "")
++			  (match_operand 1 "" ""))
++		     (use (match_operand 2 "" ""))])]
++  "reload_completed"
++{
++  machine_mode mode;
++  int regno;
++  int count;
++  rtx to;
++  int i, off;
++
++  /* Support only storing a constant number of fixed-point registers to
++     memory.  */
 +  if (GET_CODE (operands[2]) != CONST_INT
-+      || INTVAL (operands[2]) < 1
-+      || INTVAL (operands[2]) > MAX_XBBO_BURST_LEN
 +      || GET_CODE (operands[0]) != MEM
-+      || GET_CODE (operands[1]) != REG
-+      || (REGNO (operands[1]) + INTVAL (operands[2]) - 1) > LAST_NONIO_GP_REG)
++      || GET_CODE (operands[1]) != REG)
 +    FAIL;
 +
 +  count = INTVAL (operands[2]);
-+  first_regno = REGNO (operands[1]);
++  regno = REGNO (operands[1]);
++  mode = GET_MODE (operands[1]);
++  if (mode != QImode)
++    FAIL;
 +
 +  operands[3] = gen_rtx_PARALLEL (VOIDmode, rtvec_alloc (count));
 +
++  if (!can_create_pseudo_p ())
++    {
++      if (GET_CODE (XEXP (operands[0], 0)) == REG)
++	{
++	  to = XEXP (operands[0], 0);
++	  off = 0;
++	}
++      else if (GET_CODE (XEXP (operands[0], 0)) == PLUS
++	       && GET_CODE (XEXP (XEXP (operands[0], 0), 0)) == REG
++	       && GET_CODE (XEXP (XEXP (operands[0], 0), 1)) == CONST_INT)
++	{
++	  to = XEXP (XEXP (operands[0], 0), 0);
++	  off = INTVAL (XEXP (XEXP (operands[0], 0), 1));
++	}
++      else
++	FAIL;
++    }
++  else
++    {
++      to = force_reg (Pmode, XEXP (operands[0], 0));
++      off = 0;
++    }
++
 +  for (i = 0; i < count; i++)
 +    XVECEXP (operands[3], 0, i)
-+      = gen_rtx_SET (gen_rtx_MEM (QImode,
-+				  plus_constant (Pmode,
-+						 XEXP (operands[0], 0),
-+						 i * UNITS_PER_WORD)),
-+		     gen_rtx_REG (QImode, first_regno + i));
-+}")
++      = gen_rtx_SET (change_address (operands[0], mode,
++		       plus_constant (Pmode, to,
++				      off + i * GET_MODE_SIZE (mode))),
++		     gen_rtx_REG (mode, regno + i));
++})
 +
-+;; Include the machine-generated patterns for all LBBO/SBBO multuple-reg
-+;; lengths.  This is needed due to limitations of GCC.  See
-+;; http://article.gmane.org/gmane.comp.gcc.devel/54458
-+(include "pru-ldst-multiple.md")
++(define_insn "*pru_store_multiple"
++  [(match_parallel 0 "store_multiple_operation"
++		   [(set (match_operand:QI 1 "memory_operand" "=m")
++			 (match_operand:QI 2 "register_operand" "r"))])]
++  "reload_completed"
++{
++  int nregs = XVECLEN (operands[0], 0);
++  operands[0] = GEN_INT (nregs);
++  return "sb%B1o\\t%b2, %1, %0";
++}
++  [(set_attr "type" "st")
++   (set_attr "length" "4")])
 +
 +;; Zero extension patterns
 +;;
@@ -5231,23 +5167,6 @@ index 00000000000..328fb484847
 +  ""
 +  ""
 +  [(set_attr "type" "alu")])
-+
-+; Combine phase tends to produce this expression when given the following
-+; expression: "uint dst = (ushort) op0 & (uint) op1;
-+;
-+; TODO - fix properly! Understand whether we need to fix combine core, augment
-+; our hooks, or PRU is giving incorrect costs for subexpressions.
-+(define_insn "*and_combine_zero_extend_workaround<mode>"
-+ [(set (match_operand:SI 0 "register_operand"       "=r")
-+       (zero_extend:SI
-+	(subreg:EQD
-+	  (and:SI
-+	    (match_operand:SI 1 "register_operand"  "%r")
-+	    (match_operand:SI 2 "register_operand"  "rI"))
-+	  0)))]
-+ ""
-+ "and\\t%0, %1, %F2<EQD:regwidth>"
-+ [(set_attr "type" "alu")])
 +
 +
 +;;  Shift instructions
@@ -5820,10 +5739,10 @@ index 00000000000..ab29e443882
 +		$(CONFIG_H) $(TM_H) $(srcdir)/config/pru/pru-protos.h
 +	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $<
 diff --git a/gcc/doc/extend.texi b/gcc/doc/extend.texi
-index e0a84b8b3c5..29ebb086f50 100644
+index 7b471ec40f7..920653848b3 100644
 --- a/gcc/doc/extend.texi
 +++ b/gcc/doc/extend.texi
-@@ -21535,6 +21535,7 @@ for further explanation.
+@@ -21635,6 +21635,7 @@ for further explanation.
  * ARM Pragmas::
  * M32C Pragmas::
  * MeP Pragmas::
@@ -5831,7 +5750,7 @@ index e0a84b8b3c5..29ebb086f50 100644
  * RS/6000 and PowerPC Pragmas::
  * S/390 Pragmas::
  * Darwin Pragmas::
-@@ -21686,6 +21687,25 @@ extern int foo ();
+@@ -21786,6 +21787,25 @@ extern int foo ();
  
  @end table
  
@@ -5858,10 +5777,10 @@ index e0a84b8b3c5..29ebb086f50 100644
  @subsection RS/6000 and PowerPC Pragmas
  
 diff --git a/gcc/doc/invoke.texi b/gcc/doc/invoke.texi
-index 419980ff86e..af17e72bef1 100644
+index 1dcdfb51c47..ff3245ed3eb 100644
 --- a/gcc/doc/invoke.texi
 +++ b/gcc/doc/invoke.texi
-@@ -1020,6 +1020,10 @@ See RS/6000 and PowerPC Options.
+@@ -1041,6 +1041,10 @@ See RS/6000 and PowerPC Options.
  -mstack-protector-guard=@var{guard} -mstack-protector-guard-reg=@var{reg} @gol
  -mstack-protector-guard-offset=@var{offset}}
  
@@ -5872,7 +5791,7 @@ index 419980ff86e..af17e72bef1 100644
  @emph{RISC-V Options}
  @gccoptlist{-mbranch-cost=@var{N-instruction} @gol
  -mplt  -mno-plt @gol
-@@ -14439,6 +14443,7 @@ platform.
+@@ -14620,6 +14624,7 @@ platform.
  * picoChip Options::
  * PowerPC Options::
  * PowerPC SPE Options::
@@ -5880,7 +5799,7 @@ index 419980ff86e..af17e72bef1 100644
  * RISC-V Options::
  * RL78 Options::
  * RS/6000 and PowerPC Options::
-@@ -22914,6 +22919,56 @@ the offset with a symbol reference to a canary in the TLS block.
+@@ -23093,6 +23098,56 @@ the offset with a symbol reference to a canary in the TLS block.
  @end table
  
  
@@ -5938,10 +5857,10 @@ index 419980ff86e..af17e72bef1 100644
  @subsection RISC-V Options
  @cindex RISC-V Options
 diff --git a/gcc/doc/md.texi b/gcc/doc/md.texi
-index a3ecb711eca..c1fa37f97f4 100644
+index 734bc765387..01ebd96186a 100644
 --- a/gcc/doc/md.texi
 +++ b/gcc/doc/md.texi
-@@ -3298,6 +3298,28 @@ Vector constant that is all zeros.
+@@ -3306,6 +3306,28 @@ Vector constant that is all zeros.
  
  @end table
  

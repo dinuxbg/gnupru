@@ -1,13 +1,33 @@
-From 89645d8df33e6836535b8418718a0d2e5e831e3f Mon Sep 17 00:00:00 2001
+From 25b30713c21725893721daf2bca07ee582a21d64 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 11 Mar 2018 22:23:26 +0200
-Subject: [PATCH 1/8] Initial PRU port
+Subject: [PATCH 1/7] Initial PRU port
 
-I would like to contribute newlib port for the TI PRU I/O processor [1].
+Hi,
 
-Binutils port has already been merged. I've sent patches for gcc and simulator.
+I would like to contribute newlib port for the TI PRU I/O processor [1] [2].
+
+Binutils port has already been merged. I've sent patches for gcc.
+
+The following files need to be regenerated. Let me know if I should post a separate patch for them:
+ configure
+ libgloss/configure
+ libgloss/pru/aclocal.m4
+ libgloss/pru/configure
+ newlib/libc/machine/configure
+ newlib/libc/machine/pru/Makefile.in
+ newlib/libc/machine/pru/aclocal.m4
+ newlib/libc/machine/pru/configure
+ newlib/libm/machine/configure
+ newlib/libm/machine/pru/Makefile.in
+ newlib/libm/machine/pru/aclocal.m4
+ newlib/libm/machine/pru/configure
+
+Regards,
+Dimitar
 
 [1] http://processors.wiki.ti.com/index.php/PRU-ICSS
+[2] http://beagleboard.org/pru
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -102,7 +122,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 newlib/libc/machine/pru/setjmp.s
 
 diff --git a/configure.ac b/configure.ac
-index 3cb95d69d..021d3645a 100644
+index cf856e567..28e83a73d 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -697,6 +697,10 @@ case "${target}" in
@@ -3647,7 +3667,7 @@ index 4eebf6d95..10115c613 100644
  	syscall_dir=syscalls
  	;;
 diff --git a/newlib/libc/include/machine/ieeefp.h b/newlib/libc/include/machine/ieeefp.h
-index 2fb2268ce..a81a85cee 100644
+index a40975248..e4d6384aa 100644
 --- a/newlib/libc/include/machine/ieeefp.h
 +++ b/newlib/libc/include/machine/ieeefp.h
 @@ -409,6 +409,10 @@
