@@ -1,4 +1,4 @@
-From 8f50eeec88a73a59d6d86e1de27b1d92d116e597 Mon Sep 17 00:00:00 2001
+From 9c4084c4a2b3631b97e07e5d60b74479830e81e7 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 23 Mar 2018 22:24:22 +0200
 Subject: [PATCH 02/13] Initial TI PRU libgcc port
@@ -8,7 +8,7 @@ to help with TI PRU toolchain ABI compatibility.
 
 libgcc/ChangeLog:
 
-2018-04-15  Dimitar Dimitrov  <dimitar@dinux.eu>
+2018-07-27  Dimitar Dimitrov  <dimitar@dinux.eu>
 
 	* config.host: Add PRU target.
 	* config/pru/asri.c: New file.

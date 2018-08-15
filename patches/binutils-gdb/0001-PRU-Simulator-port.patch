@@ -1,7 +1,7 @@
-From dbd42aeba24cdfc1d71df6423095a063c250035c Mon Sep 17 00:00:00 2001
+From ce7df0f0f8b260d1e760416ff2beb3addc0f145a Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 22:37:01 +0300
-Subject: [PATCH 1/7] PRU Simulator port
+Subject: [PATCH 1/6] PRU Simulator port
 
 I'd like to contribute a sim port for the TI PRU I/O processor. I did not
 receive feedback for my v3 patch series. So after a bit of waiting I rebased

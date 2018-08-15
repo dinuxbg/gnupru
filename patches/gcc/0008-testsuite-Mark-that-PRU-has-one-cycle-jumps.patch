@@ -1,11 +1,11 @@
-From 91d51f485119128492ee131c7a0f9f74f9c8debe Mon Sep 17 00:00:00 2001
+From f655636ae81c29da542d108837e72f720b4d6c57 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 22:07:17 +0200
 Subject: [PATCH 08/13] testsuite: Mark that PRU has one-cycle jumps
 
 gcc/testsuite/ChangeLog:
 
-2018-04-15  Dimitar Dimitrov  <dimitar@dinux.eu>
+2018-07-27  Dimitar Dimitrov  <dimitar@dinux.eu>
 
 	* gcc.dg/tree-ssa/20040204-1.c: XFAIL on pru.
 	* gcc.dg/tree-ssa/reassoc-33.c: Ditto.

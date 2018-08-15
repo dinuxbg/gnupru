@@ -1,4 +1,4 @@
-From 51b3e04841f439d5a01ece14ce6331563bf76216 Mon Sep 17 00:00:00 2001
+From 1c58e37d02cda3ee4f681ec266f616d12e47b34f Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 22:00:23 +0200
 Subject: [PATCH 06/13] testsuite: Remove PRU from test cases requiring hosted
@@ -6,7 +6,7 @@ Subject: [PATCH 06/13] testsuite: Remove PRU from test cases requiring hosted
 
 gcc/testsuite/ChangeLog:
 
-2018-04-15  Dimitar Dimitrov  <dimitar@dinux.eu>
+2018-07-27  Dimitar Dimitrov  <dimitar@dinux.eu>
 
 	* gcc.c-torture/execute/20101011-1.c: Define DO_TEST to 0 for PRU.
 	* gcc.dg/20020312-2.c: No PIC register for PRU.

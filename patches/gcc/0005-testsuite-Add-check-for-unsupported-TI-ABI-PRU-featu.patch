@@ -1,4 +1,4 @@
-From a1a854504d9269c09b42a117c425e0baa13850f6 Mon Sep 17 00:00:00 2001
+From b3357d5dc5b345bfd58a871dba3d3a723ffdb464 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 15 Apr 2018 15:03:27 +0300
 Subject: [PATCH 05/13] testsuite: Add check for unsupported TI ABI PRU
@@ -9,22 +9,22 @@ used for PRU target.
 
 gcc/testsuite/ChangeLog:
 
-2018-04-15  Dimitar Dimitrov  <dimitar@dinux.eu>
+2018-07-27  Dimitar Dimitrov  <dimitar@dinux.eu>
 
 	* lib/gcc-dg.exp: Filter unsupported features in PRU's TI ABI mode.
 	* lib/target-utils.exp: Ditto.
 	* lib/target-supports.exp (check_effective_target_function_pointers,
-	check_effective_large_return_values): New.
+	check_effective_target_large_return_values): New.
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  gcc/testsuite/lib/gcc-dg.exp          | 11 +++++++++++
  gcc/testsuite/lib/target-supports.exp | 26 ++++++++++++++++++++++++++
- gcc/testsuite/lib/target-utils.exp    |  7 +++++++
- 3 files changed, 44 insertions(+)
+ gcc/testsuite/lib/target-utils.exp    |  8 ++++++++
+ 3 files changed, 45 insertions(+)
 
 diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
-index c26d1c73aa0..796bfbc23e5 100644
+index c26d1c73aa0..c061c152f16 100644
 --- a/gcc/testsuite/lib/gcc-dg.exp
 +++ b/gcc/testsuite/lib/gcc-dg.exp
 @@ -405,6 +405,17 @@ proc gcc-dg-prune { system text } {
@@ -37,7 +37,7 @@ index c26d1c73aa0..796bfbc23e5 100644
 +	return "::unsupported::funcptr"
 +    }
 +    if { [string match "*error: large return values not supported*" $text]
-+    	  && ![check_effective_large_return_values] } {
++    	  && ![check_effective_target_large_return_values] } {
 +	# The format here is important.  See dg.exp.
 +	return "::unsupported::large return values"
 +    }
@@ -46,7 +46,7 @@ index c26d1c73aa0..796bfbc23e5 100644
  }
  
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index 5299aaefcc3..bf485703bda 100644
+index 5299aaefcc3..711a6db1e97 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
 @@ -2608,6 +2608,32 @@ proc check_effective_target_ptr32plus { } {
@@ -68,7 +68,7 @@ index 5299aaefcc3..bf485703bda 100644
 +
 +# Return 1 if target supports arbitrarily large return values, 0 otherwise.
 +
-+proc check_effective_large_return_values { } {
++proc check_effective_target_large_return_values { } {
 +    if { [istarget pru-*-*] } {
 +	return [check_no_compiler_messages func_ptr_avail assembly {
 +	    #ifdef __PRU_EABI_GNU__
@@ -83,18 +83,19 @@ index 5299aaefcc3..bf485703bda 100644
  # using default options, 0 otherwise.  Avoid false positive on
  # targets with 20 or 24 bit address spaces.
 diff --git a/gcc/testsuite/lib/target-utils.exp b/gcc/testsuite/lib/target-utils.exp
-index 732a1827a02..1ba24765d2a 100644
+index 732a1827a02..f636be2cb01 100644
 --- a/gcc/testsuite/lib/target-utils.exp
 +++ b/gcc/testsuite/lib/target-utils.exp
-@@ -44,5 +44,12 @@ proc ${tool}_check_unsupported_p { output } {
+@@ -44,5 +44,13 @@ proc ${tool}_check_unsupported_p { output } {
  	     [string match "*exceeds local store*" $output] } {
  	return "memory full"
      }
 +    if { [string match "*error: function pointers not supported*" $output]
 +	  && ![check_effective_target_function_pointers] } {
++	return "function pointers not supported"
 +    }
 +    if { [string match "*error: large return values not supported*" $output]
-+	  && ![check_effective_large_return_values] } {
++	  && ![check_effective_target_large_return_values] } {
 +	return "large return values not supported"
 +    }
      return ""

@@ -1,4 +1,4 @@
-From 25b30713c21725893721daf2bca07ee582a21d64 Mon Sep 17 00:00:00 2001
+From c9c89c0a42b39e21ce28fd7489bddb5532c963be Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 11 Mar 2018 22:23:26 +0200
 Subject: [PATCH 1/7] Initial PRU port
@@ -137,7 +137,7 @@ index cf856e567..28e83a73d 100644
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
 diff --git a/libgloss/configure.in b/libgloss/configure.in
-index 6da164352..9f39e0517 100644
+index 41843eed1..9d2e690d5 100644
 --- a/libgloss/configure.in
 +++ b/libgloss/configure.in
 @@ -175,6 +175,8 @@ case "${target}" in
@@ -147,8 +147,8 @@ index 6da164352..9f39e0517 100644
 +  pru-*-*)
 +	AC_CONFIG_SUBDIRS([pru])
  	;;
- esac
- 
+   nios2-*-*)
+ 	AC_CONFIG_SUBDIRS([nios2])
 diff --git a/libgloss/pru/Makefile.in b/libgloss/pru/Makefile.in
 new file mode 100644
 index 000000000..4baa5c387
@@ -3628,10 +3628,10 @@ index 000000000..a5e490404
 +  return (-1);
 +}
 diff --git a/newlib/configure.host b/newlib/configure.host
-index 4eebf6d95..10115c613 100644
+index bfa51669d..6d9ad3c32 100644
 --- a/newlib/configure.host
 +++ b/newlib/configure.host
-@@ -82,7 +82,7 @@ case "${target_optspace}:${host}" in
+@@ -84,7 +84,7 @@ case "${target_optspace}:${host}" in
    yes:*)
      newlib_cflags="${newlib_cflags} -Os"
      ;;
@@ -3640,7 +3640,7 @@ index 4eebf6d95..10115c613 100644
      newlib_cflags="${newlib_cflags} -Os"
      ;;
    no:* | :*)
-@@ -261,6 +261,14 @@ case "${host_cpu}" in
+@@ -263,6 +263,14 @@ case "${host_cpu}" in
    powerpc*)
  	machine_dir=powerpc
  	;;
@@ -3655,7 +3655,7 @@ index 4eebf6d95..10115c613 100644
    riscv*)
  	libm_machine_dir=riscv
  	machine_dir=riscv
-@@ -817,6 +825,10 @@ newlib_cflags="${newlib_cflags} -DCLOCK_PROVIDED -DMALLOC_PROVIDED -DEXIT_PROVID
+@@ -820,6 +828,10 @@ newlib_cflags="${newlib_cflags} -DCLOCK_PROVIDED -DMALLOC_PROVIDED -DEXIT_PROVID
  	newlib_cflags="${newlib_cflags} -DHAVE_OPENDIR -DHAVE_RENAME -DHAVE_FCNTL -D_NO_POSIX_SPAWN"
  	syscall_dir=syscalls
  	;;

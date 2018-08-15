@@ -34,6 +34,7 @@ do
     -mmcu=sim) ;;
     -Wno-psabi) ;;   # Why DejaGnu even passes this flag?
     -fno-diagnostics-show-caret) ;;
+    -fno-diagnostics-show-line-numbers) ;;
     *) ARGS="${ARGS} ${1}";;
   esac
   shift

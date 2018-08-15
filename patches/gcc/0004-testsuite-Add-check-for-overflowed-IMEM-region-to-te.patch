@@ -1,4 +1,4 @@
-From 0a558557faf9596af228edf99acf55a82e2a8e06 Mon Sep 17 00:00:00 2001
+From b9ec4492110f86cbc40adfe860df6d46c5014915 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:57:14 +0200
 Subject: [PATCH 04/13] testsuite: Add check for overflowed IMEM region to
@@ -9,7 +9,7 @@ test cases manage to produce executables bigger than that.
 
 gcc/testsuite/ChangeLog:
 
-2018-04-15  Dimitar Dimitrov  <dimitar@dinux.eu>
+2018-07-27  Dimitar Dimitrov  <dimitar@dinux.eu>
 
 	* lib/gcc-dg.exp: Bail on region overflow for tiny targets.
 	* lib/target-utils.exp: Ditto.

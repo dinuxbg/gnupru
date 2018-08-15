@@ -1,11 +1,11 @@
-From 0d20402ff15f695aa667995ce0cc760a94e7800f Mon Sep 17 00:00:00 2001
+From a109200f577221cbb56e8aafc6fe98db4d79f3af Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:56:38 +0200
 Subject: [PATCH 03/13] testsuite: Add PRU tests
 
 gcc/testsuite/ChangeLog:
 
-2018-07-28  Dimitar Dimitrov  <dimitar@dinux.eu>
+2018-07-27  Dimitar Dimitrov  <dimitar@dinux.eu>
 
 	* gcc.target/pru/abi-arg-struct.c: New test.
 	* gcc.target/pru/ashiftrt.c: New test.

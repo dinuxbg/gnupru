@@ -1,11 +1,11 @@
-From d7db744f4a6f6525e62a12bc9a27f0530735b3d6 Mon Sep 17 00:00:00 2001
+From 65d6824bb48d205057eeea367d27b9f15d895bce Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Tue, 20 Feb 2018 02:41:12 +0200
 Subject: [PATCH 09/13] testsuite: Mark that PRU uses all function pointer bits
 
 gcc/testsuite/ChangeLog:
 
-2018-04-15  Dimitar Dimitrov  <dimitar@dinux.eu>
+2018-07-27  Dimitar Dimitrov  <dimitar@dinux.eu>
 
 	* g++.old-deja/g++.abi/ptrmem.C: Add PRU to list.
 

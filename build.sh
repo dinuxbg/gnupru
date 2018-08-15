@@ -55,7 +55,7 @@ mkdir -p $BUILD/newlib-cygwin
 build_binutils
 build_gcc_pass 1 "--without-headers --enable-languages=c"
 build_newlib
-build_gcc_pass 2 "--enable-languages=c,c++"
+build_gcc_pass 2 "--enable-languages=c,c++ --disable-hosted-libstdcxx"
 
 cd $RETDIR
 

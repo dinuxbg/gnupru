@@ -1,18 +1,18 @@
-From 83f38287057a1eebfabad6557322f97f0f4ec4a6 Mon Sep 17 00:00:00 2001
+From 8ecbb8033bd0af01cf193c6bcce100a9651ec88e Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:53:18 +0200
 Subject: [PATCH 01/13] Initial TI PRU GCC port
 
 ChangeLog:
 
-2018-07-19  Dimitar Dimitrov  <dimitar@dinux.eu>
+2018-07-27  Dimitar Dimitrov  <dimitar@dinux.eu>
 
 	* configure: Regenerate.
 	* configure.ac: Add PRU target.
 
 gcc/ChangeLog:
 
-2018-07-19  Dimitar Dimitrov  <dimitar@dinux.eu>
+2018-07-27  Dimitar Dimitrov  <dimitar@dinux.eu>
 
 	* common/config/pru/pru-common.c: New file.
 	* config.gcc: Add PRU target.
@@ -44,7 +44,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  gcc/config/pru/pru-passes.c        |  234 +++
  gcc/config/pru/pru-pragma.c        |   90 ++
  gcc/config/pru/pru-protos.h        |   72 +
- gcc/config/pru/pru.c               | 2997 ++++++++++++++++++++++++++++++++++++
+ gcc/config/pru/pru.c               | 3001 ++++++++++++++++++++++++++++++++++++
  gcc/config/pru/pru.h               |  551 +++++++
  gcc/config/pru/pru.md              |  956 ++++++++++++
  gcc/config/pru/pru.opt             |   53 +
@@ -52,7 +52,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  gcc/doc/extend.texi                |   20 +
  gcc/doc/invoke.texi                |   55 +
  gcc/doc/md.texi                    |   22 +
- 18 files changed, 5654 insertions(+)
+ 18 files changed, 5658 insertions(+)
  create mode 100644 gcc/common/config/pru/pru-common.c
  create mode 100644 gcc/config/pru/alu-zext.md
  create mode 100644 gcc/config/pru/constraints.md
@@ -135,7 +135,7 @@ index 00000000000..e87d70ce9ca
 +
 +struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index 78e84c2b864..818949f9119 100644
+index 17ca0cf0615..abf64b289c2 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
 @@ -493,6 +493,9 @@ powerpc*-*-*)
@@ -158,9 +158,9 @@ index 78e84c2b864..818949f9119 100644
 +	extra_objs="pru-pragma.o pru-passes.o"
 +	use_gcc_stdint=wrap
 +	;;
- rs6000-ibm-aix4.[3456789]* | powerpc-ibm-aix4.[3456789]*)
- 	tm_file="rs6000/biarch64.h ${tm_file} rs6000/aix.h rs6000/aix43.h rs6000/xcoff.h rs6000/aix-stdint.h"
- 	tmake_file="rs6000/t-aix43 t-slibgcc"
+ rs6000-ibm-aix6.* | powerpc-ibm-aix6.*)
+ 	tm_file="${tm_file} rs6000/aix.h rs6000/aix61.h rs6000/xcoff.h rs6000/aix-stdint.h"
+ 	tmake_file="rs6000/t-aix52 t-slibgcc"
 diff --git a/gcc/config/pru/alu-zext.md b/gcc/config/pru/alu-zext.md
 new file mode 100644
 index 00000000000..2112b08d3f4
@@ -1122,10 +1122,10 @@ index 00000000000..73ab76e076c
 +#endif /* GCC_PRU_PROTOS_H */
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
 new file mode 100644
-index 00000000000..52ebda942c5
+index 00000000000..de72d22278e
 --- /dev/null
 +++ b/gcc/config/pru/pru.c
-@@ -0,0 +1,2997 @@
+@@ -0,0 +1,3001 @@
 +/* Target machine subroutines for TI PRU.
 +   Copyright (C) 2014-2018 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dimitar@dinux.eu>
@@ -2090,7 +2090,8 @@ index 00000000000..52ebda942c5
 +}
 +
 +/* Return the sign bit position for given OP's mode.  */
-+static int sign_bit_position (const rtx op)
++static int
++sign_bit_position (const rtx op)
 +{
 +  const int sz = GET_MODE_SIZE (GET_MODE (op));
 +
@@ -4120,6 +4121,9 @@ index 00000000000..52ebda942c5
 +#undef  TARGET_UNWIND_WORD_MODE
 +#define TARGET_UNWIND_WORD_MODE pru_unwind_word_mode
 +
++#undef TARGET_HAVE_SPECULATION_SAFE_VALUE
++#define TARGET_HAVE_SPECULATION_SAFE_VALUE speculation_safe_value_not_needed
++
 +struct gcc_target targetm = TARGET_INITIALIZER;
 +
 +#include "gt-pru.h"
@@ -5739,10 +5743,10 @@ index 00000000000..ab29e443882
 +		$(CONFIG_H) $(TM_H) $(srcdir)/config/pru/pru-protos.h
 +	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $<
 diff --git a/gcc/doc/extend.texi b/gcc/doc/extend.texi
-index 7b471ec40f7..920653848b3 100644
+index 130f6a671ce..d35dd5472cc 100644
 --- a/gcc/doc/extend.texi
 +++ b/gcc/doc/extend.texi
-@@ -21635,6 +21635,7 @@ for further explanation.
+@@ -21748,6 +21748,7 @@ for further explanation.
  * ARM Pragmas::
  * M32C Pragmas::
  * MeP Pragmas::
@@ -5750,7 +5754,7 @@ index 7b471ec40f7..920653848b3 100644
  * RS/6000 and PowerPC Pragmas::
  * S/390 Pragmas::
  * Darwin Pragmas::
-@@ -21786,6 +21787,25 @@ extern int foo ();
+@@ -21899,6 +21900,25 @@ extern int foo ();
  
  @end table
  
@@ -5777,21 +5781,21 @@ index 7b471ec40f7..920653848b3 100644
  @subsection RS/6000 and PowerPC Pragmas
  
 diff --git a/gcc/doc/invoke.texi b/gcc/doc/invoke.texi
-index 1dcdfb51c47..ff3245ed3eb 100644
+index d7fd0e17555..76f16b1f475 100644
 --- a/gcc/doc/invoke.texi
 +++ b/gcc/doc/invoke.texi
-@@ -1041,6 +1041,10 @@ See RS/6000 and PowerPC Options.
+@@ -1043,6 +1043,10 @@ See RS/6000 and PowerPC Options.
  -mstack-protector-guard=@var{guard} -mstack-protector-guard-reg=@var{reg} @gol
  -mstack-protector-guard-offset=@var{offset}}
  
 +@emph{PRU Options}
-+@gccoptlist{-mmcu=@var{mcu}  -minrt -mno-relax -mloop @gol
++@gccoptlist{-mmcu=@var{mcu}  -minrt  -mno-relax  -mloop @gol
 +-mabi=@var{variant} @gol}
 +
  @emph{RISC-V Options}
  @gccoptlist{-mbranch-cost=@var{N-instruction} @gol
  -mplt  -mno-plt @gol
-@@ -14620,6 +14624,7 @@ platform.
+@@ -14644,6 +14648,7 @@ platform.
  * picoChip Options::
  * PowerPC Options::
  * PowerPC SPE Options::
@@ -5799,7 +5803,7 @@ index 1dcdfb51c47..ff3245ed3eb 100644
  * RISC-V Options::
  * RL78 Options::
  * RS/6000 and PowerPC Options::
-@@ -23093,6 +23098,56 @@ the offset with a symbol reference to a canary in the TLS block.
+@@ -23125,6 +23130,56 @@ the offset with a symbol reference to a canary in the TLS block.
  @end table
  
  
@@ -5812,13 +5816,13 @@ index 1dcdfb51c47..ff3245ed3eb 100644
 +@table @gcctabopt
 +@item -minrt
 +@opindex minrt
-+Enable the use of a minimum runtime environment - no static
++Enable the use of a minimum runtime environment---no static
 +initializers or constructors.  Results in significant code size
 +reduction of final ELF binaries.
 +
 +@item -mmcu=@var{mcu}
 +@opindex mmcu
-+Specify the PRU MCU variant to use.  Check newlib for exact list of options.
++Specify the PRU MCU variant to use.  Check Newlib for exact list of options.
 +
 +@item -mno-relax
 +@opindex mno-relax
@@ -5827,7 +5831,7 @@ index 1dcdfb51c47..ff3245ed3eb 100644
 +
 +@item -mloop
 +@opindex mloop
-+Allow (or do not allow) gcc to use the LOOP instruction.
++Allow (or do not allow) GCC to use the LOOP instruction.
 +
 +@item -mabi=@var{variant}
 +@opindex mabi
@@ -5840,14 +5844,14 @@ index 1dcdfb51c47..ff3245ed3eb 100644
 +supports only 32-bit data and code pointers.
 +
 +@item Optional Return Value Pointer
-+Function return values larger than 64-bits are passed by using a hidden
++Function return values larger than 64 bits are passed by using a hidden
 +pointer as the first argument of the function.  TI ABI, though, mandates that
 +the pointer can be NULL in case the caller is not using the returned value.
 +GCC always passes and expects a valid return value pointer.
 +
 +@end table
 +
-+The current @samp{mabi=ti} implementation will simply raise a compile error
++The current @samp{mabi=ti} implementation simply raises a compile error
 +when any of the above code constructs is detected.
 +
 +@end table
@@ -5857,10 +5861,10 @@ index 1dcdfb51c47..ff3245ed3eb 100644
  @subsection RISC-V Options
  @cindex RISC-V Options
 diff --git a/gcc/doc/md.texi b/gcc/doc/md.texi
-index 734bc765387..01ebd96186a 100644
+index 02f9e1e4320..434bf5131ec 100644
 --- a/gcc/doc/md.texi
 +++ b/gcc/doc/md.texi
-@@ -3306,6 +3306,28 @@ Vector constant that is all zeros.
+@@ -3317,6 +3317,28 @@ Vector constant that is all zeros.
  
  @end table
  

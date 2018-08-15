@@ -1,4 +1,4 @@
-From fa2eaf0f5c11e5cd3b2a60c24ca67c67f36b5f76 Mon Sep 17 00:00:00 2001
+From d0adc21fdf1bbe1dfb0b679be11cb94ceb72e436 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 11 Mar 2018 22:16:40 +0200
 Subject: [PATCH 4/7] PRU: HACK: Add ABI compatibility functions
