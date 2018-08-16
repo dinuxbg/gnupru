@@ -47,10 +47,7 @@ bb_daily_target_test()
   bb_make newlib "install"
 
   # GCC pass 2: full feature set
-  # Note: Disable hosted libstdc++ features due to commit:
-  #   a64e72607dcb77cf7e923100cc6c71651e2da433
-  #   PR libstdc++/86846 Alternative to pointer-width atomics
-  bb_config gcc "--target=pru --with-newlib --enable-languages=c,c++ --disable-hosted-libstdcxx --enable-checking=yes,rtl"
+  bb_config gcc "--target=pru --with-newlib --enable-languages=c,c++ --enable-checking=yes,rtl"
   bb_make gcc "-j`nproc`"
   bb_make gcc "install"
 
