@@ -25,7 +25,7 @@ print_stage()
 bb_update_source()
 {
   local PRJ=${1}
-  local URL=${1}
+  local URL=${2}
   local P
 
   pushd ${WORKSPACE}
