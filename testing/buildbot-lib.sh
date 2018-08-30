@@ -45,6 +45,7 @@ bb_update_source()
   do
     git am -3 ${P} || error "failed to apply ${P}"
   done
+  git tag buildbot-daily-${BUILD_TAG}
 
   popd
   popd
@@ -79,14 +80,32 @@ bb_config()
 
 bb_make()
 {
+  local IGNORE_ERRORS=false
+  [ "${1}" = "--ignore-errors" ] && { IGNORE_ERRORS=true; shift; }
   local PRJ="${1}"
   shift
   local MAKE_PARAMS="$@"
 
   print_stage "Building ${PRJ} with parameters \"${CONFIG_PARAMS}\""
+  mkdir -p ${WORKSPACE}/${PRJ}-build
   pushd ${WORKSPACE}/${PRJ}-build || error "missing ${PRJ}-build"
 
-  make ${MAKE_PARAMS} || error "Could not configure ${PRJ}"
+  make ${MAKE_PARAMS} || { [ ${IGNORE_ERRORS} = false ] &&  error "Could not make ${PRJ}"; }
+
+  popd
+}
+
+# Some projects have weird in-tree build rules.
+bb_source_command()
+{
+  local PRJ="${1}"
+  shift
+  local CMDS="$@"
+
+  print_stage "Building ${PRJ} with parameters \"${CONFIG_PARAMS}\""
+  pushd ${WORKSPACE}/${PRJ} || error "missing ${PRJ}"
+
+  ${CMDS} || error "Could not build ${PRJ}"
 
   popd
 }
@@ -119,7 +138,7 @@ bb_email_build_failure()
   # Note: Usually you want to install heirloom-mailx, instead of relying
   # on the bsd-mailx default package.
 
-  cat ${LOGFILE} | Mail -s "[BUILDBOT] Build ${BUILD_TAG} failed" ${REGRESSION_RECIPIENTS}
+  tail -200 ${LOGFILE} | Mail -s "[BUILDBOT] Build ${BUILD_TAG} failed" ${REGRESSION_RECIPIENTS}
 }
 
 # Gather all log files from all build directories
@@ -176,14 +195,14 @@ bb_daily_build()
   cd $WORKSPACE
 
   # Before creating our log directory, check what is the previous one.
-  local PREV_BUILD_TAG=`cd ${LOGDIR} && dirname $(ls */pass | sort | head -1)`
+  local PREV_BUILD_TAG=`cd ${LOGDIR} && dirname $(ls */pass | sort | tail -1)`
   [ -z ${PREV_BUILD_TAG} ] && error "failed to determine previous successful build"
 
   local BUILD_TAG=`date +%Y%m%d-%H%M`
   mkdir -p ${LOGDIR}/${BUILD_TAG} || error "failed to create log directory for ${BUILD_TAG}"
 
   # Execute in a subshell in order to catch build errors and send an email.
-  ( set -x; bb_daily_target_test ${PREV_BUILD_TAG} ${BUILD_TAG} ) >${LOGDIR}/${BUILD_TAG}/build.log 2>&1
+  ( set -x; time bb_daily_target_test ${PREV_BUILD_TAG} ${BUILD_TAG} ) >${LOGDIR}/${BUILD_TAG}/build.log 2>&1
   ST=$?
   [ "${ST}" = "0" ] || bb_email_build_failure ${BUILD_TAG} ${LOGDIR}/${BUILD_TAG}/build.log
   [ "${ST}" = "0" ] && touch ${LOGDIR}/${BUILD_TAG}/pass
