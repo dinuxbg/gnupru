@@ -1,12 +1,12 @@
-From 1c58e37d02cda3ee4f681ec266f616d12e47b34f Mon Sep 17 00:00:00 2001
+From cb760ad29a502ae6db0e311cc871198a5e0760f6 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 22:00:23 +0200
-Subject: [PATCH 06/13] testsuite: Remove PRU from test cases requiring hosted
+Subject: [PATCH 06/19] testsuite: Remove PRU from test cases requiring hosted
  environment
 
 gcc/testsuite/ChangeLog:
 
-2018-07-27  Dimitar Dimitrov  <dimitar@dinux.eu>
+2018-10-08  Dimitar Dimitrov  <dimitar@dinux.eu>
 
 	* gcc.c-torture/execute/20101011-1.c: Define DO_TEST to 0 for PRU.
 	* gcc.dg/20020312-2.c: No PIC register for PRU.
@@ -18,12 +18,12 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  2 files changed, 5 insertions(+)
 
 diff --git a/gcc/testsuite/gcc.c-torture/execute/20101011-1.c b/gcc/testsuite/gcc.c-torture/execute/20101011-1.c
-index dda49a59852..7f8d14d617c 100644
+index f95d900deaf..aa72b35fa16 100644
 --- a/gcc/testsuite/gcc.c-torture/execute/20101011-1.c
 +++ b/gcc/testsuite/gcc.c-torture/execute/20101011-1.c
-@@ -93,6 +93,9 @@ __aeabi_idiv0 (int return_value)
- #elif defined (__nvptx__)
- /* There isn't even a signal function.  */
+@@ -97,6 +97,9 @@ __aeabi_idiv0 (int return_value)
+   /* This presently doesn't raise SIGFPE even on csky-linux-gnu, much
+      less bare metal.  See the implementation of __divsi3 in libgcc.  */
  # define DO_TEST 0
 +#elif defined (__pru__)
 +/* There isn't even a signal function.  */
@@ -32,13 +32,13 @@ index dda49a59852..7f8d14d617c 100644
  # define DO_TEST 1
  #endif
 diff --git a/gcc/testsuite/gcc.dg/20020312-2.c b/gcc/testsuite/gcc.dg/20020312-2.c
-index f5929e0b057..209ef67e263 100644
+index 1a8afd81506..133862f3421 100644
 --- a/gcc/testsuite/gcc.dg/20020312-2.c
 +++ b/gcc/testsuite/gcc.dg/20020312-2.c
-@@ -111,6 +111,8 @@ extern void abort (void);
- /* No pic register.  */
- #elif defined (__nvptx__)
- /* No pic register.  */
+@@ -117,6 +117,8 @@ extern void abort (void);
+ # if defined (__CK807__) || defined (__CK810__)
+ #   define PIC_REG  "r28"
+ # endif
 +#elif defined(__PRU__)
 +/* No pic register.  */
  #else

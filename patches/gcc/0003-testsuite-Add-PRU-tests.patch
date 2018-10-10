@@ -1,11 +1,11 @@
-From a109200f577221cbb56e8aafc6fe98db4d79f3af Mon Sep 17 00:00:00 2001
+From 7f7eff3896bdd55e292e037f2479f96bc4d886d4 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:56:38 +0200
-Subject: [PATCH 03/13] testsuite: Add PRU tests
+Subject: [PATCH 03/19] testsuite: Add PRU tests
 
 gcc/testsuite/ChangeLog:
 
-2018-07-27  Dimitar Dimitrov  <dimitar@dinux.eu>
+2018-10-08  Dimitar Dimitrov  <dimitar@dinux.eu>
 
 	* gcc.target/pru/abi-arg-struct.c: New test.
 	* gcc.target/pru/ashiftrt.c: New test.
@@ -95,8 +95,8 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  gcc/testsuite/gcc.target/pru/zero_extend-hisi.c    |  43 ++++++
  gcc/testsuite/gcc.target/pru/zero_extend-qihi.c    |  43 ++++++
  gcc/testsuite/gcc.target/pru/zero_extend-qisi.c    |  43 ++++++
- gcc/testsuite/lib/target-supports.exp              |   7 +-
- 43 files changed, 1307 insertions(+), 2 deletions(-)
+ gcc/testsuite/lib/target-supports.exp              |   5 +-
+ 43 files changed, 1306 insertions(+), 1 deletion(-)
  create mode 100644 gcc/testsuite/gcc.target/pru/abi-arg-struct.c
  create mode 100644 gcc/testsuite/gcc.target/pru/ashiftrt.c
  create mode 100644 gcc/testsuite/gcc.target/pru/builtins-1.c
@@ -1695,10 +1695,10 @@ index 00000000000..0e9ae4cf01e
 +}
 +
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index c2d814cf8c6..60105eb9fd7 100644
+index fd74c04d092..8caea35edff 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
-@@ -512,7 +512,8 @@ proc check_effective_target_trampolines { } {
+@@ -502,7 +502,8 @@ proc check_effective_target_trampolines { } {
  	 || [istarget msp430-*-*]
  	 || [istarget nvptx-*-*]
  	 || [istarget hppa2.0w-hp-hpux11.23]
@@ -1708,7 +1708,7 @@ index c2d814cf8c6..60105eb9fd7 100644
  	return 0;
      }
      return 1
-@@ -685,6 +686,7 @@ proc check_profiling_available { test_what } {
+@@ -675,6 +676,7 @@ proc check_profiling_available { test_what } {
  	     || [istarget nvptx-*-*]
  	     || [istarget powerpc-*-eabi*]
  	     || [istarget powerpc-*-elf]
@@ -1716,16 +1716,7 @@ index c2d814cf8c6..60105eb9fd7 100644
  	     || [istarget rx-*-*]	
  	     || [istarget tic6x-*-elf]
  	     || [istarget visium-*-*]
-@@ -880,7 +882,7 @@ proc check_effective_target_tls_emulated {} {
- proc check_effective_target_tls_runtime {} {
-     # The runtime does not have TLS support, but just
-     # running the test below is insufficient to show this.
--    if { [istarget msp430-*-*] || [istarget visium-*-*] } {
-+    if { [istarget msp430-*-*] || [istarget visium-*-*] || [istarget pru-*-*] } {
- 	return 0
-     }
-     return [check_runtime tls_runtime {
-@@ -8850,6 +8852,7 @@ proc check_effective_target_logical_op_short_circuit {} {
+@@ -8394,6 +8396,7 @@ proc check_effective_target_logical_op_short_circuit {} {
  	 || [istarget riscv*-*-*]
  	 || [istarget v850*-*-*]
  	 || [istarget visium-*-*]

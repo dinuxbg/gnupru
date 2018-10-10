@@ -1,0 +1,26 @@
+From 9c114889a17e36615c3c1f3c90eb77f1923a98e2 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Tue, 9 Oct 2018 23:22:02 +0300
+Subject: [PATCH 16/19] Minor
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ gcc/config/pru/pru.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
+index 19adac9ec19..685a429ea87 100644
+--- a/gcc/config/pru/pru.c
++++ b/gcc/config/pru/pru.c
+@@ -703,7 +703,7 @@ pru_rtx_costs (rtx x, machine_mode mode,
+       {
+ 	/* Factor in that "mul" requires fixed registers, which
+ 	   would likely require register moves.  */
+-	*total = COSTS_N_INSNS (5);
++	*total = COSTS_N_INSNS (7);
+ 	return false;
+       }
+     case PLUS:
+-- 
+2.11.0
+

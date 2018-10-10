@@ -1,0 +1,29 @@
+From fd5f95e35271bf531bcbe39fdf5e0ed814e0b3c9 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Wed, 10 Oct 2018 06:53:17 +0300
+Subject: [PATCH 17/19] Minor
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ gcc/config/pru/pru.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
+index 685a429ea87..dcd28e9ba16 100644
+--- a/gcc/config/pru/pru.c
++++ b/gcc/config/pru/pru.c
+@@ -742,9 +742,9 @@ pru_rtx_costs (rtx x, machine_mode mode,
+       {
+ 	rtx op1 = XEXP (x, 1);
+ 	if (const_1_operand (op1, VOIDmode))
+-	  *total = COSTS_N_INSNS (2);
++	  *total = COSTS_N_INSNS (3);
+ 	else
+-	  *total = COSTS_N_INSNS (6);
++	  *total = COSTS_N_INSNS (7);
+ 	return false;
+       }
+     case ZERO_EXTRACT:
+-- 
+2.11.0
+

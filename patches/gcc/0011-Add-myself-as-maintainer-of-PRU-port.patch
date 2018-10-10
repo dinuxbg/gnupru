@@ -1,0 +1,31 @@
+From 2d1009d9da0c5e42ee317b116f31bcb3910e70de Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Mon, 27 Aug 2018 16:40:28 +0300
+Subject: [PATCH 11/19] Add myself as maintainer of PRU port
+
+ChangeLog:
+
+2018-10-08  Dimitar Dimitrov  <dimitar@dinux.eu>
+
+	* MAINTAINERS: Add self as PRU maintainer.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ MAINTAINERS | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index e478d3b2dba..4391124ac45 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -92,6 +92,7 @@ nios2 port		Sandra Loosemore	<sandra@codesourcery.com>
+ nvptx port		Tom de Vries		<tdevries@suse.de>
+ pdp11 port		Paul Koning		<ni1d@arrl.net>
+ powerpcspe port		Andrew Jenner		<andrew@codesourcery.com>
++pru port		Dimitar Dimitrov	<dimitar@dinux.eu>
+ riscv port		Kito Cheng		<kito.cheng@gmail.com>
+ riscv port		Palmer Dabbelt		<palmer@sifive.com>
+ riscv port		Andrew Waterman		<andrew@sifive.com>
+-- 
+2.11.0
+

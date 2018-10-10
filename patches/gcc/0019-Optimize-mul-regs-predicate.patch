@@ -1,0 +1,97 @@
+From 13433301e32626269dfe223d4c5fc1e5b4ecd7bc Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Wed, 10 Oct 2018 08:10:59 +0300
+Subject: [PATCH 19/19] Optimize mul regs predicate
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ gcc/config/pru/predicates.md | 68 +++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 55 insertions(+), 13 deletions(-)
+
+diff --git a/gcc/config/pru/predicates.md b/gcc/config/pru/predicates.md
+index 1b39c63041c..6a7be9f8055 100644
+--- a/gcc/config/pru/predicates.md
++++ b/gcc/config/pru/predicates.md
+@@ -61,24 +61,66 @@
+   (and (match_code "const_int")
+        (match_test "exact_log2 (~INTVAL (op) & GET_MODE_MASK (mode)) >= 0")))
+ 
+-;; Do not match SUBREG.  When assigning SI multiplication result to a DI
+-;; variable (e.g. f in gcc.dg/pr50717-1.c), SUBREG set destination is
+-;; generated, which prevents us from using REGNO.  It should be better
+-;; to declare our limitation upfront and support only REG.
+ (define_predicate "pru_muldst_operand"
+-  (and (match_code "reg")
+-       (ior (match_test "REGNO_REG_CLASS (REGNO (op)) == MULDST_REGS")
+-	    (match_test "REGNO (op) >= FIRST_PSEUDO_REGISTER"))))
++  (match_code "subreg,reg")
++{
++  if (register_operand (op, mode))
++    {
++      int regno;
++
++      if (REG_P (op))
++	regno = REGNO (op);
++      else if (GET_CODE (op) == SUBREG && REG_P (SUBREG_REG (op)))
++	regno = REGNO (SUBREG_REG (op));
++      else
++	return 0;
++
++
++      return REGNO_REG_CLASS (regno) == MULDST_REGS
++	     || regno >= FIRST_PSEUDO_REGISTER;
++    }
++  return 0;
++}
+ 
+ (define_predicate "pru_mulsrc0_operand"
+-  (and (match_code "reg")
+-       (ior (match_test "REGNO_REG_CLASS (REGNO (op)) == MULSRC0_REGS")
+-	    (match_test "REGNO (op) >= FIRST_PSEUDO_REGISTER"))))
++{
++  if (register_operand (op, mode))
++    {
++      int regno;
++
++      if (REG_P (op))
++	regno = REGNO (op);
++      else if (GET_CODE (op) == SUBREG && REG_P (SUBREG_REG (op)))
++	regno = REGNO (SUBREG_REG (op));
++      else
++	return 0;
++
++
++      return REGNO_REG_CLASS (regno) == MULSRC0_REG
++	     || regno >= FIRST_PSEUDO_REGISTER;
++    }
++  return 0;
++}
+ 
+ (define_predicate "pru_mulsrc1_operand"
+-  (and (match_code "reg")
+-       (ior (match_test "REGNO_REG_CLASS (REGNO (op)) == MULSRC1_REGS")
+-	    (match_test "REGNO (op) >= FIRST_PSEUDO_REGISTER"))))
++{
++  if (register_operand (op, mode))
++    {
++      int regno;
++
++      if (REG_P (op))
++	regno = REGNO (op);
++      else if (GET_CODE (op) == SUBREG && REG_P (SUBREG_REG (op)))
++	regno = REGNO (SUBREG_REG (op));
++      else
++	return 0;
++
++
++      return REGNO_REG_CLASS (regno) == MULSRC1_REG
++	     || regno >= FIRST_PSEUDO_REGISTER;
++    }
++  return 0;
++}
+ 
+ (define_predicate "reg_or_const_int_operand"
+   (ior (match_operand 0 "const_int_operand")
+-- 
+2.11.0
+

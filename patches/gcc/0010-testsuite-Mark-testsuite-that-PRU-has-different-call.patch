@@ -1,7 +1,7 @@
-From 70dfe9ee5841bb58b81b053d4524d2c80e92f625 Mon Sep 17 00:00:00 2001
+From c8d54d18fb78fcfd7e31b2f6192b69ffdf6459ed Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 20 Jul 2018 04:59:50 +0300
-Subject: [PATCH 10/13] testsuite: Mark testsuite that PRU has different
+Subject: [PATCH 10/19] testsuite: Mark testsuite that PRU has different
  calling convention
 
 For variadic functions, the last named and all anonymous arguments
@@ -9,7 +9,7 @@ are passed on stack. Regular functions pass arguments in registers.
 
 gcc/testsuite/ChangeLog:
 
-2018-07-27  Dimitar Dimitrov  <dimitar@dinux.eu>
+2018-10-08  Dimitar Dimitrov  <dimitar@dinux.eu>
 
         * gcc.dg/builtin-apply2.c: Skip for PRU.
         * gcc.dg/torture/stackalign/builtin-apply-2.c: Ditto.

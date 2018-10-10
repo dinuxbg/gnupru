@@ -1,7 +1,7 @@
-From b3357d5dc5b345bfd58a871dba3d3a723ffdb464 Mon Sep 17 00:00:00 2001
+From 397e54bd2acb3c8de87a9d593469f9cbb0ab7544 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 15 Apr 2018 15:03:27 +0300
-Subject: [PATCH 05/13] testsuite: Add check for unsupported TI ABI PRU
+Subject: [PATCH 05/19] testsuite: Add check for unsupported TI ABI PRU
  features to testsuite
 
 Not all C language features are supported when -mabi=ti option is
@@ -9,7 +9,7 @@ used for PRU target.
 
 gcc/testsuite/ChangeLog:
 
-2018-07-27  Dimitar Dimitrov  <dimitar@dinux.eu>
+2018-10-08  Dimitar Dimitrov  <dimitar@dinux.eu>
 
 	* lib/gcc-dg.exp: Filter unsupported features in PRU's TI ABI mode.
 	* lib/target-utils.exp: Ditto.
@@ -24,10 +24,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  3 files changed, 45 insertions(+)
 
 diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
-index c26d1c73aa0..c061c152f16 100644
+index 59c10016014..3287184c0bb 100644
 --- a/gcc/testsuite/lib/gcc-dg.exp
 +++ b/gcc/testsuite/lib/gcc-dg.exp
-@@ -405,6 +405,17 @@ proc gcc-dg-prune { system text } {
+@@ -407,6 +407,17 @@ proc gcc-dg-prune { system text } {
  	return "::unsupported::memory full"
      }
  
@@ -46,10 +46,10 @@ index c26d1c73aa0..c061c152f16 100644
  }
  
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index 5299aaefcc3..711a6db1e97 100644
+index 13e32377885..6e475df0922 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
-@@ -2608,6 +2608,32 @@ proc check_effective_target_ptr32plus { } {
+@@ -2602,6 +2602,32 @@ proc check_effective_target_ptr32plus { } {
      }]
  }
  

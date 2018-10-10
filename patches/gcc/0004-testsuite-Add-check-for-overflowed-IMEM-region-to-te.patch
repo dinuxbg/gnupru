@@ -1,7 +1,7 @@
-From b9ec4492110f86cbc40adfe860df6d46c5014915 Mon Sep 17 00:00:00 2001
+From 26bf3d7f0fc992262b40e22cba813fb9f2895f8b Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:57:14 +0200
-Subject: [PATCH 04/13] testsuite: Add check for overflowed IMEM region to
+Subject: [PATCH 04/19] testsuite: Add check for overflowed IMEM region to
  testsuite
 
 PRU architecture supports maximum 256k program memory (IMEM). Some GCC
@@ -9,7 +9,7 @@ test cases manage to produce executables bigger than that.
 
 gcc/testsuite/ChangeLog:
 
-2018-07-27  Dimitar Dimitrov  <dimitar@dinux.eu>
+2018-10-08  Dimitar Dimitrov  <dimitar@dinux.eu>
 
 	* lib/gcc-dg.exp: Bail on region overflow for tiny targets.
 	* lib/target-utils.exp: Ditto.
@@ -23,10 +23,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  3 files changed, 14 insertions(+)
 
 diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
-index f5e6bef5dd9..c26d1c73aa0 100644
+index c33a50c0b13..59c10016014 100644
 --- a/gcc/testsuite/lib/gcc-dg.exp
 +++ b/gcc/testsuite/lib/gcc-dg.exp
-@@ -392,6 +392,11 @@ proc gcc-dg-prune { system text } {
+@@ -394,6 +394,11 @@ proc gcc-dg-prune { system text } {
          return "::unsupported::memory full"
      }
  
@@ -39,21 +39,21 @@ index f5e6bef5dd9..c26d1c73aa0 100644
      # similar.
      if {[string match "spu-*" $system] && \
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index 60105eb9fd7..5299aaefcc3 100644
+index 8caea35edff..13e32377885 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
-@@ -8833,6 +8833,11 @@ proc check_effective_target_tiny {} {
-              && [check_effective_target_avr_tiny] } {
-          set et_target_tiny_saved 1
-        }
-+       # PRU Program Counter is 16-bits, and trampolines are not supported.
-+       # Hence directly declare as a tiny target.
-+       if [istarget pru-*-*] {
-+         set et_target_tiny_saved 1
-+       }
-     }
- 
-     return $et_target_tiny_saved
+@@ -8377,6 +8377,11 @@ proc check_effective_target_tiny {} {
+ 	    && [check_effective_target_avr_tiny] } {
+ 	   return 1
+       }
++      # PRU Program Counter is 16-bits, and trampolines are not supported.
++      # Hence directly declare as a tiny target.
++      if [istarget pru-*-*] {
++	   return 1
++      }
+       return 0
+     }]
+ }
 diff --git a/gcc/testsuite/lib/target-utils.exp b/gcc/testsuite/lib/target-utils.exp
 index bd39cc5bc79..732a1827a02 100644
 --- a/gcc/testsuite/lib/target-utils.exp

@@ -1,18 +1,18 @@
-From 8ecbb8033bd0af01cf193c6bcce100a9651ec88e Mon Sep 17 00:00:00 2001
+From a16d2b9c061d236bfa417e74ddcb55c6067c43c1 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:53:18 +0200
-Subject: [PATCH 01/13] Initial TI PRU GCC port
+Subject: [PATCH 01/19] Initial TI PRU GCC port
 
 ChangeLog:
 
-2018-07-27  Dimitar Dimitrov  <dimitar@dinux.eu>
+2018-10-08  Dimitar Dimitrov  <dimitar@dinux.eu>
 
 	* configure: Regenerate.
 	* configure.ac: Add PRU target.
 
 gcc/ChangeLog:
 
-2018-07-27  Dimitar Dimitrov  <dimitar@dinux.eu>
+2018-10-08  Dimitar Dimitrov  <dimitar@dinux.eu>
 
 	* common/config/pru/pru-common.c: New file.
 	* config.gcc: Add PRU target.
@@ -37,22 +37,22 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  configure.ac                       |    7 +
  gcc/common/config/pru/pru-common.c |   36 +
  gcc/config.gcc                     |    9 +
- gcc/config/pru/alu-zext.md         |  178 +++
- gcc/config/pru/constraints.md      |   88 ++
- gcc/config/pru/predicates.md       |  224 +++
+ gcc/config/pru/alu-zext.md         |  181 +++
+ gcc/config/pru/constraints.md      |  108 ++
+ gcc/config/pru/predicates.md       |  246 +++
  gcc/config/pru/pru-opts.h          |   31 +
- gcc/config/pru/pru-passes.c        |  234 +++
- gcc/config/pru/pru-pragma.c        |   90 ++
+ gcc/config/pru/pru-passes.c        |  236 +++
+ gcc/config/pru/pru-pragma.c        |   92 ++
  gcc/config/pru/pru-protos.h        |   72 +
- gcc/config/pru/pru.c               | 3001 ++++++++++++++++++++++++++++++++++++
- gcc/config/pru/pru.h               |  551 +++++++
- gcc/config/pru/pru.md              |  956 ++++++++++++
+ gcc/config/pru/pru.c               | 3002 ++++++++++++++++++++++++++++++++++++
+ gcc/config/pru/pru.h               |  572 +++++++
+ gcc/config/pru/pru.md              | 1015 ++++++++++++
  gcc/config/pru/pru.opt             |   53 +
  gcc/config/pru/t-pru               |   31 +
- gcc/doc/extend.texi                |   20 +
- gcc/doc/invoke.texi                |   55 +
- gcc/doc/md.texi                    |   22 +
- 18 files changed, 5658 insertions(+)
+ gcc/doc/extend.texi                |   21 +
+ gcc/doc/invoke.texi                |   65 +
+ gcc/doc/md.texi                    |   19 +
+ 18 files changed, 5796 insertions(+)
  create mode 100644 gcc/common/config/pru/pru-common.c
  create mode 100644 gcc/config/pru/alu-zext.md
  create mode 100644 gcc/config/pru/constraints.md
@@ -135,7 +135,7 @@ index 00000000000..e87d70ce9ca
 +
 +struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index 17ca0cf0615..abf64b289c2 100644
+index 0c579d1f5ea..db673b1b8bf 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
 @@ -493,6 +493,9 @@ powerpc*-*-*)
@@ -148,7 +148,7 @@ index 17ca0cf0615..abf64b289c2 100644
  riscv*)
  	cpu_type=riscv
  	extra_objs="riscv-builtins.o riscv-c.o"
-@@ -2635,6 +2638,12 @@ powerpcle-*-eabi*)
+@@ -2698,6 +2701,12 @@ powerpcle-*-eabi*)
  	extra_options="${extra_options} rs6000/sysv4.opt"
  	use_gcc_stdint=wrap
  	;;
@@ -163,10 +163,10 @@ index 17ca0cf0615..abf64b289c2 100644
  	tmake_file="rs6000/t-aix52 t-slibgcc"
 diff --git a/gcc/config/pru/alu-zext.md b/gcc/config/pru/alu-zext.md
 new file mode 100644
-index 00000000000..2112b08d3f4
+index 00000000000..eeb6f0be185
 --- /dev/null
 +++ b/gcc/config/pru/alu-zext.md
-@@ -0,0 +1,178 @@
+@@ -0,0 +1,181 @@
 +;; ALU operations with zero extensions
 +;;
 +;; Copyright (C) 2015-2018 Free Software Foundation, Inc.
@@ -188,6 +188,18 @@ index 00000000000..2112b08d3f4
 +;; along with GCC; see the file COPYING3.  If not see
 +;; <http://www.gnu.org/licenses/>.
 +
++; All PRU ALU instructions automatically zero-extend their source operands,
++; and zero-extract the result into the destination register.  This is
++; described in the machine description by defining a separate pattern
++; for each possible combination of zero_extend and mode for input operands.
++;
++; An unfortunate side effect is that quite a few invalid RTL patterns are
++; generated.  For example:
++;      ... (zero_extend:SI (match_operand:SI ...)) ...
++; These patterns are harmless since no pass should generate such RTL.  This
++; shortcut allows us to keep small and concise machine description patterns.
++
++
 +(define_subst_attr "alu2_zext"     "alu2_zext_subst"     "_z" "_noz")
 +
 +(define_subst_attr "alu3_zext_op1" "alu3_zext_op1_subst" "_z1" "_noz1")
@@ -207,29 +219,26 @@ index 00000000000..2112b08d3f4
 +	 (zero_extend:EQD
 +	  (match_operand:EQS0 1 "register_operand" "%r,r,r"))
 +	 (zero_extend:EQD
-+	  (match_operand:EQS1 2 "nonmemory_operand" "r,I,M"))))]
++	  (match_operand:EQS1 2 "nonmemory_operand" "r,<EQS1:ubyte_constr>,M"))))]
 +  ""
 +  "@
 +   add\\t%0, %1, %2
-+   add\\t%0, %1, %2
++   add\\t%0, %1, %u2
 +   sub\\t%0, %1, %n2"
-+  [(set_attr "type" "alu")
-+   (set_attr "length" "4")])
++  [(set_attr "type" "alu,alu,alu")])
 +
 +(define_insn "sub_impl<EQD:mode><EQS0:mode><EQS1:mode>_<alu3_zext><alu3_zext_op1><alu3_zext_op2>"
-+  [(set (match_operand:EQD 0 "register_operand" "=r,r,r")
++  [(set (match_operand:EQD 0 "register_operand" "=r,r")
 +	(minus:EQD
 +	 (zero_extend:EQD
-+	  (match_operand:EQS0 1 "reg_or_ubyte_operand" "r,r,I"))
++	  (match_operand:EQS0 1 "reg_or_ubyte_operand" "r,<EQS0:ubyte_constr>"))
 +	 (zero_extend:EQD
-+	  (match_operand:EQS1 2 "reg_or_ubyte_operand" "r,I,r"))))]
++	  (match_operand:EQS1 2 "register_operand" "r,r"))))]
 +  ""
 +  "@
 +   sub\\t%0, %1, %2
-+   sub\\t%0, %1, %2
-+   rsb\\t%0, %2, %1"
-+  [(set_attr "type" "alu")
-+   (set_attr "length" "4")])
++   rsb\\t%0, %2, %u1"
++  [(set_attr "type" "alu,alu")])
 +
 +
 +(define_insn "neg_impl<EQD:mode><EQS0:mode>_<alu2_zext>"
@@ -238,8 +247,7 @@ index 00000000000..2112b08d3f4
 +	  (zero_extend:EQD (match_operand:EQS0 1 "register_operand" "r"))))]
 +  ""
 +  "rsb\\t%0, %1, 0"
-+  [(set_attr "type" "alu")
-+   (set_attr "length" "4")])
++  [(set_attr "type" "alu")])
 +
 +
 +(define_insn "one_impl<EQD:mode><EQS0:mode>_<alu2_zext>"
@@ -248,23 +256,21 @@ index 00000000000..2112b08d3f4
 +	  (zero_extend:EQD (match_operand:EQS0 1 "register_operand" "r"))))]
 +  ""
 +  "not\\t%0, %1"
-+  [(set_attr "type" "alu")
-+   (set_attr "length" "4")])
++  [(set_attr "type" "alu")])
 +
 +; Specialized IOR/AND patterns for matching setbit/clearbit instructions.
 +;
 +; TODO - allow clrbit and setbit to support (1 << REG) constructs
 +
 +(define_insn "clearbit_<EQD:mode><EQS0:mode>_<bitalu_zext>"
-+  [(set (match_operand:EQD 0 "register_operand"	"=r")
++  [(set (match_operand:EQD 0 "register_operand" "=r")
 +	(and:EQD
 +	  (zero_extend:EQD
 +	    (match_operand:EQS0 1 "register_operand" "r"))
 +	  (match_operand:EQD 2 "single_zero_operand" "n")))]
 +  ""
 +  "clr\\t%0, %1, %V2"
-+  [(set_attr "type" "alu")
-+   (set_attr "length" "4")])
++  [(set_attr "type" "alu")])
 +
 +(define_insn "setbit_<EQD:mode><EQS0:mode>_<bitalu_zext>"
 +  [(set (match_operand:EQD 0 "register_operand" "=r")
@@ -274,32 +280,29 @@ index 00000000000..2112b08d3f4
 +	  (match_operand:EQD 2 "single_one_operand" "n")))]
 +  ""
 +  "set\\t%0, %1, %T2"
-+  [(set_attr "type" "alu")
-+   (set_attr "length" "4")])
++  [(set_attr "type" "alu")])
 +
 +; Regular ALU ops
 +(define_insn "<code>_impl<EQD:mode><EQS0:mode><EQS1:mode>_<alu3_zext><alu3_zext_op1><alu3_zext_op2>"
 +  [(set (match_operand:EQD 0 "register_operand" "=r")
 +	(LOGICAL:EQD
 +	  (zero_extend:EQD
-+	    (match_operand:EQS0 1 "register_operand"     "%r"))
++	    (match_operand:EQS0 1 "register_operand" "%r"))
 +	  (zero_extend:EQD
-+	    (match_operand:EQS1 2 "reg_or_ubyte_operand"  "rI"))))]
++	    (match_operand:EQS1 2 "reg_or_ubyte_operand" "r<EQS1:ubyte_constr>"))))]
 +  ""
-+  "<logical_asm>\\t%0, %1, %2"
-+  [(set_attr "type" "alu")
-+   (set_attr "length" "4")])
++  "<logical_asm>\\t%0, %1, %u2"
++  [(set_attr "type" "alu")])
 +
 +; Shift ALU ops
 +(define_insn "<shift_op>_impl<EQD:mode><EQS0:mode><EQS1:mode>_<alu3_zext><alu3_zext_op1><alu3_zext_op2>"
 +  [(set (match_operand:EQD 0 "register_operand" "=r")
 +	(SHIFT:EQD
 +	 (zero_extend:EQD (match_operand:EQS0 1 "register_operand" "r"))
-+	 (zero_extend:EQD (match_operand:EQS1 2 "shift_operand"    "rL"))))]
++	 (zero_extend:EQD (match_operand:EQS1 2 "shift_operand" "rL"))))]
 +  ""
 +  "<shift_asm>\\t%0, %1, %2"
-+  [(set_attr "type" "alu")
-+   (set_attr "length" "4")])
++  [(set_attr "type" "alu")])
 +
 +;; Substitutions
 +
@@ -347,10 +350,10 @@ index 00000000000..2112b08d3f4
 +		    (match_dup 2)))])
 diff --git a/gcc/config/pru/constraints.md b/gcc/config/pru/constraints.md
 new file mode 100644
-index 00000000000..326c8e9907c
+index 00000000000..7af45be2289
 --- /dev/null
 +++ b/gcc/config/pru/constraints.md
-@@ -0,0 +1,88 @@
+@@ -0,0 +1,108 @@
 +;; Constraint definitions for TI PRU.
 +;; Copyright (C) 2014-2018 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -376,28 +379,39 @@ index 00000000000..326c8e9907c
 +;;  I: 0 to 255.
 +;;  J: 0 to 65535.
 +;;  L: 0 to 31 (for shift counts).
-+;;  M: -255 to 0 (for converting ADD to SUB with suitable UBYTE OP2).
-+;;  N: -32768 to 32767 (16-bit signed integer)
-+;;  P: 1
 +;;  T: Text segment label.  Needed to know when to select %pmem relocation.
 +;;  Z: Constant integer zero.
 +;;
 +;; We use the following built-in register classes:
 +;;
-+;;  r: general purpose register (r0..r31)
-+;;  m: memory operand
++;;  r: General purpose register (r0..r31).
++;;  m: Memory operand.
 +;;
 +;; The following constraints are intended for internal use only:
-+;;  j: jump address register suitable for sibling calls
-+;;  l: the internal counter register used by LOOP instructions
++;;  Rmd0, Rms0, Rms1: Registers for MUL instruction operands.
++;;  Rsib: Jump address register suitable for sibling calls.
++;;  M: -255 to 0 (for converting ADD to SUB with suitable UBYTE OP2).
++;;  N: -32768 to 32767 (16-bit signed integer).
++;;  O: -128 to 127 (8-bit signed integer).
++;;  P: 1
 +
 +;; Register constraints.
 +
-+(define_register_constraint "j" "SIB_REGS"
-+  "A register suitable for an indirect sibcall.")
++(define_register_constraint "Rsib" "SIB_REGS"
++  "@internal
++  A register suitable for an indirect sibcall.")
 +
-+(define_register_constraint "l" "LOOPCNTR_REGS"
-+  "The internal counter register used by the LOOP instruction.")
++(define_register_constraint "Rmd0" "MULDST_REGS"
++  "@internal
++  The multiply destination register.")
++
++(define_register_constraint "Rms0" "MULSRC0_REGS"
++  "@internal
++  The multiply source 0 register.")
++
++(define_register_constraint "Rms1" "MULSRC1_REGS"
++  "@internal
++  The multiply source 1 register.")
 +
 +;; Integer constraints.
 +
@@ -417,17 +431,26 @@ index 00000000000..326c8e9907c
 +       (match_test "ival >= 0 && ival <= 31")))
 +
 +(define_constraint "M"
-+  "A constant in the range [-255;0]."
++  "@internal
++  A constant in the range [-255, 0]."
 +  (and (match_code "const_int")
 +       (match_test "UBYTE_INT (-ival)")))
 +
 +(define_constraint "N"
-+  "A constant in the range [-32768;32767]."
++  "@internal
++  A constant in the range [-32768, 32767]."
 +  (and (match_code "const_int")
 +       (match_test "SHWORD_INT (ival)")))
 +
++(define_constraint "O"
++  "@internal
++  A constant in the range [-128, 127]."
++  (and (match_code "const_int")
++       (match_test "SBYTE_INT (ival)")))
++
 +(define_constraint "P"
-+  "A constant 1."
++  "@internal
++  A constant 1."
 +  (and (match_code "const_int")
 +       (match_test "ival == 1")))
 +
@@ -441,10 +464,10 @@ index 00000000000..326c8e9907c
 +       (match_test "ival == 0")))
 diff --git a/gcc/config/pru/predicates.md b/gcc/config/pru/predicates.md
 new file mode 100644
-index 00000000000..78fdb8a25b7
+index 00000000000..6472c8232c0
 --- /dev/null
 +++ b/gcc/config/pru/predicates.md
-@@ -0,0 +1,224 @@
+@@ -0,0 +1,246 @@
 +;; Predicate definitions for TI PRU.
 +;; Copyright (C) 2014-2018 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -467,15 +490,22 @@ index 00000000000..78fdb8a25b7
 +
 +(define_predicate "const_1_operand"
 +  (and (match_code "const_int")
-+       (match_test "IN_RANGE (INTVAL (op), 1, 1)")))
++       (match_test "INTVAL (op) == 1")))
 +
++; Note: Always pass a valid mode!
 +(define_predicate "const_ubyte_operand"
-+  (and (match_code "const_int")
-+       (match_test "IN_RANGE (INTVAL (op), 0, 0xff)")))
++  (match_code "const_int")
++{
++  gcc_assert (mode != VOIDmode);
++  return IN_RANGE (INTVAL (op) & GET_MODE_MASK (mode), 0, 0xff);
++})
 +
 +(define_predicate "const_uhword_operand"
-+  (and (match_code "const_int")
-+       (match_test "IN_RANGE (INTVAL (op), 0, 0xffff)")))
++  (match_code "const_int")
++{
++  gcc_assert (mode != VOIDmode);
++  return IN_RANGE (INTVAL (op) & GET_MODE_MASK (mode), 0, 0xffff);
++})
 +
 +; TRUE for comparisons we support.
 +(define_predicate "pru_cmp_operator"
@@ -487,7 +517,7 @@ index 00000000000..78fdb8a25b7
 +
 +;; FP Comparisons handled by pru_expand_pru_compare.
 +(define_predicate "pru_fp_comparison_operator"
-+  (match_code "eq,lt,gt,le,ge"))
++  (match_code "eq,ne,lt,gt,le,ge"))
 +
 +;; Return true if OP is a constant that contains only one 1 in its
 +;; binary representation.
@@ -501,6 +531,28 @@ index 00000000000..78fdb8a25b7
 +  (and (match_code "const_int")
 +       (match_test "exact_log2 (~INTVAL (op) & GET_MODE_MASK (mode)) >= 0")))
 +
++;; Do not match SUBREG.  When assigning SI multiplication result to a DI
++;; variable (e.g. f in gcc.dg/pr50717-1.c), SUBREG set destination is
++;; generated, which prevents us from using REGNO.  It should be better
++;; to declare our limitation upfront and support only REG.
++(define_predicate "pru_muldst_operand"
++  (and (match_code "reg")
++       (ior (match_test "REGNO_REG_CLASS (REGNO (op)) == MULDST_REGS")
++	    (match_test "REGNO (op) >= FIRST_PSEUDO_REGISTER"))))
++
++(define_predicate "pru_mulsrc0_operand"
++  (and (match_code "reg")
++       (ior (match_test "REGNO_REG_CLASS (REGNO (op)) == MULSRC0_REGS")
++	    (match_test "REGNO (op) >= FIRST_PSEUDO_REGISTER"))))
++
++(define_predicate "pru_mulsrc1_operand"
++  (and (match_code "reg")
++       (ior (match_test "REGNO_REG_CLASS (REGNO (op)) == MULSRC1_REGS")
++	    (match_test "REGNO (op) >= FIRST_PSEUDO_REGISTER"))))
++
++(define_predicate "reg_or_const_int_operand"
++  (ior (match_operand 0 "const_int_operand")
++       (match_operand 0 "register_operand")))
 +
 +(define_predicate "reg_or_ubyte_operand"
 +  (ior (match_operand 0 "const_ubyte_operand")
@@ -520,11 +572,11 @@ index 00000000000..78fdb8a25b7
 +
 +(define_predicate "ctable_addr_operand"
 +  (and (match_code "const_int")
-+       (match_test ("(pru_get_ctable_base_index (INTVAL (op)) >= 0)"))))
++       (match_test "pru_get_ctable_base_index (INTVAL (op)) >= 0")))
 +
 +(define_predicate "ctable_base_operand"
 +  (and (match_code "const_int")
-+       (match_test ("(pru_get_ctable_exact_base_index (INTVAL (op)) >= 0)"))))
++       (match_test "pru_get_ctable_exact_base_index (INTVAL (op)) >= 0")))
 +
 +;; Ideally we should enforce a restriction to all text labels to fit in
 +;; 16bits, as required by the PRU ISA.  But for the time being we'll rely on
@@ -536,23 +588,26 @@ index 00000000000..78fdb8a25b7
 +;; Return true if OP is a text segment reference.
 +;; This is needed for program memory address expressions.  Borrowed from AVR.
 +(define_predicate "text_segment_operand"
-+  (match_code "code_label,label_ref,symbol_ref,plus,minus,const")
++  (match_code "code_label,label_ref,symbol_ref,plus,minus")
 +{
-+  switch (GET_CODE (op))
++  poly_int64 offset;
++  rtx base = strip_offset (op, &offset);
++
++  switch (GET_CODE (base))
 +    {
 +    case CODE_LABEL:
++      /* Why AVR lists this as a valid option?  Let's catch it.  */
++      gcc_unreachable ();
++      return false;
++    case LABEL_REF:
 +      return true;
-+    case LABEL_REF :
-+      return true;
-+    case SYMBOL_REF :
-+      return SYMBOL_REF_FUNCTION_P (op);
-+    case PLUS :
-+    case MINUS :
-+      /* Assume canonical format of symbol + constant.
-+	 Fall through.  */
-+    case CONST :
++    case SYMBOL_REF:
++      return SYMBOL_REF_FUNCTION_P (base);
++    case PLUS:
++    case MINUS:
++      /* Handle constructs like (&&label1 - &&label2).  See pr70460.c.  */
 +      return text_segment_operand (XEXP (op, 0), VOIDmode);
-+    default :
++    default:
 +      return false;
 +    }
 +})
@@ -566,8 +621,9 @@ index 00000000000..78fdb8a25b7
 +  machine_mode elt_mode;
 +  int count = XVECLEN (op, 0);
 +  unsigned int dest_regno;
-+  rtx src_addr;
-+  int i, off;
++  rtx src_addr, base_reg;
++  poly_int64 base_offs;
++  int i;
 +
 +  /* Perform a quick check so we don't blow up below.  */
 +  if (GET_CODE (XVECEXP (op, 0, 0)) != SET
@@ -579,22 +635,14 @@ index 00000000000..78fdb8a25b7
 +  src_addr = XEXP (SET_SRC (XVECEXP (op, 0, 0)), 0);
 +  elt_mode = GET_MODE (SET_DEST (XVECEXP (op, 0, 0)));
 +
-+  /* Check, is base, or base + displacement.  */
-+
-+  if (GET_CODE (src_addr) == REG)
-+    off = 0;
-+  else if (GET_CODE (src_addr) == PLUS
-+	   && GET_CODE (XEXP (src_addr, 0)) == REG
-+	   && GET_CODE (XEXP (src_addr, 1)) == CONST_INT)
-+    {
-+      off = INTVAL (XEXP (src_addr, 1));
-+      src_addr = XEXP (src_addr, 0);
-+    }
-+  else
++  base_reg = strip_offset (src_addr, &base_offs);
++  if (GET_CODE (base_reg) != REG)
 +    return false;
 +
 +  for (i = 1; i < count; i++)
 +    {
++      rtx elt_reg;
++      poly_int64 elt_offs;
 +      rtx elt = XVECEXP (op, 0, i);
 +
 +      if (GET_CODE (elt) != SET
@@ -602,12 +650,14 @@ index 00000000000..78fdb8a25b7
 +	  || GET_MODE (SET_DEST (elt)) != elt_mode
 +	  || REGNO (SET_DEST (elt)) != dest_regno + i
 +	  || GET_CODE (SET_SRC (elt)) != MEM
-+	  || GET_MODE (SET_SRC (elt)) != elt_mode
-+	  || GET_CODE (XEXP (SET_SRC (elt), 0)) != PLUS
-+	  || ! rtx_equal_p (XEXP (XEXP (SET_SRC (elt), 0), 0), src_addr)
-+	  || GET_CODE (XEXP (XEXP (SET_SRC (elt), 0), 1)) != CONST_INT
-+	  || INTVAL (XEXP (XEXP (SET_SRC (elt), 0), 1))
-+	     != off + i * GET_MODE_SIZE (elt_mode))
++	  || GET_MODE (SET_SRC (elt)) != elt_mode)
++	return false;
++
++      elt_reg = strip_offset (XEXP (SET_SRC (elt), 0), &elt_offs);
++
++      if (GET_CODE (elt_reg) != REG
++	  || ! rtx_equal_p (elt_reg, base_reg)
++	  || elt_offs != base_offs + i * GET_MODE_SIZE (elt_mode))
 +	return false;
 +    }
 +
@@ -623,8 +673,9 @@ index 00000000000..78fdb8a25b7
 +  machine_mode elt_mode;
 +  int count = XVECLEN (op, 0);
 +  unsigned int src_regno;
-+  rtx dest_addr;
-+  int i, off;
++  rtx dest_addr, base_reg;
++  poly_int64 base_offs;
++  int i;
 +
 +  /* Perform a quick check so we don't blow up below.  */
 +  if (GET_CODE (XVECEXP (op, 0, 0)) != SET
@@ -636,22 +687,14 @@ index 00000000000..78fdb8a25b7
 +  dest_addr = XEXP (SET_DEST (XVECEXP (op, 0, 0)), 0);
 +  elt_mode = GET_MODE (SET_SRC (XVECEXP (op, 0, 0)));
 +
-+  /* Check, is base, or base + displacement.  */
-+
-+  if (GET_CODE (dest_addr) == REG)
-+    off = 0;
-+  else if (GET_CODE (dest_addr) == PLUS
-+	   && GET_CODE (XEXP (dest_addr, 0)) == REG
-+	   && GET_CODE (XEXP (dest_addr, 1)) == CONST_INT)
-+    {
-+      off = INTVAL (XEXP (dest_addr, 1));
-+      dest_addr = XEXP (dest_addr, 0);
-+    }
-+  else
++  base_reg = strip_offset (dest_addr, &base_offs);
++  if (GET_CODE (base_reg) != REG)
 +    return false;
 +
 +  for (i = 1; i < count; i++)
 +    {
++      rtx elt_reg;
++      poly_int64 elt_offs;
 +      rtx elt = XVECEXP (op, 0, i);
 +
 +      if (GET_CODE (elt) != SET
@@ -659,12 +702,14 @@ index 00000000000..78fdb8a25b7
 +	  || GET_MODE (SET_SRC (elt)) != elt_mode
 +	  || REGNO (SET_SRC (elt)) != src_regno + i
 +	  || GET_CODE (SET_DEST (elt)) != MEM
-+	  || GET_MODE (SET_DEST (elt)) != elt_mode
-+	  || GET_CODE (XEXP (SET_DEST (elt), 0)) != PLUS
-+	  || ! rtx_equal_p (XEXP (XEXP (SET_DEST (elt), 0), 0), dest_addr)
-+	  || GET_CODE (XEXP (XEXP (SET_DEST (elt), 0), 1)) != CONST_INT
-+	  || INTVAL (XEXP (XEXP (SET_DEST (elt), 0), 1))
-+	     != off + i * GET_MODE_SIZE (elt_mode))
++	  || GET_MODE (SET_DEST (elt)) != elt_mode)
++	return false;
++
++      elt_reg = strip_offset (XEXP (SET_DEST (elt), 0), &elt_offs);
++
++      if (GET_CODE (elt_reg) != REG
++	  || ! rtx_equal_p (elt_reg, base_reg)
++	  || elt_offs != base_offs + i * GET_MODE_SIZE (elt_mode))
 +	return false;
 +    }
 +  return true;
@@ -708,10 +753,10 @@ index 00000000000..1c1514cb2a3
 +#endif
 diff --git a/gcc/config/pru/pru-passes.c b/gcc/config/pru/pru-passes.c
 new file mode 100644
-index 00000000000..c95dc877722
+index 00000000000..34516540559
 --- /dev/null
 +++ b/gcc/config/pru/pru-passes.c
-@@ -0,0 +1,234 @@
+@@ -0,0 +1,236 @@
 +/* PRU target specific passes
 +   Copyright (C) 2017-2018 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dimitar@dinux.eu>
@@ -857,12 +902,14 @@ index 00000000000..c95dc877722
 +  const tree type = TREE_TYPE (*tp);
 +
 +  /* Direct function calls are allowed, obviously.  */
-+  if (TREE_CODE (*tp) == ADDR_EXPR && TREE_CODE (type) == POINTER_TYPE)
-+    {
-+      const tree ptype = TREE_TYPE (type);
-+      if (TREE_CODE (ptype) == FUNCTION_TYPE)
-+	return NULL;
-+    }
++  gcall *call = dyn_cast <gcall *> (gsi_stmt (wi->gsi));
++  if (call
++      && tp == gimple_call_fn_ptr (call)
++      && gimple_call_fndecl (call))
++    return NULL;
++
++  /* TODO - find a safe method to allow data-pointer-casted function
++     labels. Example: (void *)func.  */
 +
 +  switch (TREE_CODE (type))
 +    {
@@ -948,10 +995,10 @@ index 00000000000..c95dc877722
 +}
 diff --git a/gcc/config/pru/pru-pragma.c b/gcc/config/pru/pru-pragma.c
 new file mode 100644
-index 00000000000..11cb5bd625c
+index 00000000000..decc548a468
 --- /dev/null
 +++ b/gcc/config/pru/pru-pragma.c
-@@ -0,0 +1,90 @@
+@@ -0,0 +1,92 @@
 +/* PRU target specific pragmas
 +   Copyright (C) 2015-2018 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -1000,12 +1047,12 @@ index 00000000000..11cb5bd625c
 +  enum cpp_ttype type;
 +
 +  type = pragma_lex (&ctable_index);
-+  if (type == CPP_NUMBER)
++  if (type == CPP_NUMBER && tree_fits_uhwi_p (ctable_index))
 +    {
 +      type = pragma_lex (&base_addr);
-+      if (type == CPP_NUMBER)
++      if (type == CPP_NUMBER  && tree_fits_uhwi_p (base_addr))
 +	{
-+	  unsigned int i = tree_to_uhwi (ctable_index);
++	  unsigned HOST_WIDE_INT i = tree_to_uhwi (ctable_index);
 +	  unsigned HOST_WIDE_INT base = tree_to_uhwi (base_addr);
 +
 +	  type = pragma_lex (&base_addr);
@@ -1015,11 +1062,13 @@ index 00000000000..11cb5bd625c
 +	    }
 +	  else if (i >= ARRAY_SIZE (pru_ctable))
 +	    {
-+	      error ("%<CTABLE_ENTRY%> index %d is not valid", i);
++	      error ("%<CTABLE_ENTRY%> index %" HOST_WIDE_INT_PRINT "d"
++		     " is not valid", i);
 +	    }
 +	  else if (pru_ctable[i].valid && pru_ctable[i].base != base)
 +	    {
-+	      error ("redefinition of %<CTABLE_ENTRY %d%>", i);
++	      error ("redefinition of %<CTABLE_ENTRY "
++		     "%" HOST_WIDE_INT_PRINT "d%>", i);
 +	    }
 +	  else
 +	    {
@@ -1044,7 +1093,7 @@ index 00000000000..11cb5bd625c
 +}
 diff --git a/gcc/config/pru/pru-protos.h b/gcc/config/pru/pru-protos.h
 new file mode 100644
-index 00000000000..73ab76e076c
+index 00000000000..6b92eff7f70
 --- /dev/null
 +++ b/gcc/config/pru/pru-protos.h
 @@ -0,0 +1,72 @@
@@ -1090,10 +1139,10 @@ index 00000000000..73ab76e076c
 +extern rtx pru_get_return_address (int);
 +extern int pru_hard_regno_rename_ok (unsigned int, unsigned int);
 +
-+extern const char * pru_output_sign_extend (rtx *);
-+extern const char * pru_output_signed_cbranch (rtx *, bool);
-+extern const char * pru_output_signed_cbranch_ubyteop2 (rtx *, bool);
-+extern const char * pru_output_signed_cbranch_zeroop2 (rtx *, bool);
++extern const char *pru_output_sign_extend (rtx *);
++extern const char *pru_output_signed_cbranch (rtx *, bool);
++extern const char *pru_output_signed_cbranch_ubyteop2 (rtx *, bool);
++extern const char *pru_output_signed_cbranch_zeroop2 (rtx *, bool);
 +
 +extern rtx pru_expand_fp_compare (rtx comparison, machine_mode mode);
 +
@@ -1116,16 +1165,16 @@ index 00000000000..73ab76e076c
 +#endif /* RTX_CODE */
 +
 +#ifdef TREE_CODE
-+bool pru_return_in_memory (const_tree type, const_tree fntype ATTRIBUTE_UNUSED);
++extern bool pru_return_in_memory (const_tree type, const_tree fntype);
 +#endif /* TREE_CODE */
 +
 +#endif /* GCC_PRU_PROTOS_H */
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
 new file mode 100644
-index 00000000000..de72d22278e
+index 00000000000..245c8b98281
 --- /dev/null
 +++ b/gcc/config/pru/pru.c
-@@ -0,0 +1,3001 @@
+@@ -0,0 +1,3002 @@
 +/* Target machine subroutines for TI PRU.
 +   Copyright (C) 2014-2018 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dimitar@dinux.eu>
@@ -1212,8 +1261,8 @@ index 00000000000..de72d22278e
 +  int save_regs_offset;
 +  /* Offset from save_regs_offset to store frame pointer register.  */
 +  int fp_save_offset;
-+  /* != 0 if frame layout already calculated.  */
-+  int initialized;
++  /* True if final frame layout is already calculated.  */
++  bool initialized;
 +  /* Number of doloop tags used so far.  */
 +  int doloop_tags;
 +  /* True if the last tag was allocated to a doloop_end.  */
@@ -1222,11 +1271,10 @@ index 00000000000..de72d22278e
 +
 +/* Stack layout and calling conventions.  */
 +
-+#define PRU_STACK_ALIGN(LOC)  ROUND_UP((LOC), STACK_BOUNDARY / BITS_PER_UNIT)
++#define PRU_STACK_ALIGN(LOC)  ROUND_UP ((LOC), STACK_BOUNDARY / BITS_PER_UNIT)
 +
-+/* Return the bytes needed to compute the frame pointer from the current
-+   stack pointer.  */
-+static int
++/* Implement TARGET_COMPUTE_FRAME_LAYOUT.  */
++static void
 +pru_compute_frame_layout (void)
 +{
 +  int regno;
@@ -1236,8 +1284,7 @@ index 00000000000..de72d22278e
 +  int out_args_size;
 +  int save_reg_size;
 +
-+  if (cfun->machine->initialized)
-+    return cfun->machine->total_size;
++  gcc_assert (!cfun->machine->initialized);
 +
 +  save_mask = &cfun->machine->save_mask;
 +  CLEAR_HARD_REG_SET (*save_mask);
@@ -1277,8 +1324,6 @@ index 00000000000..de72d22278e
 +  cfun->machine->save_reg_size = save_reg_size;
 +  cfun->machine->initialized = reload_completed;
 +  cfun->machine->save_regs_offset = out_args_size + var_size;
-+
-+  return total_size;
 +}
 +
 +/* Emit efficient RTL equivalent of ADD3 with the given const_int for
@@ -1319,10 +1364,12 @@ index 00000000000..de72d22278e
 +    }
 +
 +  /* Attach a note indicating what happened.  */
-+  if (reg_note_rtx == NULL_RTX)
-+    reg_note_rtx = copy_rtx (op0_adjust);
 +  if (kind != REG_NOTE_MAX)
-+    add_reg_note (insn, kind, reg_note_rtx);
++    {
++      if (reg_note_rtx == NULL_RTX)
++	reg_note_rtx = copy_rtx (op0_adjust);
++      add_reg_note (insn, kind, reg_note_rtx);
++    }
 +
 +  RTX_FRAME_RELATED_P (insn) = 1;
 +
@@ -1371,8 +1418,7 @@ index 00000000000..de72d22278e
 +  gcc_assert (UBYTE_INT (*sp_offset));
 +
 +  /* Ok, save this bunch.  */
-+  addr = gen_rtx_PLUS (Pmode, stack_pointer_rtx,
-+		       gen_int_mode (*sp_offset, Pmode));
++  addr = plus_constant (Pmode, stack_pointer_rtx, *sp_offset);
 +
 +  if (do_store)
 +    insn = targetm.gen_store_multiple (gen_frame_mem (BLKmode, addr),
@@ -1414,7 +1460,7 @@ index 00000000000..de72d22278e
 +  int save_offset;    /* Temporary offset to currently saved register group.  */
 +  rtx insn;
 +
-+  total_frame_size = pru_compute_frame_layout ();
++  total_frame_size = cfun->machine->total_size;
 +
 +  if (flag_stack_usage_info)
 +    current_function_static_stack_size = total_frame_size;
@@ -1431,8 +1477,8 @@ index 00000000000..de72d22278e
 +    }
 +  else if (total_frame_size)
 +    {
-+      insn = emit_insn (gen_sub2_insn (stack_pointer_rtx,
-+				       gen_int_mode (total_frame_size,
++      insn = emit_insn (gen_add2_insn (stack_pointer_rtx,
++				       gen_int_mode (-total_frame_size,
 +						     Pmode)));
 +      RTX_FRAME_RELATED_P (insn) = 1;
 +      save_regs_base = cfun->machine->save_regs_offset;
@@ -1443,22 +1489,19 @@ index 00000000000..de72d22278e
 +
 +  regno_start = 0;
 +  save_offset = save_regs_base;
-+  do {
-+      regno_start = xbbo_next_reg_cluster (regno_start, &save_offset, true);
-+  } while (regno_start >= 0);
++  do
++    regno_start = xbbo_next_reg_cluster (regno_start, &save_offset, true);
++  while (regno_start >= 0);
 +
 +  if (frame_pointer_needed)
 +    {
 +      int fp_save_offset = save_regs_base + cfun->machine->fp_save_offset;
-+      pru_add3_frame_adjust (hard_frame_pointer_rtx,
-+				    stack_pointer_rtx,
-+				    fp_save_offset,
-+				    REG_NOTE_MAX,
-+				    NULL_RTX);
++      pru_add3_frame_adjust (hard_frame_pointer_rtx, stack_pointer_rtx,
++			     fp_save_offset, REG_NOTE_MAX, NULL_RTX);
 +    }
 +
 +  if (sp_offset)
-+      pru_add_to_sp (sp_offset, REG_FRAME_RELATED_EXPR);
++    pru_add_to_sp (sp_offset, REG_FRAME_RELATED_EXPR);
 +
 +  /* If we are profiling, make sure no instructions are scheduled before
 +     the call to mcount.  */
@@ -1483,26 +1526,24 @@ index 00000000000..de72d22278e
 +
 +  emit_insn (gen_blockage ());
 +
-+  total_frame_size = pru_compute_frame_layout ();
++  total_frame_size = cfun->machine->total_size;
++
 +  if (frame_pointer_needed)
 +    {
 +      /* Recover the stack pointer.  */
 +      cfa_adj = plus_constant (Pmode, stack_pointer_rtx,
 +			       (total_frame_size
 +				- cfun->machine->save_regs_offset));
-+      pru_add3_frame_adjust (stack_pointer_rtx,
-+			     hard_frame_pointer_rtx,
++      pru_add3_frame_adjust (stack_pointer_rtx, hard_frame_pointer_rtx,
 +			     -cfun->machine->fp_save_offset,
-+			     REG_CFA_DEF_CFA,
-+			     cfa_adj);
++			     REG_CFA_DEF_CFA, cfa_adj);
 +
 +      save_offset = 0;
 +      sp_adjust = total_frame_size - cfun->machine->save_regs_offset;
 +    }
 +  else if (!UBYTE_INT (total_frame_size))
 +    {
-+      pru_add_to_sp (cfun->machine->save_regs_offset,
-+			    REG_CFA_ADJUST_CFA);
++      pru_add_to_sp (cfun->machine->save_regs_offset, REG_CFA_ADJUST_CFA);
 +      save_offset = 0;
 +      sp_adjust = total_frame_size - cfun->machine->save_regs_offset;
 +    }
@@ -1513,12 +1554,19 @@ index 00000000000..de72d22278e
 +    }
 +
 +  regno_start = 0;
-+  do {
-+      regno_start = xbbo_next_reg_cluster (regno_start, &save_offset, false);
-+  } while (regno_start >= 0);
++  do
++    regno_start = xbbo_next_reg_cluster (regno_start, &save_offset, false);
++  while (regno_start >= 0);
++
++  /* Emit a blockage insn here to keep these insns from being moved to
++     an earlier spot in the epilogue.
++
++     This is necessary as we must not cut the stack back before all the
++     restores are finished.  */
++  emit_insn (gen_blockage ());
 +
 +  if (sp_adjust)
-+      pru_add_to_sp (sp_adjust, REG_CFA_ADJUST_CFA);
++    pru_add_to_sp (sp_adjust, REG_CFA_ADJUST_CFA);
 +
 +  if (!sibcall_p)
 +    emit_jump_insn (gen_simple_return ());
@@ -1609,8 +1657,6 @@ index 00000000000..de72d22278e
 +{
 +  int offset;
 +
-+  pru_compute_frame_layout ();
-+
 +  /* Set OFFSET to the offset from the stack pointer.  */
 +  switch (from)
 +    {
@@ -1645,18 +1691,9 @@ index 00000000000..de72d22278e
 +  if (!reload_completed || crtl->profile)
 +    return 0;
 +
-+  return pru_compute_frame_layout () == 0;
++  return cfun->machine->total_size == 0;
 +}
 +
-+/* Implement TARGET_MODES_TIEABLE_P.  */
-+
-+static bool
-+pru_modes_tieable_p (machine_mode mode1, machine_mode mode2)
-+{
-+  return (mode1 == mode2
-+	  || (GET_MODE_SIZE (mode1) <= 4 && GET_MODE_SIZE (mode2) <= 4));
-+}
-+
 +/* Implement TARGET_HARD_REGNO_MODE_OK.  */
 +
 +static bool
@@ -1667,7 +1704,10 @@ index 00000000000..de72d22278e
 +    case 1: return true;
 +    case 2: return (regno % 4) <= 2;
 +    case 4: return (regno % 4) == 0;
-+    default: return (regno % 4) == 0; /* Not sure why VOIDmode is passed.  */
++    case 8: return (regno % 4) == 0;
++    default:
++      /* TODO: Find out why VOIDmode and BLKmode are passed.  */
++      return (regno % 4) == 0;
 +    }
 +}
 +
@@ -1680,16 +1720,15 @@ index 00000000000..de72d22278e
 +{
 +  /* Don't allow hard registers that might be part of the frame pointer.
 +     Some places in the compiler just test for [HARD_]FRAME_POINTER_REGNUM
-+     and don't handle a frame pointer that spans more than one register.  */
++     and don't handle a frame pointer that spans more than one register.
++     TODO: Fix those faulty places.  */
 +
 +  if ((!reload_completed || frame_pointer_needed)
 +      && ((regno >= HARD_FRAME_POINTER_REGNUM
 +	   && regno <= HARD_FRAME_POINTER_REGNUM + 3)
 +	  || (regno >= FRAME_POINTER_REGNUM
 +	      && regno <= FRAME_POINTER_REGNUM + 3)))
-+    {
-+      return false;
-+    }
++    return false;
 +
 +  return true;
 +}
@@ -1704,7 +1743,8 @@ index 00000000000..de72d22278e
 +{
 +  /* Don't allow hard registers that might be part of the frame pointer.
 +     Some places in the compiler just test for [HARD_]FRAME_POINTER_REGNUM
-+     and don't care for a frame pointer that spans more than one register.  */
++     and don't care for a frame pointer that spans more than one register.
++     TODO: Fix those faulty places.  */
 +  if ((!reload_completed || frame_pointer_needed)
 +      && ((old_reg >= HARD_FRAME_POINTER_REGNUM
 +	   && old_reg <= HARD_FRAME_POINTER_REGNUM + 3)
@@ -1714,9 +1754,7 @@ index 00000000000..de72d22278e
 +	      && new_reg <= HARD_FRAME_POINTER_REGNUM + 3)
 +	  || (new_reg >= FRAME_POINTER_REGNUM
 +	      && new_reg <= FRAME_POINTER_REGNUM + 3)))
-+    {
-+      return 0;
-+    }
++    return 0;
 +
 +  return 1;
 +}
@@ -1773,7 +1811,7 @@ index 00000000000..de72d22278e
 +   cost has been computed, and false if subexpressions should be
 +   scanned.  In either case, *TOTAL contains the cost result.  */
 +static bool
-+pru_rtx_costs (rtx x, machine_mode mode ATTRIBUTE_UNUSED,
++pru_rtx_costs (rtx x, machine_mode mode,
 +	       int outer_code, int opno ATTRIBUTE_UNUSED,
 +	       int *total, bool speed ATTRIBUTE_UNUSED)
 +{
@@ -1781,139 +1819,143 @@ index 00000000000..de72d22278e
 +
 +  switch (code)
 +    {
-+      case CONST_INT:
-+	if (UBYTE_INT (INTVAL (x)))
++    case CONST_INT:
++      if ((mode == VOIDmode && UBYTE_INT (INTVAL (x)))
++	  || (mode != VOIDmode && const_ubyte_operand (x, mode)))
++	{
++	  *total = COSTS_N_INSNS (0);
++	  return true;
++	}
++      else if ((mode == VOIDmode && UHWORD_INT (INTVAL (x)))
++	       || (mode != VOIDmode && const_uhword_operand (x, mode)))
++	{
++	  *total = COSTS_N_INSNS (1);
++	  return true;
++	}
++      else if (outer_code == MEM && ctable_addr_operand (x, VOIDmode))
++	{
++	  *total = COSTS_N_INSNS (0);
++	  return true;
++	}
++      else
++	{
++	  *total = COSTS_N_INSNS (2);
++	  return true;
++	}
++
++    case LABEL_REF:
++    case SYMBOL_REF:
++    case CONST:
++      {
++	*total = COSTS_N_INSNS (1);
++	return true;
++      }
++    case CONST_DOUBLE:
++      {
++	*total = COSTS_N_INSNS (2);
++	return true;
++      }
++    case CONST_WIDE_INT:
++      {
++	/* PRU declares no vector or very large integer types.  */
++	gcc_unreachable ();
++	return true;
++      }
++    case SET:
++      {
++	int factor;
++
++	/* A SET doesn't have a mode, so let's look at the SET_DEST to get
++	   the mode for the factor.  */
++	mode = GET_MODE (SET_DEST (x));
++
++	/* SI move has the same cost as a QI move.  Moves larger than
++	   64 bits are costly.  */
++	factor = CEIL (GET_MODE_SIZE (mode), GET_MODE_SIZE (SImode));
++	*total = factor * COSTS_N_INSNS (1);
++
++	return false;
++      }
++
++    case MULT:
++      {
++	/* Factor in that "mul" requires fixed registers, which
++	   would likely require register moves.  */
++	*total = COSTS_N_INSNS (5);
++	return false;
++      }
++    case PLUS:
++      {
++	rtx op0 = XEXP (x, 0);
++	rtx op1 = XEXP (x, 1);
++	machine_mode op1_mode = GET_MODE (op1);
++
++	/* Generic RTL address expressions do not enforce mode for
++	   offsets, yet our UBYTE constraint requires it.  Fix it here.  */
++	if (op1_mode == VOIDmode && CONST_INT_P (op1) && outer_code == MEM)
++	  op1_mode = Pmode;
++	if (outer_code == MEM
++	    && ((REG_P (op0) && reg_or_ubyte_operand (op1, op1_mode))
++		|| ctable_addr_operand (op0, VOIDmode)
++		|| ctable_addr_operand (op1, VOIDmode)
++		|| (ctable_base_operand (op0, VOIDmode) && REG_P (op1))
++		|| (ctable_base_operand (op1, VOIDmode) && REG_P (op0))))
 +	  {
++	    /* CTABLE or REG base addressing - PLUS comes for free.  */
 +	    *total = COSTS_N_INSNS (0);
 +	    return true;
 +	  }
-+	else if (outer_code == MEM && ctable_addr_operand (x, VOIDmode))
-+	  {
-+	    *total = COSTS_N_INSNS (0);
-+	    return true;
-+	  }
-+	else if (UHWORD_INT (INTVAL (x)))
++	else
 +	  {
 +	    *total = COSTS_N_INSNS (1);
++	    return false;
++	  }
++	}
++    case SIGN_EXTEND:
++      {
++	*total = COSTS_N_INSNS (3);
++	return false;
++      }
++    case ASHIFTRT:
++      {
++	rtx op1 = XEXP (x, 1);
++	if (const_1_operand (op1, VOIDmode))
++	  *total = COSTS_N_INSNS (2);
++	else
++	  *total = COSTS_N_INSNS (6);
++	return false;
++      }
++    case ZERO_EXTRACT:
++      {
++	rtx op2 = XEXP (x, 2);
++	if ((outer_code == EQ || outer_code == NE)
++	    && CONST_INT_P (op2)
++	    && INTVAL (op2) == 1)
++	  {
++	    /* Branch if bit is set/clear is a single instruction.  */
++	    *total = COSTS_N_INSNS (0);
 +	    return true;
 +	  }
 +	else
 +	  {
 +	    *total = COSTS_N_INSNS (2);
-+	    return true;
++	    return false;
 +	  }
++      }
++    case ZERO_EXTEND:
++      {
++	*total = COSTS_N_INSNS (0);
++	return false;
++      }
 +
-+      case LABEL_REF:
-+      case SYMBOL_REF:
-+      case CONST:
-+      case CONST_DOUBLE:
-+	  {
-+	    *total = COSTS_N_INSNS (1);
-+	    return true;
-+	  }
-+    case SET:
-+	{
-+	  /* A SET doesn't have a mode, so let's look at the SET_DEST to get
-+	     the mode for the factor.  */
-+	  mode = GET_MODE (SET_DEST (x));
-+
-+	  if (GET_MODE_SIZE (mode) <= GET_MODE_SIZE (SImode)
-+	      && (GET_CODE (SET_SRC (x)) == ZERO_EXTEND
-+		  || outer_code == ZERO_EXTEND))
-+	    {
-+	      *total = 0;
-+	    }
-+	  else
-+	    {
-+	      /* SI move has the same cost as a QI move.  */
-+	      int factor = GET_MODE_SIZE (mode) / GET_MODE_SIZE (SImode);
-+	      if (factor == 0)
-+		factor = 1;
-+	      *total = factor * COSTS_N_INSNS (1);
-+	    }
-+
-+	  return false;
-+	}
-+
-+      case MULT:
-+	{
-+	  *total = COSTS_N_INSNS (8);
-+	  return false;
-+	}
-+      case PLUS:
-+	{
-+	  rtx op0 = XEXP (x, 0);
-+	  rtx op1 = XEXP (x, 1);
-+	  if (outer_code == MEM
-+	      && ((REG_P (op0) && reg_or_ubyte_operand (op1, VOIDmode))
-+		  || (REG_P (op1) && reg_or_ubyte_operand (op0, VOIDmode))
-+		  || (ctable_addr_operand (op0, VOIDmode) && op1 == NULL_RTX)
-+		  || (ctable_addr_operand (op1, VOIDmode) && op0 == NULL_RTX)
-+		  || (ctable_base_operand (op0, VOIDmode) && REG_P (op1))
-+		  || (ctable_base_operand (op1, VOIDmode) && REG_P (op0))))
-+	    {
-+	      /* CTABLE or REG base addressing - PLUS comes for free.  */
-+	      *total = COSTS_N_INSNS (0);
-+	      return true;
-+	    }
-+	  else
-+	    {
-+	      *total = COSTS_N_INSNS (1);
-+	      return false;
-+	    }
-+	}
-+      case SIGN_EXTEND:
-+	{
-+	  *total = COSTS_N_INSNS (3);
-+	  return false;
-+	}
-+      case ASHIFTRT:
-+	{
-+	  rtx op1 = XEXP (x, 1);
-+	  if (const_1_operand (op1, VOIDmode))
-+	    *total = COSTS_N_INSNS (2);
-+	  else
-+	    *total = COSTS_N_INSNS (6);
-+	  return false;
-+	}
-+      case ZERO_EXTRACT:
-+	{
-+	  rtx op2 = XEXP (x, 2);
-+	  if ((outer_code == EQ || outer_code == NE)
-+	      && CONST_INT_P (op2)
-+	      && INTVAL (op2) == 1)
-+	    {
-+	      /* Branch if bit is set/clear is a single instruction.  */
-+	      *total = COSTS_N_INSNS (0);
-+	      return true;
-+	    }
-+	  else
-+	    {
-+	      *total = COSTS_N_INSNS (2);
-+	      return false;
-+	    }
-+	}
-+
-+      case ZERO_EXTEND:
-+	{
-+	  *total = COSTS_N_INSNS (0);
-+	  return false;
-+	}
-+
-+      default:
-+	{
-+	  /* Do not factor mode size in the cost.  */
-+	  *total = COSTS_N_INSNS (1);
-+	  return false;
-+	}
++    default:
++      {
++	/* PRU ALU is 32 bit, despite GCC's UNITS_PER_WORD=1.  */
++	int factor = CEIL (GET_MODE_SIZE (mode), GET_MODE_SIZE (SImode));
++	*total = factor * COSTS_N_INSNS (1);
++	return false;
++      }
 +    }
-+}
-+
-+/* Implement TARGET_PREFERRED_RELOAD_CLASS.  */
-+static reg_class_t
-+pru_preferred_reload_class (rtx x ATTRIBUTE_UNUSED, reg_class_t regclass)
-+{
-+  return regclass == NO_REGS ? GENERAL_REGS : regclass;
 +}
 +
 +static GTY(()) rtx eqdf_libfunc;
@@ -1963,19 +2005,25 @@ index 00000000000..de72d22278e
 +  gedf_libfunc = init_one_libfunc ("__pruabi_ged");
 +  gtdf_libfunc = init_one_libfunc ("__pruabi_gtd");
 +
++  /* In PRU ABI, much like other TI processors, floating point
++     comparisons return non-standard values.  This quirk is handled
++     by disabling the optab library functions, and handling the
++     comparison during RTL expansion.  */
 +  set_optab_libfunc (eq_optab, SFmode, NULL);
-+  set_optab_libfunc (ne_optab, SFmode, "__pruabi_neqf");
++  set_optab_libfunc (ne_optab, SFmode, NULL);
 +  set_optab_libfunc (gt_optab, SFmode, NULL);
 +  set_optab_libfunc (ge_optab, SFmode, NULL);
 +  set_optab_libfunc (lt_optab, SFmode, NULL);
 +  set_optab_libfunc (le_optab, SFmode, NULL);
-+  set_optab_libfunc (unord_optab, SFmode, "__pruabi_unordf");
 +  set_optab_libfunc (eq_optab, DFmode, NULL);
-+  set_optab_libfunc (ne_optab, DFmode, "__pruabi_neqd");
++  set_optab_libfunc (ne_optab, DFmode, NULL);
 +  set_optab_libfunc (gt_optab, DFmode, NULL);
 +  set_optab_libfunc (ge_optab, DFmode, NULL);
 +  set_optab_libfunc (lt_optab, DFmode, NULL);
 +  set_optab_libfunc (le_optab, DFmode, NULL);
++
++  /* The isunordered function appears to be supported only by GCC.  */
++  set_optab_libfunc (unord_optab, SFmode, "__pruabi_unordf");
 +  set_optab_libfunc (unord_optab, DFmode, "__pruabi_unordd");
 +
 +  /* Floating-point to integer conversions.  */
@@ -2040,6 +2088,8 @@ index 00000000000..de72d22278e
 +
 +  gcc_assert (op_mode == DFmode || op_mode == SFmode);
 +
++  /* FP exceptions are not raised by PRU's softfp implementation.  So the
++     following transformations are safe.  */
 +  if (code == UNGE)
 +    {
 +      code = LT;
@@ -2095,7 +2145,7 @@ index 00000000000..de72d22278e
 +{
 +  const int sz = GET_MODE_SIZE (GET_MODE (op));
 +
-+  return  sz * 8 - 1;
++  return sz * 8 - 1;
 +}
 +
 +/* Output asm code for sign_extend operation.  */
@@ -2128,7 +2178,7 @@ index 00000000000..de72d22278e
 +	  dst_sz - src_sz);
 +
 +  gcc_assert (bufi > 0);
-+  gcc_assert ((unsigned int)bufi < sizeof (buf));
++  gcc_assert ((unsigned int) bufi < sizeof (buf));
 +
 +  return buf;
 +}
@@ -2191,45 +2241,41 @@ index 00000000000..de72d22278e
 +
 +  /* Determine the comparison operators for positive and negative operands.  */
 +  if (code == LT)
-+      cmp_opstr = "qblt";
++    cmp_opstr = "qblt";
 +  else if (code == LE)
-+      cmp_opstr = "qble";
++    cmp_opstr = "qble";
 +  else
-+      gcc_unreachable ();
++    gcc_unreachable ();
 +
 +  if (is_near)
-+    {
-+      bufi = snprintf (buf, sizeof (buf),
-+		       "qbbc\t.+12, %%1, %d\n\t"
-+		       "qbbc\t%%l3, %%2, %d\n\t"  /* OP1_NEG.  */
-+		       "%s\t%%l3, %%2, %%1\n\t"   /* OP1_NEG_OP2_NEG.  */
-+		       "qbbs\t.+8, %%2, %d\n\t"   /* OP1_POS.  */
-+		       "%s\t%%l3, %%2, %%1",	  /* OP1_POS_OP2_POS.  */
-+		       sign_bit_position (op1),
-+		       sign_bit_position (op2),
-+		       cmp_opstr,
-+		       sign_bit_position (op2),
-+		       cmp_opstr);
-+    }
++    bufi = snprintf (buf, sizeof (buf),
++		     "qbbc\t.+12, %%1, %d\n\t"
++		     "qbbc\t%%l3, %%2, %d\n\t"  /* OP1_NEG.  */
++		     "%s\t%%l3, %%2, %%1\n\t"   /* OP1_NEG_OP2_NEG.  */
++		     "qbbs\t.+8, %%2, %d\n\t"   /* OP1_POS.  */
++		     "%s\t%%l3, %%2, %%1",	/* OP1_POS_OP2_POS.  */
++		     sign_bit_position (op1),
++		     sign_bit_position (op2),
++		     cmp_opstr,
++		     sign_bit_position (op2),
++		     cmp_opstr);
 +  else
-+    {
-+      bufi = snprintf (buf, sizeof (buf),
-+		       "qbbc\t.+12, %%1, %d\n\t"
-+		       "qbbc\t.+20, %%2, %d\n\t"  /* OP1_NEG.  */
-+		       "%s\t.+16, %%2, %%1\n\t"   /* OP1_NEG_OP2_NEG.  */
-+		       "qbbs\t.+16, %%2, %d\n\t"  /* OP1_POS.  */
-+		       "%s\t.+8, %%2, %%1\n\t"    /* OP1_POS_OP2_POS.  */
-+		       "jmp\t.+8\n\t"		  /* jmp OUT.  */
-+		       "jmp\t%%%%label(%%l3)",	  /* BRANCH_TAKEN_LABEL.  */
-+		       sign_bit_position (op1),
-+		       sign_bit_position (op2),
-+		       cmp_opstr,
-+		       sign_bit_position (op2),
-+		       cmp_opstr);
-+    }
++    bufi = snprintf (buf, sizeof (buf),
++		     "qbbc\t.+12, %%1, %d\n\t"
++		     "qbbc\t.+20, %%2, %d\n\t"  /* OP1_NEG.  */
++		     "%s\t.+16, %%2, %%1\n\t"   /* OP1_NEG_OP2_NEG.  */
++		     "qbbs\t.+16, %%2, %d\n\t"  /* OP1_POS.  */
++		     "%s\t.+8, %%2, %%1\n\t"    /* OP1_POS_OP2_POS.  */
++		     "jmp\t.+8\n\t"		/* jmp OUT.  */
++		     "jmp\t%%%%label(%%l3)",	/* BRANCH_TAKEN_LABEL.  */
++		     sign_bit_position (op1),
++		     sign_bit_position (op2),
++		     cmp_opstr,
++		     sign_bit_position (op2),
++		     cmp_opstr);
 +
 +  gcc_assert (bufi > 0);
-+  gcc_assert ((unsigned int)bufi < sizeof (buf));
++  gcc_assert ((unsigned int) bufi < sizeof (buf));
 +
 +  return buf;
 +}
@@ -2252,45 +2298,41 @@ index 00000000000..de72d22278e
 +
 +  /* Determine the comparison operators for positive and negative operands.  */
 +  if (code == GT)
-+      cmp_opstr = "qbgt";
++    cmp_opstr = "qbgt";
 +  else if (code == GE)
-+      cmp_opstr = "qbge";
++    cmp_opstr = "qbge";
 +  else
 +    gcc_unreachable ();
 +
 +  if (is_near)
-+    {
-+      bufi = snprintf (buf, sizeof (buf),
-+		       "qbbs\t.+12, %%1, %d\n\t"
-+		       "qbbs\t%%l3, %%2, %d\n\t"  /* OP1_POS.  */
-+		       "%s\t%%l3, %%2, %%1\n\t"   /* OP1_POS_OP2_POS.  */
-+		       "qbbc\t.+8, %%2, %d\n\t"   /* OP1_NEG.  */
-+		       "%s\t%%l3, %%2, %%1",      /* OP1_NEG_OP2_NEG.  */
-+		       sign_bit_position (op1),
-+		       sign_bit_position (op2),
-+		       cmp_opstr,
-+		       sign_bit_position (op2),
-+		       cmp_opstr);
-+    }
++    bufi = snprintf (buf, sizeof (buf),
++		     "qbbs\t.+12, %%1, %d\n\t"
++		     "qbbs\t%%l3, %%2, %d\n\t"  /* OP1_POS.  */
++		     "%s\t%%l3, %%2, %%1\n\t"   /* OP1_POS_OP2_POS.  */
++		     "qbbc\t.+8, %%2, %d\n\t"   /* OP1_NEG.  */
++		     "%s\t%%l3, %%2, %%1",      /* OP1_NEG_OP2_NEG.  */
++		     sign_bit_position (op1),
++		     sign_bit_position (op2),
++		     cmp_opstr,
++		     sign_bit_position (op2),
++		     cmp_opstr);
 +  else
-+    {
-+      bufi = snprintf (buf, sizeof (buf),
-+		       "qbbs\t.+12, %%1, %d\n\t"
-+		       "qbbs\t.+20, %%2, %d\n\t"  /* OP1_POS.  */
-+		       "%s\t.+16, %%2, %%1\n\t"   /* OP1_POS_OP2_POS.  */
-+		       "qbbc\t.+16, %%2, %d\n\t"  /* OP1_NEG.  */
-+		       "%s\t.+8, %%2, %%1\n\t"    /* OP1_NEG_OP2_NEG.  */
-+		       "jmp\t.+8\n\t"		  /* jmp OUT.  */
-+		       "jmp\t%%%%label(%%l3)",	  /* BRANCH_TAKEN_LABEL.  */
-+		       sign_bit_position (op1),
-+		       sign_bit_position (op2),
-+		       cmp_opstr,
-+		       sign_bit_position (op2),
-+		       cmp_opstr);
-+    }
++    bufi = snprintf (buf, sizeof (buf),
++		     "qbbs\t.+12, %%1, %d\n\t"
++		     "qbbs\t.+20, %%2, %d\n\t"  /* OP1_POS.  */
++		     "%s\t.+16, %%2, %%1\n\t"   /* OP1_POS_OP2_POS.  */
++		     "qbbc\t.+16, %%2, %d\n\t"  /* OP1_NEG.  */
++		     "%s\t.+8, %%2, %%1\n\t"    /* OP1_NEG_OP2_NEG.  */
++		     "jmp\t.+8\n\t"		/* jmp OUT.  */
++		     "jmp\t%%%%label(%%l3)",	/* BRANCH_TAKEN_LABEL.  */
++		     sign_bit_position (op1),
++		     sign_bit_position (op2),
++		     cmp_opstr,
++		     sign_bit_position (op2),
++		     cmp_opstr);
 +
 +  gcc_assert (bufi > 0);
-+  gcc_assert ((unsigned int)bufi < sizeof (buf));
++  gcc_assert ((unsigned int) bufi < sizeof (buf));
 +
 +  return buf;
 +}
@@ -2310,11 +2352,10 @@ index 00000000000..de72d22278e
 +  else if (code == GT || code == GE)
 +    return pru_output_gtge_signed_cbranch (operands, is_near);
 +  else
-+      gcc_unreachable ();
++    gcc_unreachable ();
 +}
 +
-+/*
-+   Optimized version of pru_output_signed_cbranch for constant second
++/* Optimized version of pru_output_signed_cbranch for constant second
 +   operand.  */
 +
 +const char *
@@ -2351,13 +2392,13 @@ index 00000000000..de72d22278e
 +      if (is_near)
 +	snprintf (buf, sizeof (buf),
 +		  "qbbs\t.+8, %%1, %d\n\t"
-+		  "%s\t%%l3, %%1, %%2",
++		  "%s\t%%l3, %%1, %%u2",
 +		  regop_sign_bit_pos,
 +		  cmp_opstr);
 +      else
 +	snprintf (buf, sizeof (buf),
 +		  "qbbs\t.+12, %%1, %d\n\t"
-+		  "%s\t.+8, %%1, %%2\n\t"
++		  "%s\t.+8, %%1, %%u2\n\t"
 +		  "jmp\t%%%%label(%%l3)",
 +		  regop_sign_bit_pos,
 +		  rcmp_opstr);
@@ -2367,13 +2408,13 @@ index 00000000000..de72d22278e
 +      if (is_near)
 +	snprintf (buf, sizeof (buf),
 +		  "qbbs\t%%l3, %%1, %d\n\t"
-+		  "%s\t%%l3, %%1, %%2",
++		  "%s\t%%l3, %%1, %%u2",
 +		  regop_sign_bit_pos,
 +		  cmp_opstr);
 +      else
 +	snprintf (buf, sizeof (buf),
 +		  "qbbs\t.+8, %%1, %d\n\t"
-+		  "%s\t.+8, %%1, %%2\n\t"
++		  "%s\t.+8, %%1, %%u2\n\t"
 +		  "jmp\t%%%%label(%%l3)",
 +		  regop_sign_bit_pos,
 +		  rcmp_opstr);
@@ -2384,8 +2425,7 @@ index 00000000000..de72d22278e
 +  return buf;
 +}
 +
-+/*
-+   Optimized version of pru_output_signed_cbranch_ubyteop2 for constant
++/* Optimized version of pru_output_signed_cbranch_ubyteop2 for constant
 +   zero second operand.  */
 +
 +const char *
@@ -2435,16 +2475,8 @@ index 00000000000..de72d22278e
 +bool
 +pru_regno_ok_for_base_p (int regno, bool strict_p)
 +{
-+  if (!HARD_REGISTER_NUM_P (regno))
-+    {
-+      if (!strict_p)
-+	return true;
-+
-+      if (!reg_renumber)
-+	return false;
-+
-+      regno = reg_renumber[regno];
-+    }
++  if (!HARD_REGISTER_NUM_P (regno) && !strict_p)
++    return true;
 +
 +  /* The fake registers will be eliminated to either the stack or
 +     hard frame pointer, both of which are usually valid base registers.
@@ -2469,7 +2501,7 @@ index 00000000000..de72d22278e
 +}
 +
 +/* Recognize a CTABLE base address.  Return CTABLE entry index, or -1 if
-+ * base was not found in the pragma-filled pru_ctable.  */
++   base was not found in the pragma-filled pru_ctable.  */
 +int
 +pru_get_ctable_exact_base_index (unsigned HOST_WIDE_INT caddr)
 +{
@@ -2515,46 +2547,38 @@ index 00000000000..de72d22278e
 +}
 +
 +/* Return true if the address expression formed by BASE + OFFSET is
-+   valid.  */
++   valid.
++
++   Note that the following address is not handled here:
++	  base CTABLE constant base + UBYTE constant offset
++   The constants will be folded.  The ctable_addr_operand predicate will take
++   care of the validation.  The CTABLE base+offset split will happen during
++   operand printing.  */
 +static bool
 +pru_valid_addr_expr_p (machine_mode mode, rtx base, rtx offset, bool strict_p)
 +{
-+  if (!strict_p && base != NULL_RTX && GET_CODE (base) == SUBREG)
++  if (!strict_p && GET_CODE (base) == SUBREG)
 +    base = SUBREG_REG (base);
-+  if (!strict_p && offset != NULL_RTX && GET_CODE (offset) == SUBREG)
++  if (!strict_p && GET_CODE (offset) == SUBREG)
 +    offset = SUBREG_REG (offset);
 +
 +  if (REG_P (base)
 +      && pru_regno_ok_for_base_p (REGNO (base), strict_p)
-+      && (offset == NULL_RTX
-+	  || (CONST_INT_P (offset)
++      && ((CONST_INT_P (offset)
 +	      && pru_valid_const_ubyte_offset (mode, INTVAL (offset)))
 +	  || (REG_P (offset)
 +	      && pru_regno_ok_for_index_p (REGNO (offset), strict_p))))
-+    {
-+      /*     base register + register offset
-+       * OR  base register + UBYTE constant offset.  */
-+      return true;
-+    }
++    /*     base register + register offset
++     * OR  base register + UBYTE constant offset.  */
++    return true;
 +  else if (REG_P (base)
 +	   && pru_regno_ok_for_index_p (REGNO (base), strict_p)
-+	   && (offset != NULL_RTX && ctable_base_operand (offset, VOIDmode)))
-+    {
-+      /*     base CTABLE constant base + register offset
-+       * Note: GCC always puts the register as a first operand of PLUS.  */
-+      return true;
-+    }
-+  else if (CONST_INT_P (base)
-+	   && offset == NULL_RTX
-+	   && (ctable_addr_operand (base, VOIDmode)))
-+    {
-+      /*     base CTABLE constant base + UBYTE constant offset.  */
-+      return true;
-+    }
++	   && ctable_base_operand (offset, VOIDmode))
++    /*     base CTABLE constant base + register offset
++     * Note: GCC always puts the register as a first operand of PLUS.  */
++    return true;
 +  else
-+    {
-+      return false;
-+    }
++    return false;
 +}
 +
 +/* Implement TARGET_LEGITIMATE_ADDRESS_P.  */
@@ -2568,7 +2592,7 @@ index 00000000000..de72d22278e
 +    case SYMBOL_REF:
 +    case LABEL_REF:
 +    case CONST:
-+    case CONST_DOUBLE:
++    case CONST_WIDE_INT:
 +      return false;
 +
 +    case CONST_INT:
@@ -2580,13 +2604,13 @@ index 00000000000..de72d22278e
 +
 +      /* Register indirect with displacement.  */
 +    case PLUS:
-+	{
-+	  rtx op0 = XEXP (operand, 0);
-+	  rtx op1 = XEXP (operand, 1);
++      {
++	rtx op0 = XEXP (operand, 0);
++	rtx op1 = XEXP (operand, 1);
 +
-+	  return (pru_valid_addr_expr_p (mode, op0, op1, strict_p)
-+		  || pru_valid_addr_expr_p (mode, op1, op0, strict_p));
-+	}
++	return (pru_valid_addr_expr_p (mode, op0, op1, strict_p)
++		|| pru_valid_addr_expr_p (mode, op1, op0, strict_p));
++      }
 +
 +    default:
 +      break;
@@ -2739,6 +2763,7 @@ index 00000000000..de72d22278e
 +     R: prints reversed condition.
 +     S: print operand mode size (but do not print the operand itself)
 +     T: print exact_log2 () for const_int operands
++     u: print QI constant integer as unsigned.  No transformation for regs.
 +     V: print exact_log2 () of negated const_int operands
 +     w: Lower 32-bits of a const_int operand
 +     W: Upper 32-bits of a const_int operand
@@ -2748,7 +2773,6 @@ index 00000000000..de72d22278e
 +static void
 +pru_print_operand (FILE *file, rtx op, int letter)
 +{
-+
 +  switch (letter)
 +    {
 +    case 'S':
@@ -2784,40 +2808,56 @@ index 00000000000..de72d22278e
 +  switch (GET_CODE (op))
 +    {
 +    case REG:
-+      if (letter == 0)
++      if (letter == 0 || letter == 'u')
 +	{
 +	  fprintf (file, "%s", pru_asm_regname (op));
 +	  return;
 +	}
 +      else if (letter == 'b')
 +	{
-+	  gcc_assert (REGNO (op) <= LAST_NONIO_GP_REG);
++	  if (REGNO (op) > LAST_NONIO_GP_REG)
++	    {
++	      output_operand_lossage ("I/O register operand for '%%%c'",
++				      letter);
++	      return;
++	    }
 +	  fprintf (file, "r%d.b%d", REGNO (op) / 4, REGNO (op) % 4);
 +	  return;
 +	}
-+      else if (letter == 'F')
++      else if (letter == 'F' || letter == 'N')
 +	{
-+	  gcc_assert (REGNO (op) <= LAST_NONIO_GP_REG);
-+	  gcc_assert (REGNO (op) % 4 == 0);
-+	  fprintf (file, "r%d", REGNO (op) / 4);
-+	  return;
-+	}
-+      else if (letter == 'N')
-+	{
-+	  gcc_assert (REGNO (op) <= LAST_NONIO_GP_REG);
-+	  gcc_assert (REGNO (op) % 4 == 0);
-+	  fprintf (file, "r%d", REGNO (op) / 4 + 1);
++	  if (REGNO (op) > LAST_NONIO_GP_REG - 1)
++	    {
++	      output_operand_lossage ("I/O register operand for '%%%c'",
++				      letter);
++	      return;
++	    }
++	  if (REGNO (op) % 4 != 0)
++	    {
++	      output_operand_lossage ("non 32 bit register operand for '%%%c'",
++				      letter);
++	      return;
++	    }
++	  fprintf (file, "r%d", REGNO (op) / 4 + (letter == 'N' ? 1 : 0));
 +	  return;
 +	}
 +      else if (letter == 'y')
 +	{
-+	  gcc_assert (REGNO (op) <= LAST_NONIO_GP_REG - 1);
++	  if (REGNO (op) > LAST_NONIO_GP_REG - 1)
++	    {
++	      output_operand_lossage ("invalid operand for '%%%c'", letter);
++	      return;
++	    }
 +	  fprintf (file, "%s", reg_names[REGNO (op) + 1]);
 +	  return;
 +	}
 +      else if (letter == 'z')
 +	{
-+	  gcc_assert (REGNO (op) <= LAST_NONIO_GP_REG - 2);
++	  if (REGNO (op) > LAST_NONIO_GP_REG - 2)
++	    {
++	      output_operand_lossage ("invalid operand for '%%%c'", letter);
++	      return;
++	    }
 +	  fprintf (file, "%s", reg_names[REGNO (op) + 2]);
 +	  return;
 +	}
@@ -2844,14 +2884,22 @@ index 00000000000..de72d22278e
 +	     requirement.  Use CTZ here to deal with constant's sign
 +	     extension.  */
 +	  HOST_WIDE_INT val = wi::ctz (INTVAL (op));
-+	  gcc_assert (val >= 0 && val <= 31);
++	  if (val < 0 || val > 31)
++	    {
++	      output_operand_lossage ("invalid operand for '%%%c'", letter);
++	      return;
++	    }
 +	  output_addr_const (file, gen_int_mode (val, SImode));
 +	  return;
 +	}
 +      else if (letter == 'V')
 +	{
 +	  HOST_WIDE_INT val = wi::ctz (~INTVAL (op));
-+	  gcc_assert (val >= 0 && val <= 31);
++	  if (val < 0 || val > 31)
++	    {
++	      output_operand_lossage ("invalid operand for '%%%c'", letter);
++	      return;
++	    }
 +	  output_addr_const (file, gen_int_mode (val, SImode));
 +	  return;
 +	}
@@ -2865,6 +2913,14 @@ index 00000000000..de72d22278e
 +	{
 +	  HOST_WIDE_INT val = (INTVAL (op) >> 32) & 0xffffffff;
 +	  output_addr_const (file, gen_int_mode (val, SImode));
++	  return;
++	}
++      else if (letter == 'u')
++	{
++	  /* Workaround GCC's representation of QI constants in sign-extended
++	     form, and PRU's assembler insistence on unsigned constant
++	     integers.  See the notes about O constraint.  */
++	  fprintf (file, HOST_WIDE_INT_PRINT_DEC, INTVAL (op) & 0xff);
 +	  return;
 +	}
 +      /* Else, fall through.  */
@@ -2883,7 +2939,7 @@ index 00000000000..de72d22278e
 +	{
 +	  HOST_WIDE_INT ival = INTVAL (pru_to_int_mode (op));
 +	  if (letter != 0)
-+	    output_operand_lossage ("Unsupported code '%c' for fixed-point:",
++	    output_operand_lossage ("unsupported code '%c' for fixed-point:",
 +				    letter);
 +	  fprintf (file, HOST_WIDE_INT_PRINT_DEC, ival);
 +	  return;
@@ -2896,7 +2952,10 @@ index 00000000000..de72d22278e
 +	  long val;
 +
 +	  if (GET_MODE (op) != SFmode)
-+	    fatal_insn ("internal compiler error.  Unknown mode:", op);
++	    {
++	      output_operand_lossage ("double constants not supported");
++	      return;
++	    }
 +	  REAL_VALUE_TO_TARGET_SINGLE (*CONST_DOUBLE_REAL_VALUE (op), val);
 +	  fprintf (file, "0x%lx", val);
 +	  return;
@@ -2910,11 +2969,16 @@ index 00000000000..de72d22278e
 +	}
 +      else
 +	{
-+	  gcc_unreachable ();
++	  output_operand_lossage ("invalid operand for '%%%c'", letter);
++	  return;
 +	}
 +      break;
 +
 +    case SUBREG:
++      /* Subregs should not appear at so late stage.  */
++      gcc_unreachable ();
++      break;
++
 +    case MEM:
 +      if (letter == 0)
 +	{
@@ -2938,7 +3002,7 @@ index 00000000000..de72d22278e
 +		  fprintf (file, "c");
 +		  return;
 +		}
-+	      else if (REG_P (op0) || REG_P (op1))
++	      else if (REG_P (op0))
 +		{
 +		  fprintf (file, "b");
 +		  return;
@@ -2973,28 +3037,25 @@ index 00000000000..de72d22278e
 +      break;
 +    }
 +
-+  output_operand_lossage ("Unsupported operand %s for code '%c'",
++  output_operand_lossage ("unsupported operand %s for code '%c'",
 +			  GET_RTX_NAME (GET_CODE (op)), letter);
-+  gcc_unreachable ();
 +}
 +
 +/* Implement TARGET_PRINT_OPERAND_ADDRESS.  */
 +static void
 +pru_print_operand_address (FILE *file, machine_mode mode, rtx op)
 +{
-+  if (GET_CODE (op) != REG && CONSTANT_ADDRESS_P (op)
-+      && text_segment_operand (op, VOIDmode))
++  if (CONSTANT_ADDRESS_P (op) && text_segment_operand (op, VOIDmode))
 +    {
-+      fprintf (stderr, "Unexpectred text address?\n");
-+      debug_rtx (op);
-+      gcc_unreachable ();
++      output_operand_lossage ("unexpected text address:");
++      return;
 +    }
 +
 +  switch (GET_CODE (op))
 +    {
 +    case CONST:
 +    case LABEL_REF:
-+    case CONST_DOUBLE:
++    case CONST_WIDE_INT:
 +    case SYMBOL_REF:
 +      break;
 +
@@ -3025,9 +3086,8 @@ index 00000000000..de72d22278e
 +	else if (REG_P (op1) && CONST_INT_P (op0)
 +		 && pru_get_ctable_exact_base_index (INTVAL (op0)) >= 0)
 +	  {
-+	    base = pru_get_ctable_exact_base_index (INTVAL (op0));
-+	    fprintf (file, "%d, %s", base, pru_asm_regname (op1));
-+	    return;
++	    /* Not a valid RTL.  */
++	    gcc_unreachable ();
 +	  }
 +	else if (REG_P (op0) && CONSTANT_P (op1))
 +	  {
@@ -3037,9 +3097,8 @@ index 00000000000..de72d22278e
 +	  }
 +	else if (REG_P (op1) && CONSTANT_P (op0))
 +	  {
-+	    fprintf (file, "%s, ", pru_asm_regname (op1));
-+	    output_addr_const (file, op0);
-+	    return;
++	    /* Not a valid RTL.  */
++	    gcc_unreachable ();
 +	  }
 +	else if (REG_P (op1) && REG_P (op0))
 +	  {
@@ -3064,9 +3123,7 @@ index 00000000000..de72d22278e
 +      break;
 +    }
 +
-+  fprintf (stderr, "Missing way to print address\n");
-+  debug_rtx (op);
-+  gcc_unreachable ();
++  output_operand_lossage ("unsupported memory expression:");
 +}
 +
 +/* Implement TARGET_ASM_FUNCTION_PROLOGUE.  */
@@ -3074,10 +3131,7 @@ index 00000000000..de72d22278e
 +pru_asm_function_prologue (FILE *file)
 +{
 +  if (flag_verbose_asm || flag_debug_asm)
-+    {
-+      pru_compute_frame_layout ();
-+      pru_dump_frame_layout (file);
-+    }
++    pru_dump_frame_layout (file);
 +}
 +
 +/* Implement `TARGET_ASM_INTEGER'.
@@ -3113,7 +3167,7 @@ index 00000000000..de72d22278e
 +    }
 +}
 +
-+/* Implement TARGET_ASM_FILETARGET_ASM_FILE_START_START.  */
++/* Implement TARGET_ASM_FILE_START.  */
 +
 +static void
 +pru_file_start (void)
@@ -3180,25 +3234,26 @@ index 00000000000..de72d22278e
 +  /* Find the first available slot that fits.  Yes, that's the PRU ABI.  */
 +  for (i = 0; regi < 0 && i < ARRAY_SIZE (cum->regs_used); i++)
 +    {
-+      if (mode == BLKmode)
-+	{
-+	  /* Structs are passed, beginning at a full register.  */
-+	  if ((i % 4) != 0)
-+	    continue;
-+	}
-+      else
-+	{
-+	  /* Scalar arguments.  */
++      /* VLAs and vector types are not defined in the PRU ABI.  Let's
++	 handle them the same as their same-sized counterparts.  This way
++	 we do not need to treat BLKmode differently, and need only to check
++	 the size.  */
++      gcc_assert (argsize == 1 || argsize == 2 || argsize == 3
++		  || argsize == 4 || argsize == 8);
 +
-+	  /* Ensure SI and DI arguments are stored in full registers only.  */
-+	  if ((argsize >= 4) && (i % 4) != 0)
-+	    continue;
++      /* Ensure SI and DI arguments are stored in full registers only.  */
++      if ((argsize >= 4) && (i % 4) != 0)
++	continue;
 +
-+	  /* rX.w0/w1/w2 are OK.  But avoid spreading the second byte
-+	     into a different full register.  */
-+	  if (argsize == 2 && (i % 4) == 3)
-+	    continue;
-+	}
++      /* Structures with size 24 bits are passed starting at a full
++	 register boundary.  */
++      if (argsize == 3 && (i % 4) != 0)
++	continue;
++
++      /* rX.w0/w1/w2 are OK.  But avoid spreading the second byte
++	 into a different full register.  */
++      if (argsize == 2 && (i % 4) == 3)
++	continue;
 +
 +      for (bi = 0;
 +	   bi < argsize && (bi + i) < ARRAY_SIZE (cum->regs_used);
@@ -3423,7 +3478,7 @@ index 00000000000..de72d22278e
 +	     2 - count, count == 1 ? "" : "s");
 +
 +  for (; count < 2; count++)
-+      emit_insn_before (gen_nop (), last_insn);
++    emit_insn_before (gen_nop (), last_insn);
 +
 +  /* Insert the label.  */
 +  emit_label_before (label, last_insn);
@@ -3873,7 +3928,7 @@ index 00000000000..de72d22278e
 +				NULL);
 +
 +  pru_builtins[PRU_BUILTIN_DELAY_CYCLES]
-+    = add_builtin_function ( "__delay_cycles", void_ftype_longlong,
++    = add_builtin_function ("__delay_cycles", void_ftype_longlong,
 +			    PRU_BUILTIN_DELAY_CYCLES, BUILT_IN_MD, NULL,
 +			    NULL_TREE);
 +}
@@ -3908,13 +3963,11 @@ index 00000000000..de72d22278e
 +
 +  c = INTVAL (arg);
 +
-+  if (HOST_BITS_PER_WIDE_INT > 32)
++  gcc_assert (HOST_BITS_PER_WIDE_INT > 32);
++  if (c < 0)
 +    {
-+      if (c < 0)
-+	{
-+	  error ("%<__delay_cycles%> only takes non-negative cycle counts");
-+	  return NULL_RTX;
-+	}
++      error ("%<__delay_cycles%> only takes non-negative cycle counts");
++      return NULL_RTX;
 +    }
 +
 +  emit_insn (gen_delay_cycles_start (arg));
@@ -4044,14 +4097,14 @@ index 00000000000..de72d22278e
 +#undef TARGET_BUILTIN_DECL
 +#define TARGET_BUILTIN_DECL pru_builtin_decl
 +
++#undef TARGET_COMPUTE_FRAME_LAYOUT
++#define TARGET_COMPUTE_FRAME_LAYOUT pru_compute_frame_layout
++
 +#undef TARGET_FUNCTION_OK_FOR_SIBCALL
 +#define TARGET_FUNCTION_OK_FOR_SIBCALL hook_bool_tree_tree_true
 +
 +#undef TARGET_CAN_ELIMINATE
 +#define TARGET_CAN_ELIMINATE pru_can_eliminate
-+
-+#undef TARGET_MODES_TIEABLE_P
-+#define TARGET_MODES_TIEABLE_P pru_modes_tieable_p
 +
 +#undef TARGET_HARD_REGNO_MODE_OK
 +#define TARGET_HARD_REGNO_MODE_OK pru_hard_regno_mode_ok
@@ -4085,9 +4138,6 @@ index 00000000000..de72d22278e
 +
 +#undef TARGET_LEGITIMATE_ADDRESS_P
 +#define TARGET_LEGITIMATE_ADDRESS_P pru_legitimate_address_p
-+
-+#undef TARGET_PREFERRED_RELOAD_CLASS
-+#define TARGET_PREFERRED_RELOAD_CLASS pru_preferred_reload_class
 +
 +#undef TARGET_INIT_LIBFUNCS
 +#define TARGET_INIT_LIBFUNCS pru_init_libfuncs
@@ -4129,10 +4179,10 @@ index 00000000000..de72d22278e
 +#include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
 new file mode 100644
-index 00000000000..de1b9100209
+index 00000000000..9f1e6e85836
 --- /dev/null
 +++ b/gcc/config/pru/pru.h
-@@ -0,0 +1,551 @@
+@@ -0,0 +1,572 @@
 +/* Definitions of target machine for TI PRU.
 +   Copyright (C) 2014-2018 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -4172,9 +4222,9 @@ index 00000000000..de1b9100209
 +    }						    \
 +  while (0)
 +
-+/* TI ABI implementation is not feature enough (e.g. function pointers are
-+   not supported), so we cannot list it as a multilib variant.  To prevent
-+   misuse from users, do not link any of the standard libraries.  */
++/* TI ABI implementation is not feature-complete enough (e.g. function
++   pointers are not supported), so we cannot list it as a multilib variant.
++   To prevent misuse from users, do not link any of the standard libraries.  */
 +#define DRIVER_SELF_SPECS			      \
 +  "%{mabi=ti:-nodefaultlibs} "			      \
 +  "%{mmcu=*:-specs=device-specs/%*%s %<mmcu=*} "
@@ -4277,6 +4327,12 @@ index 00000000000..de1b9100209
 +   36			  First Pseudo Register
 +
 +   The definitions for all the hard register numbers are located in pru.md.
++   Note that GCC's internal register numbering differs from the conventional
++   register naming in PRU ISA.  PRU ISA defines word-based register numbers
++   and sub-register suffixes (e.g. RA is r3.w0).  GCC uses linear numbering
++   of 8 bit sub-registers (e.g. RA starts at r12).  When outputting assembly,
++   GCC will take into account the RTL operand size (e.g. r12:HI) in order to
++   translate to the conventional PRU ISA format expected by GAS.
 +*/
 +
 +#define FIXED_REGISTERS				\
@@ -4306,27 +4362,27 @@ index 00000000000..de1b9100209
 +/*  32 */  1,1,1,1, 1,1,1,1, 1,1,1,1, 1,1,1,1	\
 +  }
 +
-+#define __pru_RSEQ(X)  (X) * 4 + 0, (X) * 4 + 1, (X) * 4 + 2, (X) * 4 + 3
++#define PRU_SEQ_R(X)  (X) * 4 + 0, (X) * 4 + 1, (X) * 4 + 2, (X) * 4 + 3
 +#define REG_ALLOC_ORDER							    \
 +  {									    \
 +    /* Call-clobbered, yet not used for parameters.  */			    \
-+    __pru_RSEQ (0),  __pru_RSEQ ( 1),					    \
++    PRU_SEQ_R (0),  PRU_SEQ_R ( 1),					    \
 +									    \
-+    __pru_RSEQ (14), __pru_RSEQ (15), __pru_RSEQ (16), __pru_RSEQ (17),	    \
-+    __pru_RSEQ (18), __pru_RSEQ (19), __pru_RSEQ (20), __pru_RSEQ (21),	    \
-+    __pru_RSEQ (22), __pru_RSEQ (23), __pru_RSEQ (24), __pru_RSEQ (25),	    \
-+    __pru_RSEQ (26), __pru_RSEQ (27), __pru_RSEQ (28), __pru_RSEQ (29),	    \
++    PRU_SEQ_R (14), PRU_SEQ_R (15), PRU_SEQ_R (16), PRU_SEQ_R (17),	    \
++    PRU_SEQ_R (18), PRU_SEQ_R (19), PRU_SEQ_R (20), PRU_SEQ_R (21),	    \
++    PRU_SEQ_R (22), PRU_SEQ_R (23), PRU_SEQ_R (24), PRU_SEQ_R (25),	    \
++    PRU_SEQ_R (26), PRU_SEQ_R (27), PRU_SEQ_R (28), PRU_SEQ_R (29),	    \
 +									    \
-+    __pru_RSEQ ( 5), __pru_RSEQ ( 6), __pru_RSEQ ( 7), __pru_RSEQ ( 8),	    \
-+    __pru_RSEQ ( 9), __pru_RSEQ (10), __pru_RSEQ (11), __pru_RSEQ (12),	    \
-+    __pru_RSEQ (13),							    \
++    PRU_SEQ_R ( 5), PRU_SEQ_R ( 6), PRU_SEQ_R ( 7), PRU_SEQ_R ( 8),	    \
++    PRU_SEQ_R ( 9), PRU_SEQ_R (10), PRU_SEQ_R (11), PRU_SEQ_R (12),	    \
++    PRU_SEQ_R (13),							    \
 +									    \
-+    __pru_RSEQ ( 4),							    \
-+    __pru_RSEQ ( 2), __pru_RSEQ ( 3),					    \
++    PRU_SEQ_R ( 4),							    \
++    PRU_SEQ_R ( 2), PRU_SEQ_R ( 3),					    \
 +									    \
 +    /* I/O and virtual registers.  */					    \
-+    __pru_RSEQ (30), __pru_RSEQ (31), __pru_RSEQ (32), __pru_RSEQ (33),	    \
-+    __pru_RSEQ (34), __pru_RSEQ (35)					    \
++    PRU_SEQ_R (30), PRU_SEQ_R (31), PRU_SEQ_R (32), PRU_SEQ_R (33),	    \
++    PRU_SEQ_R (34), PRU_SEQ_R (35)					    \
 +  }
 +
 +/* Register Classes.  */
@@ -4336,6 +4392,9 @@ index 00000000000..de1b9100209
 +  NO_REGS,
 +  SIB_REGS,
 +  LOOPCNTR_REGS,
++  MULDST_REGS,
++  MULSRC0_REGS,
++  MULSRC1_REGS,
 +  GP_REGS,
 +  ALL_REGS,
 +  LIM_REG_CLASSES
@@ -4347,6 +4406,9 @@ index 00000000000..de1b9100209
 +  {  "NO_REGS",		  \
 +     "SIB_REGS",	  \
 +     "LOOPCNTR_REGS",	  \
++     "MULDST_REGS",	  \
++     "MULSRC0_REGS",	  \
++     "MULSRC1_REGS",	  \
 +     "GP_REGS",		  \
 +     "ALL_REGS" }
 +
@@ -4357,6 +4419,9 @@ index 00000000000..de1b9100209
 +    /* NO_REGS	      */ { 0, 0, 0, 0, 0},			\
 +    /* SIB_REGS	      */ { 0xf, 0xff000000, ~0, 0xffffff, 0},	\
 +    /* LOOPCNTR_REGS  */ { 0, 0, 0, 0, 0xf},			\
++    /* MULDST_REGS    */ { 0, 0, 0, 0x00000f00, 0},		\
++    /* MULSRC0_REGS   */ { 0, 0, 0, 0x000f0000, 0},		\
++    /* MULSRC1_REGS   */ { 0, 0, 0, 0x00f00000, 0},		\
 +    /* GP_REGS	      */ { ~0, ~0, ~0, ~0, 0},			\
 +    /* ALL_REGS	      */ { ~0,~0, ~0, ~0, ~0}			\
 +  }
@@ -4364,7 +4429,10 @@ index 00000000000..de1b9100209
 +
 +#define GP_REG_P(REGNO) ((unsigned)(REGNO) <= LAST_GP_REG)
 +#define REGNO_REG_CLASS(REGNO)						    \
-+	((REGNO) >= FIRST_ARG_REGNO && (REGNO) <= LAST_ARG_REGNO ? SIB_REGS \
++	((REGNO) == MULDST_REG ? MULDST_REGS				    \
++	 : (REGNO) == MULSRC0_REG ? MULSRC0_REGS			    \
++	 : (REGNO) == MULSRC1_REG ? MULSRC1_REGS			    \
++	 : (REGNO) >= FIRST_ARG_REGNO && (REGNO) <= LAST_ARG_REGNO ? SIB_REGS \
 +	 : (REGNO) == STATIC_CHAIN_REGNUM ? SIB_REGS			    \
 +	 : (REGNO) == LOOPCNTR_REG ? LOOPCNTR_REGS			    \
 +	 : (REGNO) <= LAST_NONIO_GP_REG ? GP_REGS			    \
@@ -4377,18 +4445,19 @@ index 00000000000..de1b9100209
 +#define STATIC_CHAIN_REGNUM      0	/* r0 */
 +
 +/* Tests for various kinds of constants used in the PRU port.  */
-+#define SHIFT_INT(X) ((X) >= 0 && (X) <= 31)
++#define SHIFT_INT(X) (IN_RANGE ((X), 0, 31))
 +
 +#define UHWORD_INT(X) (IN_RANGE ((X), 0, 0xffff))
 +#define SHWORD_INT(X) (IN_RANGE ((X), -32768, 32767))
 +#define UBYTE_INT(X) (IN_RANGE ((X), 0, 0xff))
++#define SBYTE_INT(X) (IN_RANGE ((X), -128, 127))
 +
 +/* Say that the epilogue uses the return address register.  Note that
 +   in the case of sibcalls, the values "used by the epilogue" are
 +   considered live at the start of the called function.  */
-+#define EPILOGUE_USES(REGNO) (epilogue_completed &&	      \
-+			      (((REGNO) == RA_REGNO)	      \
-+			       || (REGNO) == (RA_REGNO + 1)))
++#define EPILOGUE_USES(REGNO) (epilogue_completed		\
++			      && (((REGNO) == RA_REGNO)		\
++				  || (REGNO) == (RA_REGNO + 1)))
 +
 +/* EXIT_IGNORE_STACK should be nonzero if, when returning from a function,
 +   the stack pointer does not matter.  The value is tested only in
@@ -4492,48 +4561,48 @@ index 00000000000..de1b9100209
 +
 +#define GLOBAL_ASM_OP "\t.global\t"
 +
-+#define __pru_name_R(X)  X".b0", X".b1", X".b2", X".b3"
++#define PRU_NAME_R(X)  X".b0", X".b1", X".b2", X".b3"
 +#define REGISTER_NAMES		  \
 +  {				  \
-+    __pru_name_R ("r0"),	  \
-+    __pru_name_R ("r1"),	  \
-+    __pru_name_R ("r2"),	  \
-+    __pru_name_R ("r3"),	  \
-+    __pru_name_R ("r4"),	  \
-+    __pru_name_R ("r5"),	  \
-+    __pru_name_R ("r6"),	  \
-+    __pru_name_R ("r7"),	  \
-+    __pru_name_R ("r8"),	  \
-+    __pru_name_R ("r9"),	  \
-+    __pru_name_R ("r10"),	  \
-+    __pru_name_R ("r11"),	  \
-+    __pru_name_R ("r12"),	  \
-+    __pru_name_R ("r13"),	  \
-+    __pru_name_R ("r14"),	  \
-+    __pru_name_R ("r15"),	  \
-+    __pru_name_R ("r16"),	  \
-+    __pru_name_R ("r17"),	  \
-+    __pru_name_R ("r18"),	  \
-+    __pru_name_R ("r19"),	  \
-+    __pru_name_R ("r20"),	  \
-+    __pru_name_R ("r21"),	  \
-+    __pru_name_R ("r22"),	  \
-+    __pru_name_R ("r23"),	  \
-+    __pru_name_R ("r24"),	  \
-+    __pru_name_R ("r25"),	  \
-+    __pru_name_R ("r26"),	  \
-+    __pru_name_R ("r27"),	  \
-+    __pru_name_R ("r28"),	  \
-+    __pru_name_R ("r29"),	  \
-+    __pru_name_R ("r30"),	  \
-+    __pru_name_R ("r31"),	  \
-+    __pru_name_R ("loopcntr_reg"), \
-+    __pru_name_R ("pc"),	  \
-+    __pru_name_R ("fake_fp"),	  \
-+    __pru_name_R ("fake_ap"),	  \
++    PRU_NAME_R ("r0"),		  \
++    PRU_NAME_R ("r1"),		  \
++    PRU_NAME_R ("r2"),		  \
++    PRU_NAME_R ("r3"),		  \
++    PRU_NAME_R ("r4"),		  \
++    PRU_NAME_R ("r5"),		  \
++    PRU_NAME_R ("r6"),		  \
++    PRU_NAME_R ("r7"),		  \
++    PRU_NAME_R ("r8"),		  \
++    PRU_NAME_R ("r9"),		  \
++    PRU_NAME_R ("r10"),		  \
++    PRU_NAME_R ("r11"),		  \
++    PRU_NAME_R ("r12"),		  \
++    PRU_NAME_R ("r13"),		  \
++    PRU_NAME_R ("r14"),		  \
++    PRU_NAME_R ("r15"),		  \
++    PRU_NAME_R ("r16"),		  \
++    PRU_NAME_R ("r17"),		  \
++    PRU_NAME_R ("r18"),		  \
++    PRU_NAME_R ("r19"),		  \
++    PRU_NAME_R ("r20"),		  \
++    PRU_NAME_R ("r21"),		  \
++    PRU_NAME_R ("r22"),		  \
++    PRU_NAME_R ("r23"),		  \
++    PRU_NAME_R ("r24"),		  \
++    PRU_NAME_R ("r25"),		  \
++    PRU_NAME_R ("r26"),		  \
++    PRU_NAME_R ("r27"),		  \
++    PRU_NAME_R ("r28"),		  \
++    PRU_NAME_R ("r29"),		  \
++    PRU_NAME_R ("r30"),		  \
++    PRU_NAME_R ("r31"),		  \
++    PRU_NAME_R ("loopcntr_reg"),  \
++    PRU_NAME_R ("pc"),		  \
++    PRU_NAME_R ("fake_fp"),	  \
++    PRU_NAME_R ("fake_ap"),	  \
 +}
 +
-+#define __pru_overlap_R(X)	      \
++#define PRU_OVERLAP_R(X)	      \
 +  { "r" #X	, X * 4	    ,  4 },   \
 +  { "r" #X ".w0", X * 4 + 0 ,  2 },   \
 +  { "r" #X ".w1", X * 4 + 1 ,  2 },   \
@@ -4545,38 +4614,38 @@ index 00000000000..de1b9100209
 +    { "sp", 2 * 4, 4 },		    \
 +    { "ra", 3 * 4, 2 },		    \
 +    { "fp", 4 * 4, 4 },		    \
-+    __pru_overlap_R (0),	    \
-+    __pru_overlap_R (1),	    \
-+    __pru_overlap_R (2),	    \
-+    __pru_overlap_R (3),	    \
-+    __pru_overlap_R (4),	    \
-+    __pru_overlap_R (5),	    \
-+    __pru_overlap_R (6),	    \
-+    __pru_overlap_R (7),	    \
-+    __pru_overlap_R (8),	    \
-+    __pru_overlap_R (9),	    \
-+    __pru_overlap_R (10),	    \
-+    __pru_overlap_R (11),	    \
-+    __pru_overlap_R (12),	    \
-+    __pru_overlap_R (13),	    \
-+    __pru_overlap_R (14),	    \
-+    __pru_overlap_R (15),	    \
-+    __pru_overlap_R (16),	    \
-+    __pru_overlap_R (17),	    \
-+    __pru_overlap_R (18),	    \
-+    __pru_overlap_R (19),	    \
-+    __pru_overlap_R (20),	    \
-+    __pru_overlap_R (21),	    \
-+    __pru_overlap_R (22),	    \
-+    __pru_overlap_R (23),	    \
-+    __pru_overlap_R (24),	    \
-+    __pru_overlap_R (25),	    \
-+    __pru_overlap_R (26),	    \
-+    __pru_overlap_R (27),	    \
-+    __pru_overlap_R (28),	    \
-+    __pru_overlap_R (29),	    \
-+    __pru_overlap_R (30),	    \
-+    __pru_overlap_R (31),	    \
++    PRU_OVERLAP_R (0),		    \
++    PRU_OVERLAP_R (1),		    \
++    PRU_OVERLAP_R (2),		    \
++    PRU_OVERLAP_R (3),		    \
++    PRU_OVERLAP_R (4),		    \
++    PRU_OVERLAP_R (5),		    \
++    PRU_OVERLAP_R (6),		    \
++    PRU_OVERLAP_R (7),		    \
++    PRU_OVERLAP_R (8),		    \
++    PRU_OVERLAP_R (9),		    \
++    PRU_OVERLAP_R (10),		    \
++    PRU_OVERLAP_R (11),		    \
++    PRU_OVERLAP_R (12),		    \
++    PRU_OVERLAP_R (13),		    \
++    PRU_OVERLAP_R (14),		    \
++    PRU_OVERLAP_R (15),		    \
++    PRU_OVERLAP_R (16),		    \
++    PRU_OVERLAP_R (17),		    \
++    PRU_OVERLAP_R (18),		    \
++    PRU_OVERLAP_R (19),		    \
++    PRU_OVERLAP_R (20),		    \
++    PRU_OVERLAP_R (21),		    \
++    PRU_OVERLAP_R (22),		    \
++    PRU_OVERLAP_R (23),		    \
++    PRU_OVERLAP_R (24),		    \
++    PRU_OVERLAP_R (25),		    \
++    PRU_OVERLAP_R (26),		    \
++    PRU_OVERLAP_R (27),		    \
++    PRU_OVERLAP_R (28),		    \
++    PRU_OVERLAP_R (29),		    \
++    PRU_OVERLAP_R (30),		    \
++    PRU_OVERLAP_R (31),		    \
 +}
 +
 +#define ASM_OUTPUT_ADDR_VEC_ELT(FILE, VALUE)				    \
@@ -4664,6 +4733,8 @@ index 00000000000..de1b9100209
 +
 +/* Misc parameters.  */
 +
++#define TARGET_SUPPORTS_WIDE_INT 1
++
 +#define STORE_FLAG_VALUE 1
 +#define Pmode SImode
 +#define FUNCTION_MODE Pmode
@@ -4686,10 +4757,10 @@ index 00000000000..de1b9100209
 +#endif /* GCC_PRU_H */
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
 new file mode 100644
-index 00000000000..4be1958e6c9
+index 00000000000..fb0daa72605
 --- /dev/null
 +++ b/gcc/config/pru/pru.md
-@@ -0,0 +1,956 @@
+@@ -0,0 +1,1015 @@
 +;; Machine Description for TI PRU.
 +;; Copyright (C) 2014-2018 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -4714,17 +4785,20 @@ index 00000000000..4be1958e6c9
 +;; Register numbers.
 +(define_constants
 +  [
-+   (FIRST_ARG_REGNO	    56)	; Argument registers.
-+   (LAST_ARG_REGNO	    119)	;
-+   (FIRST_RETVAL_REGNO	    56)	; Return value registers.
-+   (LAST_RETVAL_REGNO	    60)	;
-+   (PROLOGUE_TEMP_REGNO	    4)	; Temporary register to use in prologue.
++   (FIRST_ARG_REGNO	    56)	 ; Argument registers.
++   (LAST_ARG_REGNO	    119) ;
++   (FIRST_RETVAL_REGNO	    56)	 ; Return value registers.
++   (LAST_RETVAL_REGNO	    60)	 ;
++   (PROLOGUE_TEMP_REGNO	    4)	 ; Temporary register to use in prologue.
 +
-+   (RA_REGNO		    14)	; Return address register r3.w2.
-+   (FP_REGNO		    16)	; Frame pointer register.
-+   (LAST_NONIO_GP_REG	    119)	; Last non-I/O general purpose register.
-+   (LOOPCNTR_REG	    128)	; internal LOOP counter register
-+   (LAST_GP_REG		    132)	; Last general purpose register.
++   (RA_REGNO		    14)	 ; Return address register r3.w2.
++   (FP_REGNO		    16)	 ; Frame pointer register.
++   (MULDST_REG		    104) ; Multiply destination register.
++   (MULSRC0_REG		    112) ; Multiply source register.
++   (MULSRC1_REG		    116) ; Multiply source register.
++   (LAST_NONIO_GP_REG	    119) ; Last non-I/O general purpose register.
++   (LOOPCNTR_REG	    128) ; internal LOOP counter register
++   (LAST_GP_REG		    132) ; Last general purpose register.
 +
 +   ;; Target register definitions.
 +   (STACK_POINTER_REGNUM	8)
@@ -4771,16 +4845,16 @@ index 00000000000..4be1958e6c9
 +(include "constraints.md")
 +
 +;; All supported direct move-modes
-+(define_mode_iterator MOVMODE [QI QQ UQQ
-+			       HI HQ UHQ HA UHA
-+			       SI SQ USQ SA USA
-+			       SF])
++(define_mode_iterator MOV8_16_32 [QI QQ UQQ
++				  HI HQ UHQ HA UHA
++				  SI SQ USQ SA USA SF SD])
 +
-+(define_mode_iterator MOV32 [SI SF SD SQ USQ])
++(define_mode_iterator MOV8_16 [QI QQ UQQ
++			       HI HQ UHQ HA UHA])
++(define_mode_iterator MOV32 [SI SQ USQ SA USA SF SD])
 +(define_mode_iterator MOV64 [DI DF DD DQ UDQ])
 +(define_mode_iterator QISI [QI HI SI])
 +(define_mode_iterator HISI [HI SI])
-+(define_mode_iterator QIHI [QI HI])
 +(define_mode_iterator SFDF [SF DF])
 +
 +;; EQS0/0 for extension source 0/1 and EQD for extension destination patterns.
@@ -4788,70 +4862,75 @@ index 00000000000..4be1958e6c9
 +(define_mode_iterator EQS1 [QI HI SI])
 +(define_mode_iterator EQD [QI HI SI])
 +
-+; Not recommended.  Please use %0 instead!
-+(define_mode_attr regwidth [(QI ".b0") (HI ".w0") (SI "")])
++;; GCC sign-extends its integer constants.  Hence 0x80 will be represented
++;; as -128 for QI mode and 128 for HI and SI modes.  To cope with this,
++;; use different constraints to match UBYTE in different modes.
++;;
++;; Wherever this iterator is used, the corresponding operand has the 'u'
++;; print format modifier. That is how the QI signedness is cured, and
++;; the generated assembly contains unsigned constants.
++;;
++;; If the pattern has no QI operands, then this iterator need not be used.
++;;
++;; Note that we do not require "uhword_constr" since ALU instructions
++;; can use only UBYTE constants.  The MOV patterns are already separately
++;; defined for each size, hence no need for an iterator.
++(define_mode_attr ubyte_constr [(QI "O") (HI "I") (SI "I")])
 +
 +;; Move instructions
 +
 +(define_expand "mov<mode>"
-+  [(set (match_operand:MOVMODE 0 "nonimmediate_operand" "")
-+	(match_operand:MOVMODE 1 "general_operand"       ""))]
++  [(set (match_operand:MOV8_16_32 0 "nonimmediate_operand")
++	(match_operand:MOV8_16_32 1 "general_operand"))]
 +  ""
-+  "
-+  {
-+    /* It helps to split constant loading and memory access
-+       early, so that the LDI/LDI32 instructions can be hoisted
-+       outside a loop body.  */
-+    if (MEM_P (operands[0]))
-+      operands[1] = force_reg (<MODE>mode, operands[1]);
-+  }
-+  "
-+)
++{
++  /* It helps to split constant loading and memory access
++     early, so that the LDI/LDI32 instructions can be hoisted
++     outside a loop body.  */
++  if (MEM_P (operands[0]))
++    operands[1] = force_reg (<MODE>mode, operands[1]);
++})
 +
-+;; Leave mem and reg operands in the same insn.  Otherwise LRA gets
-+;; confused, and gcc.target/pru/pr64366.c triggers infinite loops in reload.
++;; Keep a single pattern for 32 bit MOV operations.  LRA requires that the
++;; movXX patterns be unified for any given mode.
++;;
++;; Note: Assume that Program Mem (T constraint) can fit in 16 bits!
 +(define_insn "prumov<mode>"
-+  [(set (match_operand:MOVMODE 0 "nonimmediate_operand" "=m,r,r")
-+	(match_operand:MOVMODE 1 "nonimmediate_operand" "r,m,r"))]
++  [(set (match_operand:MOV32 0 "nonimmediate_operand" "=m,r,r,r,r,r")
++	(match_operand:MOV32 1 "general_operand"      "r,m,r,T,J,iF"))]
 +  ""
 +  "@
 +    sb%B0o\\t%b1, %0, %S0
 +    lb%B1o\\t%b0, %1, %S1
-+    mov\\t%0, %1"
-+  [(set_attr "type" "st,ld,alu")
-+   (set_attr "length" "4,4,4")])
-+
-+
-+;; Split loading of integer constants into a distinct pattern, in order to
-+;; prevent CSE from considering "SET (MEM, CONST_INT)" as a valid insn
-+;; selection.  This fixes an abnormally long compile time exposed by
-+;; gcc.dg/pr48141.c
-+;;
-+;; Note: Assume that Program Mem (T constraint) can fit in 16 bits!
-+(define_insn "prumov_ldi<mode>"
-+  [(set (match_operand:QIHI 0 "register_operand"	"=r,r,r")
-+	(match_operand:VOID 1 "immediate_operand"       "T,J,N"))]
-+  ""
-+  "@
++    mov\\t%0, %1
 +    ldi\\t%0, %%pmem(%1)
 +    ldi\\t%0, %1
-+    ldi\\t%0, (%1) & 0xffff"
-+  [(set_attr "type" "alu,alu,alu")
-+   (set_attr "length" "4,4,4")])
++    ldi32\\t%0, %1"
++  [(set_attr "type" "st,ld,alu,alu,alu,alu")
++   (set_attr "length" "4,4,4,4,4,8")])
 +
-+(define_insn "prumov_ldisisf<mode>"
-+  [(set (match_operand:MOV32 0 "register_operand"	 "=r,r,r")
-+	(match_operand:MOV32 1 "immediate_operand"       "T,J,iF"))]
++
++;; Separate pattern for 8 and 16 bit moves, since LDI32 pseudo instruction
++;; cannot handle byte and word-sized registers.
++;;
++;; Note: Constraint N is fine for both QI and HI mode, since it is used
++;; in the context of 16 bit constant integer.
++(define_insn "prumov<mode>"
++  [(set (match_operand:MOV8_16 0 "nonimmediate_operand" "=m,r,r,r,r")
++	(match_operand:MOV8_16 1 "general_operand"      "r,m,r,T,N"))]
 +  ""
 +  "@
-+    ldi\\t%F0, %%pmem(%1)
-+    ldi\\t%F0, %1
-+    ldi32\\t%F0, %1"
-+  [(set_attr "type" "alu,alu,alu")
-+   (set_attr "length" "4,4,8")])
++    sb%B0o\\t%b1, %0, %S0
++    lb%B1o\\t%b0, %1, %S1
++    mov\\t%0, %1
++    ldi\\t%0, %%pmem(%1)
++    ldi\\t%0, (%1) & 0xffff"
++  [(set_attr "type" "st,ld,alu,alu,alu")
++   (set_attr "length" "4,4,4,4,4")])
 +
-+; I cannot think of any reason for the core to pass a 64-bit symbolic
-+; constants.  Hence simplify the rule and handle only numeric constants.
++
++; Pmode is 32 bits for PRU so symbolic constants cannot be 64 bits.  Hence
++; this pattern handles only numeric constants.
 +;
 +; Note: Unlike the arithmetics, here we cannot use "&" output modifier.
 +; GCC expects to be able to move registers around "no matter what".
@@ -4859,34 +4938,33 @@ index 00000000000..4be1958e6c9
 +; does not seem efficient, and will violate TI ABI.
 +(define_insn "mov<mode>"
 +  [(set (match_operand:MOV64 0 "nonimmediate_operand" "=m,r,r,r,r,r")
-+	(match_operand:MOV64 1 "general_operand"       "r,m,r,T,J,nF"))]
++	(match_operand:MOV64 1 "general_operand"      "r,m,r,T,J,nF"))]
 +  ""
-+  {
-+    switch (which_alternative)
++{
++  switch (which_alternative)
 +    {
-+      case 0:
-+	return "sb%B0o\\t%b1, %0, %S0";
-+      case 1:
-+	return "lb%B1o\\t%b0, %1, %S1";
-+      case 2:
-+	/* careful with overlapping source and destination regs.  */
-+	gcc_assert (GP_REG_P (REGNO (operands[0])));
-+	gcc_assert (GP_REG_P (REGNO (operands[1])));
-+	if (REGNO (operands[0]) == (REGNO (operands[1]) + 4))
-+	  return "mov\\t%N0, %N1\;mov\\t%F0, %F1";
-+	else
-+	  return "mov\\t%F0, %F1\;mov\\t%N0, %N1";
-+      case 3:
-+	return "ldi\\t%F0, %%pmem(%1)\;ldi\\t%N0, 0";
-+      case 4:
-+	return "ldi\\t%F0, %1\;ldi\\t%N0, 0";
-+      case 5:
-+	return "ldi32\\t%F0, %w1\;"
-+	       "ldi32\\t%N0, %W1";
-+      default:
-+	gcc_unreachable ();
-+    }
++    case 0:
++      return "sb%B0o\\t%b1, %0, %S0";
++    case 1:
++      return "lb%B1o\\t%b0, %1, %S1";
++    case 2:
++      /* careful with overlapping source and destination regs.  */
++      gcc_assert (GP_REG_P (REGNO (operands[0])));
++      gcc_assert (GP_REG_P (REGNO (operands[1])));
++      if (REGNO (operands[0]) == (REGNO (operands[1]) + 4))
++	return "mov\\t%N0, %N1\;mov\\t%F0, %F1";
++      else
++	return "mov\\t%F0, %F1\;mov\\t%N0, %N1";
++    case 3:
++      return "ldi\\t%F0, %%pmem(%1)\;ldi\\t%N0, 0";
++    case 4:
++      return "ldi\\t%F0, %1\;ldi\\t%N0, 0";
++    case 5:
++      return "ldi32\\t%F0, %w1\;ldi32\\t%N0, %W1";
++    default:
++      gcc_unreachable ();
 +  }
++}
 +  [(set_attr "type" "st,ld,alu,alu,alu,alu")
 +   (set_attr "length" "4,4,8,8,8,16")])
 +
@@ -4899,16 +4977,17 @@ index 00000000000..4be1958e6c9
 +; Idea taken from the s390 port.
 +
 +(define_expand "load_multiple"
-+  [(match_par_dup 3 [(set (match_operand 0 "" "")
-+			  (match_operand 1 "" ""))
-+		     (use (match_operand 2 "" ""))])]
++  [(match_par_dup 3 [(set (match_operand 0 "")
++			  (match_operand 1 ""))
++		     (use (match_operand 2 ""))])]
 +  "reload_completed"
 +{
 +  machine_mode mode;
 +  int regno;
 +  int count;
-+  rtx from;
-+  int i, off;
++  rtx base_reg;
++  poly_int64 base_offs;
++  int i;
 +
 +  /* Support only loading a constant number of fixed-point registers from
 +     memory.  */
@@ -4924,65 +5003,49 @@ index 00000000000..4be1958e6c9
 +    FAIL;
 +
 +  operands[3] = gen_rtx_PARALLEL (VOIDmode, rtvec_alloc (count));
-+  if (!can_create_pseudo_p ())
-+    {
-+      if (GET_CODE (XEXP (operands[1], 0)) == REG)
-+	{
-+	  from = XEXP (operands[1], 0);
-+	  off = 0;
-+	}
-+      else if (GET_CODE (XEXP (operands[1], 0)) == PLUS
-+	       && GET_CODE (XEXP (XEXP (operands[1], 0), 0)) == REG
-+	       && GET_CODE (XEXP (XEXP (operands[1], 0), 1)) == CONST_INT)
-+	{
-+	  from = XEXP (XEXP (operands[1], 0), 0);
-+	  off = INTVAL (XEXP (XEXP (operands[1], 0), 1));
-+	}
-+      else
-+	FAIL;
-+    }
-+  else
-+    {
-+      from = force_reg (Pmode, XEXP (operands[1], 0));
-+      off = 0;
-+    }
++
++  gcc_assert (!can_create_pseudo_p ());
++
++  base_reg = strip_offset (XEXP (operands[1], 0), &base_offs);
++  if (GET_CODE (base_reg) != REG)
++    FAIL;
 +
 +  for (i = 0; i < count; i++)
 +    XVECEXP (operands[3], 0, i)
 +      = gen_rtx_SET (gen_rtx_REG (mode, regno + i),
 +		     change_address (operands[1], mode,
-+		       plus_constant (Pmode, from,
-+				      off + i * GET_MODE_SIZE (mode))));
++		       plus_constant (Pmode, base_reg,
++				      base_offs + i * GET_MODE_SIZE (mode))));
 +})
 +
 +(define_insn "*pru_load_multiple"
 +  [(match_parallel 0 "load_multiple_operation"
 +		   [(set (match_operand:QI 1 "register_operand" "=r")
-+			 (match_operand:QI 2 "memory_operand" "m"))])]
++			 (match_operand:QI 2 "memory_operand"   "m"))])]
 +  "reload_completed"
 +{
 +  int nregs = XVECLEN (operands[0], 0);
 +  operands[0] = GEN_INT (nregs);
 +  return "lb%B2o\\t%b1, %2, %0";
 +}
-+  [(set_attr "type" "ld")
-+   (set_attr "length" "4")])
++  [(set_attr "type" "ld")])
 +
 +;
 +; store multiple pattern(s).
 +;
 +
 +(define_expand "store_multiple"
-+  [(match_par_dup 3 [(set (match_operand 0 "" "")
-+			  (match_operand 1 "" ""))
-+		     (use (match_operand 2 "" ""))])]
++  [(match_par_dup 3 [(set (match_operand 0 "")
++			  (match_operand 1 ""))
++		     (use (match_operand 2 ""))])]
 +  "reload_completed"
 +{
 +  machine_mode mode;
 +  int regno;
 +  int count;
-+  rtx to;
-+  int i, off;
++  rtx base_reg;
++  poly_int64 base_offs;
++  int i;
 +
 +  /* Support only storing a constant number of fixed-point registers to
 +     memory.  */
@@ -4999,40 +5062,23 @@ index 00000000000..4be1958e6c9
 +
 +  operands[3] = gen_rtx_PARALLEL (VOIDmode, rtvec_alloc (count));
 +
-+  if (!can_create_pseudo_p ())
-+    {
-+      if (GET_CODE (XEXP (operands[0], 0)) == REG)
-+	{
-+	  to = XEXP (operands[0], 0);
-+	  off = 0;
-+	}
-+      else if (GET_CODE (XEXP (operands[0], 0)) == PLUS
-+	       && GET_CODE (XEXP (XEXP (operands[0], 0), 0)) == REG
-+	       && GET_CODE (XEXP (XEXP (operands[0], 0), 1)) == CONST_INT)
-+	{
-+	  to = XEXP (XEXP (operands[0], 0), 0);
-+	  off = INTVAL (XEXP (XEXP (operands[0], 0), 1));
-+	}
-+      else
-+	FAIL;
-+    }
-+  else
-+    {
-+      to = force_reg (Pmode, XEXP (operands[0], 0));
-+      off = 0;
-+    }
++  gcc_assert (!can_create_pseudo_p ());
++
++  base_reg = strip_offset (XEXP (operands[0], 0), &base_offs);
++  if (GET_CODE (base_reg) != REG)
++    FAIL;
 +
 +  for (i = 0; i < count; i++)
 +    XVECEXP (operands[3], 0, i)
 +      = gen_rtx_SET (change_address (operands[0], mode,
-+		       plus_constant (Pmode, to,
-+				      off + i * GET_MODE_SIZE (mode))),
++		       plus_constant (Pmode, base_reg,
++				      base_offs + i * GET_MODE_SIZE (mode))),
 +		     gen_rtx_REG (mode, regno + i));
 +})
 +
 +(define_insn "*pru_store_multiple"
 +  [(match_parallel 0 "store_multiple_operation"
-+		   [(set (match_operand:QI 1 "memory_operand" "=m")
++		   [(set (match_operand:QI 1 "memory_operand"   "=m")
 +			 (match_operand:QI 2 "register_operand" "r"))])]
 +  "reload_completed"
 +{
@@ -5040,8 +5086,7 @@ index 00000000000..4be1958e6c9
 +  operands[0] = GEN_INT (nregs);
 +  return "sb%B1o\\t%b2, %1, %0";
 +}
-+  [(set_attr "type" "st")
-+   (set_attr "length" "4")])
++  [(set_attr "type" "st")])
 +
 +;; Zero extension patterns
 +;;
@@ -5050,11 +5095,10 @@ index 00000000000..4be1958e6c9
 +;; the number of memory data bytes fetched, but also the number of register
 +;; byte fields written.
 +(define_expand "zero_extend<EQS0:mode><EQD:mode>2"
-+  [(set (match_operand:EQD 0 "register_operand" "=r")
-+	(zero_extend:EQD (match_operand:EQS0 1 "register_operand" "r")))]
++  [(set (match_operand:EQD 0 "register_operand")
++	(zero_extend:EQD (match_operand:EQS0 1 "register_operand")))]
 +  ""
-+  ""
-+  [(set_attr "type"     "alu")])
++  "")
 +
 +(define_insn "*zero_extend<EQS0:mode><EQD:mode>2"
 +  [(set (match_operand:EQD 0 "register_operand" "=r")
@@ -5070,9 +5114,9 @@ index 00000000000..4be1958e6c9
 +  [(set (match_operand:EQD 0 "register_operand"			  "=r")
 +	(sign_extend:EQD (match_operand:EQS0 1 "register_operand"  "r")))]
 +  ""
-+  {
-+    return pru_output_sign_extend (operands);
-+  }
++{
++  return pru_output_sign_extend (operands);
++}
 +  [(set_attr "type" "complex")
 +   (set_attr "length" "12")])
 +
@@ -5098,12 +5142,11 @@ index 00000000000..4be1958e6c9
 +;; Arithmetic Operations
 +
 +(define_expand "add<mode>3"
-+  [(set (match_operand:QISI 0 "register_operand"		  "=r,r,r")
-+	(plus:QISI (match_operand:QISI 1 "register_operand"   "%r,r,r")
-+		 (match_operand:QISI 2 "nonmemory_operand"  "r,I,M")))]
++  [(set (match_operand:QISI 0 "register_operand")
++	(plus:QISI (match_operand:QISI 1 "register_operand")
++		 (match_operand:QISI 2 "nonmemory_operand")))]
 +  ""
-+  ""
-+  [(set_attr "type" "alu")])
++  "")
 +
 +(define_insn "adddi3"
 +  [(set (match_operand:DI 0 "register_operand"		    "=&r,&r,&r")
@@ -5118,40 +5161,36 @@ index 00000000000..4be1958e6c9
 +   (set_attr "length" "8,8,8")])
 +
 +(define_expand "sub<mode>3"
-+  [(set (match_operand:QISI 0 "register_operand"		      "=r,r,r")
-+	(minus:QISI (match_operand:QISI 1 "reg_or_ubyte_operand"  "r,r,I")
-+		  (match_operand:QISI 2 "reg_or_ubyte_operand"  "r,I,r")))]
++  [(set (match_operand:QISI 0 "register_operand")
++	(minus:QISI (match_operand:QISI 1 "reg_or_ubyte_operand")
++		    (match_operand:QISI 2 "reg_or_ubyte_operand")))]
 +  ""
-+  ""
-+  [(set_attr "type" "alu")])
++  "")
 +
 +(define_insn "subdi3"
-+  [(set (match_operand:DI 0 "register_operand"		    "=&r,&r,&r")
-+	(minus:DI (match_operand:DI 1 "register_operand"    "r,r,I")
-+		 (match_operand:DI 2 "reg_or_ubyte_operand" "r,I,r")))]
++  [(set (match_operand:DI 0 "register_operand"		      "=&r,&r")
++	(minus:DI (match_operand:DI 1 "reg_or_ubyte_operand"  "r,I")
++		  (match_operand:DI 2 "register_operand"      "r,r")))]
 +  ""
 +  "@
 +   sub\\t%F0, %F1, %F2\;suc\\t%N0, %N1, %N2
-+   sub\\t%F0, %F1, %2\;suc\\t%N0, %N1, 0
 +   rsb\\t%F0, %F2, %1\;rsc\\t%N0, %N2, 0"
-+  [(set_attr "type" "alu,alu,alu")
-+   (set_attr "length" "8,8,8")])
++  [(set_attr "type" "alu,alu")
++   (set_attr "length" "8,8")])
 +
 +;;  Negate and ones complement
 +
 +(define_expand "neg<mode>2"
-+  [(set (match_operand:QISI 0 "register_operand"		"=r")
-+	(neg:QISI (match_operand:QISI 1 "register_operand"	"r")))]
++  [(set (match_operand:QISI 0 "register_operand")
++	(neg:QISI (match_operand:QISI 1 "register_operand")))]
 +  ""
-+  ""
-+  [(set_attr "type" "alu")])
++  "")
 +
 +(define_expand "one_cmpl<mode>2"
-+  [(set (match_operand:QISI 0 "register_operand"		"=r")
-+	(not:QISI (match_operand:QISI 1 "register_operand"	"r")))]
++  [(set (match_operand:QISI 0 "register_operand")
++	(not:QISI (match_operand:QISI 1 "register_operand")))]
 +  ""
-+  ""
-+  [(set_attr "type" "alu")])
++  "")
 +
 +;;  Integer logical Operations
 +;;
@@ -5165,12 +5204,11 @@ index 00000000000..4be1958e6c9
 +(define_code_attr logical_bitop_asm [(and "and") (ior "or") (xor "xor")])
 +
 +(define_expand "<code><mode>3"
-+  [(set (match_operand:QISI 0 "register_operand"			"=r")
-+	(LOGICAL:QISI (match_operand:QISI 1 "register_operand"	"%r")
-+		    (match_operand:QISI 2 "reg_or_ubyte_operand"	"rI")))]
++  [(set (match_operand:QISI 0 "register_operand")
++	(LOGICAL:QISI (match_operand:QISI 1 "register_operand")
++		      (match_operand:QISI 2 "reg_or_ubyte_operand")))]
 +  ""
-+  ""
-+  [(set_attr "type" "alu")])
++  "")
 +
 +
 +;;  Shift instructions
@@ -5180,26 +5218,81 @@ index 00000000000..4be1958e6c9
 +(define_code_attr shift_asm  [(ashift "lsl") (lshiftrt "lsr")])
 +
 +(define_expand "<shift_op><mode>3"
-+  [(set (match_operand:QISI 0 "register_operand"		  "=r")
-+	(SHIFT:QISI (match_operand:QISI 1 "register_operand"  "r")
-+		  (match_operand:QISI 2 "shift_operand"	  "rL")))]
++  [(set (match_operand:QISI 0 "register_operand")
++	(SHIFT:QISI (match_operand:QISI 1 "register_operand")
++		    (match_operand:QISI 2 "shift_operand")))]
 +  ""
-+  ""
-+  [(set_attr "type" "shift")])
++  "")
 +
-+; LRA cannot cope with clobbered op2, hence the scratch register.
-+(define_insn "ashr<mode>3"
-+  [(set (match_operand:QISI 0 "register_operand" "=&r,r")
++; Expand to a loop of single-position arithmetic shifts, which
++; we can handle.  Pseudo code:
++;     tmpval = src;
++;     QImode cntr = nshifts & 0xff;
++;     while (cntr)
++;       {
++;         tmpval >>= 1;
++;         cntr--;
++;       }
++;     dst = tmpval;
++;
++; Note that the number of shifts is truncated to QImode.  This is a fair
++; assumption for a loop-based shifting implementation.
++(define_expand "ashr<mode>3"
++  [(set (match_operand:QISI 0 "register_operand")
 +	  (ashiftrt:QISI
-+	   (match_operand:QISI 1 "register_operand" "0,r")
-+	   (match_operand:QISI 2 "reg_or_const_1_operand" "r,P")))
-+    (clobber (match_scratch:QISI 3 "=r,X"))]
++	    (match_operand:QISI 1 "register_operand")
++	    (match_operand:QI 2 "reg_or_const_1_operand")))]
 +  ""
-+  "@
-+   mov %3, %2\;ASHRLP%=:\;qbeq ASHREND%=, %3, 0\; sub %3, %3, 1\; lsr\\t%0, %0, 1\; qbbc ASHRLP%=, %0, (%S0 * 8) - 2\; set %0, %0, (%S0 * 8) - 1\; jmp ASHRLP%=\;ASHREND%=:
-+   lsr\\t%0, %1, 1\;qbbc LSIGN%=, %0, (%S0 * 8) - 2\;set %0, %0, (%S0 * 8) - 1\;LSIGN%=:"
-+  [(set_attr "type" "complex,alu")
-+   (set_attr "length" "28,4")])
++{
++  rtx dst = operands[0];
++  rtx src = operands[1];
++  rtx nshifts = operands[2];
++  rtx_code_label *loop_label;
++  rtx_code_label *ashr_end_label;
++  rtx test, tmpval, cntr;
++
++  if (const_1_operand (nshifts, VOIDmode))
++    {
++      emit_insn (gen_ashr<mode>3_single (dst, src, nshifts));
++      DONE;
++    }
++
++  tmpval = gen_reg_rtx (<MODE>mode);
++  emit_move_insn (tmpval, src);
++
++  cntr = gen_reg_rtx (QImode);
++  emit_move_insn (cntr, nshifts);
++
++  loop_label = gen_label_rtx ();
++  ashr_end_label = gen_label_rtx ();
++
++  emit_label (loop_label);
++  test = gen_rtx_EQ (VOIDmode, cntr, const0_rtx);
++  emit_jump_insn (gen_cbranchqi4 (test, cntr, const0_rtx, ashr_end_label));
++
++  emit_insn (gen_ashr<mode>3_single (tmpval, tmpval, const1_rtx));
++  emit_insn (gen_addqi3 (cntr, cntr, GEN_INT (-1)));
++
++  emit_jump_insn (gen_jump (loop_label));
++  JUMP_LABEL (get_last_insn ()) = loop_label;
++  emit_barrier ();
++
++  emit_label (ashr_end_label);
++
++  emit_move_insn (dst, tmpval);
++
++  DONE;
++})
++
++(define_insn "ashr<mode>3_single"
++  [(set (match_operand:QISI 0 "register_operand"	"=r")
++	  (ashiftrt:QISI
++	    (match_operand:QISI 1 "register_operand"	"r")
++	    (match_operand:QI 2 "const_1_operand"  	"P")))]
++  ""
++  "lsr\\t%0, %1, 1\;qbbc LSIGN%=, %0, (%S0 * 8) - 2\;set %0, %0, (%S0 * 8) - 1\;LSIGN%=:"
++  [(set_attr "type" "alu")
++   (set_attr "length" "12")])
 +
 +
 +;; Include ALU patterns with zero-extension of operands.  That's where
@@ -5207,11 +5300,14 @@ index 00000000000..4be1958e6c9
 +
 +(include "alu-zext.md")
 +
++;; DI logical ops could be automatically split into WORD-mode ops in
++;; expand_binop().  But then we'll miss an opportunity to use SI mode
++;; operations, since WORD mode for PRU is QI.
 +(define_insn "<code>di3"
-+  [(set (match_operand:DI 0 "register_operand" "=&r,&r")
++  [(set (match_operand:DI 0 "register_operand"		"=&r,&r")
 +	  (LOGICAL_BITOP:DI
-+	   (match_operand:DI 1 "register_operand"     "%r,r")
-+	   (match_operand:DI 2 "reg_or_ubyte_operand" "r,I")))]
++	    (match_operand:DI 1 "register_operand"	"%r,r")
++	    (match_operand:DI 2 "reg_or_ubyte_operand"	"r,I")))]
 +  ""
 +  "@
 +   <logical_bitop_asm>\\t%F0, %F1, %F2\;<logical_bitop_asm>\\t%N0, %N1, %N2
@@ -5224,44 +5320,28 @@ index 00000000000..4be1958e6c9
 +  [(set (match_operand:DI 0 "register_operand"		"=r")
 +	(not:DI (match_operand:DI 1 "register_operand"	"r")))]
 +  ""
-+  {
-+    /* careful with overlapping source and destination regs.  */
-+    gcc_assert (GP_REG_P (REGNO (operands[0])));
-+    gcc_assert (GP_REG_P (REGNO (operands[1])));
-+    if (REGNO (operands[0]) == (REGNO (operands[1]) + 4))
-+      return "not\\t%N0, %N1\;not\\t%F0, %F1";
-+    else
-+      return "not\\t%F0, %F1\;not\\t%N0, %N1";
-+  }
++{
++  /* careful with overlapping source and destination regs.  */
++  gcc_assert (GP_REG_P (REGNO (operands[0])));
++  gcc_assert (GP_REG_P (REGNO (operands[1])));
++  if (REGNO (operands[0]) == (REGNO (operands[1]) + 4))
++    return "not\\t%N0, %N1\;not\\t%F0, %F1";
++  else
++    return "not\\t%F0, %F1\;not\\t%N0, %N1";
++}
 +  [(set_attr "type" "alu")
 +   (set_attr "length" "8")])
 +
-+;; Multiply instruction.  Idea for fixing registers comes from the AVR backend.
++;; Multiply instruction.  The nop is required to ensure that Rmd0 and Rms0
++;; registers are sampled and multiplication is executed on those values.
++;; Only after that one cycle can xin obtain the result.
 +
-+(define_expand "mulsi3"
-+  [(set (match_operand:SI 0 "register_operand" "")
-+	(mult:SI (match_operand:SI 1 "register_operand" "")
-+		 (match_operand:SI 2 "register_operand" "")))]
++(define_insn "mulsi3"
++  [(set (match_operand:SI 0 "pru_muldst_operand"	   "=Rmd0")
++	(mult:SI (match_operand:SI 1 "pru_mulsrc0_operand" "%Rms0")
++		 (match_operand:SI 2 "pru_mulsrc1_operand" "Rms1")))]
 +  ""
-+  {
-+     emit_insn (gen_mulsi3_fixinp (operands[0], operands[1], operands[2]));
-+     DONE;
-+  })
-+
-+
-+(define_expand "mulsi3_fixinp"
-+  [(set (reg:SI 112) (match_operand:SI 1 "register_operand" ""))
-+   (set (reg:SI 116) (match_operand:SI 2 "register_operand" ""))
-+   (set (reg:SI 104) (mult:SI (reg:SI 112) (reg:SI 116)))
-+   (set (match_operand:SI 0 "register_operand" "") (reg:SI 104))]
-+  ""
-+  {
-+  })
-+
-+(define_insn "*mulsi3_prumac"
-+  [(set (reg:SI 104) (mult:SI (reg:SI 112) (reg:SI 116)))]
-+  ""
-+  "nop\;xin\\t0, r26, 4"
++  "nop\;xin\\t0, %0, 4"
 +  [(set_attr "type" "alu")
 +   (set_attr "length" "8")])
 +
@@ -5325,21 +5405,20 @@ index 00000000000..4be1958e6c9
 +	(label_ref (match_operand 0 "" "")))]
 +  ""
 +  "jmp\\t%%label(%l0)"
-+  [(set_attr "type" "control")
-+   (set_attr "length" "4")])
++  [(set_attr "type" "control")])
 +
 +
 +(define_expand "call"
-+  [(parallel [(call (match_operand 0 "" "")
-+		    (match_operand 1 "" ""))
++  [(parallel [(call (match_operand 0 "")
++		    (match_operand 1 ""))
 +	      (clobber (reg:HI RA_REGNO))])]
 +  ""
 +  "")
 +
 +(define_expand "call_value"
-+  [(parallel [(set (match_operand 0 "" "")
-+		   (call (match_operand 1 "" "")
-+			 (match_operand 2 "" "")))
++  [(parallel [(set (match_operand 0 "")
++		   (call (match_operand 1 "")
++			 (match_operand 2 "")))
 +	      (clobber (reg:HI RA_REGNO))])]
 +  ""
 +  "")
@@ -5366,22 +5445,22 @@ index 00000000000..4be1958e6c9
 +  [(set_attr "type" "control")])
 +
 +(define_expand "sibcall"
-+  [(parallel [(call (match_operand 0 "" "")
-+		    (match_operand 1 "" ""))
++  [(parallel [(call (match_operand 0 "")
++		    (match_operand 1 ""))
 +	      (return)])]
 +  ""
 +  "")
 +
 +(define_expand "sibcall_value"
-+  [(parallel [(set (match_operand 0 "" "")
-+		   (call (match_operand 1 "" "")
-+			 (match_operand 2 "" "")))
++  [(parallel [(set (match_operand 0 "")
++		   (call (match_operand 1 "")
++			 (match_operand 2 "")))
 +	      (return)])]
 +  ""
 +  "")
 +
 +(define_insn "*sibcall"
-+ [(call (mem:SI (match_operand:SI 0 "call_operand" "i,j"))
++ [(call (mem:SI (match_operand:SI 0 "call_operand" "i,Rsib"))
 +	(match_operand 1 "" ""))
 +  (return)]
 +  "SIBLING_CALL_P (insn)"
@@ -5392,7 +5471,7 @@ index 00000000000..4be1958e6c9
 +
 +(define_insn "*sibcall_value"
 + [(set (match_operand 0 "register_operand" "")
-+       (call (mem:SI (match_operand:SI 1 "call_operand" "i,j"))
++       (call (mem:SI (match_operand:SI 1 "call_operand" "i,Rsib"))
 +	     (match_operand 2 "" "")))
 +  (return)]
 +  "SIBLING_CALL_P (insn)"
@@ -5409,16 +5488,82 @@ index 00000000000..4be1958e6c9
 +  "jmp\\t%0"
 +  [(set_attr "type" "control")])
 +
-+;; cbranch pattern.
++;; Expand the cbranch pattern in order to assign different constraints for
++;; signed and unsigned comparisons.
++(define_expand "cbranch<mode>4"
++  [(set (pc)
++     (if_then_else
++       (match_operator 0 "ordered_comparison_operator"
++	 [(match_operand:QISI 1 "register_operand")
++	  (match_operand:QISI 2 "reg_or_const_int_operand")])
++       (label_ref (match_operand 3 ""))
++       (pc)))]
++  ""
++{
++  /* Ensure our patterns will be able to handle the particular const_int.  */
++  if (CONST_INT_P (operands[2]))
++    {
++      HOST_WIDE_INT ival = INTVAL (operands[2]);
++
++      /* For signed comparisons, we cannot play games with the const_int's
++	 sign.  PRU patterns do not support negative integer constants.  */
++      if (pru_signed_cmp_operator (operands[0], VOIDmode) && !UBYTE_INT (ival))
++	{
++	  if (can_create_pseudo_p ())
++	    operands[2] = force_reg (<MODE>mode, operands[2]);
++	  else
++	    FAIL;
++	}
++
++      /* For unsigned comparisons, be prepared to handle the QI quirk.  */
++      if (pru_cmp_operator (operands[0], VOIDmode)
++	  && !const_ubyte_operand (operands[2], <MODE>mode))
++	{
++	  if (can_create_pseudo_p ())
++	    operands[2] = force_reg (<MODE>mode, operands[2]);
++	  else
++	    FAIL;
++	}
++    }
++})
++
++(define_insn "cbranch<mode>4_unsigned"
++  [(set (pc)
++     (if_then_else
++       (match_operator 0 "pru_cmp_operator"
++	 [(match_operand:QISI 1 "register_operand" "r")
++	  (match_operand:QISI 2 "reg_or_ubyte_operand" "r<QISI:ubyte_constr>")])
++       (label_ref (match_operand 3 "" ""))
++       (pc)))]
++  ""
++{
++  const bool is_near = (get_attr_length (insn) == 4);
++
++  /* PRU comparisons reverse the operand order (OP2 cmp OP1),
++     so swap the condition.  */
++  if (is_near)
++    return "qb%P0\t%l3, %1, %u2";
++  else
++    return "qb%Q0\t.+8, %1, %u2\;jmp\t%%label(%l3)";
++}
++  [(set_attr "type" "control")
++   (set (attr "length")
++	(if_then_else
++	    (and (ge (minus (match_dup 3) (pc)) (const_int -2040))
++		 (le (minus (match_dup 3) (pc)) (const_int 2036)))
++	    (const_int 4)
++	    (const_int 8)))])
++
++;; Unlike ALU operations, the const_int's sign here is important.  So we
++;; cannot use ubyte_constr.
 +;;
 +;; NOTE: The short branch check has no typo! We must be conservative and take
 +;; into account the worst case of having a signed comparison with a
 +;; "far taken branch" label, which amounts to 7 instructions.
-+
-+(define_insn "cbranch<mode>4"
++(define_insn "cbranch<mode>4_signed"
 +  [(set (pc)
 +     (if_then_else
-+       (match_operator 0 "ordered_comparison_operator"
++       (match_operator 0 "pru_signed_cmp_operator"
 +	 [(match_operand:QISI 1 "register_operand" "r,r,r")
 +	  (match_operand:QISI 2 "reg_or_ubyte_operand" "r,Z,I")])
 +       (label_ref (match_operand 3 "" ""))
@@ -5426,49 +5571,30 @@ index 00000000000..4be1958e6c9
 +  ""
 +{
 +  const int length = (get_attr_length (insn));
-+  const bool is_near = (length == 20 || length == 4);
++  const bool is_near = (length == 20);
++  enum rtx_code code = GET_CODE (operands[0]);
 +
-+  if (pru_signed_cmp_operator (operands[0], VOIDmode))
-+    {
-+      enum rtx_code code = GET_CODE (operands[0]);
-+
-+      if (which_alternative == 0)
-+	return pru_output_signed_cbranch (operands, is_near);
-+      else if (which_alternative == 1 && (code == LT || code == GE))
-+	return pru_output_signed_cbranch_zeroop2 (operands, is_near);
-+      else
-+	return pru_output_signed_cbranch_ubyteop2 (operands, is_near);
-+    }
++  if (which_alternative == 0)
++    return pru_output_signed_cbranch (operands, is_near);
++  else if (which_alternative == 1 && (code == LT || code == GE))
++    return pru_output_signed_cbranch_zeroop2 (operands, is_near);
 +  else
-+    {
-+      /* PRU demands OP1 to be immediate, so swap operands.  */
-+      if (is_near)
-+	return "qb%P0\t%l3, %1, %2";
-+      else
-+	return "qb%Q0\t.+8, %1, %2\;jmp\t%%label(%l3)";
-+    }
++    return pru_output_signed_cbranch_ubyteop2 (operands, is_near);
 +}
 +  [(set_attr "type" "control")
 +   (set (attr "length")
 +	(if_then_else
 +	    (and (ge (minus (match_dup 3) (pc)) (const_int -2020))
 +		 (le (minus (match_dup 3) (pc)) (const_int 2016)))
-+	    (if_then_else
-+		(match_test "pru_signed_cmp_operator (operands[0], VOIDmode)")
-+		    (const_int 20)
-+		    (const_int 4))
-+	    (if_then_else
-+		(match_test "pru_signed_cmp_operator (operands[0], VOIDmode)")
-+		    (const_int 28)
-+		    (const_int 8))))])
-+
++	    (const_int 20)
++	    (const_int 28)))])
 +
 +(define_expand "cbranch<mode>4"
 +  [(set (pc)
 +	(if_then_else (match_operator 0 "pru_fp_comparison_operator"
-+		       [(match_operand:SFDF 1 "register_operand" "")
-+			(match_operand:SFDF 2 "register_operand" "")])
-+		      (label_ref (match_operand 3 "" ""))
++		       [(match_operand:SFDF 1 "register_operand")
++			(match_operand:SFDF 2 "register_operand")])
++		      (label_ref (match_operand 3 ""))
 +		      (pc)))]
 +  ""
 +{
@@ -5491,7 +5617,7 @@ index 00000000000..4be1958e6c9
 +    (BIT_TEST (zero_extract:EQD
 +	 (match_operand:EQS0 0 "register_operand" "r")
 +	 (const_int 1)
-+	 (match_operand:EQS1 1 "reg_or_ubyte_operand" "rI"))
++	 (match_operand:EQS1 1 "reg_or_ubyte_operand" "r<EQS1:ubyte_constr>"))
 +     (const_int 0))
 +    (label_ref (match_operand 2 "" ""))
 +    (pc)))]
@@ -5500,9 +5626,9 @@ index 00000000000..4be1958e6c9
 +  const int length = (get_attr_length (insn));
 +  const bool is_near = (length == 4);
 +  if (is_near)
-+    return "<BIT_TEST:qbbx_op>\\t%l2, %0, %1";
++    return "<BIT_TEST:qbbx_op>\\t%l2, %0, %u1";
 +  else
-+    return "<BIT_TEST:qbbx_negop>\\t.+8, %0, %1\;jmp\\t%%label(%l2)";
++    return "<BIT_TEST:qbbx_negop>\\t.+8, %0, %u1\;jmp\\t%%label(%l2)";
 +}
 +  [(set_attr "type" "control")
 +   (set (attr "length")
@@ -5527,16 +5653,18 @@ index 00000000000..4be1958e6c9
 +	 [(match_operand:HISI 1 "reg_or_ubyte_operand" "rI")
 +	  (match_operand 2 "const_int_operand" "")] UNSPECV_LOOP_BEGIN))]
 +  ""
-+  { gcc_unreachable (); }
-+  [(set_attr "length" "4")])
++{
++  gcc_unreachable ();
++})
 +
 +(define_expand "doloop_begin"
-+  [(use (match_operand 0 "register_operand" ""))
-+   (use (match_operand 1 "" ""))]
++  [(use (match_operand 0 "register_operand"))
++   (use (match_operand 1 ""))]
 +  "TARGET_OPT_LOOP"
-+  "pru_emit_doloop (operands, 0);
-+   DONE;
-+  ")
++{
++  pru_emit_doloop (operands, 0);
++  DONE;
++})
 +
 +; Note: "JUMP_INSNs and CALL_INSNs are not allowed to have any output
 +; reloads;". Hence this insn must be prepared for a counter that is
@@ -5553,7 +5681,9 @@ index 00000000000..4be1958e6c9
 +   (unspec [(match_operand 2 "const_int_operand" "")] UNSPECV_LOOP_END)
 +   (clobber (match_scratch:HISI 3 "=X,&r"))]
 +  ""
-+  { gcc_unreachable (); }
++{
++  gcc_unreachable ();
++}
 +  ;; Worst case length:
 +  ;;
 +  ;;      sub <op3>, 1		4
@@ -5567,14 +5697,15 @@ index 00000000000..4be1958e6c9
 +	  (const_int 12)))])
 +
 +(define_expand "doloop_end"
-+  [(use (match_operand 0 "nonimmediate_operand" ""))
-+   (use (label_ref (match_operand 1 "" "")))]
++  [(use (match_operand 0 "nonimmediate_operand"))
++   (use (label_ref (match_operand 1 "")))]
 +  "TARGET_OPT_LOOP"
-+  "if (GET_CODE (operands[0]) == REG && GET_MODE (operands[0]) == QImode)
-+     FAIL;
-+   pru_emit_doloop (operands, 1);
-+   DONE;
-+  ")
++{
++  if (GET_CODE (operands[0]) == REG && GET_MODE (operands[0]) == QImode)
++    FAIL;
++  pru_emit_doloop (operands, 1);
++  DONE;
++})
 +
 +(define_insn "pruloop<mode>"
 +  [(set (reg:HISI LOOPCNTR_REG)
@@ -5582,8 +5713,7 @@ index 00000000000..4be1958e6c9
 +		    (label_ref (match_operand 1 "" ""))]
 +		   UNSPECV_LOOP_BEGIN))]
 +  ""
-+  "loop\\t%l1, %0"
-+  [(set_attr "length" "4")])
++  "loop\\t%l1, %0")
 +
 +(define_insn "pruloop_end"
 +  [(unspec [(const_int 0)] UNSPECV_LOOP_END)]
@@ -5610,7 +5740,7 @@ index 00000000000..4be1958e6c9
 +
 +
 +(define_insn "delay_cycles_2x_plus1_hi"
-+  [(unspec_volatile [(match_operand 0 "const_uhword_operand" "J")]
++  [(unspec_volatile [(match_operand:SI 0 "const_uhword_operand" "J")]
 +		    UNSPECV_DELAY_CYCLES_2X_HI)
 +   (clobber (match_scratch:SI 1 "=&r"))]
 +  ""
@@ -5648,7 +5778,7 @@ index 00000000000..4be1958e6c9
 +  [(set_attr "type" "alu")])
 diff --git a/gcc/config/pru/pru.opt b/gcc/config/pru/pru.opt
 new file mode 100644
-index 00000000000..e17d92fe1d3
+index 00000000000..49e1baab5a0
 --- /dev/null
 +++ b/gcc/config/pru/pru.opt
 @@ -0,0 +1,53 @@
@@ -5685,7 +5815,7 @@ index 00000000000..e17d92fe1d3
 +-mmcu=MCU	Select the target System-On-Chip variant that embeds this PRU.
 +
 +mno-relax
-+Target Report
++Target Report RejectNegative
 +Prevent relaxation of LDI32 relocations.
 +
 +mloop
@@ -5743,10 +5873,10 @@ index 00000000000..ab29e443882
 +		$(CONFIG_H) $(TM_H) $(srcdir)/config/pru/pru-protos.h
 +	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $<
 diff --git a/gcc/doc/extend.texi b/gcc/doc/extend.texi
-index 130f6a671ce..d35dd5472cc 100644
+index 0d9b99f14d3..9590578211b 100644
 --- a/gcc/doc/extend.texi
 +++ b/gcc/doc/extend.texi
-@@ -21748,6 +21748,7 @@ for further explanation.
+@@ -21820,6 +21820,7 @@ for further explanation.
  * ARM Pragmas::
  * M32C Pragmas::
  * MeP Pragmas::
@@ -5754,7 +5884,7 @@ index 130f6a671ce..d35dd5472cc 100644
  * RS/6000 and PowerPC Pragmas::
  * S/390 Pragmas::
  * Darwin Pragmas::
-@@ -21899,6 +21900,25 @@ extern int foo ();
+@@ -21971,6 +21972,26 @@ extern int foo ();
  
  @end table
  
@@ -5765,14 +5895,15 @@ index 130f6a671ce..d35dd5472cc 100644
 +
 +@item ctable_entry @var{index} @var{constant_address}
 +@cindex pragma, ctable_entry
-+Specifies that the given PRU CTABLE entry at @var{index} has a value
-+@var{constant_address}. This enables GCC to emit LBCO/SBCO instructions
++Specifies that the PRU CTABLE entry given by @var{index} has the value
++@var{constant_address}.  This enables GCC to emit LBCO/SBCO instructions
 +when the load/store address is known and can be addressed with some CTABLE
-+entry.  Example:
++entry.  For example:
 +
 +@smallexample
++/* will compile to "lbco Rx, 2, 0x10, 4" */
 +#pragma ctable_entry 2 0x4802a000
-+*(unsigned int *)0x4802a010 = val; /* will compile to "lbco Rx, 2, 0x10, 4" */
++*(unsigned int *)0x4802a010 = val;
 +@end smallexample
 +
 +@end table
@@ -5781,10 +5912,10 @@ index 130f6a671ce..d35dd5472cc 100644
  @subsection RS/6000 and PowerPC Pragmas
  
 diff --git a/gcc/doc/invoke.texi b/gcc/doc/invoke.texi
-index d7fd0e17555..76f16b1f475 100644
+index 802cc642453..d66d3a697e7 100644
 --- a/gcc/doc/invoke.texi
 +++ b/gcc/doc/invoke.texi
-@@ -1043,6 +1043,10 @@ See RS/6000 and PowerPC Options.
+@@ -1056,6 +1056,10 @@ See RS/6000 and PowerPC Options.
  -mstack-protector-guard=@var{guard} -mstack-protector-guard-reg=@var{reg} @gol
  -mstack-protector-guard-offset=@var{offset}}
  
@@ -5795,7 +5926,7 @@ index d7fd0e17555..76f16b1f475 100644
  @emph{RISC-V Options}
  @gccoptlist{-mbranch-cost=@var{N-instruction} @gol
  -mplt  -mno-plt @gol
-@@ -14644,6 +14648,7 @@ platform.
+@@ -14923,6 +14927,7 @@ platform.
  * picoChip Options::
  * PowerPC Options::
  * PowerPC SPE Options::
@@ -5803,7 +5934,7 @@ index d7fd0e17555..76f16b1f475 100644
  * RISC-V Options::
  * RL78 Options::
  * RS/6000 and PowerPC Options::
-@@ -23125,6 +23130,56 @@ the offset with a symbol reference to a canary in the TLS block.
+@@ -23595,6 +23600,66 @@ the offset with a symbol reference to a canary in the TLS block.
  @end table
  
  
@@ -5816,18 +5947,21 @@ index d7fd0e17555..76f16b1f475 100644
 +@table @gcctabopt
 +@item -minrt
 +@opindex minrt
-+Enable the use of a minimum runtime environment---no static
-+initializers or constructors.  Results in significant code size
-+reduction of final ELF binaries.
++Link with a minimum runtime environment, with no support for static
++initializers and constructors.  Using this option can significantly reduce
++the size of the final ELF binary.  Beware that compiler could still generate
++code with static initializers and constructors.  It is up to the programmer
++to ensure that the source program will not use those features.
 +
 +@item -mmcu=@var{mcu}
 +@opindex mmcu
-+Specify the PRU MCU variant to use.  Check Newlib for exact list of options.
++Specify the PRU MCU variant to use.  Check Newlib for the exact list of
++supported MCUs.
 +
 +@item -mno-relax
 +@opindex mno-relax
-+Pass on (or do not pass on) the @option{-mrelax} command-line option
-+to the linker.
++Make GCC pass @option{--no-relax} command-line option to the linker
++instead of the @option{--relax} option.
 +
 +@item -mloop
 +@opindex mloop
@@ -5835,36 +5969,43 @@ index d7fd0e17555..76f16b1f475 100644
 +
 +@item -mabi=@var{variant}
 +@opindex mabi
-+Specify the ABI variant to output code for.  Permissible values are @samp{gnu}
-+for GCC, and @samp{ti} for fully conformant TI ABI.  These are the differences:
++Specify the ABI variant to output code for.  @option{-mabi=ti} selects the
++unmodified TI ABI while @option{-mabi=gnu} selects a GNU variant that copes
++more naturally with certain GCC assumptions.  These are the differences:
 +
 +@table @samp
 +@item Function Pointer Size
-+TI ABI specifies that function (code) pointers are 16-bit, whereas GCC
++TI ABI specifies that function (code) pointers are 16-bit, whereas GNU
 +supports only 32-bit data and code pointers.
 +
 +@item Optional Return Value Pointer
 +Function return values larger than 64 bits are passed by using a hidden
 +pointer as the first argument of the function.  TI ABI, though, mandates that
 +the pointer can be NULL in case the caller is not using the returned value.
-+GCC always passes and expects a valid return value pointer.
++GNU always passes and expects a valid return value pointer.
 +
 +@end table
 +
-+The current @samp{mabi=ti} implementation simply raises a compile error
-+when any of the above code constructs is detected.
++The current @option{-mabi=ti} implementation simply raises a compile error
++when any of the above code constructs is detected.  As a consequence
++the standard C library cannot be built and it is omitted when linking with
++@option{-mabi=ti}.
++
++Relaxation is a GNU feature and for safety reasons is disabled when using
++@option{-mabi=ti}.  The TI toolchain does not emit relocations for QBBx
++instructions, so the GNU linker cannot adjust them when shortening adjacent
++LDI32 pseudo instructions.
 +
 +@end table
-+
 +
  @node RISC-V Options
  @subsection RISC-V Options
  @cindex RISC-V Options
 diff --git a/gcc/doc/md.texi b/gcc/doc/md.texi
-index 02f9e1e4320..434bf5131ec 100644
+index 4801d68a207..2ea3e637004 100644
 --- a/gcc/doc/md.texi
 +++ b/gcc/doc/md.texi
-@@ -3317,6 +3317,28 @@ Vector constant that is all zeros.
+@@ -3353,6 +3353,25 @@ Vector constant that is all zeros.
  
  @end table
  
@@ -5878,9 +6019,6 @@ index 02f9e1e4320..434bf5131ec 100644
 +
 +@item L
 +An unsigned 5-bit integer constant (for shift counts).
-+
-+@item M
-+An integer constant in the range [-255;0].
 +
 +@item T
 +A text segment (program memory) constant label.
