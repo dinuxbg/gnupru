@@ -1,7 +1,7 @@
-From c8d54d18fb78fcfd7e31b2f6192b69ffdf6459ed Mon Sep 17 00:00:00 2001
+From 32934f93f5050d44e3fdec9d4c7574b9b5e03ace Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 20 Jul 2018 04:59:50 +0300
-Subject: [PATCH 10/19] testsuite: Mark testsuite that PRU has different
+Subject: [PATCH 10/14] testsuite: Mark testsuite that PRU has different
  calling convention
 
 For variadic functions, the last named and all anonymous arguments

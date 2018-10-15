@@ -1,7 +1,7 @@
-From 26bf3d7f0fc992262b40e22cba813fb9f2895f8b Mon Sep 17 00:00:00 2001
+From 6163006b19d5b5978c038f024d6130f7107a73bc Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:57:14 +0200
-Subject: [PATCH 04/19] testsuite: Add check for overflowed IMEM region to
+Subject: [PATCH 04/14] testsuite: Add check for overflowed IMEM region to
  testsuite
 
 PRU architecture supports maximum 256k program memory (IMEM). Some GCC

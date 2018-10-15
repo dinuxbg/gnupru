@@ -1,7 +1,7 @@
-From 7f7eff3896bdd55e292e037f2479f96bc4d886d4 Mon Sep 17 00:00:00 2001
+From 968e4917d4f237d46b79d6957c6b9efdc35c8006 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:56:38 +0200
-Subject: [PATCH 03/19] testsuite: Add PRU tests
+Subject: [PATCH 03/14] testsuite: Add PRU tests
 
 gcc/testsuite/ChangeLog:
 

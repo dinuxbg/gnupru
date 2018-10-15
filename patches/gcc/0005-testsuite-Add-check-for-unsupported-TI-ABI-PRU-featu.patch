@@ -1,7 +1,7 @@
-From 397e54bd2acb3c8de87a9d593469f9cbb0ab7544 Mon Sep 17 00:00:00 2001
+From 80ffd04758cd62234c6db367621a15320caf5d37 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 15 Apr 2018 15:03:27 +0300
-Subject: [PATCH 05/19] testsuite: Add check for unsupported TI ABI PRU
+Subject: [PATCH 05/14] testsuite: Add check for unsupported TI ABI PRU
  features to testsuite
 
 Not all C language features are supported when -mabi=ti option is

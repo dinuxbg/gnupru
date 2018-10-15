@@ -1,7 +1,7 @@
-From a16d2b9c061d236bfa417e74ddcb55c6067c43c1 Mon Sep 17 00:00:00 2001
+From 7ebed70c682400859d6b46f43a9d757f8c1c517f Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:53:18 +0200
-Subject: [PATCH 01/19] Initial TI PRU GCC port
+Subject: [PATCH 01/14] Initial TI PRU GCC port
 
 ChangeLog:
 
@@ -39,20 +39,20 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  gcc/config.gcc                     |    9 +
  gcc/config/pru/alu-zext.md         |  181 +++
  gcc/config/pru/constraints.md      |  108 ++
- gcc/config/pru/predicates.md       |  246 +++
+ gcc/config/pru/predicates.md       |  290 ++++
  gcc/config/pru/pru-opts.h          |   31 +
- gcc/config/pru/pru-passes.c        |  236 +++
- gcc/config/pru/pru-pragma.c        |   92 ++
+ gcc/config/pru/pru-passes.c        |  228 +++
+ gcc/config/pru/pru-pragma.c        |   86 ++
  gcc/config/pru/pru-protos.h        |   72 +
- gcc/config/pru/pru.c               | 3002 ++++++++++++++++++++++++++++++++++++
+ gcc/config/pru/pru.c               | 3003 ++++++++++++++++++++++++++++++++++++
  gcc/config/pru/pru.h               |  572 +++++++
- gcc/config/pru/pru.md              | 1015 ++++++++++++
- gcc/config/pru/pru.opt             |   53 +
+ gcc/config/pru/pru.md              | 1022 ++++++++++++
+ gcc/config/pru/pru.opt             |   54 +
  gcc/config/pru/t-pru               |   31 +
  gcc/doc/extend.texi                |   21 +
  gcc/doc/invoke.texi                |   65 +
  gcc/doc/md.texi                    |   19 +
- 18 files changed, 5796 insertions(+)
+ 18 files changed, 5835 insertions(+)
  create mode 100644 gcc/common/config/pru/pru-common.c
  create mode 100644 gcc/config/pru/alu-zext.md
  create mode 100644 gcc/config/pru/constraints.md
@@ -135,10 +135,10 @@ index 00000000000..e87d70ce9ca
 +
 +struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index 0c579d1f5ea..db673b1b8bf 100644
+index 8521f7d556e..2c3d754d673 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -493,6 +493,9 @@ powerpc*-*-*)
+@@ -494,6 +494,9 @@ powerpc*-*-*)
  	esac
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
@@ -148,7 +148,7 @@ index 0c579d1f5ea..db673b1b8bf 100644
  riscv*)
  	cpu_type=riscv
  	extra_objs="riscv-builtins.o riscv-c.o"
-@@ -2698,6 +2701,12 @@ powerpcle-*-eabi*)
+@@ -2699,6 +2702,12 @@ powerpcle-*-eabi*)
  	extra_options="${extra_options} rs6000/sysv4.opt"
  	use_gcc_stdint=wrap
  	;;
@@ -464,10 +464,10 @@ index 00000000000..7af45be2289
 +       (match_test "ival == 0")))
 diff --git a/gcc/config/pru/predicates.md b/gcc/config/pru/predicates.md
 new file mode 100644
-index 00000000000..6472c8232c0
+index 00000000000..0e34d9c1a31
 --- /dev/null
 +++ b/gcc/config/pru/predicates.md
-@@ -0,0 +1,246 @@
+@@ -0,0 +1,290 @@
 +;; Predicate definitions for TI PRU.
 +;; Copyright (C) 2014-2018 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -531,24 +531,68 @@ index 00000000000..6472c8232c0
 +  (and (match_code "const_int")
 +       (match_test "exact_log2 (~INTVAL (op) & GET_MODE_MASK (mode)) >= 0")))
 +
-+;; Do not match SUBREG.  When assigning SI multiplication result to a DI
-+;; variable (e.g. f in gcc.dg/pr50717-1.c), SUBREG set destination is
-+;; generated, which prevents us from using REGNO.  It should be better
-+;; to declare our limitation upfront and support only REG.
 +(define_predicate "pru_muldst_operand"
-+  (and (match_code "reg")
-+       (ior (match_test "REGNO_REG_CLASS (REGNO (op)) == MULDST_REGS")
-+	    (match_test "REGNO (op) >= FIRST_PSEUDO_REGISTER"))))
++  (match_code "subreg,reg")
++{
++  if (register_operand (op, mode))
++    {
++      int regno;
++
++      if (REG_P (op))
++	regno = REGNO (op);
++      else if (GET_CODE (op) == SUBREG && REG_P (SUBREG_REG (op)))
++	regno = REGNO (SUBREG_REG (op));
++      else
++	return 0;
++
++
++      return REGNO_REG_CLASS (regno) == MULDST_REGS
++	     || regno >= FIRST_PSEUDO_REGISTER;
++    }
++  return 0;
++})
 +
 +(define_predicate "pru_mulsrc0_operand"
-+  (and (match_code "reg")
-+       (ior (match_test "REGNO_REG_CLASS (REGNO (op)) == MULSRC0_REGS")
-+	    (match_test "REGNO (op) >= FIRST_PSEUDO_REGISTER"))))
++  (match_code "subreg,reg")
++{
++  if (register_operand (op, mode))
++    {
++      int regno;
++
++      if (REG_P (op))
++	regno = REGNO (op);
++      else if (GET_CODE (op) == SUBREG && REG_P (SUBREG_REG (op)))
++	regno = REGNO (SUBREG_REG (op));
++      else
++	return 0;
++
++
++      return REGNO_REG_CLASS (regno) == MULSRC0_REG
++	     || regno >= FIRST_PSEUDO_REGISTER;
++    }
++  return 0;
++})
 +
 +(define_predicate "pru_mulsrc1_operand"
-+  (and (match_code "reg")
-+       (ior (match_test "REGNO_REG_CLASS (REGNO (op)) == MULSRC1_REGS")
-+	    (match_test "REGNO (op) >= FIRST_PSEUDO_REGISTER"))))
++  (match_code "subreg,reg")
++{
++  if (register_operand (op, mode))
++    {
++      int regno;
++
++      if (REG_P (op))
++	regno = REGNO (op);
++      else if (GET_CODE (op) == SUBREG && REG_P (SUBREG_REG (op)))
++	regno = REGNO (SUBREG_REG (op));
++      else
++	return 0;
++
++
++      return REGNO_REG_CLASS (regno) == MULSRC1_REG
++	     || regno >= FIRST_PSEUDO_REGISTER;
++    }
++  return 0;
++})
 +
 +(define_predicate "reg_or_const_int_operand"
 +  (ior (match_operand 0 "const_int_operand")
@@ -648,7 +692,7 @@ index 00000000000..6472c8232c0
 +      if (GET_CODE (elt) != SET
 +	  || GET_CODE (SET_DEST (elt)) != REG
 +	  || GET_MODE (SET_DEST (elt)) != elt_mode
-+	  || REGNO (SET_DEST (elt)) != dest_regno + i
++	  || REGNO (SET_DEST (elt)) != dest_regno + i * GET_MODE_SIZE (elt_mode)
 +	  || GET_CODE (SET_SRC (elt)) != MEM
 +	  || GET_MODE (SET_SRC (elt)) != elt_mode)
 +	return false;
@@ -700,7 +744,7 @@ index 00000000000..6472c8232c0
 +      if (GET_CODE (elt) != SET
 +	  || GET_CODE (SET_SRC (elt)) != REG
 +	  || GET_MODE (SET_SRC (elt)) != elt_mode
-+	  || REGNO (SET_SRC (elt)) != src_regno + i
++	  || REGNO (SET_SRC (elt)) != src_regno + i * GET_MODE_SIZE (elt_mode)
 +	  || GET_CODE (SET_DEST (elt)) != MEM
 +	  || GET_MODE (SET_DEST (elt)) != elt_mode)
 +	return false;
@@ -753,10 +797,10 @@ index 00000000000..1c1514cb2a3
 +#endif
 diff --git a/gcc/config/pru/pru-passes.c b/gcc/config/pru/pru-passes.c
 new file mode 100644
-index 00000000000..34516540559
+index 00000000000..aa4f73c4ddb
 --- /dev/null
 +++ b/gcc/config/pru/pru-passes.c
-@@ -0,0 +1,236 @@
+@@ -0,0 +1,228 @@
 +/* PRU target specific passes
 +   Copyright (C) 2017-2018 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dimitar@dinux.eu>
@@ -795,7 +839,6 @@ index 00000000000..34516540559
 +#include "gimple-walk.h"
 +#include "gimple-expr.h"
 +#include "tree-pass.h"
-+#include "gimple-pretty-print.h"
 +
 +#include "pru-protos.h"
 +
@@ -875,10 +918,8 @@ index 00000000000..34516540559
 +    {
 +      tree arg_type = TREE_VALUE (p);
 +      if (chkp_type_has_function_pointer (arg_type))
-+	{
-+	  error_at (call_location,
-+		    "function pointers not supported with %<-mabi=ti%> option");
-+	}
++	error_at (call_location,
++		  "function pointers not supported with %<-mabi=ti%> option");
 +    }
 +}
 +
@@ -908,9 +949,6 @@ index 00000000000..34516540559
 +      && gimple_call_fndecl (call))
 +    return NULL;
 +
-+  /* TODO - find a safe method to allow data-pointer-casted function
-+     labels. Example: (void *)func.  */
-+
 +  switch (TREE_CODE (type))
 +    {
 +    case FUNCTION_TYPE:
@@ -925,10 +963,8 @@ index 00000000000..34516540559
 +	    {
 +	      tree arg_type = TREE_VALUE (p);
 +	      if (chkp_type_has_function_pointer (arg_type))
-+		{
-+		  error_at (gimple_location (wi->stmt), "function pointers "
-+			    "not supported with %<-mabi=ti%> option");
-+		}
++		error_at (gimple_location (wi->stmt), "function pointers "
++			  "not supported with %<-mabi=ti%> option");
 +	    }
 +	  break;
 +	}
@@ -995,10 +1031,10 @@ index 00000000000..34516540559
 +}
 diff --git a/gcc/config/pru/pru-pragma.c b/gcc/config/pru/pru-pragma.c
 new file mode 100644
-index 00000000000..decc548a468
+index 00000000000..6df46bcd78f
 --- /dev/null
 +++ b/gcc/config/pru/pru-pragma.c
-@@ -0,0 +1,92 @@
+@@ -0,0 +1,86 @@
 +/* PRU target specific pragmas
 +   Copyright (C) 2015-2018 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -1057,19 +1093,13 @@ index 00000000000..decc548a468
 +
 +	  type = pragma_lex (&base_addr);
 +	  if (type != CPP_EOF)
-+	    {
-+	      error ("junk at end of %<#pragma CTABLE_ENTRY%>");
-+	    }
++	    error ("junk at end of %<#pragma CTABLE_ENTRY%>");
 +	  else if (i >= ARRAY_SIZE (pru_ctable))
-+	    {
-+	      error ("%<CTABLE_ENTRY%> index %" HOST_WIDE_INT_PRINT "d"
-+		     " is not valid", i);
-+	    }
++	    error ("%<CTABLE_ENTRY%> index %" HOST_WIDE_INT_PRINT "d"
++		   " is not valid", i);
 +	  else if (pru_ctable[i].valid && pru_ctable[i].base != base)
-+	    {
-+	      error ("redefinition of %<CTABLE_ENTRY "
-+		     "%" HOST_WIDE_INT_PRINT "d%>", i);
-+	    }
++	    error ("redefinition of %<CTABLE_ENTRY "
++		   "%" HOST_WIDE_INT_PRINT "d%>", i);
 +	  else
 +	    {
 +	      if (base & 0xff)
@@ -1171,10 +1201,10 @@ index 00000000000..6b92eff7f70
 +#endif /* GCC_PRU_PROTOS_H */
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
 new file mode 100644
-index 00000000000..245c8b98281
+index 00000000000..1c55fb3d0c5
 --- /dev/null
 +++ b/gcc/config/pru/pru.c
-@@ -0,0 +1,3002 @@
+@@ -0,0 +1,3003 @@
 +/* Target machine subroutines for TI PRU.
 +   Copyright (C) 2014-2018 Free Software Foundation, Inc.
 +   Dimitar Dimitrov <dimitar@dinux.eu>
@@ -1254,13 +1284,11 @@ index 00000000000..245c8b98281
 +  /* Number of bytes that variables take up.  */
 +  int var_size;
 +  /* Number of bytes that outgoing arguments take up.  */
-+  int args_size;
++  int out_args_size;
 +  /* Number of bytes needed to store registers in frame.  */
 +  int save_reg_size;
 +  /* Offset from new stack pointer to store registers.  */
 +  int save_regs_offset;
-+  /* Offset from save_regs_offset to store frame pointer register.  */
-+  int fp_save_offset;
 +  /* True if final frame layout is already calculated.  */
 +  bool initialized;
 +  /* Number of doloop tags used so far.  */
@@ -1269,7 +1297,25 @@ index 00000000000..245c8b98281
 +  bool doloop_tag_from_end;
 +};
 +
-+/* Stack layout and calling conventions.  */
++/* Stack layout and calling conventions.
++
++   The PRU ABI defines r4 as Argument Pointer.  GCC implements the same
++   semantics, but represents it with HARD_FRAME_POINTER_REGNUM and
++   names it FP.  The stack layout is shown below:
++
++       ---------------------- high address
++	| incoming args
++       ------call-boundary---
++	| pretend_args	    ^
++    FP ----------------     | total
++	| save_regs	    | frame
++	---------------	    | size
++	| local vars	    |
++	---------------	    |
++	| outgoing args     V
++    SP ---------------------- low address
++
++ */
 +
 +#define PRU_STACK_ALIGN(LOC)  ROUND_UP ((LOC), STACK_BOUNDARY / BITS_PER_UNIT)
 +
@@ -1302,17 +1348,6 @@ index 00000000000..245c8b98281
 +	save_reg_size += 1;
 +      }
 +
-+  cfun->machine->fp_save_offset = 0;
-+  if (TEST_HARD_REG_BIT (*save_mask, HARD_FRAME_POINTER_REGNUM))
-+    {
-+      int fp_save_offset = 0;
-+      for (regno = 0; regno < HARD_FRAME_POINTER_REGNUM; regno++)
-+	if (TEST_HARD_REG_BIT (*save_mask, regno))
-+	  fp_save_offset += 1;
-+
-+      cfun->machine->fp_save_offset = fp_save_offset;
-+    }
-+
 +  save_reg_size = PRU_STACK_ALIGN (save_reg_size);
 +  total_size += save_reg_size;
 +  total_size += PRU_STACK_ALIGN (crtl->args.pretend_args_size);
@@ -1320,7 +1355,7 @@ index 00000000000..245c8b98281
 +  /* Save other computed information.  */
 +  cfun->machine->total_size = total_size;
 +  cfun->machine->var_size = var_size;
-+  cfun->machine->args_size = out_args_size;
++  cfun->machine->out_args_size = out_args_size;
 +  cfun->machine->save_reg_size = save_reg_size;
 +  cfun->machine->initialized = reload_completed;
 +  cfun->machine->save_regs_offset = out_args_size + var_size;
@@ -1330,13 +1365,12 @@ index 00000000000..245c8b98281
 +   frame-related registers.
 +     op0	  - Destination register.
 +     op1	  - First addendum operand (a register).
-+     addendum     - Second addendum operand (a constant).
++     addendum	  - Second addendum operand (a constant).
 +     kind	  - Note kind.  REG_NOTE_MAX if no note must be added.
-+     reg_note_rtx - Reg note RTX.  NULL if it should be computed automatically.
 + */
 +static rtx
 +pru_add3_frame_adjust (rtx op0, rtx op1, int addendum,
-+		       const enum reg_note kind, rtx reg_note_rtx)
++		       const enum reg_note kind)
 +{
 +  rtx insn;
 +
@@ -1365,11 +1399,7 @@ index 00000000000..245c8b98281
 +
 +  /* Attach a note indicating what happened.  */
 +  if (kind != REG_NOTE_MAX)
-+    {
-+      if (reg_note_rtx == NULL_RTX)
-+	reg_note_rtx = copy_rtx (op0_adjust);
-+      add_reg_note (insn, kind, reg_note_rtx);
-+    }
++    add_reg_note (insn, kind, copy_rtx (op0_adjust));
 +
 +  RTX_FRAME_RELATED_P (insn) = 1;
 +
@@ -1381,7 +1411,7 @@ index 00000000000..245c8b98281
 +pru_add_to_sp (int addendum, const enum reg_note kind)
 +{
 +  return pru_add3_frame_adjust (stack_pointer_rtx, stack_pointer_rtx,
-+				addendum, kind, NULL_RTX);
++				addendum, kind);
 +}
 +
 +/* Helper function used during prologue/epilogue.  Emits a single LBBO/SBBO
@@ -1469,18 +1499,14 @@ index 00000000000..245c8b98281
 +  if (!UBYTE_INT (total_frame_size))
 +    {
 +      /* We need an intermediary point, this will point at the spill block.  */
-+      insn = pru_add_to_sp (cfun->machine->save_regs_offset
-+			     - total_frame_size,
-+			     REG_NOTE_MAX);
++      insn = pru_add_to_sp (cfun->machine->save_regs_offset - total_frame_size,
++			    REG_NOTE_MAX);
 +      save_regs_base = 0;
 +      sp_offset = -cfun->machine->save_regs_offset;
 +    }
 +  else if (total_frame_size)
 +    {
-+      insn = emit_insn (gen_add2_insn (stack_pointer_rtx,
-+				       gen_int_mode (-total_frame_size,
-+						     Pmode)));
-+      RTX_FRAME_RELATED_P (insn) = 1;
++      insn = pru_add_to_sp (- total_frame_size, REG_NOTE_MAX);
 +      save_regs_base = cfun->machine->save_regs_offset;
 +      sp_offset = 0;
 +    }
@@ -1493,11 +1519,16 @@ index 00000000000..245c8b98281
 +    regno_start = xbbo_next_reg_cluster (regno_start, &save_offset, true);
 +  while (regno_start >= 0);
 +
++  /* Set FP before adjusting SP.  This way fp_offset has
++     better chance to fit in UBYTE.  */
 +  if (frame_pointer_needed)
 +    {
-+      int fp_save_offset = save_regs_base + cfun->machine->fp_save_offset;
++      int fp_offset = total_frame_size
++	- crtl->args.pretend_args_size
++	+ sp_offset;
++
 +      pru_add3_frame_adjust (hard_frame_pointer_rtx, stack_pointer_rtx,
-+			     fp_save_offset, REG_NOTE_MAX, NULL_RTX);
++			     fp_offset, REG_NOTE_MAX);
 +    }
 +
 +  if (sp_offset)
@@ -1513,7 +1544,6 @@ index 00000000000..245c8b98281
 +void
 +pru_expand_epilogue (bool sibcall_p)
 +{
-+  rtx cfa_adj;
 +  int total_frame_size;
 +  int sp_adjust, save_offset;
 +  int regno_start;
@@ -1531,12 +1561,9 @@ index 00000000000..245c8b98281
 +  if (frame_pointer_needed)
 +    {
 +      /* Recover the stack pointer.  */
-+      cfa_adj = plus_constant (Pmode, stack_pointer_rtx,
-+			       (total_frame_size
-+				- cfun->machine->save_regs_offset));
 +      pru_add3_frame_adjust (stack_pointer_rtx, hard_frame_pointer_rtx,
-+			     -cfun->machine->fp_save_offset,
-+			     REG_CFA_DEF_CFA, cfa_adj);
++			     - cfun->machine->save_reg_size,
++			     REG_CFA_ADJUST_CFA);
 +
 +      save_offset = 0;
 +      sp_adjust = total_frame_size - cfun->machine->save_regs_offset;
@@ -1602,8 +1629,8 @@ index 00000000000..245c8b98281
 +	   cfun->machine->total_size);
 +  fprintf (file, "\t%s var_size = %d\n", ASM_COMMENT_START,
 +	   cfun->machine->var_size);
-+  fprintf (file, "\t%s args_size = %d\n", ASM_COMMENT_START,
-+	   cfun->machine->args_size);
++  fprintf (file, "\t%s out_args_size = %d\n", ASM_COMMENT_START,
++	   cfun->machine->out_args_size);
 +  fprintf (file, "\t%s save_reg_size = %d\n", ASM_COMMENT_START,
 +	   cfun->machine->save_reg_size);
 +  fprintf (file, "\t%s initialized = %d\n", ASM_COMMENT_START,
@@ -1661,7 +1688,7 @@ index 00000000000..245c8b98281
 +  switch (from)
 +    {
 +    case FRAME_POINTER_REGNUM:
-+      offset = cfun->machine->args_size;
++      offset = cfun->machine->out_args_size;
 +      break;
 +
 +    case ARG_POINTER_REGNUM:
@@ -1676,8 +1703,8 @@ index 00000000000..245c8b98281
 +  /* If we are asked for the frame pointer offset, then adjust OFFSET
 +     by the offset from the frame pointer to the stack pointer.  */
 +  if (to == HARD_FRAME_POINTER_REGNUM)
-+    offset -= (cfun->machine->save_regs_offset
-+	       + cfun->machine->fp_save_offset);
++    offset -= cfun->machine->total_size - crtl->args.pretend_args_size;
++
 +
 +  return offset;
 +}
@@ -1705,8 +1732,11 @@ index 00000000000..245c8b98281
 +    case 2: return (regno % 4) <= 2;
 +    case 4: return (regno % 4) == 0;
 +    case 8: return (regno % 4) == 0;
++    case 16: return (regno % 4) == 0; /* Not sure why TImode is used.  */
++    case 32: return (regno % 4) == 0; /* Not sure why CTImode is used.  */
 +    default:
 +      /* TODO: Find out why VOIDmode and BLKmode are passed.  */
++      gcc_assert (mode == BLKmode || mode == VOIDmode);
 +      return (regno % 4) == 0;
 +    }
 +}
@@ -1881,7 +1911,7 @@ index 00000000000..245c8b98281
 +      {
 +	/* Factor in that "mul" requires fixed registers, which
 +	   would likely require register moves.  */
-+	*total = COSTS_N_INSNS (5);
++	*total = COSTS_N_INSNS (7);
 +	return false;
 +      }
 +    case PLUS:
@@ -1920,9 +1950,9 @@ index 00000000000..245c8b98281
 +      {
 +	rtx op1 = XEXP (x, 1);
 +	if (const_1_operand (op1, VOIDmode))
-+	  *total = COSTS_N_INSNS (2);
++	  *total = COSTS_N_INSNS (3);
 +	else
-+	  *total = COSTS_N_INSNS (6);
++	  *total = COSTS_N_INSNS (7);
 +	return false;
 +      }
 +    case ZERO_EXTRACT:
@@ -2588,7 +2618,7 @@ index 00000000000..245c8b98281
 +{
 +  switch (GET_CODE (operand))
 +    {
-+      /* Direct.  */
++    /* Direct.  */
 +    case SYMBOL_REF:
 +    case LABEL_REF:
 +    case CONST:
@@ -2608,8 +2638,7 @@ index 00000000000..245c8b98281
 +	rtx op0 = XEXP (operand, 0);
 +	rtx op1 = XEXP (operand, 1);
 +
-+	return (pru_valid_addr_expr_p (mode, op0, op1, strict_p)
-+		|| pru_valid_addr_expr_p (mode, op1, op0, strict_p));
++	return pru_valid_addr_expr_p (mode, op0, op1, strict_p);
 +      }
 +
 +    default:
@@ -2752,23 +2781,23 @@ index 00000000000..245c8b98281
 +/* Print the operand OP to file stream FILE modified by LETTER.
 +   LETTER can be one of:
 +
-+     b: prints the register byte start (used by LBBO/SBBO)
-+     B: prints 'c' or 'b' for CTABLE or REG base in a memory address
++     b: prints the register byte start (used by LBBO/SBBO).
++     B: prints 'c' or 'b' for CTABLE or REG base in a memory address.
 +     F: Full 32-bit register.
-+     H: Higher 16-bits of a const_int operand
-+     L: Lower 16-bits of a const_int operand
-+     N: prints next 32-bit register (upper 32bits of a 64bit REG couple)
++     H: Higher 16-bits of a const_int operand.
++     L: Lower 16-bits of a const_int operand.
++     N: prints next 32-bit register (upper 32bits of a 64bit REG couple).
 +     P: prints swapped condition.
 +     Q: prints swapped and reversed condition.
 +     R: prints reversed condition.
-+     S: print operand mode size (but do not print the operand itself)
-+     T: print exact_log2 () for const_int operands
++     S: print operand mode size (but do not print the operand itself).
++     T: print exact_log2 () for const_int operands.
 +     u: print QI constant integer as unsigned.  No transformation for regs.
-+     V: print exact_log2 () of negated const_int operands
-+     w: Lower 32-bits of a const_int operand
-+     W: Upper 32-bits of a const_int operand
-+     y: print the next 8-bit register (regardless of op size)
-+     z: print the second next 8-bit register (regardless of op size)
++     V: print exact_log2 () of negated const_int operands.
++     w: Lower 32-bits of a const_int operand.
++     W: Upper 32-bits of a const_int operand.
++     y: print the next 8-bit register (regardless of op size).
++     z: print the second next 8-bit register (regardless of op size).
 +*/
 +static void
 +pru_print_operand (FILE *file, rtx op, int letter)
@@ -2993,11 +3022,10 @@ index 00000000000..245c8b98281
 +	      rtx op0 = XEXP (base, 0);
 +	      rtx op1 = XEXP (base, 1);
 +
-+	      /* PLUS cannot have two constant operands, so one
++	      /* PLUS cannot have two constant operands, so first one
 +		 of them must be a REG, hence we must check for an
 +		 exact base address.  */
-+	      if (ctable_base_operand (op0, VOIDmode)
-+		  || ctable_base_operand (op1, VOIDmode))
++	      if (ctable_base_operand (op1, VOIDmode))
 +		{
 +		  fprintf (file, "c");
 +		  return;
@@ -3064,7 +3092,11 @@ index 00000000000..245c8b98281
 +	unsigned HOST_WIDE_INT caddr = INTVAL (op);
 +	int base = pru_get_ctable_base_index (caddr);
 +	int offs = pru_get_ctable_base_offset (caddr);
-+	gcc_assert (base >= 0);
++	if (base < 0)
++	  {
++	    output_operand_lossage ("unsupported constant address:");
++	    return;
++	  }
 +	fprintf (file, "%d, %d", base, offs);
 +	return;
 +      }
@@ -3308,8 +3340,8 @@ index 00000000000..245c8b98281
 +
 +static rtx
 +pru_function_arg (cumulative_args_t cum_v, machine_mode mode,
-+		    const_tree type,
-+		    bool named)
++		  const_tree type,
++		  bool named)
 +{
 +  rtx return_rtx = NULL_RTX;
 +  int regi = pru_function_arg_regi (cum_v, mode, type, named);
@@ -3320,9 +3352,8 @@ index 00000000000..245c8b98281
 +  return return_rtx;
 +}
 +
-+/* Return number of bytes, at the beginning of the argument, that must be
-+   put in registers.  0 is the argument is entirely in registers or entirely
-+   in memory.  */
++/* Implement TARGET_ARG_PARTIAL_BYTES.  PRU never splits any arguments
++   between registers and memory, so we can return 0.  */
 +
 +static int
 +pru_arg_partial_bytes (cumulative_args_t cum_v ATTRIBUTE_UNUSED,
@@ -4179,7 +4210,7 @@ index 00000000000..245c8b98281
 +#include "gt-pru.h"
 diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
 new file mode 100644
-index 00000000000..9f1e6e85836
+index 00000000000..fc8a19eeeb5
 --- /dev/null
 +++ b/gcc/config/pru/pru.h
 @@ -0,0 +1,572 @@
@@ -4264,7 +4295,7 @@ index 00000000000..9f1e6e85836
 +#define BYTES_BIG_ENDIAN 0
 +#define WORDS_BIG_ENDIAN 0
 +
-+/* PRU is represented in GCC as an 8-bit CPU with fast 16b and 32bb
++/* PRU is represented in GCC as an 8-bit CPU with fast 16-bit and 32-bit
 +   arithmetic.  */
 +#define BITS_PER_WORD 8
 +
@@ -4309,30 +4340,30 @@ index 00000000000..9f1e6e85836
 +   0      r0		  Caller Saved.  Also used as a static chain register.
 +   1      r1		  Caller Saved.  Also used as a temporary by function
 +			  profiler and function prologue/epilogue.
-+   2      r2       sp	  Stack Pointer
-+   3*     r3.w0    ra	  Return Address (16-bit)
-+   4      r4       fp	  Frame Pointer
-+   5-13   r5-r13	  Callee Saved Registers
++   2      r2       sp	  Stack Pointer.
++   3*     r3.w0    ra	  Return Address (16-bit).
++   4      r4       fp	  Frame Pointer, also called Argument Pointer in ABI.
++   5-13   r5-r13	  Callee Saved Registers.
 +   14-29  r14-r29	  Register Arguments.  Caller Saved Registers.
-+   14-15  r14-r15	  Return Location
++   14-15  r14-r15	  Return Location.
 +   30     r30		  Special I/O register.  Not used by compiler.
 +   31     r31		  Special I/O register.  Not used by compiler.
 +
-+   32     loop_cntr	  Internal register used as a counter by LOOP insns
++   32     loop_cntr	  Internal register used as a counter by LOOP insns.
 +
-+   33     pc		  Not an actual register
++   33     pc		  Not an actual register.
 +
-+   34     fake_fp	  Fake Frame Pointer (always eliminated)
-+   35     fake_ap	  Fake Argument Pointer (always eliminated)
-+   36			  First Pseudo Register
++   34     fake_fp	  Fake Frame Pointer (always eliminated).
++   35     fake_ap	  Fake Argument Pointer (always eliminated).
++   36			  First Pseudo Register.
 +
-+   The definitions for all the hard register numbers are located in pru.md.
++   The definitions for some hard register numbers are located in pru.md.
 +   Note that GCC's internal register numbering differs from the conventional
 +   register naming in PRU ISA.  PRU ISA defines word-based register numbers
 +   and sub-register suffixes (e.g. RA is r3.w0).  GCC uses linear numbering
 +   of 8 bit sub-registers (e.g. RA starts at r12).  When outputting assembly,
 +   GCC will take into account the RTL operand size (e.g. r12:HI) in order to
-+   translate to the conventional PRU ISA format expected by GAS.
++   translate to the conventional PRU ISA format expected by GAS (r3.w0).
 +*/
 +
 +#define FIXED_REGISTERS				\
@@ -4757,10 +4788,10 @@ index 00000000000..9f1e6e85836
 +#endif /* GCC_PRU_H */
 diff --git a/gcc/config/pru/pru.md b/gcc/config/pru/pru.md
 new file mode 100644
-index 00000000000..fb0daa72605
+index 00000000000..248ae2c953d
 --- /dev/null
 +++ b/gcc/config/pru/pru.md
-@@ -0,0 +1,1015 @@
+@@ -0,0 +1,1022 @@
 +;; Machine Description for TI PRU.
 +;; Copyright (C) 2014-2018 Free Software Foundation, Inc.
 +;; Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -4857,7 +4888,7 @@ index 00000000000..fb0daa72605
 +(define_mode_iterator HISI [HI SI])
 +(define_mode_iterator SFDF [SF DF])
 +
-+;; EQS0/0 for extension source 0/1 and EQD for extension destination patterns.
++;; EQS0/1 for extension source 0/1 and EQD for extension destination patterns.
 +(define_mode_iterator EQS0 [QI HI SI])
 +(define_mode_iterator EQS1 [QI HI SI])
 +(define_mode_iterator EQD [QI HI SI])
@@ -4867,7 +4898,7 @@ index 00000000000..fb0daa72605
 +;; use different constraints to match UBYTE in different modes.
 +;;
 +;; Wherever this iterator is used, the corresponding operand has the 'u'
-+;; print format modifier. That is how the QI signedness is cured, and
++;; print format modifier.  That is how the QI signedness is cured, and
 +;; the generated assembly contains unsigned constants.
 +;;
 +;; If the pattern has no QI operands, then this iterator need not be used.
@@ -5275,6 +5306,7 @@ index 00000000000..fb0daa72605
 +
 +  emit_jump_insn (gen_jump (loop_label));
 +  JUMP_LABEL (get_last_insn ()) = loop_label;
++  LABEL_NUSES (loop_label)++;
 +  emit_barrier ();
 +
 +  emit_label (ashr_end_label);
@@ -5557,8 +5589,8 @@ index 00000000000..fb0daa72605
 +;; Unlike ALU operations, the const_int's sign here is important.  So we
 +;; cannot use ubyte_constr.
 +;;
-+;; NOTE: The short branch check has no typo! We must be conservative and take
-+;; into account the worst case of having a signed comparison with a
++;; NOTE: The short branch check has no typo!  We must be conservative and
++;; take into account the worst case of having a signed comparison with a
 +;; "far taken branch" label, which amounts to 7 instructions.
 +(define_insn "cbranch<mode>4_signed"
 +  [(set (pc)
@@ -5667,7 +5699,7 @@ index 00000000000..fb0daa72605
 +})
 +
 +; Note: "JUMP_INSNs and CALL_INSNs are not allowed to have any output
-+; reloads;". Hence this insn must be prepared for a counter that is
++; reloads;".  Hence this insn must be prepared for a counter that is
 +; not a register.
 +(define_insn "doloop_end_internal<mode>"
 +  [(set (pc)
@@ -5686,15 +5718,21 @@ index 00000000000..fb0daa72605
 +}
 +  ;; Worst case length:
 +  ;;
-+  ;;      sub <op3>, 1		4
-+  ;;      qbeq .+8, <op3>, 0    4
-+  ;;      jmp <op1>		4
++  ;;	  lbbo op3_reg, op3_ptr	  4'
++  ;;	  sub <op3_reg>, 1	  4
++  ;;	  qbeq .+8, <op3_reg>, 0  4
++  ;;	  jmp <op1>		  4
++  ;;	  sbbo op3_reg, op3_ptr	  4
 +  [(set (attr "length")
 +      (if_then_else
-+	  (and (ge (minus (pc) (match_dup 1)) (const_int 0))
-+	       (le (minus (pc) (match_dup 1)) (const_int 1020)))
-+	  (const_int 4)
-+	  (const_int 12)))])
++	(and (ge (minus (pc) (match_dup 1)) (const_int 0))
++	     (le (minus (pc) (match_dup 1)) (const_int 1020)))
++	(cond [(eq_attr "alternative" "0") (const_int 4)
++	       (eq_attr "alternative" "0") (const_int 12)]
++	       (const_int 4))
++	(cond [(eq_attr "alternative" "0") (const_int 12)
++	       (eq_attr "alternative" "0") (const_int 20)]
++	       (const_int 4))))])
 +
 +(define_expand "doloop_end"
 +  [(use (match_operand 0 "nonimmediate_operand"))
@@ -5729,14 +5767,14 @@ index 00000000000..fb0daa72605
 +		    UNSPECV_DELAY_CYCLES_START)]
 +  ""
 +  "/* Begin %0 cycle delay.  */"
-+)
++  [(set_attr "length" "0")])
 +
 +(define_insn "delay_cycles_end"
 +  [(unspec_volatile [(match_operand 0 "immediate_operand" "i")]
 +		    UNSPECV_DELAY_CYCLES_END)]
 +  ""
 +  "/* End %0 cycle delay.  */"
-+)
++  [(set_attr "length" "0")])
 +
 +
 +(define_insn "delay_cycles_2x_plus1_hi"
@@ -5778,10 +5816,10 @@ index 00000000000..fb0daa72605
 +  [(set_attr "type" "alu")])
 diff --git a/gcc/config/pru/pru.opt b/gcc/config/pru/pru.opt
 new file mode 100644
-index 00000000000..49e1baab5a0
+index 00000000000..fb9b0fcbf5c
 --- /dev/null
 +++ b/gcc/config/pru/pru.opt
-@@ -0,0 +1,53 @@
+@@ -0,0 +1,54 @@
 +; Options for the TI PRU port of the compiler.
 +; Copyright (C) 2018 Free Software Foundation, Inc.
 +; Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
@@ -5816,7 +5854,8 @@ index 00000000000..49e1baab5a0
 +
 +mno-relax
 +Target Report RejectNegative
-+Prevent relaxation of LDI32 relocations.
++Make GCC pass --no-relax command-line option to the linker instead of
++the --relax option.
 +
 +mloop
 +Target Mask(OPT_LOOP)
@@ -5873,10 +5912,10 @@ index 00000000000..ab29e443882
 +		$(CONFIG_H) $(TM_H) $(srcdir)/config/pru/pru-protos.h
 +	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $<
 diff --git a/gcc/doc/extend.texi b/gcc/doc/extend.texi
-index 0d9b99f14d3..9590578211b 100644
+index 34ecc4f8d14..2a90eea04e3 100644
 --- a/gcc/doc/extend.texi
 +++ b/gcc/doc/extend.texi
-@@ -21820,6 +21820,7 @@ for further explanation.
+@@ -21829,6 +21829,7 @@ for further explanation.
  * ARM Pragmas::
  * M32C Pragmas::
  * MeP Pragmas::
@@ -5884,7 +5923,7 @@ index 0d9b99f14d3..9590578211b 100644
  * RS/6000 and PowerPC Pragmas::
  * S/390 Pragmas::
  * Darwin Pragmas::
-@@ -21971,6 +21972,26 @@ extern int foo ();
+@@ -21980,6 +21981,26 @@ extern int foo ();
  
  @end table
  
@@ -5901,7 +5940,7 @@ index 0d9b99f14d3..9590578211b 100644
 +entry.  For example:
 +
 +@smallexample
-+/* will compile to "lbco Rx, 2, 0x10, 4" */
++/* will compile to "sbco Rx, 2, 0x10, 4" */
 +#pragma ctable_entry 2 0x4802a000
 +*(unsigned int *)0x4802a010 = val;
 +@end smallexample
@@ -6002,7 +6041,7 @@ index 802cc642453..d66d3a697e7 100644
  @subsection RISC-V Options
  @cindex RISC-V Options
 diff --git a/gcc/doc/md.texi b/gcc/doc/md.texi
-index 4801d68a207..2ea3e637004 100644
+index 360b36b862f..18a7ce938f4 100644
 --- a/gcc/doc/md.texi
 +++ b/gcc/doc/md.texi
 @@ -3353,6 +3353,25 @@ Vector constant that is all zeros.

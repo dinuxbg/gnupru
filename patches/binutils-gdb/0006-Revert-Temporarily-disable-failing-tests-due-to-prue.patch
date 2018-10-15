@@ -1,7 +1,7 @@
-From 4bf583d466f8757c132c7611cee0644a3af373a9 Mon Sep 17 00:00:00 2001
+From 120c2c033e4ae6ea963490b7d15cd90fda8a97cf Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 15 Apr 2018 11:43:56 +0300
-Subject: [PATCH 6/6] Revert "Temporarily disable failing tests due to
+Subject: [PATCH 6/7] Revert "Temporarily disable failing tests due to
  pruelf-sim.x"
 
 This reverts commit 2f9cbb4e067519434071e752ab0e741ab440d785.
@@ -11,10 +11,10 @@ This reverts commit 2f9cbb4e067519434071e752ab0e741ab440d785.
  2 files changed, 2 insertions(+), 4 deletions(-)
 
 diff --git a/ld/testsuite/ld-elf/elf.exp b/ld/testsuite/ld-elf/elf.exp
-index 6599066640..cabc79daad 100644
+index b4d4349298..96ee01f9b1 100644
 --- a/ld/testsuite/ld-elf/elf.exp
 +++ b/ld/testsuite/ld-elf/elf.exp
-@@ -222,7 +222,7 @@ set array_tests_static {
+@@ -204,7 +204,7 @@ set array_tests_static {
  
  # NetBSD ELF systems do not currently support the .*_array sections.
  set xfails "*-*-netbsdelf*"
@@ -23,7 +23,7 @@ index 6599066640..cabc79daad 100644
  
  if { [istarget *-*-linux*]
       || [istarget *-*-nacl*]
-@@ -258,6 +258,6 @@ switch -regexp $target_triplet {
+@@ -240,6 +240,6 @@ switch -regexp $target_triplet {
  	set xfails "*-*-*"
      }
  }
@@ -32,7 +32,7 @@ index 6599066640..cabc79daad 100644
  
  catch "exec rm -f tmpdir/preinit tmpdir/init tmpdir/fini tmpdir/init-mixed" status
 diff --git a/ld/testsuite/ld-unique/unique.exp b/ld/testsuite/ld-unique/unique.exp
-index 374664a026..cc3bf08d5f 100644
+index ed6a2057a6..9a704dd7ed 100644
 --- a/ld/testsuite/ld-unique/unique.exp
 +++ b/ld/testsuite/ld-unique/unique.exp
 @@ -122,8 +122,6 @@ if [board_info [target_info name] exists cflags] {
