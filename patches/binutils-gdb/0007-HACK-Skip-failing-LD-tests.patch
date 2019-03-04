@@ -1,7 +1,7 @@
-From d5ebd718980b9ef51cdfe411bad94149e51f246b Mon Sep 17 00:00:00 2001
+From 46295138e3ed55a0370e85638aaecb4dd7876bbe Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Wed, 29 Aug 2018 15:38:05 +0300
-Subject: [PATCH 7/7] HACK: Skip failing LD tests
+Subject: [PATCH 7/8] HACK: Skip failing LD tests
 
 These should be addressed properly. Until fixed, though, skip
 them to allow buildbot test to run.
@@ -13,7 +13,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  2 files changed, 6 insertions(+)
 
 diff --git a/ld/testsuite/ld-elf/notes.exp b/ld/testsuite/ld-elf/notes.exp
-index 9bf036ccf8..e89320ebca 100644
+index 04ddc8e607..269a929b02 100644
 --- a/ld/testsuite/ld-elf/notes.exp
 +++ b/ld/testsuite/ld-elf/notes.exp
 @@ -25,6 +25,11 @@ if ![is_elf_format] {

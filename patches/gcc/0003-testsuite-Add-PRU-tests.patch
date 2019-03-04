@@ -1,7 +1,7 @@
-From 968e4917d4f237d46b79d6957c6b9efdc35c8006 Mon Sep 17 00:00:00 2001
+From 125bbdf1dfa5a36abe055f906cc58a600ff74258 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:56:38 +0200
-Subject: [PATCH 03/14] testsuite: Add PRU tests
+Subject: [PATCH 03/19] testsuite: Add PRU tests
 
 gcc/testsuite/ChangeLog:
 
@@ -95,8 +95,8 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  gcc/testsuite/gcc.target/pru/zero_extend-hisi.c    |  43 ++++++
  gcc/testsuite/gcc.target/pru/zero_extend-qihi.c    |  43 ++++++
  gcc/testsuite/gcc.target/pru/zero_extend-qisi.c    |  43 ++++++
- gcc/testsuite/lib/target-supports.exp              |   5 +-
- 43 files changed, 1306 insertions(+), 1 deletion(-)
+ gcc/testsuite/lib/target-supports.exp              |   4 +-
+ 43 files changed, 1305 insertions(+), 1 deletion(-)
  create mode 100644 gcc/testsuite/gcc.target/pru/abi-arg-struct.c
  create mode 100644 gcc/testsuite/gcc.target/pru/ashiftrt.c
  create mode 100644 gcc/testsuite/gcc.target/pru/builtins-1.c
@@ -1695,10 +1695,10 @@ index 00000000000..0e9ae4cf01e
 +}
 +
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index fd74c04d092..8caea35edff 100644
+index 242cc3f3149..3a35fe4762c 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
-@@ -502,7 +502,8 @@ proc check_effective_target_trampolines { } {
+@@ -510,7 +510,8 @@ proc check_effective_target_trampolines { } {
  	 || [istarget msp430-*-*]
  	 || [istarget nvptx-*-*]
  	 || [istarget hppa2.0w-hp-hpux11.23]
@@ -1708,7 +1708,7 @@ index fd74c04d092..8caea35edff 100644
  	return 0;
      }
      return 1
-@@ -675,6 +676,7 @@ proc check_profiling_available { test_what } {
+@@ -684,6 +685,7 @@ proc check_profiling_available { test_what } {
  	     || [istarget nvptx-*-*]
  	     || [istarget powerpc-*-eabi*]
  	     || [istarget powerpc-*-elf]
@@ -1716,14 +1716,6 @@ index fd74c04d092..8caea35edff 100644
  	     || [istarget rx-*-*]	
  	     || [istarget tic6x-*-elf]
  	     || [istarget visium-*-*]
-@@ -8394,6 +8396,7 @@ proc check_effective_target_logical_op_short_circuit {} {
- 	 || [istarget riscv*-*-*]
- 	 || [istarget v850*-*-*]
- 	 || [istarget visium-*-*]
-+	 || [istarget pru*-*-*]
- 	 || [check_effective_target_arm_cortex_m] } {
- 	return 1
-     }
 -- 
 2.11.0
 

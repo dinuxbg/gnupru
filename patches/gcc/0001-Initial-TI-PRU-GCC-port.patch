@@ -1,7 +1,7 @@
-From 7ebed70c682400859d6b46f43a9d757f8c1c517f Mon Sep 17 00:00:00 2001
+From 1284c1b2879676859e3ed668aa1d8408263473b6 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:53:18 +0200
-Subject: [PATCH 01/14] Initial TI PRU GCC port
+Subject: [PATCH 01/19] Initial TI PRU GCC port
 
 ChangeLog:
 
@@ -68,7 +68,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 gcc/config/pru/t-pru
 
 diff --git a/configure.ac b/configure.ac
-index a0b0917dd55..11c9f72fc64 100644
+index 87f2aee0500..4b2301e2698 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -640,6 +640,10 @@ case "${target}" in
@@ -82,7 +82,7 @@ index a0b0917dd55..11c9f72fc64 100644
    rl78-*-*)
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
-@@ -824,6 +828,9 @@ case "${target}" in
+@@ -855,6 +859,9 @@ case "${target}" in
    powerpc*-*-*)
      libgloss_dir=rs6000
      ;;
@@ -135,10 +135,10 @@ index 00000000000..e87d70ce9ca
 +
 +struct gcc_targetm_common targetm_common = TARGETM_COMMON_INITIALIZER;
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index 8521f7d556e..2c3d754d673 100644
+index 3eb2e800fc5..b1962a3ae8f 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -494,6 +494,9 @@ powerpc*-*-*)
+@@ -509,6 +509,9 @@ powerpc*-*-*)
  	esac
  	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
  	;;
@@ -148,7 +148,7 @@ index 8521f7d556e..2c3d754d673 100644
  riscv*)
  	cpu_type=riscv
  	extra_objs="riscv-builtins.o riscv-c.o"
-@@ -2699,6 +2702,12 @@ powerpcle-*-eabi*)
+@@ -2763,6 +2766,12 @@ powerpcle-*-eabi*)
  	extra_options="${extra_options} rs6000/sysv4.opt"
  	use_gcc_stdint=wrap
  	;;
@@ -5912,10 +5912,10 @@ index 00000000000..ab29e443882
 +		$(CONFIG_H) $(TM_H) $(srcdir)/config/pru/pru-protos.h
 +	$(COMPILER) -c $(ALL_COMPILERFLAGS) $(ALL_CPPFLAGS) $(INCLUDES) $<
 diff --git a/gcc/doc/extend.texi b/gcc/doc/extend.texi
-index 34ecc4f8d14..2a90eea04e3 100644
+index 7425d890617..35c4c3e0f56 100644
 --- a/gcc/doc/extend.texi
 +++ b/gcc/doc/extend.texi
-@@ -21829,6 +21829,7 @@ for further explanation.
+@@ -22964,6 +22964,7 @@ information.
  * ARM Pragmas::
  * M32C Pragmas::
  * MeP Pragmas::
@@ -5923,7 +5923,7 @@ index 34ecc4f8d14..2a90eea04e3 100644
  * RS/6000 and PowerPC Pragmas::
  * S/390 Pragmas::
  * Darwin Pragmas::
-@@ -21980,6 +21981,26 @@ extern int foo ();
+@@ -23115,6 +23116,26 @@ extern int foo ();
  
  @end table
  
@@ -5951,12 +5951,12 @@ index 34ecc4f8d14..2a90eea04e3 100644
  @subsection RS/6000 and PowerPC Pragmas
  
 diff --git a/gcc/doc/invoke.texi b/gcc/doc/invoke.texi
-index 802cc642453..d66d3a697e7 100644
+index df0883f2fc9..fce16664b8b 100644
 --- a/gcc/doc/invoke.texi
 +++ b/gcc/doc/invoke.texi
-@@ -1056,6 +1056,10 @@ See RS/6000 and PowerPC Options.
- -mstack-protector-guard=@var{guard} -mstack-protector-guard-reg=@var{reg} @gol
- -mstack-protector-guard-offset=@var{offset}}
+@@ -1043,6 +1043,10 @@ Objective-C and Objective-C++ Dialects}.
+ @emph{PowerPC Options}
+ See RS/6000 and PowerPC Options.
  
 +@emph{PRU Options}
 +@gccoptlist{-mmcu=@var{mcu}  -minrt  -mno-relax  -mloop @gol
@@ -5965,17 +5965,17 @@ index 802cc642453..d66d3a697e7 100644
  @emph{RISC-V Options}
  @gccoptlist{-mbranch-cost=@var{N-instruction} @gol
  -mplt  -mno-plt @gol
-@@ -14923,6 +14927,7 @@ platform.
+@@ -15553,6 +15557,7 @@ platform.
+ * PDP-11 Options::
  * picoChip Options::
  * PowerPC Options::
- * PowerPC SPE Options::
 +* PRU Options::
  * RISC-V Options::
  * RL78 Options::
  * RS/6000 and PowerPC Options::
-@@ -23595,6 +23600,66 @@ the offset with a symbol reference to a canary in the TLS block.
- @end table
+@@ -23707,6 +23712,66 @@ these warnings.
  
+ These are listed under @xref{RS/6000 and PowerPC Options}.
  
 +@node PRU Options
 +@subsection PRU Options
@@ -6041,10 +6041,10 @@ index 802cc642453..d66d3a697e7 100644
  @subsection RISC-V Options
  @cindex RISC-V Options
 diff --git a/gcc/doc/md.texi b/gcc/doc/md.texi
-index 360b36b862f..18a7ce938f4 100644
+index 30612a6aecb..eb58dfdd89f 100644
 --- a/gcc/doc/md.texi
 +++ b/gcc/doc/md.texi
-@@ -3353,6 +3353,25 @@ Vector constant that is all zeros.
+@@ -3472,6 +3472,25 @@ Vector constant that is all zeros.
  
  @end table
  

@@ -1,4 +1,4 @@
-From 6cca15cbb9715af58677e39d23f52d56feef51ac Mon Sep 17 00:00:00 2001
+From 55943fdbf32b7a1fb6ebcc53d2140fa6273ec031 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 4 Jun 2018 08:06:23 +0300
 Subject: [PATCH 7/7] Revert "PRU: HACK: Add ABI compatibility functions"
@@ -13,7 +13,7 @@ This reverts commit 93cfc44d4e9ba69468959e458bf1db239feec8b0.
  5 files changed, 6 insertions(+), 49 deletions(-)
 
 diff --git a/newlib/libc/include/math.h b/newlib/libc/include/math.h
-index 2d379722b..893a5d064 100644
+index 545fc652e..1efc5b92c 100644
 --- a/newlib/libc/include/math.h
 +++ b/newlib/libc/include/math.h
 @@ -305,29 +305,10 @@ extern double tgamma (double);

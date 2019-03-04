@@ -1,0 +1,55 @@
+From c053732310f06300b4a6ac7dc697299ba746f58d Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Sat, 19 Jan 2019 06:09:43 +0200
+Subject: [PATCH 18/19] Add TARGET_HARD_REGNO_CALL_PART_CLOBBERED
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ gcc/config/pru/pru.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
+index 1c55fb3d0c5..ceb6774b4c7 100644
+--- a/gcc/config/pru/pru.c
++++ b/gcc/config/pru/pru.c
+@@ -557,6 +557,27 @@ pru_hard_regno_scratch_ok (unsigned int regno)
+ }
+ 
+ 
++/* Implement TARGET_HARD_REGNO_CALL_PART_CLOBBERED.  */
++
++static bool
++pru_hard_regno_call_part_clobbered (rtx_insn *insn ATTRIBUTE_UNUSED,
++				    unsigned regno, machine_mode mode)
++{
++  /* FIXME: This hook gets called with MODE:REGNO combinations that don't
++        represent valid hard registers like, e.g. HI:29.  Returning TRUE
++        for such registers can lead to performance degradation as mentioned
++        in PR53595.  Thus, report invalid hard registers as FALSE.  */
++
++  if (!pru_hard_regno_mode_ok (regno, mode))
++    return 0;
++
++  return ((regno < FIRST_ARG_REGNO
++           && regno + GET_MODE_SIZE (mode) > FIRST_ARG_REGNO)
++	  || (regno < LAST_ARG_REGNO
++	      && regno + GET_MODE_SIZE (mode) > LAST_ARG_REGNO));
++}
++
++
+ /* Worker function for `HARD_REGNO_RENAME_OK'.
+    Return nonzero if register OLD_REG can be renamed to register NEW_REG.  */
+ 
+@@ -2935,6 +2956,9 @@ pru_unwind_word_mode (void)
+ 
+ #undef  TARGET_HARD_REGNO_SCRATCH_OK
+ #define TARGET_HARD_REGNO_SCRATCH_OK pru_hard_regno_scratch_ok
++#undef  TARGET_HARD_REGNO_CALL_PART_CLOBBERED
++#define TARGET_HARD_REGNO_CALL_PART_CLOBBERED \
++  pru_hard_regno_call_part_clobbered
+ 
+ #undef TARGET_FUNCTION_ARG
+ #define TARGET_FUNCTION_ARG pru_function_arg
+-- 
+2.11.0
+

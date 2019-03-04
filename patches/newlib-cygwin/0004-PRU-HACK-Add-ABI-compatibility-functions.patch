@@ -1,4 +1,4 @@
-From b9b7983e8d10920631729e0107f7ba86f869ba57 Mon Sep 17 00:00:00 2001
+From 0dbb6d0c171a26117adb838e82bfa1c57b25d739 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 11 Mar 2018 22:16:40 +0200
 Subject: [PATCH 4/7] PRU: HACK: Add ABI compatibility functions
@@ -13,7 +13,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  5 files changed, 49 insertions(+), 6 deletions(-)
 
 diff --git a/newlib/libc/include/math.h b/newlib/libc/include/math.h
-index 893a5d064..2d379722b 100644
+index 1efc5b92c..545fc652e 100644
 --- a/newlib/libc/include/math.h
 +++ b/newlib/libc/include/math.h
 @@ -305,10 +305,29 @@ extern double tgamma (double);

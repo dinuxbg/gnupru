@@ -1,7 +1,7 @@
-From 1cb011181ff30d7d7b1fd067820ca72cbe0ea893 Mon Sep 17 00:00:00 2001
+From 4f04c0e5f1592e10e51e00977724afa1ca9479f5 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 22:00:23 +0200
-Subject: [PATCH 06/14] testsuite: Remove PRU from test cases requiring hosted
+Subject: [PATCH 06/19] testsuite: Remove PRU from test cases requiring hosted
  environment
 
 gcc/testsuite/ChangeLog:
@@ -13,32 +13,31 @@ gcc/testsuite/ChangeLog:
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
- gcc/testsuite/gcc.c-torture/execute/20101011-1.c | 3 +++
+ gcc/testsuite/gcc.c-torture/execute/20101011-1.c | 2 ++
  gcc/testsuite/gcc.dg/20020312-2.c                | 2 ++
- 2 files changed, 5 insertions(+)
+ 2 files changed, 4 insertions(+)
 
 diff --git a/gcc/testsuite/gcc.c-torture/execute/20101011-1.c b/gcc/testsuite/gcc.c-torture/execute/20101011-1.c
-index f95d900deaf..aa72b35fa16 100644
+index d2beeb52a0e..4a9cc63fde8 100644
 --- a/gcc/testsuite/gcc.c-torture/execute/20101011-1.c
 +++ b/gcc/testsuite/gcc.c-torture/execute/20101011-1.c
-@@ -97,6 +97,9 @@ __aeabi_idiv0 (int return_value)
-   /* This presently doesn't raise SIGFPE even on csky-linux-gnu, much
-      less bare metal.  See the implementation of __divsi3 in libgcc.  */
+@@ -102,6 +102,8 @@ __aeabi_idiv0 (int return_value)
  # define DO_TEST 0
+ #elif defined (__or1k__)
+   /* On OpenRISC division by zero does not trap.  */
 +#elif defined (__pru__)
 +/* There isn't even a signal function.  */
-+# define DO_TEST 0
+ # define DO_TEST 0
  #else
  # define DO_TEST 1
- #endif
 diff --git a/gcc/testsuite/gcc.dg/20020312-2.c b/gcc/testsuite/gcc.dg/20020312-2.c
-index 1a8afd81506..133862f3421 100644
+index c584d35908e..dae3599563a 100644
 --- a/gcc/testsuite/gcc.dg/20020312-2.c
 +++ b/gcc/testsuite/gcc.dg/20020312-2.c
-@@ -117,6 +117,8 @@ extern void abort (void);
- # if defined (__CK807__) || defined (__CK810__)
- #   define PIC_REG  "r28"
- # endif
+@@ -121,6 +121,8 @@ extern void abort (void);
+ /* No pic register.  */
+ #elif defined (__AMDGCN__)
+ /* No pic register.  */
 +#elif defined(__PRU__)
 +/* No pic register.  */
  #else

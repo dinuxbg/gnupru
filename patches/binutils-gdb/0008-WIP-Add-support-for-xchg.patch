@@ -1,0 +1,175 @@
+From bc6235fbaa33da60d1a9bdaaf2865dbf11dc268b Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Sat, 17 Nov 2018 12:06:51 +0200
+Subject: [PATCH 8/8] WIP: Add support for xchg
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ sim/pru/interp.c   | 77 ++++++++++++++++++++++++++++++++++++++++++++++++++----
+ sim/pru/pru.h      |  9 +++++++
+ sim/pru/pru.isa    |  4 +--
+ sim/pru/sim-main.h |  1 +
+ 4 files changed, 84 insertions(+), 7 deletions(-)
+
+diff --git a/sim/pru/interp.c b/sim/pru/interp.c
+index 77888ce9d0..705bf7f029 100644
+--- a/sim/pru/interp.c
++++ b/sim/pru/interp.c
+@@ -338,6 +338,22 @@ pru_sim_xin (SIM_DESC sd, SIM_CPU *cpu, unsigned int wba,
+     {
+       pru_sim_xin_mac (sd, cpu, rd_regn, rdb, length);
+     }
++  else if (wba == XFRID_SCRATCH_BANK_0 || wba == XFRID_SCRATCH_BANK_1
++	   || wba == XFRID_SCRATCH_BANK_2 || wba == XFRID_SCRATCH_BANK_PEER)
++    {
++      while (length--)
++	{
++	  unsigned int val;
++
++	  val = extract_regval (CPU.scratchpads[wba][rd_regn], rdb);
++	  write_regval (val, &CPU.regs[rd_regn], rdb);
++	  if (++rdb == 4)
++	    {
++	      rdb = 0;
++	      rd_regn++;
++	    }
++	}
++    }
+   else if (wba == 254 || wba == 255)
+     {
+       /* FILL/ZERO pseudos implemented via XIN.  */
+@@ -359,14 +375,11 @@ pru_sim_xin (SIM_DESC sd, SIM_CPU *cpu, unsigned int wba,
+ }
+ 
+ static void
+-pru_sim_xout (SIM_DESC sd, SIM_CPU *cpu, unsigned int wba,
+-	      unsigned int rd_regn, unsigned int rdb, unsigned int length)
++pru_sim_xout_mac (SIM_DESC sd, SIM_CPU *cpu, unsigned int rd_regn,
++		  unsigned int rdb, unsigned int length)
+ {
+   const int modereg_accessed = (rd_regn == 25);
+ 
+-  if (wba != 0)
+-    sim_io_error (sd, "XOUT: XFR device %d not supported.\n", wba);
+-
+   /* Multiple Accumulate.  */
+   if (rd_regn < 25 || (rd_regn * 4 + rdb + length) > (27 + 1) * 4)
+     sim_io_error (sd, "XOUT MAC: invalid transfer regn=%u.%u, length=%u\n",
+@@ -421,6 +434,60 @@ pru_sim_xout (SIM_DESC sd, SIM_CPU *cpu, unsigned int wba,
+ }
+ 
+ static void
++pru_sim_xout (SIM_DESC sd, SIM_CPU *cpu, unsigned int wba,
++	      unsigned int rd_regn, unsigned int rdb, unsigned int length)
++{
++  if (wba == 0)
++    {
++      pru_sim_xout_mac (sd, cpu, rd_regn, rdb, length);
++    }
++  else if (wba == XFRID_SCRATCH_BANK_0 || wba == XFRID_SCRATCH_BANK_1
++	   || wba == XFRID_SCRATCH_BANK_2 || wba == XFRID_SCRATCH_BANK_PEER)
++    {
++      while (length--)
++	{
++	  unsigned int val;
++
++	  val = extract_regval (CPU.regs[rd_regn], rdb);
++	  write_regval (val, &CPU.scratchpads[wba][rd_regn], rdb);
++	  if (++rdb == 4)
++	    {
++	      rdb = 0;
++	      rd_regn++;
++	    }
++	}
++    }
++  else
++    sim_io_error (sd, "XOUT: XFR device %d not supported.\n", wba);
++}
++
++static void
++pru_sim_xchg (SIM_DESC sd, SIM_CPU *cpu, unsigned int wba,
++	      unsigned int rd_regn, unsigned int rdb, unsigned int length)
++{
++  if (wba == XFRID_SCRATCH_BANK_0 || wba == XFRID_SCRATCH_BANK_1
++	   || wba == XFRID_SCRATCH_BANK_2 || wba == XFRID_SCRATCH_BANK_PEER)
++    {
++      while (length--)
++	{
++	  unsigned int valr, vals;
++
++	  valr = extract_regval (CPU.regs[rd_regn], rdb);
++	  vals = extract_regval (CPU.scratchpads[wba][rd_regn], rdb);
++	  write_regval (valr, &CPU.scratchpads[wba][rd_regn], rdb);
++	  write_regval (vals, &CPU.regs[rd_regn], rdb);
++	  if (++rdb == 4)
++	    {
++	      rdb = 0;
++	      rd_regn++;
++	    }
++	}
++    }
++  else
++    sim_io_error (sd, "XOUT: XFR device %d not supported.\n", wba);
++}
++
++static void
+ pru_sim_syscall (SIM_DESC sd, SIM_CPU *cpu)
+ {
+ 
+diff --git a/sim/pru/pru.h b/sim/pru/pru.h
+index b50854d580..6d32023003 100644
+--- a/sim/pru/pru.h
++++ b/sim/pru/pru.h
+@@ -35,6 +35,13 @@
+ /* 16-bit word addressable space.  */
+ #define IMEM_DEFAULT_SIZE (64 * 4 * 1024)
+ 
++/* For AM335x SoCs. */
++#define XFRID_SCRATCH_BANK_0	  10
++#define XFRID_SCRATCH_BANK_1	  11
++#define XFRID_SCRATCH_BANK_2	  12
++#define XFRID_SCRATCH_BANK_PEER	  14
++#define XFRID_MAX		  255
++
+ #define CPU     (cpu->pru_cpu)
+ 
+ #define PC		(CPU.pc)
+@@ -76,6 +83,8 @@
+   pru_sim_xin (sd, cpu, (wba), (regn), (rdb), (l))
+ #define DO_XOUT(wba,regn,rdb,l)	  \
+   pru_sim_xout (sd, cpu, (wba), (regn), (rdb), (l))
++#define DO_XCHG(wba,regn,rdb,l)	  \
++  pru_sim_xchg (sd, cpu, (wba), (regn), (rdb), (l))
+ 
+ #define RAISE_SIGILL(sd)  sim_engine_halt ((sd), NULL, NULL, PC_byteaddr, \
+ 					   sim_stopped, SIM_SIGILL)
+diff --git a/sim/pru/pru.isa b/sim/pru/pru.isa
+index 2eefb0fee9..d09e3e5f12 100644
+--- a/sim/pru/pru.isa
++++ b/sim/pru/pru.isa
+@@ -203,8 +203,8 @@ INSTRUCTION (xout,
+ 	     PC++)
+ 
+ INSTRUCTION (xchg,
+-	     sim_io_eprintf (sd, "XCHG instruction not supported by sim\n");
+-	     RAISE_SIGILL (sd))
++	     DO_XCHG (XFR_WBA, RD_REGN, RDB, XFR_LENGTH);
++	     PC++)
+ 
+ INSTRUCTION (sxin,
+ 	     sim_io_eprintf (sd, "SXIN instruction not supported by sim\n");
+diff --git a/sim/pru/sim-main.h b/sim/pru/sim-main.h
+index e4ab48429c..4516e88159 100644
+--- a/sim/pru/sim-main.h
++++ b/sim/pru/sim-main.h
+@@ -58,6 +58,7 @@ struct pru_regset
+   unsigned int	  carry : 1;
+   uint32_t	  ctable[32];		/* constant offsets table for xBCO */
+   uint32_t	  macregs[PRU_MAC_NREGS];
++  uint32_t	  scratchpads[XFRID_MAX + 1][32];
+   struct {
+     uint16_t looptop;			/* LOOP top (PC of loop instr) */
+     uint16_t loopend;			/* LOOP end (PC of loop end label) */
+-- 
+2.11.0
+

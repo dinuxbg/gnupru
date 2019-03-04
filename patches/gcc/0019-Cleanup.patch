@@ -1,0 +1,43 @@
+From e479f6eb12981dc00a7f805f97c867d2370239a9 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Sat, 19 Jan 2019 06:09:58 +0200
+Subject: [PATCH 19/19] Cleanup
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ gcc/config/pru/pru.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
+index ceb6774b4c7..d9ea7b50819 100644
+--- a/gcc/config/pru/pru.c
++++ b/gcc/config/pru/pru.c
+@@ -281,7 +281,6 @@ pru_expand_prologue (void)
+   int sp_offset;      /* Offset from base_reg to final stack value.  */
+   int save_regs_base; /* Offset from base_reg to register save area.  */
+   int save_offset;    /* Temporary offset to currently saved register group.  */
+-  rtx insn;
+ 
+   total_frame_size = cfun->machine->total_size;
+ 
+@@ -292,14 +291,14 @@ pru_expand_prologue (void)
+   if (!UBYTE_INT (total_frame_size))
+     {
+       /* We need an intermediary point, this will point at the spill block.  */
+-      insn = pru_add_to_sp (cfun->machine->save_regs_offset - total_frame_size,
+-			    REG_NOTE_MAX);
++      pru_add_to_sp (cfun->machine->save_regs_offset - total_frame_size,
++		     REG_NOTE_MAX);
+       save_regs_base = 0;
+       sp_offset = -cfun->machine->save_regs_offset;
+     }
+   else if (total_frame_size)
+     {
+-      insn = pru_add_to_sp (- total_frame_size, REG_NOTE_MAX);
++      pru_add_to_sp (- total_frame_size, REG_NOTE_MAX);
+       save_regs_base = cfun->machine->save_regs_offset;
+       sp_offset = 0;
+     }
+-- 
+2.11.0
+

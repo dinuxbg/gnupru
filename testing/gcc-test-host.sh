@@ -27,9 +27,12 @@ build_test_gcc()
   shift
   local TAG=${1}
 
+  local PREFIX=$HOME/bin/host-${TAG}
+  rm -fr ${PREFIX}
   cd ${BUILDDIR} || die
-  ${SRC}/configure --disable-multilib --enable-languages=c,c++ || die
-  make -j5 || die
+  ${SRC}/configure --disable-multilib --enable-languages=c,c++ --prefix=${PREFIX} || die
+  make -j$(nproc) || die
+  make install
   make check-gcc-c check-gcc-c++  || die
   local FILES="gcc/testsuite/gcc/gcc.log gcc/testsuite/gcc/gcc.sum gcc/testsuite/g++/g++.log gcc/testsuite/g++/g++.sum"
   for i in ${FILES}
@@ -40,10 +43,13 @@ build_test_gcc()
 
 
 DATETAG=`date +%Y%m%d%H%M`
+GITTAG_VANILLA=$(cd ${SRC} && git rev-parse --short ${COMMITID_VANILLA})
+GITTAG_PATCHED=$(cd ${SRC} && git rev-parse --short ${COMMITID_PATCHED})
+
 cd ${SRC} && git reset --hard ${COMMITID_VANILLA}
-build_test_gcc ${BUILD_VANILLA} ${DATETAG}-host-vanilla
+build_test_gcc ${BUILD_VANILLA} ${DATETAG}-${GITTAG_VANILLA}-host-vanilla
 cd ${SRC} && git reset --hard ${COMMITID_PATCHED}
-build_test_gcc ${BUILD_PATCHED} ${DATETAG}-host-patched
+build_test_gcc ${BUILD_PATCHED} ${DATETAG}-${GITTAG_PATCHED}-host-patched
 
 # TODO - re-enable
 #rm -fr ${BUILD_VANILLA} ${BUILD_PATCHED}

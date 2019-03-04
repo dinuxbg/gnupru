@@ -1,4 +1,4 @@
-Test run by dinux on Wed Aug 15 21:21:57 2018
+Test run by dinux on Mon Mar  4 22:27:20 2019
 Target is pru-unknown-elf
 Host   is x86_64-pc-linux-gnu
 
@@ -12,56 +12,69 @@ Running /home/dinux/projects/pru/testbot-workspace/gcc/gcc/testsuite/g++.dg/comp
 PASS: g++.dg/compat/abi/bitfield1 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/bitfield1 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/bitfield1 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/abi/bitfield1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/abi/bitfield1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/abi/bitfield1 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/bitfield2 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/bitfield2 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/bitfield2 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/abi/bitfield2 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/abi/bitfield2 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/abi/bitfield2 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 UNSUPPORTED: g++.dg/compat/abi/pr38736_main.C
 PASS: g++.dg/compat/abi/pr83487-1 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/pr83487-1 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/pr83487-1 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/abi/pr83487-1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/abi/pr83487-1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/abi/pr83487-1 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/pr83487-2 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/pr83487-2 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/pr83487-2 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/abi/pr83487-2 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/abi/pr83487-2 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/abi/pr83487-2 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/vbase8-10 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/vbase8-10 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/vbase8-10 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/abi/vbase8-10 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/abi/vbase8-10 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/abi/vbase8-10 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/vbase8-21 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/vbase8-21 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/vbase8-21 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/abi/vbase8-21 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/abi/vbase8-21 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/abi/vbase8-21 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/vbase8-22 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/vbase8-22 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/vbase8-22 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/abi/vbase8-22 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/abi/vbase8-22 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/abi/vbase8-22 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/vbase8-4 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/vbase8-4 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/vbase8-4 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/abi/vbase8-4 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/abi/vbase8-4 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/abi/vbase8-4 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/break/bitfield5 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/break/bitfield5 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/break/bitfield5 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/break/bitfield5 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/break/bitfield5 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/break/bitfield5 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/break/bitfield7 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/break/bitfield7 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/break/bitfield7 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/break/bitfield7 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/break/bitfield7 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/break/bitfield7 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/break/empty6 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/break/empty6 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/break/empty6 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/break/empty6 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/break/empty6 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/break/empty6 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/break/vbase10 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/break/vbase10 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/break/vbase10 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/break/vbase10 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/break/vbase10 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/break/vbase10 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/break/vbase11 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/break/vbase11 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/break/vbase11 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/break/vbase11 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/break/vbase11 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/break/vbase11 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 UNSUPPORTED: g++.dg/compat/decimal/pass-1_main.C
 UNSUPPORTED: g++.dg/compat/decimal/pass-2_main.C
 UNSUPPORTED: g++.dg/compat/decimal/pass-3_main.C
@@ -77,68 +90,82 @@ UNSUPPORTED: g++.dg/compat/decimal/return-6_main.C
 PASS: g++.dg/compat/eh/ctor1 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/ctor1 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/ctor1 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/eh/ctor1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/ctor1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/ctor1 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/ctor2 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/ctor2 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/ctor2 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/eh/ctor2 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/ctor2 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/ctor2 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/dtor1 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/dtor1 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/dtor1 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/eh/dtor1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/dtor1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/dtor1 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/filter1 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/filter1 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/filter1 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/eh/filter1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/filter1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/filter1 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/filter2 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/filter2 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/filter2 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/eh/filter2 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/filter2 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/filter2 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/new1 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/new1 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/new1 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/eh/new1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/new1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/new1 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/nrv1 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/nrv1 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/nrv1 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/eh/nrv1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/nrv1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/nrv1 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/spec3 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/spec3 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/spec3 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/eh/spec3 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/spec3 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/spec3 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/template1 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/template1 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/template1 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/eh/template1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/template1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/template1 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/unexpected1 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/unexpected1 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/eh/unexpected1 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/eh/unexpected1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/unexpected1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/eh/unexpected1 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/init/array5 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/init/array5 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/init/array5 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/init/array5 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/init/array5 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/init/array5 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/init/byval1 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/init/byval1 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/init/byval1 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/init/byval1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/init/byval1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/init/byval1 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/init/dtor1 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/init/dtor1 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/init/dtor1 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/init/dtor1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/init/dtor1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/init/dtor1 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/init/elide1 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/init/elide1 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/init/elide1 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/init/elide1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/init/elide1 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/init/elide1 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/init/init-ref2 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/init/init-ref2 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/init/init-ref2 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
-FAIL: g++.dg/compat/init/init-ref2 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/init/init-ref2 cp_compat_x_tst.o-cp_compat_y_tst.o link
+PASS: g++.dg/compat/init/init-ref2 cp_compat_x_tst.o-cp_compat_y_tst.o execute "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 
 		=== g++ Summary ===
 
-# of expected passes		84
-# of unexpected failures	28
+# of expected passes		140
 # of unsupported tests		13
-/home/dinux/projects/pru/testbot-workspace/gcc-build/gcc/xg++  version 9.0.0 20180815 (experimental) (GCC) 
+/home/dinux/projects/pru/testbot-workspace/gcc-build/gcc/xg++  version 9.0.1 20190304 (experimental) (GCC) 
 

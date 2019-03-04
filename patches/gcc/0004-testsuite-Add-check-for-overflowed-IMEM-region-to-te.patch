@@ -1,7 +1,7 @@
-From 6163006b19d5b5978c038f024d6130f7107a73bc Mon Sep 17 00:00:00 2001
+From 599dd529d5de8e37b4dcee09b4b986b4bc2dc212 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:57:14 +0200
-Subject: [PATCH 04/14] testsuite: Add check for overflowed IMEM region to
+Subject: [PATCH 04/19] testsuite: Add check for overflowed IMEM region to
  testsuite
 
 PRU architecture supports maximum 256k program memory (IMEM). Some GCC
@@ -17,32 +17,15 @@ gcc/testsuite/ChangeLog:
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
- gcc/testsuite/lib/gcc-dg.exp          | 5 +++++
  gcc/testsuite/lib/target-supports.exp | 5 +++++
  gcc/testsuite/lib/target-utils.exp    | 4 ++++
- 3 files changed, 14 insertions(+)
+ 2 files changed, 9 insertions(+)
 
-diff --git a/gcc/testsuite/lib/gcc-dg.exp b/gcc/testsuite/lib/gcc-dg.exp
-index c33a50c0b13..59c10016014 100644
---- a/gcc/testsuite/lib/gcc-dg.exp
-+++ b/gcc/testsuite/lib/gcc-dg.exp
-@@ -394,6 +394,11 @@ proc gcc-dg-prune { system text } {
-         return "::unsupported::memory full"
-     }
- 
-+    if { [regexp "(^|\n)\[^\n\]*: region \[^\n\]* overflowed" $text] 
-+          && [check_effective_target_tiny] } {
-+	return "::unsupported::memory full"
-+    }
-+
-     # Likewise, if we see ".text exceeds local store range" or
-     # similar.
-     if {[string match "spu-*" $system] && \
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index 8caea35edff..13e32377885 100644
+index 3a35fe4762c..e79c90cce54 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
-@@ -8377,6 +8377,11 @@ proc check_effective_target_tiny {} {
+@@ -8670,6 +8670,11 @@ proc check_effective_target_tiny {} {
  	    && [check_effective_target_avr_tiny] } {
  	   return 1
        }
@@ -55,7 +38,7 @@ index 8caea35edff..13e32377885 100644
      }]
  }
 diff --git a/gcc/testsuite/lib/target-utils.exp b/gcc/testsuite/lib/target-utils.exp
-index bd39cc5bc79..732a1827a02 100644
+index e847fdd4279..23137d4702c 100644
 --- a/gcc/testsuite/lib/target-utils.exp
 +++ b/gcc/testsuite/lib/target-utils.exp
 @@ -35,6 +35,10 @@ proc ${tool}_check_unsupported_p { output } {

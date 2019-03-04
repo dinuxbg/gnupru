@@ -1,7 +1,7 @@
-From 286420f244c1f4f4944d6c50f7b7ec7833bbdc21 Mon Sep 17 00:00:00 2001
+From 5e2a1d17c85c4fc0cf3a19af385506f17c7ab594 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 23 Mar 2018 22:24:22 +0200
-Subject: [PATCH 02/14] Initial TI PRU libgcc port
+Subject: [PATCH 02/19] Initial TI PRU libgcc port
 
 The floating point support has been borrowed from C6X libgcc port
 to help with TI PRU toolchain ABI compatibility.
@@ -84,10 +84,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 libgcc/config/pru/t-pru
 
 diff --git a/libgcc/config.host b/libgcc/config.host
-index 029f6569caf..5206b5dc9d7 100644
+index 91abc84da03..dda0892b0c8 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
-@@ -168,6 +168,9 @@ nios2*-*-*)
+@@ -175,6 +175,9 @@ or1k*-*-*)
  powerpc*-*-*)
  	cpu_type=rs6000
  	;;
@@ -97,7 +97,7 @@ index 029f6569caf..5206b5dc9d7 100644
  rs6000*-*-*)
  	;;
  riscv*-*-*)
-@@ -1158,6 +1161,10 @@ powerpcle-*-eabi*)
+@@ -1178,6 +1181,10 @@ powerpcle-*-eabi*)
  	tmake_file="${tmake_file} rs6000/t-ppccomm rs6000/t-crtstuff t-crtstuff-pic t-fdpbit"
  	extra_parts="$extra_parts crtbegin.o crtend.o crtbeginS.o crtendS.o crtbeginT.o ecrti.o ecrtn.o ncrti.o ncrtn.o"
  	;;

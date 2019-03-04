@@ -1,4 +1,4 @@
-From 64f3eeba00da572f27548d9fa73ae20fd561a560 Mon Sep 17 00:00:00 2001
+From a41a2b453fe039f0f1648f4c9b7a961ca2242deb Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 11 Mar 2018 22:23:26 +0200
 Subject: [PATCH 1/7] Initial PRU port
@@ -3621,7 +3621,7 @@ index 000000000..a5e490404
 +  return (-1);
 +}
 diff --git a/newlib/configure.host b/newlib/configure.host
-index 9e809c9a8..070656df4 100644
+index fa805d61a..63fd758d9 100644
 --- a/newlib/configure.host
 +++ b/newlib/configure.host
 @@ -85,7 +85,7 @@ case "${target_optspace}:${host}" in
@@ -3633,7 +3633,7 @@ index 9e809c9a8..070656df4 100644
      newlib_cflags="${newlib_cflags} -Os"
      ;;
    no:* | :*)
-@@ -283,6 +283,14 @@ case "${host_cpu}" in
+@@ -288,6 +288,14 @@ case "${host_cpu}" in
    powerpc*)
  	machine_dir=powerpc
  	;;
@@ -3648,7 +3648,7 @@ index 9e809c9a8..070656df4 100644
    riscv*)
  	libm_machine_dir=riscv
  	machine_dir=riscv
-@@ -843,6 +851,10 @@ newlib_cflags="${newlib_cflags} -DCLOCK_PROVIDED -DMALLOC_PROVIDED -DEXIT_PROVID
+@@ -853,6 +861,10 @@ newlib_cflags="${newlib_cflags} -DCLOCK_PROVIDED -DMALLOC_PROVIDED -DEXIT_PROVID
  	newlib_cflags="${newlib_cflags} -DHAVE_OPENDIR -DHAVE_RENAME -DHAVE_FCNTL -D_NO_POSIX_SPAWN"
  	syscall_dir=syscalls
  	;;
@@ -3660,7 +3660,7 @@ index 9e809c9a8..070656df4 100644
  	syscall_dir=syscalls
  	;;
 diff --git a/newlib/libc/include/machine/ieeefp.h b/newlib/libc/include/machine/ieeefp.h
-index a40975248..e4d6384aa 100644
+index 911eeb51e..536ac11fc 100644
 --- a/newlib/libc/include/machine/ieeefp.h
 +++ b/newlib/libc/include/machine/ieeefp.h
 @@ -409,6 +409,10 @@
@@ -3691,10 +3691,10 @@ index 9212f840b..a3b33e372 100644
  #define _JBLEN 0x44
  #endif
 diff --git a/newlib/libc/machine/configure.in b/newlib/libc/machine/configure.in
-index 8ebe68bdb..88e728b02 100644
+index 0d4068c13..a070b5838 100644
 --- a/newlib/libc/machine/configure.in
 +++ b/newlib/libc/machine/configure.in
-@@ -64,6 +64,7 @@ if test -n "${machine_dir}"; then
+@@ -65,6 +65,7 @@ if test -n "${machine_dir}"; then
  	nvptx) AC_CONFIG_SUBDIRS(nvptx) ;;
  	or1k) AC_CONFIG_SUBDIRS(or1k) ;;
  	powerpc) AC_CONFIG_SUBDIRS(powerpc) ;;

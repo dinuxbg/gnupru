@@ -1,7 +1,7 @@
-From c60a96cb58715fd85436c5b180a6bb8e54f4ff5a Mon Sep 17 00:00:00 2001
+From 68af2682c10557f747057021b63ca75214a08236 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 22:37:01 +0300
-Subject: [PATCH 1/7] PRU Simulator port
+Subject: [PATCH 1/8] PRU Simulator port
 
 I'd like to contribute a sim port for the TI PRU I/O processor. I did not
 receive feedback for my v3 patch series. So after a bit of waiting I rebased
@@ -75,11 +75,11 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  sim/pru/aclocal.m4       | 129 ++++++++
  sim/pru/config.in        | 248 ++++++++++++++++
  sim/pru/configure.ac     |  12 +
- sim/pru/interp.c         | 752 +++++++++++++++++++++++++++++++++++++++++++++++
+ sim/pru/interp.c         | 753 +++++++++++++++++++++++++++++++++++++++++++++++
  sim/pru/pru.h            | 101 +++++++
  sim/pru/pru.isa          | 249 ++++++++++++++++
- sim/pru/sim-main.h       |  80 +++++
- 13 files changed, 1647 insertions(+)
+ sim/pru/sim-main.h       |  81 +++++
+ 13 files changed, 1649 insertions(+)
  create mode 100644 sim/pru/Makefile.in
  create mode 100644 sim/pru/aclocal.m4
  create mode 100644 sim/pru/config.in
@@ -90,7 +90,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 sim/pru/sim-main.h
 
 diff --git a/sim/MAINTAINERS b/sim/MAINTAINERS
-index ccd5a9c3cd..942f0b0e23 100644
+index 3b9b08c40d..4ca67cfd1d 100644
 --- a/sim/MAINTAINERS
 +++ b/sim/MAINTAINERS
 @@ -29,6 +29,7 @@ mips I-IV	Maciej W. Rozycki <macro@linux-mips.org>
@@ -636,10 +636,10 @@ index 0000000000..54ac06f48e
 +SIM_AC_OUTPUT
 diff --git a/sim/pru/interp.c b/sim/pru/interp.c
 new file mode 100644
-index 0000000000..187e9ab3cb
+index 0000000000..77888ce9d0
 --- /dev/null
 +++ b/sim/pru/interp.c
-@@ -0,0 +1,752 @@
+@@ -0,0 +1,753 @@
 +/* Simulator for the Texas Instruments PRU processor
 +   Copyright 2014-2018 Free Software Foundation, Inc.
 +   Inspired by the Microblase simulator
@@ -663,6 +663,7 @@ index 0000000000..187e9ab3cb
 +#include "config.h"
 +#include <stdbool.h>
 +#include <stdint.h>
++#include <stddef.h>
 +#include "bfd.h"
 +#include "gdb/callback.h"
 +#include "libiberty.h"
@@ -1756,10 +1757,10 @@ index 0000000000..2eefb0fee9
 +	     })
 diff --git a/sim/pru/sim-main.h b/sim/pru/sim-main.h
 new file mode 100644
-index 0000000000..6b3bd20d59
+index 0000000000..e4ab48429c
 --- /dev/null
 +++ b/sim/pru/sim-main.h
-@@ -0,0 +1,80 @@
+@@ -0,0 +1,81 @@
 +/* Copyright 2014-2018 Free Software Foundation, Inc.
 +   Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
 +
@@ -1782,6 +1783,7 @@ index 0000000000..6b3bd20d59
 +#define PRU_SIM_MAIN
 +
 +#include <stdint.h>
++#include <stddef.h>
 +#include "pru.h"
 +#include "sim-basics.h"
 +
