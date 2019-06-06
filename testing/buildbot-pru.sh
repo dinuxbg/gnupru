@@ -55,8 +55,8 @@ bb_daily_target_test()
   bb_make gcc "pdf"
 
   # Test GCC
-  bb_make gcc "check-gcc-c RUNTESTFLAGS=--target_board=pru-sim"
-  bb_make gcc "check-gcc-c++ RUNTESTFLAGS=--target_board=pru-sim"
+  bb_make gcc "check-gcc-c -j`nproc` RUNTESTFLAGS=--target_board=pru-sim"
+  bb_make gcc "check-gcc-c++ -j`nproc` RUNTESTFLAGS=--target_board=pru-sim"
 
   # Save all the logs
   bb_gather_log_files ${BUILD_TAG}
