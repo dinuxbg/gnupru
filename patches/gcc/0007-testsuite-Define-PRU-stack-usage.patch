@@ -1,7 +1,7 @@
-From a73389bd59feb3986878f75c79f3bd7ef3198f38 Mon Sep 17 00:00:00 2001
+From 87b15adbe5e23ea69d15a22d053cdd7a036d599a Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 22:00:47 +0200
-Subject: [PATCH 07/19] testsuite: Define PRU stack usage
+Subject: [PATCH 07/22] testsuite: Define PRU stack usage
 
 gcc/testsuite/ChangeLog:
 

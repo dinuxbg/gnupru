@@ -1,7 +1,7 @@
-From 5e2a1d17c85c4fc0cf3a19af385506f17c7ab594 Mon Sep 17 00:00:00 2001
+From aa8c77f4d26d2c69e25ad7176d7f2965208b6bae Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 23 Mar 2018 22:24:22 +0200
-Subject: [PATCH 02/19] Initial TI PRU libgcc port
+Subject: [PATCH 02/22] Initial TI PRU libgcc port
 
 The floating point support has been borrowed from C6X libgcc port
 to help with TI PRU toolchain ABI compatibility.
@@ -84,7 +84,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 libgcc/config/pru/t-pru
 
 diff --git a/libgcc/config.host b/libgcc/config.host
-index 91abc84da03..dda0892b0c8 100644
+index d75e2b5d7aa..588fd7c3324 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
 @@ -175,6 +175,9 @@ or1k*-*-*)

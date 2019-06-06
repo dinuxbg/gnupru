@@ -1,7 +1,7 @@
-From 853a30a3b730017e7ec919d188bbb5978af69927 Mon Sep 17 00:00:00 2001
+From d5092566ebf05432c37e23e8af0a3e895ae9e6fe Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 4 Jun 2018 08:06:15 +0300
-Subject: [PATCH 6/7] Revert "Add TI remoteproc headers"
+Subject: [PATCH 6/8] Revert "Add TI remoteproc headers"
 
 This reverts commit a94b0162d98a447df50dbbae7f6c03a84eaeea75.
 ---

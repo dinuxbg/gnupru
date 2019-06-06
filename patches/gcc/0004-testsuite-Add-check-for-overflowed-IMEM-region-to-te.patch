@@ -1,7 +1,7 @@
-From 599dd529d5de8e37b4dcee09b4b986b4bc2dc212 Mon Sep 17 00:00:00 2001
+From 4c744eeaacd9f3f13925d69624cf4659f38ab2bd Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:57:14 +0200
-Subject: [PATCH 04/19] testsuite: Add check for overflowed IMEM region to
+Subject: [PATCH 04/22] testsuite: Add check for overflowed IMEM region to
  testsuite
 
 PRU architecture supports maximum 256k program memory (IMEM). Some GCC
@@ -22,10 +22,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  2 files changed, 9 insertions(+)
 
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index 3a35fe4762c..e79c90cce54 100644
+index b60eab6d75d..2b3290619dc 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
-@@ -8670,6 +8670,11 @@ proc check_effective_target_tiny {} {
+@@ -8765,6 +8765,11 @@ proc check_effective_target_tiny {} {
  	    && [check_effective_target_avr_tiny] } {
  	   return 1
        }

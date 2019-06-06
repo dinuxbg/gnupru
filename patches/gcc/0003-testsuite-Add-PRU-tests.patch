@@ -1,7 +1,7 @@
-From 125bbdf1dfa5a36abe055f906cc58a600ff74258 Mon Sep 17 00:00:00 2001
+From f3469433a4da545e914683c0c44443cc0a346439 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 10 Nov 2016 21:56:38 +0200
-Subject: [PATCH 03/19] testsuite: Add PRU tests
+Subject: [PATCH 03/22] testsuite: Add PRU tests
 
 gcc/testsuite/ChangeLog:
 
@@ -1695,10 +1695,10 @@ index 00000000000..0e9ae4cf01e
 +}
 +
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index 242cc3f3149..3a35fe4762c 100644
+index 916be2b607a..b60eab6d75d 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
-@@ -510,7 +510,8 @@ proc check_effective_target_trampolines { } {
+@@ -513,7 +513,8 @@ proc check_effective_target_trampolines { } {
  	 || [istarget msp430-*-*]
  	 || [istarget nvptx-*-*]
  	 || [istarget hppa2.0w-hp-hpux11.23]
@@ -1708,7 +1708,7 @@ index 242cc3f3149..3a35fe4762c 100644
  	return 0;
      }
      return 1
-@@ -684,6 +685,7 @@ proc check_profiling_available { test_what } {
+@@ -687,6 +688,7 @@ proc check_profiling_available { test_what } {
  	     || [istarget nvptx-*-*]
  	     || [istarget powerpc-*-eabi*]
  	     || [istarget powerpc-*-elf]

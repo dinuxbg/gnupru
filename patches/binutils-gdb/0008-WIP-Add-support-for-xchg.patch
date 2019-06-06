@@ -1,7 +1,7 @@
-From bc6235fbaa33da60d1a9bdaaf2865dbf11dc268b Mon Sep 17 00:00:00 2001
+From 20474b812ac602d79dcc30c1d4114d276a2f1648 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sat, 17 Nov 2018 12:06:51 +0200
-Subject: [PATCH 8/8] WIP: Add support for xchg
+Subject: [PATCH 8/9] WIP: Add support for xchg
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
@@ -12,10 +12,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  4 files changed, 84 insertions(+), 7 deletions(-)
 
 diff --git a/sim/pru/interp.c b/sim/pru/interp.c
-index 77888ce9d0..705bf7f029 100644
+index 28cff5ba6d..8e918969eb 100644
 --- a/sim/pru/interp.c
 +++ b/sim/pru/interp.c
-@@ -338,6 +338,22 @@ pru_sim_xin (SIM_DESC sd, SIM_CPU *cpu, unsigned int wba,
+@@ -339,6 +339,22 @@ pru_sim_xin (SIM_DESC sd, SIM_CPU *cpu, unsigned int wba,
      {
        pru_sim_xin_mac (sd, cpu, rd_regn, rdb, length);
      }
@@ -38,7 +38,7 @@ index 77888ce9d0..705bf7f029 100644
    else if (wba == 254 || wba == 255)
      {
        /* FILL/ZERO pseudos implemented via XIN.  */
-@@ -359,14 +375,11 @@ pru_sim_xin (SIM_DESC sd, SIM_CPU *cpu, unsigned int wba,
+@@ -360,14 +376,11 @@ pru_sim_xin (SIM_DESC sd, SIM_CPU *cpu, unsigned int wba,
  }
  
  static void
@@ -55,7 +55,7 @@ index 77888ce9d0..705bf7f029 100644
    /* Multiple Accumulate.  */
    if (rd_regn < 25 || (rd_regn * 4 + rdb + length) > (27 + 1) * 4)
      sim_io_error (sd, "XOUT MAC: invalid transfer regn=%u.%u, length=%u\n",
-@@ -421,6 +434,60 @@ pru_sim_xout (SIM_DESC sd, SIM_CPU *cpu, unsigned int wba,
+@@ -422,6 +435,60 @@ pru_sim_xout (SIM_DESC sd, SIM_CPU *cpu, unsigned int wba,
  }
  
  static void

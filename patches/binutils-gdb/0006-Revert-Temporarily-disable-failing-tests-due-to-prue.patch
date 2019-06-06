@@ -1,7 +1,7 @@
-From 03c684ce3e936763e3a5e4957627b1ea93df00e9 Mon Sep 17 00:00:00 2001
+From 6492aa582ccd60ff4b3cdaee149d54caceff03b4 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 15 Apr 2018 11:43:56 +0300
-Subject: [PATCH 6/8] Revert "Temporarily disable failing tests due to
+Subject: [PATCH 6/9] Revert "Temporarily disable failing tests due to
  pruelf-sim.x"
 
 This reverts commit 2f9cbb4e067519434071e752ab0e741ab440d785.
@@ -11,10 +11,10 @@ This reverts commit 2f9cbb4e067519434071e752ab0e741ab440d785.
  2 files changed, 2 insertions(+), 4 deletions(-)
 
 diff --git a/ld/testsuite/ld-elf/elf.exp b/ld/testsuite/ld-elf/elf.exp
-index d0c708e81c..4a5ef8a219 100644
+index 7f01d05f68..cf4ed422e4 100644
 --- a/ld/testsuite/ld-elf/elf.exp
 +++ b/ld/testsuite/ld-elf/elf.exp
-@@ -228,7 +228,7 @@ set array_tests_static {
+@@ -222,7 +222,7 @@ set array_tests_static {
  
  # NetBSD ELF systems do not currently support the .*_array sections.
  set xfails "*-*-netbsdelf*"
@@ -23,7 +23,7 @@ index d0c708e81c..4a5ef8a219 100644
  
  if { [istarget *-*-linux*]
       || [istarget *-*-nacl*]
-@@ -257,6 +257,6 @@ if { [istarget *-*-linux*]
+@@ -301,6 +301,6 @@ if { [istarget *-*-linux*]
      ]
  }
  
@@ -32,7 +32,7 @@ index d0c708e81c..4a5ef8a219 100644
  
  catch "exec rm -f tmpdir/preinit tmpdir/init tmpdir/fini tmpdir/init-mixed" status
 diff --git a/ld/testsuite/ld-unique/unique.exp b/ld/testsuite/ld-unique/unique.exp
-index b96a637c5e..2cda1335a3 100644
+index 02b45a35d0..eb21108344 100644
 --- a/ld/testsuite/ld-unique/unique.exp
 +++ b/ld/testsuite/ld-unique/unique.exp
 @@ -122,8 +122,6 @@ if [board_info [target_info name] exists cflags] {

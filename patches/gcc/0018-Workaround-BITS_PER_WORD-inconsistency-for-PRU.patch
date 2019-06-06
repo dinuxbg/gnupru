@@ -1,0 +1,38 @@
+From 67f059242500cb5cb51e1b35f2431327a1d5687d Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Sat, 30 Mar 2019 11:47:01 +0200
+Subject: [PATCH 18/22] Workaround BITS_PER_WORD inconsistency for PRU
+
+gcc/ChangeLog:
+
+2019-03-30  Dimitar Dimitrov  <dimitar@dinux.eu>
+
+        * expmed.c (strict_volatile_bitfield_p):
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ gcc/expmed.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/gcc/expmed.c b/gcc/expmed.c
+index d7f8e9a5d76..bc09d5dc717 100644
+--- a/gcc/expmed.c
++++ b/gcc/expmed.c
+@@ -546,9 +546,11 @@ strict_volatile_bitfield_p (rtx op0, unsigned HOST_WIDE_INT bitsize,
+       || flag_strict_volatile_bitfields <= 0)
+     return false;
+ 
+-  /* The bit size must not be larger than the field mode, and
+-     the field mode must not be larger than a word.  */
+-  if (bitsize > modesize || modesize > BITS_PER_WORD)
++  /* The bit size must not be larger than the field mode.
++     Ideally, modesize must not be larger than BITS_PER_WORD.  Unfortunately
++     some targets (like pru) declare "fake" BITS_PER_WORD.  It makes more sense
++     to force access size to INT_TYPE_SIZE.  */
++  if (bitsize > modesize || modesize > INT_TYPE_SIZE)
+     return false;
+ 
+   /* Check for cases of unaligned fields that must be split.  */
+-- 
+2.11.0
+

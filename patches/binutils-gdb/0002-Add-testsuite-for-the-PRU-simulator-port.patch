@@ -1,7 +1,7 @@
-From a78c52fd7db5f479e2b588a2795d34da5e80e914 Mon Sep 17 00:00:00 2001
+From 892b5d4de49f9b0c9fb16754e20ef56e7eeee98c Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Tue, 6 Dec 2016 23:22:26 +0200
-Subject: [PATCH 2/8] Add testsuite for the PRU simulator port
+Subject: [PATCH 2/9] Add testsuite for the PRU simulator port
 
 2018-06-19  Dimitar Dimitrov <dimitar@dinux.eu>
 

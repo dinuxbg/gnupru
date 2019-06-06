@@ -1,7 +1,7 @@
-From a41a2b453fe039f0f1648f4c9b7a961ca2242deb Mon Sep 17 00:00:00 2001
+From 97e6fc6b3613f1c01e6c6dde08cb1fef21e0a2e9 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 11 Mar 2018 22:23:26 +0200
-Subject: [PATCH 1/7] Initial PRU port
+Subject: [PATCH 1/8] Initial PRU port
 
 Hi,
 

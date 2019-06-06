@@ -1,7 +1,7 @@
-From 46295138e3ed55a0370e85638aaecb4dd7876bbe Mon Sep 17 00:00:00 2001
+From 8200b063abca275aa62ecac16e8175891b35c27a Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Wed, 29 Aug 2018 15:38:05 +0300
-Subject: [PATCH 7/8] HACK: Skip failing LD tests
+Subject: [PATCH 7/9] HACK: Skip failing LD tests
 
 These should be addressed properly. Until fixed, though, skip
 them to allow buildbot test to run.

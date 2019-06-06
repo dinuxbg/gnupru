@@ -5,9 +5,9 @@
 
 # On which upstream commits to apply patches. I frequently rebase so
 # expect these to be somewhat random.
-GCC_BASECOMMIT=4233f2a8d6f8c8a12ba58f097caa0209df393266
-BINUTILS_BASECOMMIT=7b63ad86ab1a56812772f266b345ecaa494ece95
-NEWLIB_BASECOMMIT=fc5b248784f094c99bce02e6af580d3db5ebd93f
+GCC_BASECOMMIT=a3c76318e27f695774bfe9be9fdca76b284a2230
+BINUTILS_BASECOMMIT=fbe4d6650d714643fe340d9ccba7fc500c26b91d
+NEWLIB_BASECOMMIT=5c2a3661c1aeefb0591ce46e8ab3274f0c6d9112
 
 # You can export your (local) repositories to speed up
 # compilation.

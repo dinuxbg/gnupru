@@ -1,7 +1,7 @@
-From 46701b9208e1db6b5c13b592c4c11e322e97b1dd Mon Sep 17 00:00:00 2001
+From e061e8a7ca4ea9b3f870107f7304c307f73bbc14 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 15 Jun 2014 09:58:48 +0300
-Subject: [PATCH 3/8] Fix silent failure in source command
+Subject: [PATCH 3/9] Fix silent failure in source command
 
 On a debian with dash as default shell the following error is silently ignored:
 LIB_PATH='' /bin/bash ../../binutils-gdb/ld/genscripts.sh "../../binutils-gdb/ld" "/home/dinux/bin/pru-gcc/lib" "/home/dinux/bin/pru-gcc" "/home/dinux/bin/pru-gcc" x86_64-unknown-linux-gnu pru-unknown-none pru "pruelf" "/usr/local/lib /lib /usr/lib" no no pruelf "pru"
@@ -25,15 +25,15 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/ld/genscrba.sh b/ld/genscrba.sh
-index 030cb7d42e..dbbce090c6 100644
+index d10e27a43c..58e1b31744 100644
 --- a/ld/genscrba.sh
 +++ b/ld/genscrba.sh
 @@ -3,7 +3,7 @@ source_em()
  {
    local current_script="$em_script"
    em_script=$1
--  . $em_script
-+  . $em_script || exit $?
+-  source_sh $1
++  source_sh $1 || exit $?
    em_script=$current_script
  }
  fragment()

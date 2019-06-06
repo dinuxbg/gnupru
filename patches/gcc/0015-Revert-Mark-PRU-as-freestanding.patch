@@ -1,23 +1,23 @@
-From 7d32702a90c2085d5b58e173d385a3b2e4e78663 Mon Sep 17 00:00:00 2001
+From 3133fc71e9ea1b9837020cfbbddec802d1aee704 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
-Date: Fri, 9 Nov 2018 21:21:26 +0200
-Subject: [PATCH 16/19] Mark PRU as freestanding
+Date: Sat, 10 Nov 2018 22:20:29 +0200
+Subject: [PATCH 15/22] Revert "Mark PRU as freestanding"
 
-Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+This reverts commit 8425e6aa51159667501202111be4f4287493317d.
 ---
  gcc/testsuite/lib/target-supports.exp | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index 483ccf86c38..5ba546320fb 100644
+index cae749e0471..01472879062 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
-@@ -714,7 +714,7 @@ proc check_profiling_available { test_what } {
+@@ -717,7 +717,7 @@ proc check_profiling_available { test_what } {
  # in Section 4 of C99 standard. Effectively, it is a target which supports no
  # extra headers or libraries other than what is considered essential.
  proc check_effective_target_freestanding { } {
--    if { [istarget nvptx-*-*] } {
-+    if { [istarget nvptx-*-*] || [istarget pru-*-*] } {
+-    if { [istarget nvptx-*-*] || [istarget pru-*-*] } {
++    if { [istarget nvptx-*-*] } {
  	return 1
      }
      return 0

@@ -1,7 +1,7 @@
-From 754b76f27fa3948a631594e8d2ceaee9ce734a3d Mon Sep 17 00:00:00 2001
+From b7d7efcccbf46314c225cb393eef5ea997e3254d Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 15 Apr 2018 15:03:27 +0300
-Subject: [PATCH 05/19] testsuite: Add check for unsupported TI ABI PRU
+Subject: [PATCH 05/22] testsuite: Add check for unsupported TI ABI PRU
  features to testsuite
 
 Not all C language features are supported when -mabi=ti option is
@@ -46,10 +46,10 @@ index c56e8e80ae0..e23b63cf3d1 100644
  }
  
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index e79c90cce54..483ccf86c38 100644
+index 2b3290619dc..01472879062 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
-@@ -2632,6 +2632,32 @@ proc check_effective_target_size20plus { } {
+@@ -2644,6 +2644,32 @@ proc check_effective_target_size20plus { } {
      }]
  }
  
@@ -70,7 +70,7 @@ index e79c90cce54..483ccf86c38 100644
 +
 +proc check_effective_target_large_return_values { } {
 +    if { [istarget pru-*-*] } {
-+	return [check_no_compiler_messages func_ptr_avail assembly {
++	return [check_no_compiler_messages large_return_values assembly {
 +	    #ifdef __PRU_EABI_GNU__
 +	    #error unsupported
 +	    #endif

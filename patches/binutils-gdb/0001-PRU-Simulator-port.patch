@@ -1,7 +1,7 @@
-From 68af2682c10557f747057021b63ca75214a08236 Mon Sep 17 00:00:00 2001
+From 456fb1543eb1430ad07cd662cff4e5399ee00c4c Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 24 Oct 2016 22:37:01 +0300
-Subject: [PATCH 1/8] PRU Simulator port
+Subject: [PATCH 1/9] PRU Simulator port
 
 I'd like to contribute a sim port for the TI PRU I/O processor. I did not
 receive feedback for my v3 patch series. So after a bit of waiting I rebased
@@ -75,11 +75,11 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  sim/pru/aclocal.m4       | 129 ++++++++
  sim/pru/config.in        | 248 ++++++++++++++++
  sim/pru/configure.ac     |  12 +
- sim/pru/interp.c         | 753 +++++++++++++++++++++++++++++++++++++++++++++++
+ sim/pru/interp.c         | 754 +++++++++++++++++++++++++++++++++++++++++++++++
  sim/pru/pru.h            | 101 +++++++
  sim/pru/pru.isa          | 249 ++++++++++++++++
  sim/pru/sim-main.h       |  81 +++++
- 13 files changed, 1649 insertions(+)
+ 13 files changed, 1650 insertions(+)
  create mode 100644 sim/pru/Makefile.in
  create mode 100644 sim/pru/aclocal.m4
  create mode 100644 sim/pru/config.in
@@ -636,10 +636,10 @@ index 0000000000..54ac06f48e
 +SIM_AC_OUTPUT
 diff --git a/sim/pru/interp.c b/sim/pru/interp.c
 new file mode 100644
-index 0000000000..77888ce9d0
+index 0000000000..28cff5ba6d
 --- /dev/null
 +++ b/sim/pru/interp.c
-@@ -0,0 +1,753 @@
+@@ -0,0 +1,754 @@
 +/* Simulator for the Texas Instruments PRU processor
 +   Copyright 2014-2018 Free Software Foundation, Inc.
 +   Inspired by the Microblase simulator
@@ -669,6 +669,7 @@ index 0000000000..77888ce9d0
 +#include "libiberty.h"
 +#include "gdb/remote-sim.h"
 +#include "sim-main.h"
++#include "sim-assert.h"
 +#include "sim-options.h"
 +#include "sim-syscall.h"
 +#include "pru.h"

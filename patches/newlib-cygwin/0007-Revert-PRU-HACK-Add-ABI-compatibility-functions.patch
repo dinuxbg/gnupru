@@ -1,7 +1,7 @@
-From 55943fdbf32b7a1fb6ebcc53d2140fa6273ec031 Mon Sep 17 00:00:00 2001
+From 1020e6291afb0d8b89129ab4e5ce800fbd5fde23 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 4 Jun 2018 08:06:23 +0300
-Subject: [PATCH 7/7] Revert "PRU: HACK: Add ABI compatibility functions"
+Subject: [PATCH 7/8] Revert "PRU: HACK: Add ABI compatibility functions"
 
 This reverts commit 93cfc44d4e9ba69468959e458bf1db239feec8b0.
 ---

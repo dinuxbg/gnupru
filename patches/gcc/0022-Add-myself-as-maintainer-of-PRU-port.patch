@@ -1,7 +1,7 @@
-From e5343659c0e0d680949cb92d349e321d42e2e820 Mon Sep 17 00:00:00 2001
+From edeee178a1b5225946a8ef85db8ca1ca34b9b151 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 27 Aug 2018 16:40:28 +0300
-Subject: [PATCH 14/19] Add myself as maintainer of PRU port
+Subject: [PATCH 22/22] Add myself as maintainer of PRU port
 
 ChangeLog:
 
@@ -15,10 +15,10 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  1 file changed, 1 insertion(+)
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 4b4a1e7dad4..2365713c034 100644
+index 8905ac7a613..c76ad1786e1 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -95,6 +95,7 @@ nvptx port		Tom de Vries		<tdevries@suse.de>
+@@ -94,6 +94,7 @@ nvptx port		Tom de Vries		<tdevries@suse.de>
  or1k port		Stafford Horne		<shorne@gmail.com>
  pdp11 port		Paul Koning		<ni1d@arrl.net>
  powerpcspe port		Andrew Jenner		<andrew@codesourcery.com>

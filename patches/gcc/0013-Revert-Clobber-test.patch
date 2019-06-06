@@ -1,7 +1,7 @@
-From a5ddd18fb492bf4336a6846faf098d9e74a4f78e Mon Sep 17 00:00:00 2001
+From 72d5f4d80df6b6ca8244e81f9fa9e2f2a425eac7 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 22 Jun 2018 06:36:49 +0300
-Subject: [PATCH 13/19] Revert "Clobber test"
+Subject: [PATCH 13/22] Revert "Clobber test"
 
 This reverts commit ee9131d889b5f3e98e90f7b14e60ad60e3c2cbcd.
 ---
