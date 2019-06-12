@@ -1,4 +1,4 @@
-From 76975930236b414e6cfb135e5685e16c49fb1e78 Mon Sep 17 00:00:00 2001
+From 67113ca1b4fe4f7d50c4dc53e063626130df04bd Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 1 Jun 2017 04:50:28 +0300
 Subject: [PATCH 5/9] Temporarily disable failing tests due to pruelf-sim.x

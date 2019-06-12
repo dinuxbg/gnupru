@@ -1,4 +1,4 @@
-From 1020e6291afb0d8b89129ab4e5ce800fbd5fde23 Mon Sep 17 00:00:00 2001
+From c2e10ace738eafb429d375283cbadcd3f8b770aa Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 4 Jun 2018 08:06:23 +0300
 Subject: [PATCH 7/8] Revert "PRU: HACK: Add ABI compatibility functions"

@@ -1,7 +1,7 @@
-From e6960026b5a75f7478c9d69cc80bdd78aa59be25 Mon Sep 17 00:00:00 2001
+From a9e77bd11c29e29ad22eda2eec7c168c9c3c24af Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Fri, 9 Nov 2018 21:21:26 +0200
-Subject: [PATCH 14/22] Mark PRU as freestanding
+Subject: [PATCH 03/12] Mark PRU as freestanding
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---

@@ -1,7 +1,7 @@
-From 3133fc71e9ea1b9837020cfbbddec802d1aee704 Mon Sep 17 00:00:00 2001
+From 342883449f8d63cd6e4141860e44e2ff04839ae4 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sat, 10 Nov 2018 22:20:29 +0200
-Subject: [PATCH 15/22] Revert "Mark PRU as freestanding"
+Subject: [PATCH 04/12] Revert "Mark PRU as freestanding"
 
 This reverts commit 8425e6aa51159667501202111be4f4287493317d.
 ---

@@ -1,24 +1,30 @@
-From d9c96a9460780286b3123012192bdc59effa6513 Mon Sep 17 00:00:00 2001
+From 6c7d1cdbe69673e8e708ff6a1fa49ea2c4411db3 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
-Date: Thu, 6 Jun 2019 22:39:56 +0300
-Subject: [PATCH 17/22] Revert "testsuite: Mark PRU as having no alignment
- requirements"
+Date: Sun, 17 Mar 2019 22:08:01 +0200
+Subject: [PATCH 05/12] testsuite: Mark PRU as having no alignment requirements
 
-This reverts commit b4c520e19611356f1f162ce0737c634b7e3152aa.
+gcc/testsuite/ChangeLog:
+
+2019-03-17  Dimitar Dimitrov  <dimitar@dinux.eu>
+
+        * lib/target-supports.exp
+	(check_effective_target_natural_alignment_32): Add pru-*-*.
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  gcc/testsuite/lib/target-supports.exp | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/gcc/testsuite/lib/target-supports.exp b/gcc/testsuite/lib/target-supports.exp
-index 5a4aa585a4d..01472879062 100644
+index 01472879062..5a4aa585a4d 100644
 --- a/gcc/testsuite/lib/target-supports.exp
 +++ b/gcc/testsuite/lib/target-supports.exp
 @@ -6287,7 +6287,7 @@ proc check_effective_target_natural_alignment_32 { } {
      # FIXME: 32bit powerpc: guaranteed only if MASK_ALIGN_NATURAL/POWER.
      return [check_cached_effective_target_indexed natural_alignment_32 {
        if { ([istarget *-*-darwin*] && [is-effective-target lp64])
--	    || [istarget avr-*-*] || [istarget pru-*-*] } {
-+	    || [istarget avr-*-*] } {
+-	    || [istarget avr-*-*] } {
++	    || [istarget avr-*-*] || [istarget pru-*-*] } {
  	   return 0
  	 } else {
  	   return 1
