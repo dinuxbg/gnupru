@@ -51,6 +51,28 @@ bb_update_source()
   popd
 }
 
+bb_update_source_svn()
+{
+  local PRJ=${1}
+  local URL=${2}
+  local P
+
+  pushd ${WORKSPACE}
+
+  [ -d "${PRJ}" ] || svn co ${URL} ${PRJ} || error "initial ${URL} clone failed"
+
+  pushd ${PRJ} || error "cannot enter ${PRJ}"
+  svn revert --recursive . || error "failed to prune remote"
+  svn update || error "failed to update SVN ${PRJ}"
+  [ -d ../${PRJ}-patches ] && ls ../${PRJ-}-patches/* | sort | while read P
+  do
+    echo "ERROR: Local patching not supported for SVN. Sorry"
+    exit 1
+  done
+
+  popd
+  popd
+}
 
 bb_clean()
 {
@@ -68,12 +90,17 @@ bb_config()
   local PRJ="${1}"
   shift
   local CONFIG_PARAMS="$@"
+  local CONFIGURE
 
   print_stage "Configuring ${PRJ} with parameters \"${CONFIG_PARAMS}\""
   mkdir -p ${WORKSPACE}/${PRJ}-build
   pushd ${WORKSPACE}/${PRJ}-build || error "failed to mkdir ${PRJ}-build"
 
-  ${WORKSPACE}/${PRJ}/configure --prefix=${PREFIX} ${CONFIG_PARAMS} || error "Could not configure ${PRJ}"
+  # HACK: Workaround bug in newlib testsuite's build system.
+  # See: https://sourceware.org/ml/newlib/2011/msg00457.html
+  CONFIGURE=`realpath ${WORKSPACE}/${PRJ}/configure`
+
+  ${CONFIGURE} --prefix=${PREFIX} ${CONFIG_PARAMS} || error "Could not configure ${PRJ}"
 
   popd
 }

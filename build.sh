@@ -16,7 +16,7 @@ build_binutils()
 {
   cd $BUILD/binutils-gdb
   $SRC/binutils-gdb/configure --target=pru --prefix=$PREFIX --disable-nls --with-bugurl="https://github.com/dinuxbg/gnupru/issues" --disable-gdb || die Could not configure Binutils
-  make -j4 || die Could not build Binutils
+  make -j`nproc` || die Could not build Binutils
   make install || die Could not install Binutils
 }
 
@@ -27,7 +27,7 @@ build_gcc_pass()
   EXTRA_ARGS=$2
   cd $BUILD/gcc
   $SRC/gcc/configure --target=pru --prefix=$PREFIX --disable-nls --with-newlib --with-bugurl="https://github.com/dinuxbg/gnupru/issues" $EXTRA_ARGS || die Could not configure GCC pass$PASS
-  make -j4 || die Could not build GCC pass$PASS
+  make -j`nproc` || die Could not build GCC pass$PASS
   make install || die Could not install GCC pass$PASS
 }
 
@@ -35,8 +35,16 @@ build_newlib()
 {
   cd $BUILD/newlib-cygwin
   $SRC/newlib-cygwin/configure --target=pru --prefix=$PREFIX --disable-newlib-fvwrite-in-streamio --enable-newlib-nano-formatted-io --disable-newlib-multithread || die Could not configure Newlib
-  make -j4 || die Could not build Newlib
+  make -j`nproc` || die Could not build Newlib
   make install || die Could not install Newlib
+}
+
+build_gnuprumcu()
+{
+  cd $BUILD/gnuprumcu
+  $SRC/gnuprumcu/configure --target=pru --prefix=$PREFIX || die Could not configure gnuprumcu
+  make -j`nproc` || die Could not build gnuprumcu
+  make install || die Could not install gnuprumcu
 }
 
 RETDIR=`pwd`
@@ -50,12 +58,14 @@ mkdir -p $PREFIX
 mkdir -p $BUILD/gcc
 mkdir -p $BUILD/binutils-gdb
 mkdir -p $BUILD/newlib-cygwin
+mkdir -p $BUILD/gnuprumcu
 
 # Configure, build and install.
 build_binutils
 build_gcc_pass 1 "--without-headers --enable-languages=c"
 build_newlib
 build_gcc_pass 2 "--enable-languages=c,c++"
+build_gnuprumcu
 
 cd $RETDIR
 

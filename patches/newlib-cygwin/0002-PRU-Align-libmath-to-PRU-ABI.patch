@@ -1,7 +1,7 @@
-From d8f297ff080ede00e4826e2cd09a6efd7c73668e Mon Sep 17 00:00:00 2001
+From df2fe0767795a6d871b7e118f82ccd855cd99890 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 11 Mar 2018 22:15:05 +0200
-Subject: [PATCH 2/8] PRU: Align libmath to PRU ABI
+Subject: [PATCH 2/3] PRU: Align libmath to PRU ABI
 
 The TI proprietary toolchain uses nonstandard names for some math
 library functions. In order to achieve ABI compatibility between
@@ -11,19 +11,19 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
  newlib/configure.host                 |  1 +
  newlib/libm/machine/configure.in      |  1 +
- newlib/libm/machine/pru/Makefile.am   | 19 ++++++++++++++++
- newlib/libm/machine/pru/configure.in  | 11 +++++++++
- newlib/libm/machine/pru/fpclassify.c  | 43 +++++++++++++++++++++++++++++++++++
- newlib/libm/machine/pru/fpclassifyf.c | 43 +++++++++++++++++++++++++++++++++++
- newlib/libm/machine/pru/isfinite.c    | 43 +++++++++++++++++++++++++++++++++++
- newlib/libm/machine/pru/isfinitef.c   | 43 +++++++++++++++++++++++++++++++++++
- newlib/libm/machine/pru/isinf.c       | 43 +++++++++++++++++++++++++++++++++++
- newlib/libm/machine/pru/isinff.c      | 43 +++++++++++++++++++++++++++++++++++
- newlib/libm/machine/pru/isnan.c       | 43 +++++++++++++++++++++++++++++++++++
- newlib/libm/machine/pru/isnanf.c      | 43 +++++++++++++++++++++++++++++++++++
- newlib/libm/machine/pru/isnormal.c    | 43 +++++++++++++++++++++++++++++++++++
- newlib/libm/machine/pru/isnormalf.c   | 43 +++++++++++++++++++++++++++++++++++
- 14 files changed, 462 insertions(+)
+ newlib/libm/machine/pru/Makefile.am   | 19 ++++++++++++++
+ newlib/libm/machine/pru/configure.in  | 11 ++++++++
+ newlib/libm/machine/pru/fpclassify.c  | 36 +++++++++++++++++++++++++++
+ newlib/libm/machine/pru/fpclassifyf.c | 36 +++++++++++++++++++++++++++
+ newlib/libm/machine/pru/isfinite.c    | 36 +++++++++++++++++++++++++++
+ newlib/libm/machine/pru/isfinitef.c   | 36 +++++++++++++++++++++++++++
+ newlib/libm/machine/pru/isinf.c       | 36 +++++++++++++++++++++++++++
+ newlib/libm/machine/pru/isinff.c      | 36 +++++++++++++++++++++++++++
+ newlib/libm/machine/pru/isnan.c       | 36 +++++++++++++++++++++++++++
+ newlib/libm/machine/pru/isnanf.c      | 36 +++++++++++++++++++++++++++
+ newlib/libm/machine/pru/isnormal.c    | 36 +++++++++++++++++++++++++++
+ newlib/libm/machine/pru/isnormalf.c   | 36 +++++++++++++++++++++++++++
+ 14 files changed, 392 insertions(+)
  create mode 100644 newlib/libm/machine/pru/Makefile.am
  create mode 100644 newlib/libm/machine/pru/configure.in
  create mode 100644 newlib/libm/machine/pru/fpclassify.c
@@ -105,42 +105,35 @@ index 000000000..7a22fa31c
 +AC_OUTPUT
 diff --git a/newlib/libm/machine/pru/fpclassify.c b/newlib/libm/machine/pru/fpclassify.c
 new file mode 100644
-index 000000000..53e22f0fa
+index 000000000..3556f6532
 --- /dev/null
 +++ b/newlib/libm/machine/pru/fpclassify.c
-@@ -0,0 +1,43 @@
-+/*
-+  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
-+  All rights reserved.
-+
-+  Redistribution and use in source and binary forms, with or without
-+  modification, are permitted provided that the following conditions
-+  are met:
-+
-+  * Redistributions of source code must retain the above copyright
-+  notice, this list of conditions and the following disclaimer.
-+
-+  * Redistributions in binary form must reproduce the above copyright
-+  notice, this list of conditions and the following disclaimer in the
-+  documentation and/or other materials provided with the distribution.
-+
-+  * Neither the names of the copyright holders nor the names of their
-+  contributors may be used to endorse or promote products derived from
-+  this software without specific prior written permission.
-+
-+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-+  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-+  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-+  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-+  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+  POSSIBILITY OF SUCH DAMAGE.
-+*/
+@@ -0,0 +1,36 @@
++/* SPDX-License-Identifier: BSD-2-Clause-FreeBSD
++ *
++ * Copyright (c) 2018-2019 Dimitar Dimitrov <dimitar@dinux.eu>
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
 +
 +#include <math.h>
 +
@@ -154,42 +147,35 @@ index 000000000..53e22f0fa
 +}
 diff --git a/newlib/libm/machine/pru/fpclassifyf.c b/newlib/libm/machine/pru/fpclassifyf.c
 new file mode 100644
-index 000000000..01c06aeef
+index 000000000..f4dd201d9
 --- /dev/null
 +++ b/newlib/libm/machine/pru/fpclassifyf.c
-@@ -0,0 +1,43 @@
-+/*
-+  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
-+  All rights reserved.
-+
-+  Redistribution and use in source and binary forms, with or without
-+  modification, are permitted provided that the following conditions
-+  are met:
-+
-+  * Redistributions of source code must retain the above copyright
-+  notice, this list of conditions and the following disclaimer.
-+
-+  * Redistributions in binary form must reproduce the above copyright
-+  notice, this list of conditions and the following disclaimer in the
-+  documentation and/or other materials provided with the distribution.
-+
-+  * Neither the names of the copyright holders nor the names of their
-+  contributors may be used to endorse or promote products derived from
-+  this software without specific prior written permission.
-+
-+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-+  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-+  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-+  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-+  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+  POSSIBILITY OF SUCH DAMAGE.
-+*/
+@@ -0,0 +1,36 @@
++/* SPDX-License-Identifier: BSD-2-Clause-FreeBSD
++ *
++ * Copyright (c) 2018-2019 Dimitar Dimitrov <dimitar@dinux.eu>
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
 +
 +#include <math.h>
 +
@@ -203,42 +189,35 @@ index 000000000..01c06aeef
 +}
 diff --git a/newlib/libm/machine/pru/isfinite.c b/newlib/libm/machine/pru/isfinite.c
 new file mode 100644
-index 000000000..305d6bc0e
+index 000000000..2e61877e9
 --- /dev/null
 +++ b/newlib/libm/machine/pru/isfinite.c
-@@ -0,0 +1,43 @@
-+/*
-+  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
-+  All rights reserved.
-+
-+  Redistribution and use in source and binary forms, with or without
-+  modification, are permitted provided that the following conditions
-+  are met:
-+
-+  * Redistributions of source code must retain the above copyright
-+  notice, this list of conditions and the following disclaimer.
-+
-+  * Redistributions in binary form must reproduce the above copyright
-+  notice, this list of conditions and the following disclaimer in the
-+  documentation and/or other materials provided with the distribution.
-+
-+  * Neither the names of the copyright holders nor the names of their
-+  contributors may be used to endorse or promote products derived from
-+  this software without specific prior written permission.
-+
-+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-+  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-+  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-+  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-+  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+  POSSIBILITY OF SUCH DAMAGE.
-+*/
+@@ -0,0 +1,36 @@
++/* SPDX-License-Identifier: BSD-2-Clause-FreeBSD
++ *
++ * Copyright (c) 2018-2019 Dimitar Dimitrov <dimitar@dinux.eu>
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
 +
 +#include <math.h>
 +
@@ -252,42 +231,35 @@ index 000000000..305d6bc0e
 +}
 diff --git a/newlib/libm/machine/pru/isfinitef.c b/newlib/libm/machine/pru/isfinitef.c
 new file mode 100644
-index 000000000..fcd7247cc
+index 000000000..be88157de
 --- /dev/null
 +++ b/newlib/libm/machine/pru/isfinitef.c
-@@ -0,0 +1,43 @@
-+/*
-+  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
-+  All rights reserved.
-+
-+  Redistribution and use in source and binary forms, with or without
-+  modification, are permitted provided that the following conditions
-+  are met:
-+
-+  * Redistributions of source code must retain the above copyright
-+  notice, this list of conditions and the following disclaimer.
-+
-+  * Redistributions in binary form must reproduce the above copyright
-+  notice, this list of conditions and the following disclaimer in the
-+  documentation and/or other materials provided with the distribution.
-+
-+  * Neither the names of the copyright holders nor the names of their
-+  contributors may be used to endorse or promote products derived from
-+  this software without specific prior written permission.
-+
-+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-+  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-+  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-+  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-+  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+  POSSIBILITY OF SUCH DAMAGE.
-+*/
+@@ -0,0 +1,36 @@
++/* SPDX-License-Identifier: BSD-2-Clause-FreeBSD
++ *
++ * Copyright (c) 2018-2019 Dimitar Dimitrov <dimitar@dinux.eu>
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
 +
 +#include <math.h>
 +
@@ -301,42 +273,35 @@ index 000000000..fcd7247cc
 +}
 diff --git a/newlib/libm/machine/pru/isinf.c b/newlib/libm/machine/pru/isinf.c
 new file mode 100644
-index 000000000..2a2ca7339
+index 000000000..bd2d883b0
 --- /dev/null
 +++ b/newlib/libm/machine/pru/isinf.c
-@@ -0,0 +1,43 @@
-+/*
-+  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
-+  All rights reserved.
-+
-+  Redistribution and use in source and binary forms, with or without
-+  modification, are permitted provided that the following conditions
-+  are met:
-+
-+  * Redistributions of source code must retain the above copyright
-+  notice, this list of conditions and the following disclaimer.
-+
-+  * Redistributions in binary form must reproduce the above copyright
-+  notice, this list of conditions and the following disclaimer in the
-+  documentation and/or other materials provided with the distribution.
-+
-+  * Neither the names of the copyright holders nor the names of their
-+  contributors may be used to endorse or promote products derived from
-+  this software without specific prior written permission.
-+
-+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-+  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-+  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-+  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-+  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+  POSSIBILITY OF SUCH DAMAGE.
-+*/
+@@ -0,0 +1,36 @@
++/* SPDX-License-Identifier: BSD-2-Clause-FreeBSD
++ *
++ * Copyright (c) 2018-2019 Dimitar Dimitrov <dimitar@dinux.eu>
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
 +
 +#include <math.h>
 +
@@ -350,42 +315,35 @@ index 000000000..2a2ca7339
 +}
 diff --git a/newlib/libm/machine/pru/isinff.c b/newlib/libm/machine/pru/isinff.c
 new file mode 100644
-index 000000000..ffbf23b54
+index 000000000..094371050
 --- /dev/null
 +++ b/newlib/libm/machine/pru/isinff.c
-@@ -0,0 +1,43 @@
-+/*
-+  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
-+  All rights reserved.
-+
-+  Redistribution and use in source and binary forms, with or without
-+  modification, are permitted provided that the following conditions
-+  are met:
-+
-+  * Redistributions of source code must retain the above copyright
-+  notice, this list of conditions and the following disclaimer.
-+
-+  * Redistributions in binary form must reproduce the above copyright
-+  notice, this list of conditions and the following disclaimer in the
-+  documentation and/or other materials provided with the distribution.
-+
-+  * Neither the names of the copyright holders nor the names of their
-+  contributors may be used to endorse or promote products derived from
-+  this software without specific prior written permission.
-+
-+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-+  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-+  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-+  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-+  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+  POSSIBILITY OF SUCH DAMAGE.
-+*/
+@@ -0,0 +1,36 @@
++/* SPDX-License-Identifier: BSD-2-Clause-FreeBSD
++ *
++ * Copyright (c) 2018-2019 Dimitar Dimitrov <dimitar@dinux.eu>
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
 +
 +#include <math.h>
 +
@@ -399,42 +357,35 @@ index 000000000..ffbf23b54
 +}
 diff --git a/newlib/libm/machine/pru/isnan.c b/newlib/libm/machine/pru/isnan.c
 new file mode 100644
-index 000000000..a0ea651b1
+index 000000000..4d2f4dc1f
 --- /dev/null
 +++ b/newlib/libm/machine/pru/isnan.c
-@@ -0,0 +1,43 @@
-+/*
-+  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
-+  All rights reserved.
-+
-+  Redistribution and use in source and binary forms, with or without
-+  modification, are permitted provided that the following conditions
-+  are met:
-+
-+  * Redistributions of source code must retain the above copyright
-+  notice, this list of conditions and the following disclaimer.
-+
-+  * Redistributions in binary form must reproduce the above copyright
-+  notice, this list of conditions and the following disclaimer in the
-+  documentation and/or other materials provided with the distribution.
-+
-+  * Neither the names of the copyright holders nor the names of their
-+  contributors may be used to endorse or promote products derived from
-+  this software without specific prior written permission.
-+
-+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-+  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-+  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-+  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-+  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+  POSSIBILITY OF SUCH DAMAGE.
-+*/
+@@ -0,0 +1,36 @@
++/* SPDX-License-Identifier: BSD-2-Clause-FreeBSD
++ *
++ * Copyright (c) 2018-2019 Dimitar Dimitrov <dimitar@dinux.eu>
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
 +
 +#include <math.h>
 +
@@ -448,42 +399,35 @@ index 000000000..a0ea651b1
 +}
 diff --git a/newlib/libm/machine/pru/isnanf.c b/newlib/libm/machine/pru/isnanf.c
 new file mode 100644
-index 000000000..cba350e6f
+index 000000000..21a2f04ea
 --- /dev/null
 +++ b/newlib/libm/machine/pru/isnanf.c
-@@ -0,0 +1,43 @@
-+/*
-+  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
-+  All rights reserved.
-+
-+  Redistribution and use in source and binary forms, with or without
-+  modification, are permitted provided that the following conditions
-+  are met:
-+
-+  * Redistributions of source code must retain the above copyright
-+  notice, this list of conditions and the following disclaimer.
-+
-+  * Redistributions in binary form must reproduce the above copyright
-+  notice, this list of conditions and the following disclaimer in the
-+  documentation and/or other materials provided with the distribution.
-+
-+  * Neither the names of the copyright holders nor the names of their
-+  contributors may be used to endorse or promote products derived from
-+  this software without specific prior written permission.
-+
-+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-+  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-+  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-+  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-+  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+  POSSIBILITY OF SUCH DAMAGE.
-+*/
+@@ -0,0 +1,36 @@
++/* SPDX-License-Identifier: BSD-2-Clause-FreeBSD
++ *
++ * Copyright (c) 2018-2019 Dimitar Dimitrov <dimitar@dinux.eu>
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
 +
 +#include <math.h>
 +
@@ -497,42 +441,35 @@ index 000000000..cba350e6f
 +}
 diff --git a/newlib/libm/machine/pru/isnormal.c b/newlib/libm/machine/pru/isnormal.c
 new file mode 100644
-index 000000000..c1463e4c6
+index 000000000..915ec0277
 --- /dev/null
 +++ b/newlib/libm/machine/pru/isnormal.c
-@@ -0,0 +1,43 @@
-+/*
-+  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
-+  All rights reserved.
-+
-+  Redistribution and use in source and binary forms, with or without
-+  modification, are permitted provided that the following conditions
-+  are met:
-+
-+  * Redistributions of source code must retain the above copyright
-+  notice, this list of conditions and the following disclaimer.
-+
-+  * Redistributions in binary form must reproduce the above copyright
-+  notice, this list of conditions and the following disclaimer in the
-+  documentation and/or other materials provided with the distribution.
-+
-+  * Neither the names of the copyright holders nor the names of their
-+  contributors may be used to endorse or promote products derived from
-+  this software without specific prior written permission.
-+
-+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-+  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-+  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-+  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-+  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+  POSSIBILITY OF SUCH DAMAGE.
-+*/
+@@ -0,0 +1,36 @@
++/* SPDX-License-Identifier: BSD-2-Clause-FreeBSD
++ *
++ * Copyright (c) 2018-2019 Dimitar Dimitrov <dimitar@dinux.eu>
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
 +
 +#include <math.h>
 +
@@ -546,42 +483,35 @@ index 000000000..c1463e4c6
 +}
 diff --git a/newlib/libm/machine/pru/isnormalf.c b/newlib/libm/machine/pru/isnormalf.c
 new file mode 100644
-index 000000000..e7023f52a
+index 000000000..b0e9a45fc
 --- /dev/null
 +++ b/newlib/libm/machine/pru/isnormalf.c
-@@ -0,0 +1,43 @@
-+/*
-+  (c) Copyright 2017-2018 Dimitar Dimitrov <dimitar@dinux.eu>
-+  All rights reserved.
-+
-+  Redistribution and use in source and binary forms, with or without
-+  modification, are permitted provided that the following conditions
-+  are met:
-+
-+  * Redistributions of source code must retain the above copyright
-+  notice, this list of conditions and the following disclaimer.
-+
-+  * Redistributions in binary form must reproduce the above copyright
-+  notice, this list of conditions and the following disclaimer in the
-+  documentation and/or other materials provided with the distribution.
-+
-+  * Neither the names of the copyright holders nor the names of their
-+  contributors may be used to endorse or promote products derived from
-+  this software without specific prior written permission.
-+
-+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-+  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-+  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-+  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-+  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-+  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
-+  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+  POSSIBILITY OF SUCH DAMAGE.
-+*/
+@@ -0,0 +1,36 @@
++/* SPDX-License-Identifier: BSD-2-Clause-FreeBSD
++ *
++ * Copyright (c) 2018-2019 Dimitar Dimitrov <dimitar@dinux.eu>
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
 +
 +#include <math.h>
 +
@@ -594,5 +524,5 @@ index 000000000..e7023f52a
 +  return isnormal(a);
 +}
 -- 
-2.11.0
+2.20.1
 

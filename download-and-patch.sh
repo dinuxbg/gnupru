@@ -5,9 +5,10 @@
 
 # On which upstream commits to apply patches. I frequently rebase so
 # expect these to be somewhat random.
-GCC_BASECOMMIT=50324c06a83ea8d232d213a63b5af82bb2e499b0
-BINUTILS_BASECOMMIT=c6a636ce375d5af4ce0b3aa78b1cc90fd82040bd
-NEWLIB_BASECOMMIT=007bc1923c505f18dce5949b57a849640f25b15c
+GCC_BASECOMMIT=a7d35751fec95d75ab80e626d66cbe5b834f8a13
+BINUTILS_BASECOMMIT=60391a255b720e37ab1efbb7e83bf7dfa270a0fe
+NEWLIB_BASECOMMIT=f39a694c463c1a1ea14e60f5d03652d94e6f76ee
+GNUPRUMCU_URL=https://github.com/dinuxbg/gnuprumcu/releases/download/v0.1.0/gnuprumcu-0.1.0.tar.gz
 
 # You can export your (local) repositories to speed up
 # compilation.
@@ -56,6 +57,17 @@ prepare_source()
   cd $MAINDIR
 }
 
+prepare_source_tarball()
+{
+  local PRJ=$1
+  local URL=$2
+  wget $URL -O $SRC/"$PRJ".tar.gz || die "failed to download $URL"
+  mkdir -p "${SRC}/${PRJ}"
+  pushd "${SRC}/${PRJ}"
+  tar --strip-components=1 -xaf "${SRC}/${PRJ}.tar.gz" || die "failed to extract ${PRJ}.tar.gz"
+  popd
+}
+
 RETDIR=`pwd`
 
 [ -d $SRC ] && die Incremental builds not supported. Cleanup and retry, e.g. 'git clean -fdx'
@@ -65,6 +77,7 @@ mkdir -p $SRC
 prepare_source binutils-gdb $BINUTILS_GIT $BINUTILS_BASECOMMIT "$BINUTILS_GIT_REFERENCE"
 prepare_source gcc $GCC_GIT $GCC_BASECOMMIT "$GCC_GIT_REFERENCE"
 prepare_source newlib-cygwin $NEWLIB_GIT $NEWLIB_BASECOMMIT "$NEWLIB_GIT_REFERENCE"
+prepare_source_tarball gnuprumcu $GNUPRUMCU_URL
 
 cd $RETDIR
 

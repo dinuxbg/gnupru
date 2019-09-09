@@ -1,7 +1,7 @@
-From 20dd2dc8e6e7767575ec75fa549757fae2ad253d Mon Sep 17 00:00:00 2001
+From a570038264a771f61fd05afd58490d2e96a2be4b Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Thu, 9 May 2019 22:33:49 +0300
-Subject: [PATCH 9/9] Add myself as PRU maintainer
+Subject: [PATCH 8/8] Add myself as PRU maintainer
 
 binutils/ChangeLog:
 
@@ -27,5 +27,5 @@ index 87b23bf875..e5200b10da 100644
    RISC-V	   Andrew Waterman <andrew@sifive.com>
    RISC-V	   Jim Wilson <jimw@sifive.com>
 -- 
-2.11.0
+2.20.1
 

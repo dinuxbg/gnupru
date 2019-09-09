@@ -1,7 +1,7 @@
-From a035f598f8ef53a146e0aa1dbc591ef3fa94fc5f Mon Sep 17 00:00:00 2001
+From 96de8c12c787d1f50eb6b87ac460895bc8c08b48 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sat, 30 Mar 2019 11:47:01 +0200
-Subject: [PATCH 07/12] Workaround BITS_PER_WORD inconsistency for PRU
+Subject: [PATCH 2/4] Workaround BITS_PER_WORD inconsistency for PRU
 
 gcc/ChangeLog:
 
@@ -15,7 +15,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  1 file changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/gcc/expmed.c b/gcc/expmed.c
-index d7f8e9a5d76..bc09d5dc717 100644
+index c582f3a1e62..83a8d4bdadc 100644
 --- a/gcc/expmed.c
 +++ b/gcc/expmed.c
 @@ -546,9 +546,11 @@ strict_volatile_bitfield_p (rtx op0, unsigned HOST_WIDE_INT bitsize,
@@ -34,5 +34,5 @@ index d7f8e9a5d76..bc09d5dc717 100644
  
    /* Check for cases of unaligned fields that must be split.  */
 -- 
-2.11.0
+2.20.1
 

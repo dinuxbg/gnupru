@@ -1,32 +1,45 @@
-From 8c7f846699108b9eefb6e741d057ba1c3c0429a7 Mon Sep 17 00:00:00 2001
+From 020a1eb769315ef3b5553ebe0995b661c0a22e26 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Tue, 6 Dec 2016 23:22:26 +0200
-Subject: [PATCH 2/9] Add testsuite for the PRU simulator port
+Subject: [PATCH 2/8] Add testsuite for the PRU simulator port
 
-2018-06-19  Dimitar Dimitrov <dimitar@dinux.eu>
+2019-09-04  Dimitar Dimitrov <dimitar@dinux.eu>
 
-sim/test
+sim/testsuite
 
 	* configure: Regenerate.
-	* pru: New directory.
+
+2019-09-04  Dimitar Dimitrov  <dimitar@dinux.eu>
+
+sim/testsuite/sim/pru
+
+	* add.s: New test.
+	* allinsn.exp: New file.
+	* dmem-zero-pass.s: New test.
+	* dmem-zero-trap.s: New test.
+	* dram.s: New test.
+	* jmp.s: New test.
+	* loop-imm.s: New test.
+	* loop-reg.s: New test.
+	* mul.s: New test.
+	* subreg.s: New test.
+	* testutils.inc: New file.
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
- sim/testsuite/configure                |  3 ++
- sim/testsuite/sim/pru/ChangeLog        | 13 ++++++
- sim/testsuite/sim/pru/add.s            | 22 +++++++++
- sim/testsuite/sim/pru/allinsn.exp      | 15 +++++++
- sim/testsuite/sim/pru/dmem-zero-pass.s | 11 +++++
- sim/testsuite/sim/pru/dmem-zero-trap.s | 14 ++++++
- sim/testsuite/sim/pru/dram.s           | 54 ++++++++++++++++++++++
- sim/testsuite/sim/pru/jmp.s            | 22 +++++++++
- sim/testsuite/sim/pru/loop-imm.s       | 25 +++++++++++
- sim/testsuite/sim/pru/loop-reg.s       | 26 +++++++++++
- sim/testsuite/sim/pru/mul.s            | 71 +++++++++++++++++++++++++++++
- sim/testsuite/sim/pru/subreg.s         | 22 +++++++++
- sim/testsuite/sim/pru/testutils.inc    | 82 ++++++++++++++++++++++++++++++++++
- 13 files changed, 380 insertions(+)
- create mode 100644 sim/testsuite/sim/pru/ChangeLog
+ sim/testsuite/configure                |   3 +
+ sim/testsuite/sim/pru/add.s            |  40 ++++++++++
+ sim/testsuite/sim/pru/allinsn.exp      |  33 ++++++++
+ sim/testsuite/sim/pru/dmem-zero-pass.s |  29 +++++++
+ sim/testsuite/sim/pru/dmem-zero-trap.s |  32 ++++++++
+ sim/testsuite/sim/pru/dram.s           |  72 ++++++++++++++++++
+ sim/testsuite/sim/pru/jmp.s            |  40 ++++++++++
+ sim/testsuite/sim/pru/loop-imm.s       |  43 +++++++++++
+ sim/testsuite/sim/pru/loop-reg.s       |  44 +++++++++++
+ sim/testsuite/sim/pru/mul.s            |  89 ++++++++++++++++++++++
+ sim/testsuite/sim/pru/subreg.s         |  40 ++++++++++
+ sim/testsuite/sim/pru/testutils.inc    | 100 +++++++++++++++++++++++++
+ 12 files changed, 565 insertions(+)
  create mode 100644 sim/testsuite/sim/pru/add.s
  create mode 100644 sim/testsuite/sim/pru/allinsn.exp
  create mode 100644 sim/testsuite/sim/pru/dmem-zero-pass.s
@@ -53,33 +66,32 @@ index 238d2a2be8..a3e7fa7131 100755
     ft32-*-*)
         sim_arch=ft32
         ;;
-diff --git a/sim/testsuite/sim/pru/ChangeLog b/sim/testsuite/sim/pru/ChangeLog
-new file mode 100644
-index 0000000000..6cffb849c2
---- /dev/null
-+++ b/sim/testsuite/sim/pru/ChangeLog
-@@ -0,0 +1,13 @@
-+2019-02-19  Dimitar Dimitrov  <dimitar@dinux.eu>
-+
-+	* ChangeLog: New file.
-+	* add.s: New test.
-+	* allinsn.exp: New file.
-+	* dmem-zero-pass.s: New test.
-+	* dmem-zero-trap.s: New test.
-+	* dram.s: New test.
-+	* jmp.s: New test.
-+	* loop-imm.s: New test.
-+	* loop-reg.s: New test.
-+	* subreg.s: New test.
-+	* testutils.inc: New file.
 diff --git a/sim/testsuite/sim/pru/add.s b/sim/testsuite/sim/pru/add.s
 new file mode 100644
-index 0000000000..10bdd9a8ef
+index 0000000000..b40480fb69
 --- /dev/null
 +++ b/sim/testsuite/sim/pru/add.s
-@@ -0,0 +1,22 @@
+@@ -0,0 +1,40 @@
 +# check that basic add insn works.
 +# mach: pru
++
++# Copyright (C) 2016-2019 Free Software Foundation, Inc.
++# Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++#
++# This file is part of the GNU simulators.
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 +
 +.include "testutils.inc"
 +
@@ -102,11 +114,29 @@ index 0000000000..10bdd9a8ef
 +2:	fail
 diff --git a/sim/testsuite/sim/pru/allinsn.exp b/sim/testsuite/sim/pru/allinsn.exp
 new file mode 100644
-index 0000000000..6e50710224
+index 0000000000..1f48715338
 --- /dev/null
 +++ b/sim/testsuite/sim/pru/allinsn.exp
-@@ -0,0 +1,15 @@
+@@ -0,0 +1,33 @@
 +# PRU simulator testsuite
++
++# Copyright (C) 2016-2019 Free Software Foundation, Inc.
++# Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++#
++# This file is part of the GNU simulators.
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 +
 +if [istarget pru-*] {
 +    # all machines
@@ -123,12 +153,30 @@ index 0000000000..6e50710224
 +}
 diff --git a/sim/testsuite/sim/pru/dmem-zero-pass.s b/sim/testsuite/sim/pru/dmem-zero-pass.s
 new file mode 100644
-index 0000000000..3cdc715d35
+index 0000000000..da522a2b7a
 --- /dev/null
 +++ b/sim/testsuite/sim/pru/dmem-zero-pass.s
-@@ -0,0 +1,11 @@
+@@ -0,0 +1,29 @@
 +# check that DMEM zero address access works by default.
 +# mach: pru
++
++# Copyright (C) 2016-2019 Free Software Foundation, Inc.
++# Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++#
++# This file is part of the GNU simulators.
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 +
 +.include "testutils.inc"
 +
@@ -140,15 +188,33 @@ index 0000000000..3cdc715d35
 +	pass
 diff --git a/sim/testsuite/sim/pru/dmem-zero-trap.s b/sim/testsuite/sim/pru/dmem-zero-trap.s
 new file mode 100644
-index 0000000000..55d8a22505
+index 0000000000..e9cbf12660
 --- /dev/null
 +++ b/sim/testsuite/sim/pru/dmem-zero-trap.s
-@@ -0,0 +1,14 @@
+@@ -0,0 +1,32 @@
 +# check that DMEM zero address access can be trapped.
 +# mach: pru
 +# sim: --error-null-deref
 +# xerror:
 +# output: core: 4 byte read to unmapped address 0x0 at *\n
++
++# Copyright (C) 2016-2019 Free Software Foundation, Inc.
++# Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++#
++# This file is part of the GNU simulators.
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 +
 +.include "testutils.inc"
 +
@@ -160,12 +226,30 @@ index 0000000000..55d8a22505
 +	pass
 diff --git a/sim/testsuite/sim/pru/dram.s b/sim/testsuite/sim/pru/dram.s
 new file mode 100644
-index 0000000000..2a998b566c
+index 0000000000..970723a285
 --- /dev/null
 +++ b/sim/testsuite/sim/pru/dram.s
-@@ -0,0 +1,54 @@
+@@ -0,0 +1,72 @@
 +# check that DRAM memory access works.
 +# mach: pru
++
++# Copyright (C) 2016-2019 Free Software Foundation, Inc.
++# Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++#
++# This file is part of the GNU simulators.
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 +
 +.include "testutils.inc"
 +
@@ -220,12 +304,30 @@ index 0000000000..2a998b566c
 +	.byte 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 diff --git a/sim/testsuite/sim/pru/jmp.s b/sim/testsuite/sim/pru/jmp.s
 new file mode 100644
-index 0000000000..d01d78f823
+index 0000000000..79ac92054b
 --- /dev/null
 +++ b/sim/testsuite/sim/pru/jmp.s
-@@ -0,0 +1,22 @@
-+# check that basic add insn works.
+@@ -0,0 +1,40 @@
++# check that jump and branch insns work.
 +# mach: pru
++
++# Copyright (C) 2016-2019 Free Software Foundation, Inc.
++# Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++#
++# This file is part of the GNU simulators.
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 +
 +.include "testutils.inc"
 +
@@ -248,12 +350,30 @@ index 0000000000..d01d78f823
 +	ret
 diff --git a/sim/testsuite/sim/pru/loop-imm.s b/sim/testsuite/sim/pru/loop-imm.s
 new file mode 100644
-index 0000000000..118219b54c
+index 0000000000..a17f8b84c1
 --- /dev/null
 +++ b/sim/testsuite/sim/pru/loop-imm.s
-@@ -0,0 +1,25 @@
+@@ -0,0 +1,43 @@
 +# check that loop insn works.
 +# mach: pru
++
++# Copyright (C) 2016-2019 Free Software Foundation, Inc.
++# Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++#
++# This file is part of the GNU simulators.
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 +
 +.include "testutils.inc"
 +
@@ -279,12 +399,30 @@ index 0000000000..118219b54c
 +F:	fail
 diff --git a/sim/testsuite/sim/pru/loop-reg.s b/sim/testsuite/sim/pru/loop-reg.s
 new file mode 100644
-index 0000000000..d4843e9415
+index 0000000000..31f853319f
 --- /dev/null
 +++ b/sim/testsuite/sim/pru/loop-reg.s
-@@ -0,0 +1,26 @@
+@@ -0,0 +1,44 @@
 +# check that loop insn works.
 +# mach: pru
++
++# Copyright (C) 2016-2019 Free Software Foundation, Inc.
++# Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++#
++# This file is part of the GNU simulators.
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 +
 +.include "testutils.inc"
 +
@@ -311,12 +449,30 @@ index 0000000000..d4843e9415
 +F:	fail
 diff --git a/sim/testsuite/sim/pru/mul.s b/sim/testsuite/sim/pru/mul.s
 new file mode 100644
-index 0000000000..a576a50b78
+index 0000000000..7077d73759
 --- /dev/null
 +++ b/sim/testsuite/sim/pru/mul.s
-@@ -0,0 +1,71 @@
+@@ -0,0 +1,89 @@
 +# check that multiplication works.
 +# mach: pru
++
++# Copyright (C) 2016-2019 Free Software Foundation, Inc.
++# Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++#
++# This file is part of the GNU simulators.
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 +
 +.include "testutils.inc"
 +
@@ -388,12 +544,30 @@ index 0000000000..a576a50b78
 +2:	fail
 diff --git a/sim/testsuite/sim/pru/subreg.s b/sim/testsuite/sim/pru/subreg.s
 new file mode 100644
-index 0000000000..a100e411b2
+index 0000000000..d2c34b3398
 --- /dev/null
 +++ b/sim/testsuite/sim/pru/subreg.s
-@@ -0,0 +1,22 @@
+@@ -0,0 +1,40 @@
 +# check that subregister addressing works.
 +# mach: pru
++
++# Copyright (C) 2016-2019 Free Software Foundation, Inc.
++# Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++#
++# This file is part of the GNU simulators.
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 +
 +.include "testutils.inc"
 +
@@ -416,10 +590,28 @@ index 0000000000..a100e411b2
 +F:	fail
 diff --git a/sim/testsuite/sim/pru/testutils.inc b/sim/testsuite/sim/pru/testutils.inc
 new file mode 100644
-index 0000000000..fae386733c
+index 0000000000..753908447e
 --- /dev/null
 +++ b/sim/testsuite/sim/pru/testutils.inc
-@@ -0,0 +1,82 @@
+@@ -0,0 +1,100 @@
++# Copyright (C) 2016-2019 Free Software Foundation, Inc.
++# Contributed by Dimitar Dimitrov <dimitar@dinux.eu>
++#
++# This file is part of the GNU simulators.
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 3 of the License, or
++# (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program.  If not, see <http://www.gnu.org/licenses/>.
++
 +# MACRO: start
 +# All assembler tests should start with a call to "main_test"
 +	.macro start
@@ -503,5 +695,5 @@ index 0000000000..fae386733c
 +	qbne \label, \op0\().b3, ((\C0) >> 24) & 0xff
 +	.endm
 -- 
-2.11.0
+2.20.1
 

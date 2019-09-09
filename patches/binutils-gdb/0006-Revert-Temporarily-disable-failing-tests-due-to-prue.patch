@@ -1,7 +1,7 @@
-From 9d945d7bc7d272bbdccd3daddc46e2dd40613612 Mon Sep 17 00:00:00 2001
+From ceb48fd5039337baf0d80a8a9c261dbf4b752db2 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 15 Apr 2018 11:43:56 +0300
-Subject: [PATCH 6/9] Revert "Temporarily disable failing tests due to
+Subject: [PATCH 6/8] Revert "Temporarily disable failing tests due to
  pruelf-sim.x"
 
 This reverts commit 2f9cbb4e067519434071e752ab0e741ab440d785.
@@ -45,5 +45,5 @@ index 02b45a35d0..eb21108344 100644
  if ![ld_link "$CC $board_cflags" "tmpdir/unique_prog" "tmpdir/unique.o"] {
      fail "Could not link a unique executable"
 -- 
-2.11.0
+2.20.1
 

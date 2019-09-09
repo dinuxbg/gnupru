@@ -1,13 +1,15 @@
-From 14bd0cb545f1aac8db72053b0aa867175c00f8e7 Mon Sep 17 00:00:00 2001
+From dbd53b2bacc69c6ab3050b4f6d4a87adaf711ce3 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 11 Mar 2018 22:23:26 +0200
-Subject: [PATCH 1/8] Initial PRU port
+Subject: [PATCH 1/3] Initial PRU port
 
 Hi,
 
 I would like to contribute newlib port for the TI PRU I/O processor [1] [2].
 
-Binutils port has already been merged. I've sent patches for gcc.
+The is the third version of the patch [3], [4].
+
+Binutils and GCC ports have already been merged.
 
 The following files need to be regenerated. Let me know if I should post a separate patch for them:
  configure
@@ -28,87 +30,48 @@ Dimitar
 
 [1] http://processors.wiki.ti.com/index.php/PRU-ICSS
 [2] http://beagleboard.org/pru
+[3] https://sourceware.org/ml/newlib/2018/msg00392.html
+[4] https://sourceware.org/ml/newlib/2019/msg00501.html
 
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
- configure.ac                                      |   4 +
- libgloss/configure.in                             |   2 +
- libgloss/pru/Makefile.in                          | 147 ++++
- libgloss/pru/close.c                              |  24 +
- libgloss/pru/configure.in                         |  66 ++
- libgloss/pru/crt0.S                               |  84 +++
- libgloss/pru/device-specs/am335x.pru0             |   5 +
- libgloss/pru/device-specs/am335x.pru1             |   5 +
- libgloss/pru/device-specs/am437x.icss0.pru0       |   5 +
- libgloss/pru/device-specs/am437x.icss0.pru1       |   5 +
- libgloss/pru/device-specs/am437x.icss1.pru0       |   5 +
- libgloss/pru/device-specs/am437x.icss1.pru1       |   5 +
- libgloss/pru/device-specs/sim                     |   5 +
- libgloss/pru/do_global_dtors.c                    |  40 ++
- libgloss/pru/fstat.c                              |  28 +
- libgloss/pru/getpid.c                             |  24 +
- libgloss/pru/gettimeofday.c                       |  31 +
- libgloss/pru/inbyte.c                             |  38 ++
- libgloss/pru/include/pru/am335x.h                 | 772 ++++++++++++++++++++++
- libgloss/pru/include/pru/io.h                     | 124 ++++
- libgloss/pru/isatty.c                             |  26 +
- libgloss/pru/kill.c                               |  28 +
- libgloss/pru/ldscripts/gen-ld-scripts.sh          |  61 ++
- libgloss/pru/ldscripts/pruelf-am335x.pru0.x       | 200 ++++++
- libgloss/pru/ldscripts/pruelf-am335x.pru1.x       | 200 ++++++
- libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x | 200 ++++++
- libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x | 200 ++++++
- libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x | 200 ++++++
- libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x | 200 ++++++
- libgloss/pru/ldscripts/pruelf-sim.x               | 200 ++++++
- libgloss/pru/lseek.c                              |  31 +
- libgloss/pru/open.c                               |  30 +
- libgloss/pru/outbyte.c                            |  24 +
- libgloss/pru/print.c                              |  25 +
- libgloss/pru/putnum.c                             |  42 ++
- libgloss/pru/raise.c                              |  24 +
- libgloss/pru/sbrk.c                               |  46 ++
- libgloss/pru/stat.c                               |  31 +
- libgloss/pru/syscalls.S                           |  32 +
- libgloss/pru/unlink.c                             |  30 +
- newlib/configure.host                             |  14 +-
- newlib/libc/include/machine/ieeefp.h              |   4 +
- newlib/libc/include/machine/setjmp.h              |   5 +
- newlib/libc/machine/configure.in                  |   1 +
- newlib/libc/machine/pru/Makefile.am               |  16 +
- newlib/libc/machine/pru/configure.in              |  14 +
- newlib/libc/machine/pru/setjmp.s                  |  46 ++
- 47 files changed, 3348 insertions(+), 1 deletion(-)
+ configure.ac                             |   4 +
+ libgloss/configure.in                    |   3 +
+ libgloss/pru/Makefile.in                 | 155 ++++++++++++++++++
+ libgloss/pru/configure.in                |  66 ++++++++
+ libgloss/pru/crt0.S                      |  97 +++++++++++
+ libgloss/pru/device-specs/sim            |   5 +
+ libgloss/pru/do_global_dtors.c           |  53 ++++++
+ libgloss/pru/gettimeofday.c              |  31 ++++
+ libgloss/pru/inbyte.c                    |  51 ++++++
+ libgloss/pru/isatty.c                    |  26 +++
+ libgloss/pru/ldscripts/gen-ld-scripts.sh |  80 +++++++++
+ libgloss/pru/ldscripts/pruelf-sim.x      | 200 +++++++++++++++++++++++
+ libgloss/pru/outbyte.c                   |  37 +++++
+ libgloss/pru/print.c                     |  25 +++
+ libgloss/pru/putnum.c                    |  42 +++++
+ libgloss/pru/raise.c                     |  24 +++
+ libgloss/pru/sbrk.c                      |  46 ++++++
+ libgloss/pru/stat.c                      |  31 ++++
+ libgloss/pru/syscalls.S                  |  78 +++++++++
+ newlib/configure.host                    |  14 +-
+ newlib/libc/include/machine/ieeefp.h     |   4 +
+ newlib/libc/include/machine/setjmp.h     |   5 +
+ newlib/libc/machine/configure.in         |   1 +
+ newlib/libc/machine/pru/Makefile.am      |  16 ++
+ newlib/libc/machine/pru/configure.in     |  14 ++
+ newlib/libc/machine/pru/setjmp.s         |  45 +++++
+ 26 files changed, 1152 insertions(+), 1 deletion(-)
  create mode 100644 libgloss/pru/Makefile.in
- create mode 100644 libgloss/pru/close.c
  create mode 100644 libgloss/pru/configure.in
  create mode 100644 libgloss/pru/crt0.S
- create mode 100644 libgloss/pru/device-specs/am335x.pru0
- create mode 100644 libgloss/pru/device-specs/am335x.pru1
- create mode 100644 libgloss/pru/device-specs/am437x.icss0.pru0
- create mode 100644 libgloss/pru/device-specs/am437x.icss0.pru1
- create mode 100644 libgloss/pru/device-specs/am437x.icss1.pru0
- create mode 100644 libgloss/pru/device-specs/am437x.icss1.pru1
  create mode 100644 libgloss/pru/device-specs/sim
  create mode 100644 libgloss/pru/do_global_dtors.c
- create mode 100644 libgloss/pru/fstat.c
- create mode 100644 libgloss/pru/getpid.c
  create mode 100644 libgloss/pru/gettimeofday.c
  create mode 100644 libgloss/pru/inbyte.c
- create mode 100644 libgloss/pru/include/pru/am335x.h
- create mode 100644 libgloss/pru/include/pru/io.h
  create mode 100644 libgloss/pru/isatty.c
- create mode 100644 libgloss/pru/kill.c
  create mode 100755 libgloss/pru/ldscripts/gen-ld-scripts.sh
- create mode 100644 libgloss/pru/ldscripts/pruelf-am335x.pru0.x
- create mode 100644 libgloss/pru/ldscripts/pruelf-am335x.pru1.x
- create mode 100644 libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
- create mode 100644 libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
- create mode 100644 libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
- create mode 100644 libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
  create mode 100644 libgloss/pru/ldscripts/pruelf-sim.x
- create mode 100644 libgloss/pru/lseek.c
- create mode 100644 libgloss/pru/open.c
  create mode 100644 libgloss/pru/outbyte.c
  create mode 100644 libgloss/pru/print.c
  create mode 100644 libgloss/pru/putnum.c
@@ -116,7 +79,6 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  create mode 100644 libgloss/pru/sbrk.c
  create mode 100644 libgloss/pru/stat.c
  create mode 100644 libgloss/pru/syscalls.S
- create mode 100644 libgloss/pru/unlink.c
  create mode 100644 newlib/libc/machine/pru/Makefile.am
  create mode 100644 newlib/libc/machine/pru/configure.in
  create mode 100644 newlib/libc/machine/pru/setjmp.s
@@ -137,35 +99,49 @@ index cf856e567..28e83a73d 100644
      # libssp uses a misaligned load to trigger a fault, but the RL78
      # doesn't fault for those - instead, it gives a build-time error
 diff --git a/libgloss/configure.in b/libgloss/configure.in
-index 41843eed1..9d2e690d5 100644
+index 41843eed1..a681f233f 100644
 --- a/libgloss/configure.in
 +++ b/libgloss/configure.in
-@@ -175,6 +175,8 @@ case "${target}" in
- 	;;
+@@ -176,6 +176,9 @@ case "${target}" in
    or1k-*-* | or1knd-*-* )
  	AC_CONFIG_SUBDIRS([or1k])
+ 	;;
 +  pru-*-*)
 +	AC_CONFIG_SUBDIRS([pru])
- 	;;
++	;;
    nios2-*-*)
  	AC_CONFIG_SUBDIRS([nios2])
+ 	;;
 diff --git a/libgloss/pru/Makefile.in b/libgloss/pru/Makefile.in
 new file mode 100644
-index 000000000..4baa5c387
+index 000000000..99e5a3e77
 --- /dev/null
 +++ b/libgloss/pru/Makefile.in
-@@ -0,0 +1,147 @@
-+# Copyright (c) 2014-2018 Dimitar Dimitrov <dimitar@dinux.eu>
+@@ -0,0 +1,155 @@
++# SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 +#
-+# The authors hereby grant permission to use, copy, modify, distribute,
-+# and license this software and its documentation for any purpose, provided
-+# that existing copyright notices are retained in all copies and that this
-+# notice is included verbatim in any distributions. No written agreement,
-+# license, or royalty fee is required for any of the authorized uses.
-+# Modifications to this software may be copyrighted by their authors
-+# and need not follow the licensing terms described here, provided that
-+# the new terms are clearly indicated on the first page of each file where
-+# they apply.
++# Copyright 2018-2019 Dimitar Dimitrov <dimitar@dinux.eu>
++# All rights reserved.
++#
++# Redistribution and use in source and binary forms, with or without
++# modification, are permitted provided that the following conditions
++# are met:
++# 1. Redistributions of source code must retain the above copyright
++#    notice, this list of conditions and the following disclaimer.
++# 2. Redistributions in binary form must reproduce the above copyright
++#    notice, this list of conditions and the following disclaimer in the
++#    documentation and/or other materials provided with the distribution.
++#
++# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++# IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++# NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 +
 +VPATH = @srcdir@ @srcdir@/..
 +
@@ -213,9 +189,9 @@ index 000000000..4baa5c387
 +
 +# object files needed
 +OBJS = \
-+	close.o do_global_dtors.o fstat.o getpid.o gettimeofday.o \
-+	isatty.o kill.o lseek.o open.o putnum.o raise.o \
-+	inbyte.o outbyte.o sbrk.o stat.o syscalls.o unlink.o \
++	do_global_dtors.o gettimeofday.o \
++	isatty.o putnum.o raise.o \
++	inbyte.o outbyte.o sbrk.o stat.o syscalls.o \
 +	do_global_dtors.o
 +
 +# Object files specific to particular targets.
@@ -282,11 +258,6 @@ index 000000000..4baa5c387
 +	  b=`basename $$s`; \
 +	  ${INSTALL_DATA} $$s ${DESTDIR}${tooldir}/lib${MULTISUBDIR}/$$b ;\
 +	done
-+	${mkinstalldirs} ${DESTDIR}${tooldir}/include/pru; \
-+	for i in ${srcdir}/include/pru/*.h; do \
-+	  b=`basename $$i`; \
-+	  $(INSTALL_DATA) $$i $(DESTDIR)$(tooldir)/include/pru/$$b ;\
-+	done
 +	${mkinstalldirs} ${DESTDIR}${tooldir}/lib${MULTISUBDIR}/device-specs; \
 +	for s in ${srcdir}/device-specs/*; do \
 +	  b=`basename $$s`; \
@@ -302,36 +273,6 @@ index 000000000..4baa5c387
 +
 +config.status: $(srcdir)/configure
 +	$(SHELL) config.status --recheck
-diff --git a/libgloss/pru/close.c b/libgloss/pru/close.c
-new file mode 100644
-index 000000000..c1a14fbcb
---- /dev/null
-+++ b/libgloss/pru/close.c
-@@ -0,0 +1,24 @@
-+/* close.c -- close a file descriptor.
-+ *
-+ * Copyright (c) 1995, 1999 Cygnus Support
-+ *
-+ * The authors hereby grant permission to use, copy, modify, distribute,
-+ * and license this software and its documentation for any purpose, provided
-+ * that existing copyright notices are retained in all copies and that this
-+ * notice is included verbatim in any distributions. No written agreement,
-+ * license, or royalty fee is required for any of the authorized uses.
-+ * Modifications to this software may be copyrighted by their authors
-+ * and need not follow the licensing terms described here, provided that
-+ * the new terms are clearly indicated on the first page of each file where
-+ * they apply.
-+ */
-+#include "glue.h"
-+
-+/*
-+ * close -- We don't need to do anything, but pretend we did.
-+ */
-+int
-+_close (int fd)
-+{
-+  return (0);
-+}
 diff --git a/libgloss/pru/configure.in b/libgloss/pru/configure.in
 new file mode 100644
 index 000000000..2a4c946e8
@@ -406,23 +347,36 @@ index 000000000..2a4c946e8
 +AC_OUTPUT
 diff --git a/libgloss/pru/crt0.S b/libgloss/pru/crt0.S
 new file mode 100644
-index 000000000..dc4def820
+index 000000000..b3f0d53a9
 --- /dev/null
 +++ b/libgloss/pru/crt0.S
-@@ -0,0 +1,84 @@
-+/* crt0.S -- PRU startup code
+@@ -0,0 +1,97 @@
++/* SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 + *
-+ * Copyright (c) 2014-2018 Dimitar Dimitrov <dimitar@dinux.eu>
++ * crt0.S -- PRU startup code
 + *
-+ * The authors hereby grant permission to use, copy, modify, distribute,
-+ * and license this software and its documentation for any purpose, provided
-+ * that existing copyright notices are retained in all copies and that this
-+ * notice is included verbatim in any distributions. No written agreement,
-+ * license, or royalty fee is required for any of the authorized uses.
-+ * Modifications to this software may be copyrighted by their authors
-+ * and need not follow the licensing terms described here, provided that
-+ * the new terms are clearly indicated on the first page of each file where
-+ * they apply.
++ * Copyright (c) 2018-2019 Dimitar Dimitrov <dimitar@dinux.eu>
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
 +#include "newlib.h"
 +
@@ -449,7 +403,7 @@ index 000000000..dc4def820
 +	call	atexit
 +
 +	/* Call constructors. Use non-call-clobbered registers. */
-+	ldi	r5, __init_array_begin
++	ldi	r5, __init_array_start
 +	ldi	r6, __init_array_end
 +ctors_loop:
 +	qbeq	ctors_done, r5, r6
@@ -494,72 +448,6 @@ index 000000000..dc4def820
 +	.weak __dso_handle
 +__dso_handle:
 +	.long	0
-diff --git a/libgloss/pru/device-specs/am335x.pru0 b/libgloss/pru/device-specs/am335x.pru0
-new file mode 100644
-index 000000000..0594be488
---- /dev/null
-+++ b/libgloss/pru/device-specs/am335x.pru0
-@@ -0,0 +1,5 @@
-+*cpp_device:
-+-D__AM335X_PRU0__ -D__AM335X_
-+
-+*link_device:
-+%{!r:-Tpruelf-am335x.pru0.x}
-diff --git a/libgloss/pru/device-specs/am335x.pru1 b/libgloss/pru/device-specs/am335x.pru1
-new file mode 100644
-index 000000000..d5cdb34fd
---- /dev/null
-+++ b/libgloss/pru/device-specs/am335x.pru1
-@@ -0,0 +1,5 @@
-+*cpp_device:
-+-D__AM335X_PRU1__ -D__AM335X_
-+
-+*link_device:
-+%{!r:-Tpruelf-am335x.pru1.x}
-diff --git a/libgloss/pru/device-specs/am437x.icss0.pru0 b/libgloss/pru/device-specs/am437x.icss0.pru0
-new file mode 100644
-index 000000000..67f244372
---- /dev/null
-+++ b/libgloss/pru/device-specs/am437x.icss0.pru0
-@@ -0,0 +1,5 @@
-+*cpp_device:
-+-D__AM437X_ICSS0_PRU0__ -D__AM437X_ICSS0__ -D__AM437X__
-+
-+*link_device:
-+%{!r:-Tpruelf-am437x.icss0.pru0.x}
-diff --git a/libgloss/pru/device-specs/am437x.icss0.pru1 b/libgloss/pru/device-specs/am437x.icss0.pru1
-new file mode 100644
-index 000000000..5ff978c7e
---- /dev/null
-+++ b/libgloss/pru/device-specs/am437x.icss0.pru1
-@@ -0,0 +1,5 @@
-+*cpp_device:
-+-D__AM437X_ICSS0_PRU1__ -D__AM437X_ICSS0__ -D__AM437X__
-+
-+*link_device:
-+%{!r:-Tpruelf-am437x.icss0.pru1.x}
-diff --git a/libgloss/pru/device-specs/am437x.icss1.pru0 b/libgloss/pru/device-specs/am437x.icss1.pru0
-new file mode 100644
-index 000000000..eb0f7f450
---- /dev/null
-+++ b/libgloss/pru/device-specs/am437x.icss1.pru0
-@@ -0,0 +1,5 @@
-+*cpp_device:
-+-D__AM437X_ICSS1_PRU0__ -D__AM437X_ICSS1__ -D__AM437X__
-+
-+*link_device:
-+%{!r:-Tpruelf-am437x.icss1.pru0.x}
-diff --git a/libgloss/pru/device-specs/am437x.icss1.pru1 b/libgloss/pru/device-specs/am437x.icss1.pru1
-new file mode 100644
-index 000000000..692f8f689
---- /dev/null
-+++ b/libgloss/pru/device-specs/am437x.icss1.pru1
-@@ -0,0 +1,5 @@
-+*cpp_device:
-+-D__AM437X_ICSS1_PRU1__ -D__AM437X_ICSS1__ -D__AM437X__
-+
-+*link_device:
-+%{!r:-Tpruelf-am437x.icss1.pru1.x}
 diff --git a/libgloss/pru/device-specs/sim b/libgloss/pru/device-specs/sim
 new file mode 100644
 index 000000000..50d4689e0
@@ -573,29 +461,42 @@ index 000000000..50d4689e0
 +%{!r:-Tpruelf-sim.x}
 diff --git a/libgloss/pru/do_global_dtors.c b/libgloss/pru/do_global_dtors.c
 new file mode 100644
-index 000000000..4d1621147
+index 000000000..149c631f7
 --- /dev/null
 +++ b/libgloss/pru/do_global_dtors.c
-@@ -0,0 +1,40 @@
-+/* do_global_dtors - invoke global destructors
+@@ -0,0 +1,53 @@
++/* SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 + *
-+ * Copyright (c) 2015-2018 Dimitar Dimitrov <dimitar@dinux.eu>
++ * do_global_dtors - invoke global destructors
 + *
-+ * The authors hereby grant permission to use, copy, modify, distribute,
-+ * and license this software and its documentation for any purpose, provided
-+ * that existing copyright notices are retained in all copies and that this
-+ * notice is included verbatim in any distributions. No written agreement,
-+ * license, or royalty fee is required for any of the authorized uses.
-+ * Modifications to this software may be copyrighted by their authors
-+ * and need not follow the licensing terms described here, provided that
-+ * the new terms are clearly indicated on the first page of each file where
-+ * they apply.
++ * Copyright (c) 2018-2019 Dimitar Dimitrov <dimitar@dinux.eu>
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
 +#include <stdint.h>
 +#include <_ansi.h>
 +#include "syscall.h"
 +
-+extern void *__fini_array_begin;
++extern void *__fini_array_start;
 +extern void *__fini_array_end;
 +
 +/*
@@ -606,7 +507,7 @@ index 000000000..4d1621147
 +{
 +    /* ABI dictates pointers in init/fini arrays are 16-bit.  */
 +    const uint16_t *end = (uint16_t *)&__fini_array_end;
-+    const uint16_t *begin = (uint16_t *)&__fini_array_begin;
++    const uint16_t *begin = (uint16_t *)&__fini_array_start;
 +    const uint16_t *p;
 +    void (**dtor) (void);
 +
@@ -616,70 +517,6 @@ index 000000000..4d1621147
 +	dtor = (void *)p;
 +	(*dtor) ();
 +    }
-+}
-diff --git a/libgloss/pru/fstat.c b/libgloss/pru/fstat.c
-new file mode 100644
-index 000000000..7e562c3f6
---- /dev/null
-+++ b/libgloss/pru/fstat.c
-@@ -0,0 +1,28 @@
-+/* fstat.c -- get status of a file.
-+ *
-+ * Copyright (c) 1995, 1999 Cygnus Support
-+ *
-+ * The authors hereby grant permission to use, copy, modify, distribute,
-+ * and license this software and its documentation for any purpose, provided
-+ * that existing copyright notices are retained in all copies and that this
-+ * notice is included verbatim in any distributions. No written agreement,
-+ * license, or royalty fee is required for any of the authorized uses.
-+ * Modifications to this software may be copyrighted by their authors
-+ * and need not follow the licensing terms described here, provided that
-+ * the new terms are clearly indicated on the first page of each file where
-+ * they apply.
-+ */
-+#include <sys/stat.h>
-+#include "glue.h"
-+
-+/*
-+ * fstat -- Since we have no file system, we just return an error.
-+ */
-+int
-+_fstat (int fd, struct stat *buf)
-+{
-+  buf->st_mode = S_IFCHR;	/* Always pretend to be a tty */
-+  buf->st_blksize = 0;
-+
-+  return (0);
-+}
-diff --git a/libgloss/pru/getpid.c b/libgloss/pru/getpid.c
-new file mode 100644
-index 000000000..cc9e85749
---- /dev/null
-+++ b/libgloss/pru/getpid.c
-@@ -0,0 +1,24 @@
-+/* getpid.c -- get the current process id.
-+ *
-+ * Copyright (c) 1995, 1999 Cygnus Support
-+ *
-+ * The authors hereby grant permission to use, copy, modify, distribute,
-+ * and license this software and its documentation for any purpose, provided
-+ * that existing copyright notices are retained in all copies and that this
-+ * notice is included verbatim in any distributions. No written agreement,
-+ * license, or royalty fee is required for any of the authorized uses.
-+ * Modifications to this software may be copyrighted by their authors
-+ * and need not follow the licensing terms described here, provided that
-+ * the new terms are clearly indicated on the first page of each file where
-+ * they apply.
-+ */
-+#include "glue.h"
-+
-+/*
-+ * getpid -- only one process, so just return 1.
-+ */
-+int
-+_getpid (void)
-+{
-+  return __MYPID;
 +}
 diff --git a/libgloss/pru/gettimeofday.c b/libgloss/pru/gettimeofday.c
 new file mode 100644
@@ -720,23 +557,36 @@ index 000000000..b4b7cb078
 +}
 diff --git a/libgloss/pru/inbyte.c b/libgloss/pru/inbyte.c
 new file mode 100644
-index 000000000..2ea885216
+index 000000000..36eb363f4
 --- /dev/null
 +++ b/libgloss/pru/inbyte.c
-@@ -0,0 +1,38 @@
-+/* inbyte.c -- inbyte function for remoteproc
+@@ -0,0 +1,51 @@
++/* SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 + *
-+ * Copyright (c) 2014-2018 Dimitar Dimitrov <dimitar@dinux.eu>
++ * inbyte.c -- inbyte function for remoteproc
 + *
-+ * The authors hereby grant permission to use, copy, modify, distribute,
-+ * and license this software and its documentation for any purpose, provided
-+ * that existing copyright notices are retained in all copies and that this
-+ * notice is included verbatim in any distributions. No written agreement,
-+ * license, or royalty fee is required for any of the authorized uses.
-+ * Modifications to this software may be copyrighted by their authors
-+ * and need not follow the licensing terms described here, provided that
-+ * the new terms are clearly indicated on the first page of each file where
-+ * they apply.
++ * Copyright (c) 2018-2019 Dimitar Dimitrov <dimitar@dinux.eu>
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
 +#include <errno.h>
 +#include <_ansi.h>
@@ -762,922 +612,14 @@ index 000000000..2ea885216
 +    return 1;
 +}
 +
-diff --git a/libgloss/pru/include/pru/am335x.h b/libgloss/pru/include/pru/am335x.h
-new file mode 100644
-index 000000000..a594f359e
---- /dev/null
-+++ b/libgloss/pru/include/pru/am335x.h
-@@ -0,0 +1,772 @@
-+/* pru/am335x.h -- PRU I/O registers definitions for PRU inside AM335x SoCs
-+
-+   Copyright (c) 2015-2018 Dimitar Dimitrov <dimitar@dinux.eu>
-+   All rights reserved.
-+
-+   Redistribution and use in source and binary forms, with or without
-+   modification, are permitted provided that the following condition
-+   is met:
-+
-+   1. Redistributions of source code must retain the above copyright
-+      notice, this list of conditions and the following disclaimer.
-+
-+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+   FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+   COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-+   INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-+   (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-+   SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-+   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-+   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-+   OF THE POSSIBILITY OF SUCH DAMAGE.
-+   */
-+
-+#ifndef __PRU_AM335X_H__
-+#define __PRU_AM335X_H__
-+
-+
-+/* Local memory map (TRM section 4.3.2.1) */
-+#define __LOCAL_DATA_RAM_BASE		0x00000000
-+#define __PEER_DATA_RAM_BASE		0x00002000
-+#define __SHARED_DATA_RAM_BASE		0x00010000
-+#define __INTC_BASE			0x00020000
-+#define __PRU0_CTRL_REGS_BASE		0x00022000
-+#define __PRU1_CTRL_REGS_BASE		0x00024000
-+#define __CFG_BASE			0x00026000
-+#define __UART0_BASE			0x00028000
-+#define __IEP_BASE			0x0002E000
-+#define __ECAP0_BASE			0x00030000
-+#define __MII_RT_CFG_BASE		0x00032000
-+#define __MII_MDIO_BASE			0x00034000
-+#define __SYS_OCP_HP0_BASE		0x00080000
-+
-+/* ====================== CTABLE base addresses ====================== */
-+#pragma ctable_entry 0 0x00020000
-+#pragma ctable_entry 1 0x48040000
-+#pragma ctable_entry 2 0x4802a000
-+#pragma ctable_entry 3 0x00030000
-+#pragma ctable_entry 4 0x00026000
-+#pragma ctable_entry 5 0x48060000
-+#pragma ctable_entry 6 0x48030000
-+#pragma ctable_entry 7 0x00028000
-+#pragma ctable_entry 8 0x46000000
-+#pragma ctable_entry 9 0x4a100000
-+#pragma ctable_entry 10 0x48318000
-+#pragma ctable_entry 11 0x48022000
-+#pragma ctable_entry 12 0x48024000
-+#pragma ctable_entry 13 0x48318000
-+#pragma ctable_entry 14 0x481cc000
-+#pragma ctable_entry 15 0x481d0000
-+#pragma ctable_entry 16 0x481a0000
-+#pragma ctable_entry 17 0x4819c000
-+#pragma ctable_entry 18 0x48300000
-+#pragma ctable_entry 19 0x48302000
-+#pragma ctable_entry 20 0x48304000
-+#pragma ctable_entry 21 0x00032400
-+#pragma ctable_entry 22 0x480c8000
-+#pragma ctable_entry 23 0x480ca000
-+/* 24-31 are user-defined base addresses. */
-+
-+/* ====================== PRU CTRL module ====================== */
-+#define PRU_CTRL_CONTROL_OFFS		0x00
-+#define PRU_CTRL_STATUS_OFFS		0x04
-+#define PRU_CTRL_WAKEUP_EN_OFFS		0x08
-+#define PRU_CTRL_CYCLE_OFFS		0x0c
-+#define PRU_CTRL_STALL_OFFS		0x10
-+#define PRU_CTRL_CTBIR0_OFFS		0x20
-+#define PRU_CTRL_CTBIR1_OFFS		0x24
-+#define PRU_CTRL_CPPR0_OFFS		0x28
-+#define PRU_CTRL_CPPR1_OFFS		0x2c
-+
-+struct __PRU_CONTROL_S {
-+	const volatile unsigned int SOFT_RST_N		: 1;
-+	volatile unsigned int ENABLE			: 1;
-+	volatile unsigned int SLEEPING			: 1;
-+	volatile unsigned int COUNTER_ENABLE		: 1;
-+	volatile unsigned int __reserved_1		: 4;
-+	volatile unsigned int SINGLE_STEP		: 1;
-+	volatile unsigned int __reserved_2		: 5;
-+	const volatile unsigned int __reserved_3	: 1;
-+	const volatile unsigned int RUNSTATE		: 1;
-+	volatile unsigned int PCOUNTER_RST_VAL		: 16;
-+};
-+
-+struct __PRU_STATUS_S {
-+	volatile unsigned int PCOUNTER			: 16;
-+	volatile unsigned int __reserved_1		: 16;
-+};
-+
-+struct __PRU_CTBIR0_S {
-+	volatile unsigned int C24_BLK_INDEX		: 8;
-+	volatile unsigned int __reserved_1		: 8;
-+	volatile unsigned int C25_BLK_INDEX		: 8;
-+	volatile unsigned int __reserved_2		: 8;
-+};
-+
-+struct __PRU_CTBIR1_S {
-+	volatile unsigned int C26_BLK_INDEX		: 8;
-+	volatile unsigned int __reserved_1		: 8;
-+	volatile unsigned int C27_BLK_INDEX		: 8;
-+	volatile unsigned int __reserved_2		: 8;
-+};
-+
-+struct __PRU_CTPPR0_S {
-+	volatile unsigned int C28_POINTER		: 16;
-+	volatile unsigned int C29_POINTER		: 16;
-+};
-+
-+struct __PRU_CTPPR1_S {
-+	volatile unsigned int C30_POINTER		: 16;
-+	volatile unsigned int C31_POINTER		: 16;
-+};
-+
-+struct __PRU_CTRL {
-+	union {
-+		volatile unsigned int CONTROL;
-+		struct __PRU_CONTROL_S CONTROL_bit;
-+	};
-+	union {
-+		volatile unsigned int STATUS;
-+		struct __PRU_STATUS_S STATUS_bit;
-+	};
-+	volatile unsigned int WAKEUP_EN;
-+	volatile unsigned int CYCLE;
-+	volatile unsigned int STALL;
-+	volatile unsigned int __gap1[3];
-+	union {
-+		volatile unsigned int CTBIR0;
-+		struct __PRU_CTBIR0_S CTBIR0_bit;
-+	};
-+	union {
-+		volatile unsigned int CTBIR1;
-+		struct __PRU_CTBIR1_S CTBIR1_bit;
-+	};
-+	union {
-+		volatile unsigned int CTPPR0;
-+		struct __PRU_CTPPR0_S CTPPR0_bit;
-+	};
-+	union {
-+		volatile unsigned int CTPPR1;
-+		struct __PRU_CTPPR1_S CTPPR1_bit;
-+	};
-+};
-+
-+#define PRU0_CTRL	(*((struct __PRU_CTRL *)__PRU0_CTRL_REGS_BASE))
-+#define PRU1_CTRL	(*((struct __PRU_CTRL *)__PRU1_CTRL_REGS_BASE))
-+
-+#if defined(__AM335X_PRU0__)
-+  #define PRU_CTRL	PRU0_CTRL
-+#elif defined(__AM335X_PRU1__)
-+  #define PRU_CTRL	PRU1_CTRL
-+#else
-+  #error "Unrecognized AM335x PRU core - check your -mmcu option"
-+#endif
-+
-+
-+
-+/* ====================== PRU INTC module ====================== */
-+#define PRU_INTC_REVID_OFFS		0x00
-+#define PRU_INTC_CR_OFFS		0x04
-+#define PRU_INTC_GER_OFFS		0x10
-+#define PRU_INTC_GNLR_OFFS		0x1C
-+#define PRU_INTC_SISR_OFFS		0x20
-+#define PRU_INTC_SICR_OFFS		0x24
-+#define PRU_INTC_EISR_OFFS		0x28
-+#define PRU_INTC_EICR_OFFS		0x2c
-+#define PRU_INTC_HIEISR_OFFS		0x34
-+#define PRU_INTC_HIDISR_OFFS		0x38
-+#define PRU_INTC_GPIR_OFFS		0x80
-+#define PRU_INTC_SRSR0_OFFS		0x200
-+#define PRU_INTC_SRSR1_OFFS		0x204
-+#define PRU_INTC_SECR0_OFFS		0x280
-+#define PRU_INTC_SECR1_OFFS		0x284
-+#define PRU_INTC_ESR0_OFFS		0x300
-+#define PRU_INTC_ESR1_OFFS		0x304
-+#define PRU_INTC_ECR0_OFFS		0x380
-+#define PRU_INTC_ECR1_OFFS		0x384
-+#define PRU_INTC_CMR0_OFFS		0x400
-+#define PRU_INTC_CMR1_OFFS		0x404
-+#define PRU_INTC_CMR2_OFFS		0x408
-+#define PRU_INTC_CMR3_OFFS		0x40c
-+#define PRU_INTC_CMR4_OFFS		0x410
-+#define PRU_INTC_CMR5_OFFS		0x414
-+#define PRU_INTC_CMR6_OFFS		0x418
-+#define PRU_INTC_CMR7_OFFS		0x41c
-+#define PRU_INTC_CMR8_OFFS		0x420
-+#define PRU_INTC_CMR9_OFFS		0x424
-+#define PRU_INTC_CMR10_OFFS		0x428
-+#define PRU_INTC_CMR11_OFFS		0x42c
-+#define PRU_INTC_CMR12_OFFS		0x430
-+#define PRU_INTC_CMR13_OFFS		0x434
-+#define PRU_INTC_CMR14_OFFS		0x438
-+#define PRU_INTC_CMR15_OFFS		0x43c
-+#define PRU_INTC_HMR0_OFFS		0x800
-+#define PRU_INTC_HMR1_OFFS		0x804
-+#define PRU_INTC_HMR2_OFFS		0x808
-+#define PRU_INTC_HIPIR0_OFFS		0x900
-+#define PRU_INTC_HIPIR1_OFFS		0x904
-+#define PRU_INTC_HIPIR2_OFFS		0x908
-+#define PRU_INTC_HIPIR3_OFFS		0x90c
-+#define PRU_INTC_HIPIR4_OFFS		0x910
-+#define PRU_INTC_HIPIR5_OFFS		0x914
-+#define PRU_INTC_HIPIR6_OFFS		0x918
-+#define PRU_INTC_HIPIR7_OFFS		0x91c
-+#define PRU_INTC_HIPIR8_OFFS		0x920
-+#define PRU_INTC_HIPIR9_OFFS		0x924
-+#define PRU_INTC_SIPR0_OFFS		0xd00
-+#define PRU_INTC_SIPR1_OFFS		0xd04
-+#define PRU_INTC_SITR0_OFFS		0xd80
-+#define PRU_INTC_SITR1_OFFS		0xd84
-+#define PRU_INTC_HINLR0_OFFS		0x1100
-+#define PRU_INTC_HINLR1_OFFS		0x1104
-+#define PRU_INTC_HINLR2_OFFS		0x1108
-+#define PRU_INTC_HINLR3_OFFS		0x110c
-+#define PRU_INTC_HINLR4_OFFS		0x1110
-+#define PRU_INTC_HINLR5_OFFS		0x1114
-+#define PRU_INTC_HINLR6_OFFS		0x1118
-+#define PRU_INTC_HINLR7_OFFS		0x111c
-+#define PRU_INTC_HINLR8_OFFS		0x1120
-+#define PRU_INTC_HINLR9_OFFS		0x1124
-+#define PRU_INTC_HIER_OFFS		0x1500
-+
-+
-+struct __PRU_INTC_REVID_S {
-+	const volatile unsigned int REV_MINOR		: 6;
-+	const volatile unsigned int REV_CUSTOM		: 2;
-+	const volatile unsigned int REV_MAJOR		: 3;
-+	const volatile unsigned int REV_RTL		: 5;
-+	const volatile unsigned int REV_MODULE		: 12;
-+	const volatile unsigned int __reserved_1	: 2;
-+	const volatile unsigned int REV_SCHEME		: 2;
-+};
-+
-+
-+struct __PRU_INTC_CR_S {
-+	volatile unsigned int __reserved_1		: 2;
-+	volatile unsigned int NEST_MODE			: 2;
-+	volatile unsigned int __reserved_2		: 28;
-+};
-+
-+
-+struct __PRU_INTC_GER_S {
-+	volatile unsigned int ENABLE_HINT_ANY		: 1;
-+	volatile unsigned int __reserved_2		: 30;
-+};
-+
-+
-+struct __PRU_INTC_GNLR_S {
-+	volatile unsigned int GLB_NEST_LEVEL		: 9;
-+	volatile unsigned int __reserved_1		: 22;
-+	volatile unsigned int AUTO_OVERRIDE		: 1;
-+};
-+
-+
-+struct __PRU_INTC_SISR_S {
-+	volatile unsigned int STATUS_SET_INDEX		: 10;
-+	volatile unsigned int __reserved_1		: 22;
-+};
-+
-+
-+struct __PRU_INTC_SICR_S {
-+	volatile unsigned int STATUS_CLR_INDEX		: 10;
-+	volatile unsigned int __reserved_1		: 22;
-+};
-+
-+
-+struct __PRU_INTC_EISR_S {
-+	volatile unsigned int STATUS_SET_INDEX		: 10;
-+	volatile unsigned int __reserved_1		: 22;
-+};
-+
-+
-+struct __PRU_INTC_EICR_S {
-+	volatile unsigned int STATUS_CLR_INDEX		: 10;
-+	volatile unsigned int __reserved_1		: 22;
-+};
-+
-+
-+struct __PRU_INTC_HIEISR_S {
-+	volatile unsigned int HINT_ENABLE_SET_INDEX	: 10;
-+	volatile unsigned int __reserved_1		: 22;
-+};
-+
-+
-+struct __PRU_INTC_HIDISR_S {
-+	volatile unsigned int HINT_ENABLE_CLR_INDEX	: 10;
-+	volatile unsigned int __reserved_1		: 22;
-+};
-+
-+struct __PRU_INTC_GPIR_S {
-+	volatile unsigned int GLB_PRI_INTR		: 10;
-+	volatile unsigned int __reserved_1		: 21;
-+	volatile unsigned int GLB_NONE			: 1;
-+};
-+
-+
-+
-+struct __PRU_INTC_CMR_S {
-+	volatile unsigned int CH_MAP			: 4;
-+	volatile unsigned int __reserved_1		: 4;
-+} __attribute__((packed));
-+
-+
-+struct __PRU_INTC_HMR_S {
-+	volatile unsigned int HINT_MAP			: 4;
-+	volatile unsigned int __reserved_1		: 4;
-+} __attribute__((packed));
-+
-+
-+struct __PRU_INTC_HIPIR_S {
-+	volatile unsigned int PRI_HINT			: 10;
-+	volatile unsigned int __reserved_1		: 21;
-+	volatile unsigned int NONE_HINT			: 1;
-+};
-+
-+
-+struct __PRU_INTC_HINLR_S {
-+	volatile unsigned int AUTO_OVERRIDE		: 10;
-+	volatile unsigned int __reserved_1		: 21;
-+	volatile unsigned int NEST_HINT			: 1;
-+};
-+
-+struct __PRU_INTC_HIER_S {
-+	volatile unsigned int ENABLE_HINT		: 10;
-+	volatile unsigned int __reserved_1		: 22;
-+};
-+
-+struct __PRU_INTC {
-+	union {
-+		const volatile unsigned int REVID;
-+		struct __PRU_INTC_REVID_S REVID_bit;
-+	};
-+	union {
-+		volatile unsigned int CR;
-+		struct __PRU_INTC_CR_S CR_bit;
-+	};
-+	unsigned int __gap1[2];
-+	union {
-+		volatile unsigned int GER;
-+		struct __PRU_INTC_GER_S GER_bit;
-+	};
-+	unsigned int __gap2[2];
-+	union {
-+		volatile unsigned int GNLR;
-+		struct __PRU_INTC_GNLR_S GNLR_bit;
-+	};
-+	union {
-+		volatile unsigned int SISR;
-+		struct __PRU_INTC_SISR_S SISR_bit;
-+	};
-+	union {
-+		volatile unsigned int SICR;
-+		struct __PRU_INTC_SICR_S SICR_bit;
-+	};
-+	union {
-+		volatile unsigned int EISR;
-+		struct __PRU_INTC_EISR_S EISR_bit;
-+	};
-+	union {
-+		volatile unsigned int EICR;
-+		struct __PRU_INTC_EICR_S EICR_bit;
-+	};
-+	unsigned int __gap3[1];
-+	union {
-+		volatile unsigned int HIEISR;
-+		struct __PRU_INTC_HIEISR_S HIEISR_bit;
-+	};
-+	union {
-+		volatile unsigned int HIDISR;
-+		struct __PRU_INTC_HIEISR_S HIDISR_bit;
-+	};
-+	unsigned int __gap4[17];
-+	union {
-+		volatile unsigned int GPIR;
-+		struct __PRU_INTC_GPIR_S GPIR_bit;
-+	};
-+	unsigned int __gap5[95];
-+	volatile unsigned int SPSR0;
-+	volatile unsigned int SPSR1;
-+	unsigned int __gap6[30];
-+	volatile unsigned int SECR0;
-+	volatile unsigned int SECR1;
-+	unsigned int __gap7[30];
-+	volatile unsigned int ESR0;
-+	volatile unsigned int ESR1;
-+	unsigned int __gap8[30];
-+	volatile unsigned int ECR0;
-+	volatile unsigned int ECR1;
-+	unsigned int __gap9[30];
-+	union {
-+		volatile unsigned int CMR0;
-+		struct __PRU_INTC_CMR_S CMR0_bit;
-+	};
-+	union {
-+		volatile unsigned int CMR1;
-+		struct __PRU_INTC_CMR_S CMR1_bit;
-+	};
-+	union {
-+		volatile unsigned int CMR2;
-+		struct __PRU_INTC_CMR_S CMR2_bit;
-+	};
-+	union {
-+		volatile unsigned int CMR3;
-+		struct __PRU_INTC_CMR_S CMR3_bit;
-+	};
-+	union {
-+		volatile unsigned int CMR4;
-+		struct __PRU_INTC_CMR_S CMR4_bit;
-+	};
-+	union {
-+		volatile unsigned int CMR5;
-+		struct __PRU_INTC_CMR_S CMR5_bit;
-+	};
-+	union {
-+		volatile unsigned int CMR6;
-+		struct __PRU_INTC_CMR_S CMR6_bit;
-+	};
-+	union {
-+		volatile unsigned int CMR7;
-+		struct __PRU_INTC_CMR_S CMR7_bit;
-+	};
-+	union {
-+		volatile unsigned int CMR8;
-+		struct __PRU_INTC_CMR_S CMR8_bit;
-+	};
-+	union {
-+		volatile unsigned int CMR9;
-+		struct __PRU_INTC_CMR_S CMR9_bit;
-+	};
-+	union {
-+		volatile unsigned int CMR10;
-+		struct __PRU_INTC_CMR_S CMR10_bit;
-+	};
-+	union {
-+		volatile unsigned int CMR11;
-+		struct __PRU_INTC_CMR_S CMR11_bit;
-+	};
-+	union {
-+		volatile unsigned int CMR12;
-+		struct __PRU_INTC_CMR_S CMR12_bit;
-+	};
-+	union {
-+		volatile unsigned int CMR13;
-+		struct __PRU_INTC_CMR_S CMR13_bit;
-+	};
-+	union {
-+		volatile unsigned int CMR14;
-+		struct __PRU_INTC_CMR_S CMR14_bit;
-+	};
-+	union {
-+		volatile unsigned int CMR15;
-+		struct __PRU_INTC_CMR_S CMR15_bit;
-+	};
-+	unsigned int __gap10[240];
-+	union {
-+		volatile unsigned int HMR0;
-+		struct __PRU_INTC_HMR_S HMR0_bit;
-+	};
-+	union {
-+		volatile unsigned int HMR1;
-+		struct __PRU_INTC_HMR_S HMR1_bit;
-+	};
-+	union {
-+		volatile unsigned int HMR2;
-+		struct __PRU_INTC_HMR_S HMR2_bit;
-+	};
-+	unsigned int __gap11[61];
-+	union {
-+		volatile unsigned int HIPIR0;
-+		struct __PRU_INTC_HIPIR_S HIPIR0_bit;
-+	};
-+	union {
-+		volatile unsigned int HIPIR1;
-+		struct __PRU_INTC_HIPIR_S HIPIR1_bit;
-+	};
-+	union {
-+		volatile unsigned int HIPIR2;
-+		struct __PRU_INTC_HIPIR_S HIPIR2_bit;
-+	};
-+	union {
-+		volatile unsigned int HIPIR3;
-+		struct __PRU_INTC_HIPIR_S HIPIR3_bit;
-+	};
-+	union {
-+		volatile unsigned int HIPIR4;
-+		struct __PRU_INTC_HIPIR_S HIPIR4_bit;
-+	};
-+	union {
-+		volatile unsigned int HIPIR5;
-+		struct __PRU_INTC_HIPIR_S HIPIR5_bit;
-+	};
-+	union {
-+		volatile unsigned int HIPIR6;
-+		struct __PRU_INTC_HIPIR_S HIPIR6_bit;
-+	};
-+	union {
-+		volatile unsigned int HIPIR7;
-+		struct __PRU_INTC_HIPIR_S HIPIR7_bit;
-+	};
-+	union {
-+		volatile unsigned int HIPIR8;
-+		struct __PRU_INTC_HIPIR_S HIPIR8_bit;
-+	};
-+	union {
-+		volatile unsigned int HIPIR9;
-+		struct __PRU_INTC_HIPIR_S HIPIR9_bit;
-+	};
-+	unsigned int __gap12[246];
-+	volatile unsigned int SIPR0;
-+	volatile unsigned int SIPR1;
-+	unsigned int __gap13[30];
-+	volatile unsigned int SITR0;
-+	volatile unsigned int SITR1;
-+	unsigned int __gap14[222];
-+	union {
-+		volatile unsigned int HINLR0;
-+		struct __PRU_INTC_HINLR_S HINLR0_bit;
-+	};
-+	union {
-+		volatile unsigned int HINLR1;
-+		struct __PRU_INTC_HINLR_S HINLR1_bit;
-+	};
-+	union {
-+		volatile unsigned int HINLR2;
-+		struct __PRU_INTC_HINLR_S HINLR2_bit;
-+	};
-+	union {
-+		volatile unsigned int HINLR3;
-+		struct __PRU_INTC_HINLR_S HINLR3_bit;
-+	};
-+	union {
-+		volatile unsigned int HINLR4;
-+		struct __PRU_INTC_HINLR_S HINLR4_bit;
-+	};
-+	union {
-+		volatile unsigned int HINLR5;
-+		struct __PRU_INTC_HINLR_S HINLR5_bit;
-+	};
-+	union {
-+		volatile unsigned int HINLR6;
-+		struct __PRU_INTC_HINLR_S HINLR6_bit;
-+	};
-+	union {
-+		volatile unsigned int HINLR7;
-+		struct __PRU_INTC_HINLR_S HINLR7_bit;
-+	};
-+	union {
-+		volatile unsigned int HINLR8;
-+		struct __PRU_INTC_HINLR_S HINLR8_bit;
-+	};
-+	union {
-+		volatile unsigned int HINLR9;
-+		struct __PRU_INTC_HINLR_S HINLR9_bit;
-+	};
-+	unsigned int __gap15[246];
-+	union {
-+		volatile unsigned int HIER;
-+		struct __PRU_INTC_HIER_S HIER_bit;
-+	};
-+};
-+#define PRU_INTC	(*((struct __PRU_INTC *)__INTC_BASE))
-+
-+/* ====================== PRU UART module ====================== */
-+/* TODO */
-+
-+/* ====================== PRU eCAP module ====================== */
-+/* TODO */
-+
-+/* ====================== PRU CFG module ====================== */
-+#define PRU_CFG_REVID_OFFS		0x00
-+#define PRU_CFG_SYSCFG_OFFS		0x04
-+#define PRU_CFG_GPCFG0_OFFS		0x08
-+#define PRU_CFG_GPCFG1_OFFS		0x0c
-+#define PRU_CFG_CGR_OFFS		0x10
-+#define PRU_CFG_ISRP_OFFS		0x14
-+#define PRU_CFG_ISP_OFFS		0x18
-+#define PRU_CFG_IESP_OFFS		0x1c
-+#define PRU_CFG_IECP_OFFS		0x20
-+#define PRU_CFG_SCRP_OFFS		0x24
-+#define PRU_CFG_PMAO_OFFS		0x28
-+#define PRU_CFG_MII_RT_OFFS		0x2c
-+#define PRU_CFG_IEPCLK_OFFS		0x30
-+#define PRU_CFG_SPP_OFFS		0x34
-+#define PRU_CFG_PIN_MIX_OFFS		0x40
-+
-+struct __PRU_CFG_SYSCFG_S {
-+	volatile unsigned int IDLE_MODE			: 2;
-+	volatile unsigned int STANDBY_MODE		: 2;
-+	volatile unsigned int STANDBY_INIT		: 1;
-+	const volatile unsigned int SUB_MWAIT		: 1;
-+	volatile unsigned int __reserved_1		: 24;
-+};
-+
-+struct __PRU_CFG_GPCFG_S {
-+	volatile unsigned int GPI_MODE			: 2;
-+	volatile unsigned int GPI_CLK_MODE		: 1;
-+	volatile unsigned int GPI_DIV0			: 5;
-+	volatile unsigned int GPI_DIV1			: 5;
-+	volatile unsigned int GPI_SB			: 1;
-+	volatile unsigned int GPO_MODE			: 1;
-+	volatile unsigned int GPO_DIV0			: 5;
-+	volatile unsigned int GPO_DIV1			: 5;
-+	volatile unsigned int GPO_SH_SEL		: 1;
-+	volatile unsigned int __reserved_1		: 6;
-+};
-+
-+struct __PRU_CFG_CGR_S {
-+	volatile unsigned int PRU0_CLK_STOP_REQ		: 1;
-+	const volatile unsigned int PRU0_CLK_STOP_ACK	: 1;
-+	volatile unsigned int PRU0_CLK_EN		: 1;
-+	volatile unsigned int PRU1_CLK_STOP_REQ		: 1;
-+	const volatile unsigned int PRU1_CLK_STOP_ACK	: 1;
-+	volatile unsigned int PRU1_CLK_EN		: 1;
-+	volatile unsigned int INTC_CLK_STOP_REQ		: 1;
-+	const volatile unsigned int INTC_CLK_STOP_ACK	: 1;
-+	volatile unsigned int INTC_CLK_EN		: 1;
-+	volatile unsigned int UART_CLK_STOP_REQ		: 1;
-+	const volatile unsigned int UART_CLK_STOP_ACK	: 1;
-+	volatile unsigned int UART_CLK_EN		: 1;
-+	volatile unsigned int ECAP_CLK_STOP_REQ		: 1;
-+	const volatile unsigned int ECAP_CLK_STOP_ACK	: 1;
-+	volatile unsigned int ECAP_CLK_EN		: 1;
-+	volatile unsigned int IEP_CLK_STOP_REQ		: 1;
-+	const volatile unsigned int IEP_CLK_STOP_ACK	: 1;
-+	volatile unsigned int IEP_CLK_EN		: 1;
-+	volatile unsigned int __reserved_1		: 14;
-+};
-+
-+struct __PRU_CFG_ISPx_S {
-+	volatile unsigned int PRU0_IMEM_PE		: 4;
-+	volatile unsigned int PRU0_DMEM_PE		: 4;
-+	volatile unsigned int PRU1_IMEM_PE		: 4;
-+	volatile unsigned int PRU1_DMEM_PE		: 4;
-+	volatile unsigned int RAM_PE			: 4;
-+	volatile unsigned int __reserved_1		: 12;
-+};
-+
-+struct __PRU_CFG_SCRP_S {
-+	volatile unsigned int SCRP_1			: 2;
-+	volatile unsigned int SCRP_2			: 2;
-+	volatile unsigned int SCRP_3			: 2;
-+	volatile unsigned int SCRP_4			: 2;
-+	volatile unsigned int SCRP_5			: 1;
-+	volatile unsigned int SCRP_6			: 1;
-+	volatile unsigned int SCRP_7			: 1;
-+	volatile unsigned int SCRP_8			: 1;
-+	volatile unsigned int SCRP_9			: 1;
-+	volatile unsigned int SCRP_10			: 1;
-+	volatile unsigned int SCRP_11			: 1;
-+	volatile unsigned int SCRP_12			: 1;
-+	volatile unsigned int SCRP_13			: 1;
-+	volatile unsigned int SCRP_14			: 1;
-+	volatile unsigned int SCRP_15			: 1;
-+	volatile unsigned int SCRP_16			: 1;
-+	volatile unsigned int SCRP_17			: 1;
-+	volatile unsigned int SCRP_18			: 1;
-+	volatile unsigned int __reserved_1		: 10;
-+};
-+
-+struct __PRU_CFG_PMAO_S {
-+	volatile unsigned int PMAO_PRU0			: 1;
-+	volatile unsigned int PMAO_PRU1			: 1;
-+	volatile unsigned int __reserved_1		: 30;
-+};
-+
-+struct __PRU_CFG_MII_RT_S {
-+	volatile unsigned int MII_RT_EVENT_EN		: 1;
-+	volatile unsigned int __reserved_1		: 31;
-+};
-+
-+
-+struct __PRU_CFG_IEPCLK_S {
-+	volatile unsigned int OCP_EN			: 1;
-+	volatile unsigned int __reserved_1		: 31;
-+};
-+
-+struct __PRU_CFG_SPP_S {
-+	volatile unsigned int PRU1_PAD_HP_EN		: 1;
-+	volatile unsigned int XFR_SHIFT_EN		: 1;
-+	volatile unsigned int __reserved_1		: 30;
-+};
-+
-+
-+struct __PRU_CFG_PIN_MX_S {
-+	volatile unsigned int PIN_MUX_SEL		: 8;
-+	volatile unsigned int __reserved_1		: 24;
-+};
-+
-+struct __PRU_CFG {
-+	volatile unsigned int REVID;
-+	union {
-+		volatile unsigned int SYSCFG;
-+		struct __PRU_CFG_SYSCFG_S SYSCFG_bit;
-+	};
-+	union {
-+		volatile unsigned int GPCFG0;
-+		struct __PRU_CFG_GPCFG_S GPCFG0_bit;
-+#if defined(__AM335X_PRU0__)
-+		volatile unsigned int GPCFG;
-+		struct __PRU_CFG_GPCFG_S GPCFG_bit;
-+#endif
-+	};
-+	union {
-+		volatile unsigned int GPCFG1;
-+		struct __PRU_CFG_GPCFG_S GPCFG1_bit;
-+#if defined(__AM335X_PRU1__)
-+		volatile unsigned int GPCFG;
-+		struct __PRU_CFG_GPCFG_S GPCFG_bit;
-+#endif
-+	};
-+	union {
-+		volatile unsigned int CGR;
-+		struct __PRU_CFG_CGR_S CGR_bit;
-+	};
-+	union {
-+		volatile unsigned int ISRP;
-+		struct __PRU_CFG_ISPx_S ISRP_bit;
-+	};
-+	union {
-+		volatile unsigned int ISP;
-+		struct __PRU_CFG_ISPx_S ISP_bit;
-+	};
-+	union {
-+		volatile unsigned int IESP;
-+		struct __PRU_CFG_ISPx_S IESP_bit;
-+	};
-+	union {
-+		volatile unsigned int IECP;
-+		struct __PRU_CFG_ISPx_S IECP_bit;
-+	};
-+	union {
-+		volatile unsigned int SCRP;
-+		struct __PRU_CFG_SCRP_S SCRP_bit;
-+	};
-+	union {
-+		volatile unsigned int PMAO;
-+		struct __PRU_CFG_PMAO_S PMAO_bit;
-+	};
-+	union {
-+		volatile unsigned int MII_RT;
-+		struct __PRU_CFG_MII_RT_S MII_RT_bit;
-+	};
-+	union {
-+		volatile unsigned int IEPCLK;
-+		struct __PRU_CFG_IEPCLK_S IEPCLK_bit;
-+	};
-+	union {
-+		volatile unsigned int SPP;
-+		struct __PRU_CFG_SPP_S SPP_bit;
-+	};
-+	volatile unsigned int __gap1[2];
-+	union {
-+		volatile unsigned int PIN_MX;
-+		struct __PRU_CFG_PIN_MX_S PIN_MX_bit;
-+	};
-+};
-+#define PRU_CFG	(*((struct __PRU_CFG *)__CFG_BASE))
-+
-+
-+#endif
-diff --git a/libgloss/pru/include/pru/io.h b/libgloss/pru/include/pru/io.h
-new file mode 100644
-index 000000000..b8a70aa78
---- /dev/null
-+++ b/libgloss/pru/include/pru/io.h
-@@ -0,0 +1,124 @@
-+/* pru/io.h -- PRU I/O registers definitions
-+
-+   Copyright (c) 2015-2018 Dimitar Dimitrov <dimitar@dinux.eu>
-+   All rights reserved.
-+
-+   Redistribution and use in source and binary forms, with or without
-+   modification, are permitted provided that the following condition
-+   is met:
-+
-+   1. Redistributions of source code must retain the above copyright
-+      notice, this list of conditions and the following disclaimer.
-+
-+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
-+   FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
-+   COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-+   INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-+   (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-+   SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
-+   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
-+   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
-+   OF THE POSSIBILITY OF SUCH DAMAGE.
-+   */
-+
-+#ifndef __PRU_IO_H__
-+#define __PRU_IO_H__
-+
-+
-+static inline void write_r30(unsigned int val)
-+{
-+	asm volatile ("mov\tr30, %0" : : "r"(val));
-+}
-+
-+static inline unsigned int read_r30(void)
-+{
-+	unsigned int val;
-+	asm volatile ("mov\t%0, r30" : "=r"(val) :);
-+	return val;
-+}
-+
-+static inline void write_r31(unsigned int val)
-+{
-+	asm volatile ("mov\tr31, %0" : : "r"(val));
-+}
-+
-+static inline unsigned int read_r31(void)
-+{
-+	unsigned int val;
-+	asm volatile ("mov\t%0, r31" : "=r"(val) :);
-+	return val;
-+}
-+
-+#ifdef __cplusplus
-+
-+/*
-+ * Elegant accessors for C++ users. Use __R30 and __R31 as normal
-+ * LHS and RHS variables to respectively read and write to R30/R31.
-+ */
-+class __R30_type {
-+public:
-+	void operator= (unsigned int rhs) const {
-+		write_r30(rhs);
-+	}
-+	operator unsigned int() const {
-+		return read_r30();
-+	}
-+};
-+
-+class __R31_type {
-+public:
-+	void operator= (unsigned int rhs) const {
-+		write_r31(rhs);
-+	}
-+	operator unsigned int() const {
-+		return read_r31();
-+	}
-+};
-+
-+__R30_type __R30 __attribute__((weak));
-+__R31_type __R31 __attribute__((weak));
-+
-+#endif	/* __cplusplus */
-+
-+static inline void __halt(void)
-+{
-+	asm volatile ("halt" : : : "memory");
-+}
-+
-+#define PRU_R31_INTR_IN1_BIT		31
-+#define PRU_R31_INTR_IN1_MASK		(1u << 31)
-+#define PRU_R31_INTR_IN0_BIT		30
-+#define PRU_R31_INTR_IN0_MASK		(1u << 30)
-+
-+#define PRU_R31_STATUS_BIT		0
-+#define PRU_R31_STATUS_MASK		(0x3fffffffu << 0)
-+
-+#define PRU_R31_VEC_VALID_BIT		5
-+#define PRU_R31_VEC_VALID_MASK		(1u << 5)
-+#define PRU_R31_VEC_BIT			0
-+#define PRU_R31_VEC_MASK		(0xfu << 0)
-+
-+#define PRU_R25_ACC_CARRY_BIT		1
-+#define PRU_R25_ACC_CARRY_MASK		(1u << 1)
-+#define PRU_R25_MAC_EN_BIT		0
-+#define PRU_R25_MAC_EN_MASK		(1u << 0)
-+
-+/* XFR Device ID numbers */
-+#define XFR_ID_MAC			0
-+#define XFR_ID_BANK0			10
-+#define XFR_ID_BANK1			11
-+#define XFR_ID_BANK2			12
-+#define XFR_ID_PEER_CORE		14
-+
-+#if defined(__AM335X_PRU0__) || defined(__AM335X_PRU1__)
-+#  include <pru/am335x.h>
-+#elif defined(__SIM__)
-+   /* perhaps warn? */
-+#else
-+#  warning "No matching PRU instance variant found for <pru/io.h>"
-+#endif
-+
-+#endif
 diff --git a/libgloss/pru/isatty.c b/libgloss/pru/isatty.c
 new file mode 100644
-index 000000000..bb160edf2
+index 000000000..5ec816ba5
 --- /dev/null
 +++ b/libgloss/pru/isatty.c
 @@ -0,0 +1,26 @@
 +/* isatty.c -- chek the terminal device.
-+ * 
++ *
 + * Copyright (c) 1995 Cygnus Support
 + *
 + * The authors hereby grant permission to use, copy, modify, distribute,
@@ -1702,47 +644,38 @@ index 000000000..bb160edf2
 +{
 +  return (1);
 +}
-diff --git a/libgloss/pru/kill.c b/libgloss/pru/kill.c
-new file mode 100644
-index 000000000..5bf7c4110
---- /dev/null
-+++ b/libgloss/pru/kill.c
-@@ -0,0 +1,28 @@
-+/* kill.c -- remove a process.
-+ *
-+ * Copyright (c) 1995, 1999 Cygnus Support
-+ *
-+ * The authors hereby grant permission to use, copy, modify, distribute,
-+ * and license this software and its documentation for any purpose, provided
-+ * that existing copyright notices are retained in all copies and that this
-+ * notice is included verbatim in any distributions. No written agreement,
-+ * license, or royalty fee is required for any of the authorized uses.
-+ * Modifications to this software may be copyrighted by their authors
-+ * and need not follow the licensing terms described here, provided that
-+ * the new terms are clearly indicated on the first page of each file where
-+ * they apply.
-+ */
-+#include "glue.h"
-+
-+extern void _exit (int) __attribute__((__noreturn__));
-+
-+/*
-+ * kill -- go out via exit...
-+ */
-+int
-+_kill (int pid, int sig)
-+{
-+  if(pid == __MYPID)
-+    _exit(sig);
-+  return 0;
-+}
 diff --git a/libgloss/pru/ldscripts/gen-ld-scripts.sh b/libgloss/pru/ldscripts/gen-ld-scripts.sh
 new file mode 100755
-index 000000000..575a30970
+index 000000000..ac1e53083
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/gen-ld-scripts.sh
-@@ -0,0 +1,61 @@
+@@ -0,0 +1,80 @@
 +#!/bin/bash
++# SPDX-License-Identifier: BSD-2-Clause-FreeBSD
++#
++# Copyright 2018-2019 Dimitar Dimitrov <dimitar@dinux.eu>
++# All rights reserved.
++#
++# Redistribution and use in source and binary forms, with or without
++# modification, are permitted provided that the following conditions
++# are met:
++# 1. Redistributions of source code must retain the above copyright
++#    notice, this list of conditions and the following disclaimer.
++# 2. Redistributions in binary form must reproduce the above copyright
++#    notice, this list of conditions and the following disclaimer in the
++#    documentation and/or other materials provided with the distribution.
++#
++# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++# OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++# IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++# NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++
 +
 +# Generate additional MCU-specific linker scripts by using the
 +# default PRU-LD linker script.
@@ -1797,1251 +730,9 @@ index 000000000..575a30970
 +
 +#             IMEM DMEM   HEAP_SIZE    STACK_SIZE
 +dump_modified 256K 65536K "32 * 1024 * 1024" "1024 * 1024" | tee pruelf-sim.x
-+dump_modified 8K   8K     "32"         "512"       | tee pruelf-am335x.pru0.x
-+dump_modified 8K   8K     "32"         "512"       | tee pruelf-am335x.pru1.x
-+dump_modified 4K   4K     "32"         "256"       | tee pruelf-am437x.icss0.pru0.x
-+dump_modified 4K   4K     "32"         "256"       | tee pruelf-am437x.icss0.pru1.x
-+dump_modified 8K   8K     "32"         "512"       | tee pruelf-am437x.icss1.pru0.x
-+dump_modified 8K   8K     "32"         "512"       | tee pruelf-am437x.icss1.pru1.x
-diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru0.x b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
-new file mode 100644
-index 000000000..39f46ee86
---- /dev/null
-+++ b/libgloss/pru/ldscripts/pruelf-am335x.pru0.x
-@@ -0,0 +1,200 @@
-+/* WARNING: automatically generated from the default pru-ld script! */
-+
-+
-+
-+/* Default linker script, for normal executables */
-+OUTPUT_FORMAT("elf32-pru","elf32-pru","elf32-pru")
-+OUTPUT_ARCH(pru)
-+MEMORY
-+{
-+  imem   (x)   : ORIGIN = 0x20000000, LENGTH = 8K
-+  dmem   (rw!x) : ORIGIN = 0x0, LENGTH = 8K
-+}
-+__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
-+__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
-+PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem));
-+ENTRY (_start)
-+SECTIONS
-+{
-+  /* Read-only sections, merged into text segment: */
-+  .hash          : { *(.hash)		}
-+  .dynsym        : { *(.dynsym)		}
-+  .dynstr        : { *(.dynstr)		}
-+  .gnu.version   : { *(.gnu.version)	}
-+  .gnu.version_d   : { *(.gnu.version_d)	}
-+  .gnu.version_r   : { *(.gnu.version_r)	}
-+  .rel.init      : { *(.rel.init)		}
-+  .rela.init     : { *(.rela.init)	}
-+  .rel.text      :
-+    {
-+      *(.rel.text)
-+      *(.rel.text.*)
-+      *(.rel.text:*)
-+      *(.rel.gnu.linkonce.t*)
-+    }
-+  .rela.text     :
-+    {
-+      *(.rela.text)
-+      *(.rela.text.*)
-+      *(.rela.text:*)
-+      *(.rela.gnu.linkonce.t*)
-+    }
-+  .rel.fini      : { *(.rel.fini)		}
-+  .rela.fini     : { *(.rela.fini)	}
-+  .rel.rodata    :
-+    {
-+      *(.rel.rodata)
-+      *(.rel.rodata.*)
-+      *(.rel.rodata:*)
-+      *(.rel.gnu.linkonce.r*)
-+    }
-+  .rela.rodata   :
-+    {
-+      *(.rela.rodata)
-+      *(.rela.rodata.*)
-+      *(.rela.rodata:*)
-+      *(.rela.gnu.linkonce.r*)
-+    }
-+  .rel.data      :
-+    {
-+      *(.rel.data)
-+      *(.rel.data.*)
-+      *(.rel.data:*)
-+      *(.rel.gnu.linkonce.d*)
-+    }
-+  .rela.data     :
-+    {
-+      *(.rela.data)
-+      *(.rela.data.*)
-+      *(.rela.data:*)
-+      *(.rela.gnu.linkonce.d*)
-+    }
-+  .rel.init_array   	  : { *(.rel.init_array)	}
-+  .rela.init_array  	  : { *(.rela.init_array)	}
-+  .rel.fini_array   	  : { *(.rel.fini_array)	}
-+  .rela.fini_array  	  : { *(.rela.fini_array)	}
-+  .rel.got     		  : { *(.rel.got)		}
-+  .rela.got    		  : { *(.rela.got)	}
-+  .rel.bss     		  : { *(.rel.bss)		}
-+  .rela.bss    		  : { *(.rela.bss)	}
-+  .rel.plt     		  : { *(.rel.plt)		}
-+  .rela.plt    		  : { *(.rela.plt)	}
-+  /* Internal text space.  */
-+  .text   :
-+  {
-+     _text_start = . ;
-+    . = ALIGN(4);
-+    *(.init0)  /* Start here after reset.  */
-+    KEEP (*(.init0))
-+    . = ALIGN(4);
-+    *(.text)
-+    . = ALIGN(4);
-+    *(.text.*)
-+    . = ALIGN(4);
-+    *(.text:*)
-+    . = ALIGN(4);
-+    *(.gnu.linkonce.t*)
-+    . = ALIGN(4);
-+     _text_end = . ;
-+  }  > imem
-+  .data          :
-+  {
-+    /* Optional variable that user is prepared to have NULL address.  */
-+     *(.data.atzero*)
-+    /* CRT is prepared for constructor/destructor table to have
-+       a "valid" NULL address.  */
-+     __init_array_begin = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
-+     KEEP (*(.init_array))
-+     __init_array_end = . ;
-+     __fini_array_begin = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
-+     KEEP (*(.fini_array))
-+     __fini_array_end = . ;
-+    /* DATA memory starts at address 0.  So to avoid placing a valid static
-+       variable at the invalid NULL address, we introduce the .data.atzero
-+       section.  If CRT can make some use of it - great.  Otherwise skip a
-+       word.  In all cases .data/.bss sections must start at non-zero.  */
-+    . += (. == 0 ? 4 : 0);
-+     PROVIDE (_data_start = .) ;
-+    *(.data)
-+     *(.data*)
-+     *(.data:*)
-+     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
-+     *(.rodata.*) /* with -fdata-sections.  */
-+     *(.rodata:*)
-+    *(.gnu.linkonce.d*)
-+    *(.gnu.linkonce.r*)
-+    . = ALIGN(4);
-+     PROVIDE (_data_end = .) ;
-+  }  > dmem
-+  .resource_table   :
-+  {
-+    KEEP (*(.resource_table))
-+  }  > dmem
-+  .bss   :
-+  {
-+     PROVIDE (_bss_start = .) ;
-+    *(.bss)
-+     *(.bss.*)
-+     *(.bss:*)
-+    *(.gnu.linkonce.b*)
-+    *(COMMON)
-+     PROVIDE (_bss_end = .) ;
-+  }  > dmem
-+  /* Global data not cleared after reset.  */
-+  .noinit  :
-+  {
-+     PROVIDE (_noinit_start = .) ;
-+    *(.noinit)
-+     PROVIDE (_noinit_end = .) ;
-+     PROVIDE (_heap_start = .) ;
-+     . += __HEAP_SIZE ;
-+    /* Stack is not here really.  It will be put at the end of DMEM.
-+       But we take into account its size here, in order to allow
-+       for MEMORY overflow checking during link time.  */
-+     . += __STACK_SIZE ;
-+  }  > dmem
-+  /* Stabs debugging sections.  */
-+  .stab 0 : { *(.stab) }
-+  .stabstr 0 : { *(.stabstr) }
-+  .stab.excl 0 : { *(.stab.excl) }
-+  .stab.exclstr 0 : { *(.stab.exclstr) }
-+  .stab.index 0 : { *(.stab.index) }
-+  .stab.indexstr 0 : { *(.stab.indexstr) }
-+  .comment 0 : { *(.comment) }
-+  .note.gnu.build-id : { *(.note.gnu.build-id) }
-+  /* DWARF debug sections.
-+     Symbols in the DWARF debugging sections are relative to the beginning
-+     of the section so we begin them at 0.  */
-+  /* DWARF 1 */
-+  .debug          0 : { *(.debug) }
-+  .line           0 : { *(.line) }
-+  /* GNU DWARF 1 extensions */
-+  .debug_srcinfo  0 : { *(.debug_srcinfo) }
-+  .debug_sfnames  0 : { *(.debug_sfnames) }
-+  /* DWARF 1.1 and DWARF 2 */
-+  .debug_aranges  0 : { *(.debug_aranges) }
-+  .debug_pubnames 0 : { *(.debug_pubnames) }
-+  /* DWARF 2 */
-+  .debug_info     0 : { *(.debug_info .gnu.linkonce.wi.*) }
-+  .debug_abbrev   0 : { *(.debug_abbrev) }
-+  .debug_line     0 : { *(.debug_line .debug_line.* .debug_line_end) }
-+  .debug_frame    0 : { *(.debug_frame) }
-+  .debug_str      0 : { *(.debug_str) }
-+  .debug_loc      0 : { *(.debug_loc) }
-+  .debug_macinfo  0 : { *(.debug_macinfo) }
-+  /* SGI/MIPS DWARF 2 extensions */
-+  .debug_weaknames 0 : { *(.debug_weaknames) }
-+  .debug_funcnames 0 : { *(.debug_funcnames) }
-+  .debug_typenames 0 : { *(.debug_typenames) }
-+  .debug_varnames  0 : { *(.debug_varnames) }
-+  /* DWARF 3 */
-+  .debug_pubtypes 0 : { *(.debug_pubtypes) }
-+  .debug_ranges   0 : { *(.debug_ranges) }
-+  /* DWARF Extension.  */
-+  .debug_macro    0 : { *(.debug_macro) }
-+  .debug_addr     0 : { *(.debug_addr) }
-+}
-+
-+
-diff --git a/libgloss/pru/ldscripts/pruelf-am335x.pru1.x b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
-new file mode 100644
-index 000000000..39f46ee86
---- /dev/null
-+++ b/libgloss/pru/ldscripts/pruelf-am335x.pru1.x
-@@ -0,0 +1,200 @@
-+/* WARNING: automatically generated from the default pru-ld script! */
-+
-+
-+
-+/* Default linker script, for normal executables */
-+OUTPUT_FORMAT("elf32-pru","elf32-pru","elf32-pru")
-+OUTPUT_ARCH(pru)
-+MEMORY
-+{
-+  imem   (x)   : ORIGIN = 0x20000000, LENGTH = 8K
-+  dmem   (rw!x) : ORIGIN = 0x0, LENGTH = 8K
-+}
-+__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
-+__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
-+PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem));
-+ENTRY (_start)
-+SECTIONS
-+{
-+  /* Read-only sections, merged into text segment: */
-+  .hash          : { *(.hash)		}
-+  .dynsym        : { *(.dynsym)		}
-+  .dynstr        : { *(.dynstr)		}
-+  .gnu.version   : { *(.gnu.version)	}
-+  .gnu.version_d   : { *(.gnu.version_d)	}
-+  .gnu.version_r   : { *(.gnu.version_r)	}
-+  .rel.init      : { *(.rel.init)		}
-+  .rela.init     : { *(.rela.init)	}
-+  .rel.text      :
-+    {
-+      *(.rel.text)
-+      *(.rel.text.*)
-+      *(.rel.text:*)
-+      *(.rel.gnu.linkonce.t*)
-+    }
-+  .rela.text     :
-+    {
-+      *(.rela.text)
-+      *(.rela.text.*)
-+      *(.rela.text:*)
-+      *(.rela.gnu.linkonce.t*)
-+    }
-+  .rel.fini      : { *(.rel.fini)		}
-+  .rela.fini     : { *(.rela.fini)	}
-+  .rel.rodata    :
-+    {
-+      *(.rel.rodata)
-+      *(.rel.rodata.*)
-+      *(.rel.rodata:*)
-+      *(.rel.gnu.linkonce.r*)
-+    }
-+  .rela.rodata   :
-+    {
-+      *(.rela.rodata)
-+      *(.rela.rodata.*)
-+      *(.rela.rodata:*)
-+      *(.rela.gnu.linkonce.r*)
-+    }
-+  .rel.data      :
-+    {
-+      *(.rel.data)
-+      *(.rel.data.*)
-+      *(.rel.data:*)
-+      *(.rel.gnu.linkonce.d*)
-+    }
-+  .rela.data     :
-+    {
-+      *(.rela.data)
-+      *(.rela.data.*)
-+      *(.rela.data:*)
-+      *(.rela.gnu.linkonce.d*)
-+    }
-+  .rel.init_array   	  : { *(.rel.init_array)	}
-+  .rela.init_array  	  : { *(.rela.init_array)	}
-+  .rel.fini_array   	  : { *(.rel.fini_array)	}
-+  .rela.fini_array  	  : { *(.rela.fini_array)	}
-+  .rel.got     		  : { *(.rel.got)		}
-+  .rela.got    		  : { *(.rela.got)	}
-+  .rel.bss     		  : { *(.rel.bss)		}
-+  .rela.bss    		  : { *(.rela.bss)	}
-+  .rel.plt     		  : { *(.rel.plt)		}
-+  .rela.plt    		  : { *(.rela.plt)	}
-+  /* Internal text space.  */
-+  .text   :
-+  {
-+     _text_start = . ;
-+    . = ALIGN(4);
-+    *(.init0)  /* Start here after reset.  */
-+    KEEP (*(.init0))
-+    . = ALIGN(4);
-+    *(.text)
-+    . = ALIGN(4);
-+    *(.text.*)
-+    . = ALIGN(4);
-+    *(.text:*)
-+    . = ALIGN(4);
-+    *(.gnu.linkonce.t*)
-+    . = ALIGN(4);
-+     _text_end = . ;
-+  }  > imem
-+  .data          :
-+  {
-+    /* Optional variable that user is prepared to have NULL address.  */
-+     *(.data.atzero*)
-+    /* CRT is prepared for constructor/destructor table to have
-+       a "valid" NULL address.  */
-+     __init_array_begin = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
-+     KEEP (*(.init_array))
-+     __init_array_end = . ;
-+     __fini_array_begin = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
-+     KEEP (*(.fini_array))
-+     __fini_array_end = . ;
-+    /* DATA memory starts at address 0.  So to avoid placing a valid static
-+       variable at the invalid NULL address, we introduce the .data.atzero
-+       section.  If CRT can make some use of it - great.  Otherwise skip a
-+       word.  In all cases .data/.bss sections must start at non-zero.  */
-+    . += (. == 0 ? 4 : 0);
-+     PROVIDE (_data_start = .) ;
-+    *(.data)
-+     *(.data*)
-+     *(.data:*)
-+     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
-+     *(.rodata.*) /* with -fdata-sections.  */
-+     *(.rodata:*)
-+    *(.gnu.linkonce.d*)
-+    *(.gnu.linkonce.r*)
-+    . = ALIGN(4);
-+     PROVIDE (_data_end = .) ;
-+  }  > dmem
-+  .resource_table   :
-+  {
-+    KEEP (*(.resource_table))
-+  }  > dmem
-+  .bss   :
-+  {
-+     PROVIDE (_bss_start = .) ;
-+    *(.bss)
-+     *(.bss.*)
-+     *(.bss:*)
-+    *(.gnu.linkonce.b*)
-+    *(COMMON)
-+     PROVIDE (_bss_end = .) ;
-+  }  > dmem
-+  /* Global data not cleared after reset.  */
-+  .noinit  :
-+  {
-+     PROVIDE (_noinit_start = .) ;
-+    *(.noinit)
-+     PROVIDE (_noinit_end = .) ;
-+     PROVIDE (_heap_start = .) ;
-+     . += __HEAP_SIZE ;
-+    /* Stack is not here really.  It will be put at the end of DMEM.
-+       But we take into account its size here, in order to allow
-+       for MEMORY overflow checking during link time.  */
-+     . += __STACK_SIZE ;
-+  }  > dmem
-+  /* Stabs debugging sections.  */
-+  .stab 0 : { *(.stab) }
-+  .stabstr 0 : { *(.stabstr) }
-+  .stab.excl 0 : { *(.stab.excl) }
-+  .stab.exclstr 0 : { *(.stab.exclstr) }
-+  .stab.index 0 : { *(.stab.index) }
-+  .stab.indexstr 0 : { *(.stab.indexstr) }
-+  .comment 0 : { *(.comment) }
-+  .note.gnu.build-id : { *(.note.gnu.build-id) }
-+  /* DWARF debug sections.
-+     Symbols in the DWARF debugging sections are relative to the beginning
-+     of the section so we begin them at 0.  */
-+  /* DWARF 1 */
-+  .debug          0 : { *(.debug) }
-+  .line           0 : { *(.line) }
-+  /* GNU DWARF 1 extensions */
-+  .debug_srcinfo  0 : { *(.debug_srcinfo) }
-+  .debug_sfnames  0 : { *(.debug_sfnames) }
-+  /* DWARF 1.1 and DWARF 2 */
-+  .debug_aranges  0 : { *(.debug_aranges) }
-+  .debug_pubnames 0 : { *(.debug_pubnames) }
-+  /* DWARF 2 */
-+  .debug_info     0 : { *(.debug_info .gnu.linkonce.wi.*) }
-+  .debug_abbrev   0 : { *(.debug_abbrev) }
-+  .debug_line     0 : { *(.debug_line .debug_line.* .debug_line_end) }
-+  .debug_frame    0 : { *(.debug_frame) }
-+  .debug_str      0 : { *(.debug_str) }
-+  .debug_loc      0 : { *(.debug_loc) }
-+  .debug_macinfo  0 : { *(.debug_macinfo) }
-+  /* SGI/MIPS DWARF 2 extensions */
-+  .debug_weaknames 0 : { *(.debug_weaknames) }
-+  .debug_funcnames 0 : { *(.debug_funcnames) }
-+  .debug_typenames 0 : { *(.debug_typenames) }
-+  .debug_varnames  0 : { *(.debug_varnames) }
-+  /* DWARF 3 */
-+  .debug_pubtypes 0 : { *(.debug_pubtypes) }
-+  .debug_ranges   0 : { *(.debug_ranges) }
-+  /* DWARF Extension.  */
-+  .debug_macro    0 : { *(.debug_macro) }
-+  .debug_addr     0 : { *(.debug_addr) }
-+}
-+
-+
-diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
-new file mode 100644
-index 000000000..cbbf3bfec
---- /dev/null
-+++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru0.x
-@@ -0,0 +1,200 @@
-+/* WARNING: automatically generated from the default pru-ld script! */
-+
-+
-+
-+/* Default linker script, for normal executables */
-+OUTPUT_FORMAT("elf32-pru","elf32-pru","elf32-pru")
-+OUTPUT_ARCH(pru)
-+MEMORY
-+{
-+  imem   (x)   : ORIGIN = 0x20000000, LENGTH = 4K
-+  dmem   (rw!x) : ORIGIN = 0x0, LENGTH = 4K
-+}
-+__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
-+__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 256 ;
-+PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem));
-+ENTRY (_start)
-+SECTIONS
-+{
-+  /* Read-only sections, merged into text segment: */
-+  .hash          : { *(.hash)		}
-+  .dynsym        : { *(.dynsym)		}
-+  .dynstr        : { *(.dynstr)		}
-+  .gnu.version   : { *(.gnu.version)	}
-+  .gnu.version_d   : { *(.gnu.version_d)	}
-+  .gnu.version_r   : { *(.gnu.version_r)	}
-+  .rel.init      : { *(.rel.init)		}
-+  .rela.init     : { *(.rela.init)	}
-+  .rel.text      :
-+    {
-+      *(.rel.text)
-+      *(.rel.text.*)
-+      *(.rel.text:*)
-+      *(.rel.gnu.linkonce.t*)
-+    }
-+  .rela.text     :
-+    {
-+      *(.rela.text)
-+      *(.rela.text.*)
-+      *(.rela.text:*)
-+      *(.rela.gnu.linkonce.t*)
-+    }
-+  .rel.fini      : { *(.rel.fini)		}
-+  .rela.fini     : { *(.rela.fini)	}
-+  .rel.rodata    :
-+    {
-+      *(.rel.rodata)
-+      *(.rel.rodata.*)
-+      *(.rel.rodata:*)
-+      *(.rel.gnu.linkonce.r*)
-+    }
-+  .rela.rodata   :
-+    {
-+      *(.rela.rodata)
-+      *(.rela.rodata.*)
-+      *(.rela.rodata:*)
-+      *(.rela.gnu.linkonce.r*)
-+    }
-+  .rel.data      :
-+    {
-+      *(.rel.data)
-+      *(.rel.data.*)
-+      *(.rel.data:*)
-+      *(.rel.gnu.linkonce.d*)
-+    }
-+  .rela.data     :
-+    {
-+      *(.rela.data)
-+      *(.rela.data.*)
-+      *(.rela.data:*)
-+      *(.rela.gnu.linkonce.d*)
-+    }
-+  .rel.init_array   	  : { *(.rel.init_array)	}
-+  .rela.init_array  	  : { *(.rela.init_array)	}
-+  .rel.fini_array   	  : { *(.rel.fini_array)	}
-+  .rela.fini_array  	  : { *(.rela.fini_array)	}
-+  .rel.got     		  : { *(.rel.got)		}
-+  .rela.got    		  : { *(.rela.got)	}
-+  .rel.bss     		  : { *(.rel.bss)		}
-+  .rela.bss    		  : { *(.rela.bss)	}
-+  .rel.plt     		  : { *(.rel.plt)		}
-+  .rela.plt    		  : { *(.rela.plt)	}
-+  /* Internal text space.  */
-+  .text   :
-+  {
-+     _text_start = . ;
-+    . = ALIGN(4);
-+    *(.init0)  /* Start here after reset.  */
-+    KEEP (*(.init0))
-+    . = ALIGN(4);
-+    *(.text)
-+    . = ALIGN(4);
-+    *(.text.*)
-+    . = ALIGN(4);
-+    *(.text:*)
-+    . = ALIGN(4);
-+    *(.gnu.linkonce.t*)
-+    . = ALIGN(4);
-+     _text_end = . ;
-+  }  > imem
-+  .data          :
-+  {
-+    /* Optional variable that user is prepared to have NULL address.  */
-+     *(.data.atzero*)
-+    /* CRT is prepared for constructor/destructor table to have
-+       a "valid" NULL address.  */
-+     __init_array_begin = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
-+     KEEP (*(.init_array))
-+     __init_array_end = . ;
-+     __fini_array_begin = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
-+     KEEP (*(.fini_array))
-+     __fini_array_end = . ;
-+    /* DATA memory starts at address 0.  So to avoid placing a valid static
-+       variable at the invalid NULL address, we introduce the .data.atzero
-+       section.  If CRT can make some use of it - great.  Otherwise skip a
-+       word.  In all cases .data/.bss sections must start at non-zero.  */
-+    . += (. == 0 ? 4 : 0);
-+     PROVIDE (_data_start = .) ;
-+    *(.data)
-+     *(.data*)
-+     *(.data:*)
-+     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
-+     *(.rodata.*) /* with -fdata-sections.  */
-+     *(.rodata:*)
-+    *(.gnu.linkonce.d*)
-+    *(.gnu.linkonce.r*)
-+    . = ALIGN(4);
-+     PROVIDE (_data_end = .) ;
-+  }  > dmem
-+  .resource_table   :
-+  {
-+    KEEP (*(.resource_table))
-+  }  > dmem
-+  .bss   :
-+  {
-+     PROVIDE (_bss_start = .) ;
-+    *(.bss)
-+     *(.bss.*)
-+     *(.bss:*)
-+    *(.gnu.linkonce.b*)
-+    *(COMMON)
-+     PROVIDE (_bss_end = .) ;
-+  }  > dmem
-+  /* Global data not cleared after reset.  */
-+  .noinit  :
-+  {
-+     PROVIDE (_noinit_start = .) ;
-+    *(.noinit)
-+     PROVIDE (_noinit_end = .) ;
-+     PROVIDE (_heap_start = .) ;
-+     . += __HEAP_SIZE ;
-+    /* Stack is not here really.  It will be put at the end of DMEM.
-+       But we take into account its size here, in order to allow
-+       for MEMORY overflow checking during link time.  */
-+     . += __STACK_SIZE ;
-+  }  > dmem
-+  /* Stabs debugging sections.  */
-+  .stab 0 : { *(.stab) }
-+  .stabstr 0 : { *(.stabstr) }
-+  .stab.excl 0 : { *(.stab.excl) }
-+  .stab.exclstr 0 : { *(.stab.exclstr) }
-+  .stab.index 0 : { *(.stab.index) }
-+  .stab.indexstr 0 : { *(.stab.indexstr) }
-+  .comment 0 : { *(.comment) }
-+  .note.gnu.build-id : { *(.note.gnu.build-id) }
-+  /* DWARF debug sections.
-+     Symbols in the DWARF debugging sections are relative to the beginning
-+     of the section so we begin them at 0.  */
-+  /* DWARF 1 */
-+  .debug          0 : { *(.debug) }
-+  .line           0 : { *(.line) }
-+  /* GNU DWARF 1 extensions */
-+  .debug_srcinfo  0 : { *(.debug_srcinfo) }
-+  .debug_sfnames  0 : { *(.debug_sfnames) }
-+  /* DWARF 1.1 and DWARF 2 */
-+  .debug_aranges  0 : { *(.debug_aranges) }
-+  .debug_pubnames 0 : { *(.debug_pubnames) }
-+  /* DWARF 2 */
-+  .debug_info     0 : { *(.debug_info .gnu.linkonce.wi.*) }
-+  .debug_abbrev   0 : { *(.debug_abbrev) }
-+  .debug_line     0 : { *(.debug_line .debug_line.* .debug_line_end) }
-+  .debug_frame    0 : { *(.debug_frame) }
-+  .debug_str      0 : { *(.debug_str) }
-+  .debug_loc      0 : { *(.debug_loc) }
-+  .debug_macinfo  0 : { *(.debug_macinfo) }
-+  /* SGI/MIPS DWARF 2 extensions */
-+  .debug_weaknames 0 : { *(.debug_weaknames) }
-+  .debug_funcnames 0 : { *(.debug_funcnames) }
-+  .debug_typenames 0 : { *(.debug_typenames) }
-+  .debug_varnames  0 : { *(.debug_varnames) }
-+  /* DWARF 3 */
-+  .debug_pubtypes 0 : { *(.debug_pubtypes) }
-+  .debug_ranges   0 : { *(.debug_ranges) }
-+  /* DWARF Extension.  */
-+  .debug_macro    0 : { *(.debug_macro) }
-+  .debug_addr     0 : { *(.debug_addr) }
-+}
-+
-+
-diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
-new file mode 100644
-index 000000000..cbbf3bfec
---- /dev/null
-+++ b/libgloss/pru/ldscripts/pruelf-am437x.icss0.pru1.x
-@@ -0,0 +1,200 @@
-+/* WARNING: automatically generated from the default pru-ld script! */
-+
-+
-+
-+/* Default linker script, for normal executables */
-+OUTPUT_FORMAT("elf32-pru","elf32-pru","elf32-pru")
-+OUTPUT_ARCH(pru)
-+MEMORY
-+{
-+  imem   (x)   : ORIGIN = 0x20000000, LENGTH = 4K
-+  dmem   (rw!x) : ORIGIN = 0x0, LENGTH = 4K
-+}
-+__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
-+__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 256 ;
-+PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem));
-+ENTRY (_start)
-+SECTIONS
-+{
-+  /* Read-only sections, merged into text segment: */
-+  .hash          : { *(.hash)		}
-+  .dynsym        : { *(.dynsym)		}
-+  .dynstr        : { *(.dynstr)		}
-+  .gnu.version   : { *(.gnu.version)	}
-+  .gnu.version_d   : { *(.gnu.version_d)	}
-+  .gnu.version_r   : { *(.gnu.version_r)	}
-+  .rel.init      : { *(.rel.init)		}
-+  .rela.init     : { *(.rela.init)	}
-+  .rel.text      :
-+    {
-+      *(.rel.text)
-+      *(.rel.text.*)
-+      *(.rel.text:*)
-+      *(.rel.gnu.linkonce.t*)
-+    }
-+  .rela.text     :
-+    {
-+      *(.rela.text)
-+      *(.rela.text.*)
-+      *(.rela.text:*)
-+      *(.rela.gnu.linkonce.t*)
-+    }
-+  .rel.fini      : { *(.rel.fini)		}
-+  .rela.fini     : { *(.rela.fini)	}
-+  .rel.rodata    :
-+    {
-+      *(.rel.rodata)
-+      *(.rel.rodata.*)
-+      *(.rel.rodata:*)
-+      *(.rel.gnu.linkonce.r*)
-+    }
-+  .rela.rodata   :
-+    {
-+      *(.rela.rodata)
-+      *(.rela.rodata.*)
-+      *(.rela.rodata:*)
-+      *(.rela.gnu.linkonce.r*)
-+    }
-+  .rel.data      :
-+    {
-+      *(.rel.data)
-+      *(.rel.data.*)
-+      *(.rel.data:*)
-+      *(.rel.gnu.linkonce.d*)
-+    }
-+  .rela.data     :
-+    {
-+      *(.rela.data)
-+      *(.rela.data.*)
-+      *(.rela.data:*)
-+      *(.rela.gnu.linkonce.d*)
-+    }
-+  .rel.init_array   	  : { *(.rel.init_array)	}
-+  .rela.init_array  	  : { *(.rela.init_array)	}
-+  .rel.fini_array   	  : { *(.rel.fini_array)	}
-+  .rela.fini_array  	  : { *(.rela.fini_array)	}
-+  .rel.got     		  : { *(.rel.got)		}
-+  .rela.got    		  : { *(.rela.got)	}
-+  .rel.bss     		  : { *(.rel.bss)		}
-+  .rela.bss    		  : { *(.rela.bss)	}
-+  .rel.plt     		  : { *(.rel.plt)		}
-+  .rela.plt    		  : { *(.rela.plt)	}
-+  /* Internal text space.  */
-+  .text   :
-+  {
-+     _text_start = . ;
-+    . = ALIGN(4);
-+    *(.init0)  /* Start here after reset.  */
-+    KEEP (*(.init0))
-+    . = ALIGN(4);
-+    *(.text)
-+    . = ALIGN(4);
-+    *(.text.*)
-+    . = ALIGN(4);
-+    *(.text:*)
-+    . = ALIGN(4);
-+    *(.gnu.linkonce.t*)
-+    . = ALIGN(4);
-+     _text_end = . ;
-+  }  > imem
-+  .data          :
-+  {
-+    /* Optional variable that user is prepared to have NULL address.  */
-+     *(.data.atzero*)
-+    /* CRT is prepared for constructor/destructor table to have
-+       a "valid" NULL address.  */
-+     __init_array_begin = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
-+     KEEP (*(.init_array))
-+     __init_array_end = . ;
-+     __fini_array_begin = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
-+     KEEP (*(.fini_array))
-+     __fini_array_end = . ;
-+    /* DATA memory starts at address 0.  So to avoid placing a valid static
-+       variable at the invalid NULL address, we introduce the .data.atzero
-+       section.  If CRT can make some use of it - great.  Otherwise skip a
-+       word.  In all cases .data/.bss sections must start at non-zero.  */
-+    . += (. == 0 ? 4 : 0);
-+     PROVIDE (_data_start = .) ;
-+    *(.data)
-+     *(.data*)
-+     *(.data:*)
-+     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
-+     *(.rodata.*) /* with -fdata-sections.  */
-+     *(.rodata:*)
-+    *(.gnu.linkonce.d*)
-+    *(.gnu.linkonce.r*)
-+    . = ALIGN(4);
-+     PROVIDE (_data_end = .) ;
-+  }  > dmem
-+  .resource_table   :
-+  {
-+    KEEP (*(.resource_table))
-+  }  > dmem
-+  .bss   :
-+  {
-+     PROVIDE (_bss_start = .) ;
-+    *(.bss)
-+     *(.bss.*)
-+     *(.bss:*)
-+    *(.gnu.linkonce.b*)
-+    *(COMMON)
-+     PROVIDE (_bss_end = .) ;
-+  }  > dmem
-+  /* Global data not cleared after reset.  */
-+  .noinit  :
-+  {
-+     PROVIDE (_noinit_start = .) ;
-+    *(.noinit)
-+     PROVIDE (_noinit_end = .) ;
-+     PROVIDE (_heap_start = .) ;
-+     . += __HEAP_SIZE ;
-+    /* Stack is not here really.  It will be put at the end of DMEM.
-+       But we take into account its size here, in order to allow
-+       for MEMORY overflow checking during link time.  */
-+     . += __STACK_SIZE ;
-+  }  > dmem
-+  /* Stabs debugging sections.  */
-+  .stab 0 : { *(.stab) }
-+  .stabstr 0 : { *(.stabstr) }
-+  .stab.excl 0 : { *(.stab.excl) }
-+  .stab.exclstr 0 : { *(.stab.exclstr) }
-+  .stab.index 0 : { *(.stab.index) }
-+  .stab.indexstr 0 : { *(.stab.indexstr) }
-+  .comment 0 : { *(.comment) }
-+  .note.gnu.build-id : { *(.note.gnu.build-id) }
-+  /* DWARF debug sections.
-+     Symbols in the DWARF debugging sections are relative to the beginning
-+     of the section so we begin them at 0.  */
-+  /* DWARF 1 */
-+  .debug          0 : { *(.debug) }
-+  .line           0 : { *(.line) }
-+  /* GNU DWARF 1 extensions */
-+  .debug_srcinfo  0 : { *(.debug_srcinfo) }
-+  .debug_sfnames  0 : { *(.debug_sfnames) }
-+  /* DWARF 1.1 and DWARF 2 */
-+  .debug_aranges  0 : { *(.debug_aranges) }
-+  .debug_pubnames 0 : { *(.debug_pubnames) }
-+  /* DWARF 2 */
-+  .debug_info     0 : { *(.debug_info .gnu.linkonce.wi.*) }
-+  .debug_abbrev   0 : { *(.debug_abbrev) }
-+  .debug_line     0 : { *(.debug_line .debug_line.* .debug_line_end) }
-+  .debug_frame    0 : { *(.debug_frame) }
-+  .debug_str      0 : { *(.debug_str) }
-+  .debug_loc      0 : { *(.debug_loc) }
-+  .debug_macinfo  0 : { *(.debug_macinfo) }
-+  /* SGI/MIPS DWARF 2 extensions */
-+  .debug_weaknames 0 : { *(.debug_weaknames) }
-+  .debug_funcnames 0 : { *(.debug_funcnames) }
-+  .debug_typenames 0 : { *(.debug_typenames) }
-+  .debug_varnames  0 : { *(.debug_varnames) }
-+  /* DWARF 3 */
-+  .debug_pubtypes 0 : { *(.debug_pubtypes) }
-+  .debug_ranges   0 : { *(.debug_ranges) }
-+  /* DWARF Extension.  */
-+  .debug_macro    0 : { *(.debug_macro) }
-+  .debug_addr     0 : { *(.debug_addr) }
-+}
-+
-+
-diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
-new file mode 100644
-index 000000000..39f46ee86
---- /dev/null
-+++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru0.x
-@@ -0,0 +1,200 @@
-+/* WARNING: automatically generated from the default pru-ld script! */
-+
-+
-+
-+/* Default linker script, for normal executables */
-+OUTPUT_FORMAT("elf32-pru","elf32-pru","elf32-pru")
-+OUTPUT_ARCH(pru)
-+MEMORY
-+{
-+  imem   (x)   : ORIGIN = 0x20000000, LENGTH = 8K
-+  dmem   (rw!x) : ORIGIN = 0x0, LENGTH = 8K
-+}
-+__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
-+__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
-+PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem));
-+ENTRY (_start)
-+SECTIONS
-+{
-+  /* Read-only sections, merged into text segment: */
-+  .hash          : { *(.hash)		}
-+  .dynsym        : { *(.dynsym)		}
-+  .dynstr        : { *(.dynstr)		}
-+  .gnu.version   : { *(.gnu.version)	}
-+  .gnu.version_d   : { *(.gnu.version_d)	}
-+  .gnu.version_r   : { *(.gnu.version_r)	}
-+  .rel.init      : { *(.rel.init)		}
-+  .rela.init     : { *(.rela.init)	}
-+  .rel.text      :
-+    {
-+      *(.rel.text)
-+      *(.rel.text.*)
-+      *(.rel.text:*)
-+      *(.rel.gnu.linkonce.t*)
-+    }
-+  .rela.text     :
-+    {
-+      *(.rela.text)
-+      *(.rela.text.*)
-+      *(.rela.text:*)
-+      *(.rela.gnu.linkonce.t*)
-+    }
-+  .rel.fini      : { *(.rel.fini)		}
-+  .rela.fini     : { *(.rela.fini)	}
-+  .rel.rodata    :
-+    {
-+      *(.rel.rodata)
-+      *(.rel.rodata.*)
-+      *(.rel.rodata:*)
-+      *(.rel.gnu.linkonce.r*)
-+    }
-+  .rela.rodata   :
-+    {
-+      *(.rela.rodata)
-+      *(.rela.rodata.*)
-+      *(.rela.rodata:*)
-+      *(.rela.gnu.linkonce.r*)
-+    }
-+  .rel.data      :
-+    {
-+      *(.rel.data)
-+      *(.rel.data.*)
-+      *(.rel.data:*)
-+      *(.rel.gnu.linkonce.d*)
-+    }
-+  .rela.data     :
-+    {
-+      *(.rela.data)
-+      *(.rela.data.*)
-+      *(.rela.data:*)
-+      *(.rela.gnu.linkonce.d*)
-+    }
-+  .rel.init_array   	  : { *(.rel.init_array)	}
-+  .rela.init_array  	  : { *(.rela.init_array)	}
-+  .rel.fini_array   	  : { *(.rel.fini_array)	}
-+  .rela.fini_array  	  : { *(.rela.fini_array)	}
-+  .rel.got     		  : { *(.rel.got)		}
-+  .rela.got    		  : { *(.rela.got)	}
-+  .rel.bss     		  : { *(.rel.bss)		}
-+  .rela.bss    		  : { *(.rela.bss)	}
-+  .rel.plt     		  : { *(.rel.plt)		}
-+  .rela.plt    		  : { *(.rela.plt)	}
-+  /* Internal text space.  */
-+  .text   :
-+  {
-+     _text_start = . ;
-+    . = ALIGN(4);
-+    *(.init0)  /* Start here after reset.  */
-+    KEEP (*(.init0))
-+    . = ALIGN(4);
-+    *(.text)
-+    . = ALIGN(4);
-+    *(.text.*)
-+    . = ALIGN(4);
-+    *(.text:*)
-+    . = ALIGN(4);
-+    *(.gnu.linkonce.t*)
-+    . = ALIGN(4);
-+     _text_end = . ;
-+  }  > imem
-+  .data          :
-+  {
-+    /* Optional variable that user is prepared to have NULL address.  */
-+     *(.data.atzero*)
-+    /* CRT is prepared for constructor/destructor table to have
-+       a "valid" NULL address.  */
-+     __init_array_begin = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
-+     KEEP (*(.init_array))
-+     __init_array_end = . ;
-+     __fini_array_begin = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
-+     KEEP (*(.fini_array))
-+     __fini_array_end = . ;
-+    /* DATA memory starts at address 0.  So to avoid placing a valid static
-+       variable at the invalid NULL address, we introduce the .data.atzero
-+       section.  If CRT can make some use of it - great.  Otherwise skip a
-+       word.  In all cases .data/.bss sections must start at non-zero.  */
-+    . += (. == 0 ? 4 : 0);
-+     PROVIDE (_data_start = .) ;
-+    *(.data)
-+     *(.data*)
-+     *(.data:*)
-+     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
-+     *(.rodata.*) /* with -fdata-sections.  */
-+     *(.rodata:*)
-+    *(.gnu.linkonce.d*)
-+    *(.gnu.linkonce.r*)
-+    . = ALIGN(4);
-+     PROVIDE (_data_end = .) ;
-+  }  > dmem
-+  .resource_table   :
-+  {
-+    KEEP (*(.resource_table))
-+  }  > dmem
-+  .bss   :
-+  {
-+     PROVIDE (_bss_start = .) ;
-+    *(.bss)
-+     *(.bss.*)
-+     *(.bss:*)
-+    *(.gnu.linkonce.b*)
-+    *(COMMON)
-+     PROVIDE (_bss_end = .) ;
-+  }  > dmem
-+  /* Global data not cleared after reset.  */
-+  .noinit  :
-+  {
-+     PROVIDE (_noinit_start = .) ;
-+    *(.noinit)
-+     PROVIDE (_noinit_end = .) ;
-+     PROVIDE (_heap_start = .) ;
-+     . += __HEAP_SIZE ;
-+    /* Stack is not here really.  It will be put at the end of DMEM.
-+       But we take into account its size here, in order to allow
-+       for MEMORY overflow checking during link time.  */
-+     . += __STACK_SIZE ;
-+  }  > dmem
-+  /* Stabs debugging sections.  */
-+  .stab 0 : { *(.stab) }
-+  .stabstr 0 : { *(.stabstr) }
-+  .stab.excl 0 : { *(.stab.excl) }
-+  .stab.exclstr 0 : { *(.stab.exclstr) }
-+  .stab.index 0 : { *(.stab.index) }
-+  .stab.indexstr 0 : { *(.stab.indexstr) }
-+  .comment 0 : { *(.comment) }
-+  .note.gnu.build-id : { *(.note.gnu.build-id) }
-+  /* DWARF debug sections.
-+     Symbols in the DWARF debugging sections are relative to the beginning
-+     of the section so we begin them at 0.  */
-+  /* DWARF 1 */
-+  .debug          0 : { *(.debug) }
-+  .line           0 : { *(.line) }
-+  /* GNU DWARF 1 extensions */
-+  .debug_srcinfo  0 : { *(.debug_srcinfo) }
-+  .debug_sfnames  0 : { *(.debug_sfnames) }
-+  /* DWARF 1.1 and DWARF 2 */
-+  .debug_aranges  0 : { *(.debug_aranges) }
-+  .debug_pubnames 0 : { *(.debug_pubnames) }
-+  /* DWARF 2 */
-+  .debug_info     0 : { *(.debug_info .gnu.linkonce.wi.*) }
-+  .debug_abbrev   0 : { *(.debug_abbrev) }
-+  .debug_line     0 : { *(.debug_line .debug_line.* .debug_line_end) }
-+  .debug_frame    0 : { *(.debug_frame) }
-+  .debug_str      0 : { *(.debug_str) }
-+  .debug_loc      0 : { *(.debug_loc) }
-+  .debug_macinfo  0 : { *(.debug_macinfo) }
-+  /* SGI/MIPS DWARF 2 extensions */
-+  .debug_weaknames 0 : { *(.debug_weaknames) }
-+  .debug_funcnames 0 : { *(.debug_funcnames) }
-+  .debug_typenames 0 : { *(.debug_typenames) }
-+  .debug_varnames  0 : { *(.debug_varnames) }
-+  /* DWARF 3 */
-+  .debug_pubtypes 0 : { *(.debug_pubtypes) }
-+  .debug_ranges   0 : { *(.debug_ranges) }
-+  /* DWARF Extension.  */
-+  .debug_macro    0 : { *(.debug_macro) }
-+  .debug_addr     0 : { *(.debug_addr) }
-+}
-+
-+
-diff --git a/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
-new file mode 100644
-index 000000000..39f46ee86
---- /dev/null
-+++ b/libgloss/pru/ldscripts/pruelf-am437x.icss1.pru1.x
-@@ -0,0 +1,200 @@
-+/* WARNING: automatically generated from the default pru-ld script! */
-+
-+
-+
-+/* Default linker script, for normal executables */
-+OUTPUT_FORMAT("elf32-pru","elf32-pru","elf32-pru")
-+OUTPUT_ARCH(pru)
-+MEMORY
-+{
-+  imem   (x)   : ORIGIN = 0x20000000, LENGTH = 8K
-+  dmem   (rw!x) : ORIGIN = 0x0, LENGTH = 8K
-+}
-+__HEAP_SIZE = DEFINED(__HEAP_SIZE) ? __HEAP_SIZE : 32 ;
-+__STACK_SIZE = DEFINED(__STACK_SIZE) ? __STACK_SIZE : 512 ;
-+PROVIDE (_stack_top = ORIGIN(dmem) + LENGTH(dmem));
-+ENTRY (_start)
-+SECTIONS
-+{
-+  /* Read-only sections, merged into text segment: */
-+  .hash          : { *(.hash)		}
-+  .dynsym        : { *(.dynsym)		}
-+  .dynstr        : { *(.dynstr)		}
-+  .gnu.version   : { *(.gnu.version)	}
-+  .gnu.version_d   : { *(.gnu.version_d)	}
-+  .gnu.version_r   : { *(.gnu.version_r)	}
-+  .rel.init      : { *(.rel.init)		}
-+  .rela.init     : { *(.rela.init)	}
-+  .rel.text      :
-+    {
-+      *(.rel.text)
-+      *(.rel.text.*)
-+      *(.rel.text:*)
-+      *(.rel.gnu.linkonce.t*)
-+    }
-+  .rela.text     :
-+    {
-+      *(.rela.text)
-+      *(.rela.text.*)
-+      *(.rela.text:*)
-+      *(.rela.gnu.linkonce.t*)
-+    }
-+  .rel.fini      : { *(.rel.fini)		}
-+  .rela.fini     : { *(.rela.fini)	}
-+  .rel.rodata    :
-+    {
-+      *(.rel.rodata)
-+      *(.rel.rodata.*)
-+      *(.rel.rodata:*)
-+      *(.rel.gnu.linkonce.r*)
-+    }
-+  .rela.rodata   :
-+    {
-+      *(.rela.rodata)
-+      *(.rela.rodata.*)
-+      *(.rela.rodata:*)
-+      *(.rela.gnu.linkonce.r*)
-+    }
-+  .rel.data      :
-+    {
-+      *(.rel.data)
-+      *(.rel.data.*)
-+      *(.rel.data:*)
-+      *(.rel.gnu.linkonce.d*)
-+    }
-+  .rela.data     :
-+    {
-+      *(.rela.data)
-+      *(.rela.data.*)
-+      *(.rela.data:*)
-+      *(.rela.gnu.linkonce.d*)
-+    }
-+  .rel.init_array   	  : { *(.rel.init_array)	}
-+  .rela.init_array  	  : { *(.rela.init_array)	}
-+  .rel.fini_array   	  : { *(.rel.fini_array)	}
-+  .rela.fini_array  	  : { *(.rela.fini_array)	}
-+  .rel.got     		  : { *(.rel.got)		}
-+  .rela.got    		  : { *(.rela.got)	}
-+  .rel.bss     		  : { *(.rel.bss)		}
-+  .rela.bss    		  : { *(.rela.bss)	}
-+  .rel.plt     		  : { *(.rel.plt)		}
-+  .rela.plt    		  : { *(.rela.plt)	}
-+  /* Internal text space.  */
-+  .text   :
-+  {
-+     _text_start = . ;
-+    . = ALIGN(4);
-+    *(.init0)  /* Start here after reset.  */
-+    KEEP (*(.init0))
-+    . = ALIGN(4);
-+    *(.text)
-+    . = ALIGN(4);
-+    *(.text.*)
-+    . = ALIGN(4);
-+    *(.text:*)
-+    . = ALIGN(4);
-+    *(.gnu.linkonce.t*)
-+    . = ALIGN(4);
-+     _text_end = . ;
-+  }  > imem
-+  .data          :
-+  {
-+    /* Optional variable that user is prepared to have NULL address.  */
-+     *(.data.atzero*)
-+    /* CRT is prepared for constructor/destructor table to have
-+       a "valid" NULL address.  */
-+     __init_array_begin = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
-+     KEEP (*(.init_array))
-+     __init_array_end = . ;
-+     __fini_array_begin = . ;
-+     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
-+     KEEP (*(.fini_array))
-+     __fini_array_end = . ;
-+    /* DATA memory starts at address 0.  So to avoid placing a valid static
-+       variable at the invalid NULL address, we introduce the .data.atzero
-+       section.  If CRT can make some use of it - great.  Otherwise skip a
-+       word.  In all cases .data/.bss sections must start at non-zero.  */
-+    . += (. == 0 ? 4 : 0);
-+     PROVIDE (_data_start = .) ;
-+    *(.data)
-+     *(.data*)
-+     *(.data:*)
-+     *(.rodata)  /* We need to include .rodata here if gcc is used.  */
-+     *(.rodata.*) /* with -fdata-sections.  */
-+     *(.rodata:*)
-+    *(.gnu.linkonce.d*)
-+    *(.gnu.linkonce.r*)
-+    . = ALIGN(4);
-+     PROVIDE (_data_end = .) ;
-+  }  > dmem
-+  .resource_table   :
-+  {
-+    KEEP (*(.resource_table))
-+  }  > dmem
-+  .bss   :
-+  {
-+     PROVIDE (_bss_start = .) ;
-+    *(.bss)
-+     *(.bss.*)
-+     *(.bss:*)
-+    *(.gnu.linkonce.b*)
-+    *(COMMON)
-+     PROVIDE (_bss_end = .) ;
-+  }  > dmem
-+  /* Global data not cleared after reset.  */
-+  .noinit  :
-+  {
-+     PROVIDE (_noinit_start = .) ;
-+    *(.noinit)
-+     PROVIDE (_noinit_end = .) ;
-+     PROVIDE (_heap_start = .) ;
-+     . += __HEAP_SIZE ;
-+    /* Stack is not here really.  It will be put at the end of DMEM.
-+       But we take into account its size here, in order to allow
-+       for MEMORY overflow checking during link time.  */
-+     . += __STACK_SIZE ;
-+  }  > dmem
-+  /* Stabs debugging sections.  */
-+  .stab 0 : { *(.stab) }
-+  .stabstr 0 : { *(.stabstr) }
-+  .stab.excl 0 : { *(.stab.excl) }
-+  .stab.exclstr 0 : { *(.stab.exclstr) }
-+  .stab.index 0 : { *(.stab.index) }
-+  .stab.indexstr 0 : { *(.stab.indexstr) }
-+  .comment 0 : { *(.comment) }
-+  .note.gnu.build-id : { *(.note.gnu.build-id) }
-+  /* DWARF debug sections.
-+     Symbols in the DWARF debugging sections are relative to the beginning
-+     of the section so we begin them at 0.  */
-+  /* DWARF 1 */
-+  .debug          0 : { *(.debug) }
-+  .line           0 : { *(.line) }
-+  /* GNU DWARF 1 extensions */
-+  .debug_srcinfo  0 : { *(.debug_srcinfo) }
-+  .debug_sfnames  0 : { *(.debug_sfnames) }
-+  /* DWARF 1.1 and DWARF 2 */
-+  .debug_aranges  0 : { *(.debug_aranges) }
-+  .debug_pubnames 0 : { *(.debug_pubnames) }
-+  /* DWARF 2 */
-+  .debug_info     0 : { *(.debug_info .gnu.linkonce.wi.*) }
-+  .debug_abbrev   0 : { *(.debug_abbrev) }
-+  .debug_line     0 : { *(.debug_line .debug_line.* .debug_line_end) }
-+  .debug_frame    0 : { *(.debug_frame) }
-+  .debug_str      0 : { *(.debug_str) }
-+  .debug_loc      0 : { *(.debug_loc) }
-+  .debug_macinfo  0 : { *(.debug_macinfo) }
-+  /* SGI/MIPS DWARF 2 extensions */
-+  .debug_weaknames 0 : { *(.debug_weaknames) }
-+  .debug_funcnames 0 : { *(.debug_funcnames) }
-+  .debug_typenames 0 : { *(.debug_typenames) }
-+  .debug_varnames  0 : { *(.debug_varnames) }
-+  /* DWARF 3 */
-+  .debug_pubtypes 0 : { *(.debug_pubtypes) }
-+  .debug_ranges   0 : { *(.debug_ranges) }
-+  /* DWARF Extension.  */
-+  .debug_macro    0 : { *(.debug_macro) }
-+  .debug_addr     0 : { *(.debug_addr) }
-+}
-+
-+
 diff --git a/libgloss/pru/ldscripts/pruelf-sim.x b/libgloss/pru/ldscripts/pruelf-sim.x
 new file mode 100644
-index 000000000..353c187b8
+index 000000000..1dc8b4f2e
 --- /dev/null
 +++ b/libgloss/pru/ldscripts/pruelf-sim.x
 @@ -0,0 +1,200 @@
@@ -3150,11 +841,11 @@ index 000000000..353c187b8
 +     *(.data.atzero*)
 +    /* CRT is prepared for constructor/destructor table to have
 +       a "valid" NULL address.  */
-+     __init_array_begin = . ;
++     __init_array_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*)))
 +     KEEP (*(.init_array))
 +     __init_array_end = . ;
-+     __fini_array_begin = . ;
++     __fini_array_start = . ;
 +     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*)))
 +     KEEP (*(.fini_array))
 +     __fini_array_end = . ;
@@ -3190,7 +881,7 @@ index 000000000..353c187b8
 +     PROVIDE (_bss_end = .) ;
 +  }  > dmem
 +  /* Global data not cleared after reset.  */
-+  .noinit  :
++  .noinit   :
 +  {
 +     PROVIDE (_noinit_start = .) ;
 +    *(.noinit)
@@ -3210,7 +901,7 @@ index 000000000..353c187b8
 +  .stab.index 0 : { *(.stab.index) }
 +  .stab.indexstr 0 : { *(.stab.indexstr) }
 +  .comment 0 : { *(.comment) }
-+  .note.gnu.build-id : { *(.note.gnu.build-id) }
++  .note.gnu.build-id   : { *(.note.gnu.build-id) }
 +  /* DWARF debug sections.
 +     Symbols in the DWARF debugging sections are relative to the beginning
 +     of the section so we begin them at 0.  */
@@ -3245,98 +936,38 @@ index 000000000..353c187b8
 +}
 +
 +
-diff --git a/libgloss/pru/lseek.c b/libgloss/pru/lseek.c
-new file mode 100644
-index 000000000..966b2b8a3
---- /dev/null
-+++ b/libgloss/pru/lseek.c
-@@ -0,0 +1,31 @@
-+/* lseek.c -- move read/write pointer.
-+ *
-+ * Copyright (c) 1995, 1999 Cygnus Support
-+ *
-+ * The authors hereby grant permission to use, copy, modify, distribute,
-+ * and license this software and its documentation for any purpose, provided
-+ * that existing copyright notices are retained in all copies and that this
-+ * notice is included verbatim in any distributions. No written agreement,
-+ * license, or royalty fee is required for any of the authorized uses.
-+ * Modifications to this software may be copyrighted by their authors
-+ * and need not follow the licensing terms described here, provided that
-+ * the new terms are clearly indicated on the first page of each file where
-+ * they apply.
-+ */
-+#include <sys/types.h>
-+#include <errno.h>
-+#include "glue.h"
-+
-+#undef errno
-+extern int errno;
-+
-+/*
-+ * lseek --  we return an error.
-+ */
-+off_t
-+_lseek (int fd, off_t offset, int whence)
-+{
-+  errno = ESPIPE;
-+  return ((off_t)-1);
-+}
-+
-diff --git a/libgloss/pru/open.c b/libgloss/pru/open.c
-new file mode 100644
-index 000000000..7140eefc4
---- /dev/null
-+++ b/libgloss/pru/open.c
-@@ -0,0 +1,30 @@
-+/* open.c -- open a file.
-+ * 
-+ * Copyright (c) 1995, 1999 Cygnus Support
-+ *
-+ * The authors hereby grant permission to use, copy, modify, distribute,
-+ * and license this software and its documentation for any purpose, provided
-+ * that existing copyright notices are retained in all copies and that this
-+ * notice is included verbatim in any distributions. No written agreement,
-+ * license, or royalty fee is required for any of the authorized uses.
-+ * Modifications to this software may be copyrighted by their authors
-+ * and need not follow the licensing terms described here, provided that
-+ * the new terms are clearly indicated on the first page of each file where
-+ * they apply.
-+ */
-+#include <errno.h>
-+#include "glue.h"
-+
-+#undef errno
-+extern int errno;
-+
-+/*
-+ * open -- open a file descriptor. We don't have a filesystem, so
-+ *         we return an error.
-+ */
-+int
-+_open (const char *buf, int flags, int mode)
-+{
-+  errno = EIO;
-+  return (-1);
-+}
 diff --git a/libgloss/pru/outbyte.c b/libgloss/pru/outbyte.c
 new file mode 100644
-index 000000000..13e4277ea
+index 000000000..fc2ec06cf
 --- /dev/null
 +++ b/libgloss/pru/outbyte.c
-@@ -0,0 +1,24 @@
-+/* outbyte.c -- outbyte function for simulator
+@@ -0,0 +1,37 @@
++/* SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 + *
-+ * Copyright (c) 2014-2018 Dimitar Dimitrov <dimitar@dinux.eu>
++ * outbyte.c -- outbyte function for simulator
 + *
-+ * The authors hereby grant permission to use, copy, modify, distribute,
-+ * and license this software and its documentation for any purpose, provided
-+ * that existing copyright notices are retained in all copies and that this
-+ * notice is included verbatim in any distributions. No written agreement,
-+ * license, or royalty fee is required for any of the authorized uses.
-+ * Modifications to this software may be copyrighted by their authors
-+ * and need not follow the licensing terms described here, provided that
-+ * the new terms are clearly indicated on the first page of each file where
-+ * they apply.
++ * Copyright (c) 2018-2019 Dimitar Dimitrov <dimitar@dinux.eu>
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
 +#include <unistd.h>
 +#include <_ansi.h>
@@ -3459,12 +1090,12 @@ index 000000000..d8e902605
 +}
 diff --git a/libgloss/pru/sbrk.c b/libgloss/pru/sbrk.c
 new file mode 100644
-index 000000000..f14e4ec34
+index 000000000..7210ee8ff
 --- /dev/null
 +++ b/libgloss/pru/sbrk.c
 @@ -0,0 +1,46 @@
 +/* sbrk.c -- allocate memory dynamically.
-+ * 
++ *
 + * Copyright (c) 1995,1996,1999 Cygnus Support
 + *
 + * The authors hereby grant permission to use, copy, modify, distribute,
@@ -3548,78 +1179,88 @@ index 000000000..64cb27253
 +
 diff --git a/libgloss/pru/syscalls.S b/libgloss/pru/syscalls.S
 new file mode 100644
-index 000000000..eb074690a
+index 000000000..8ed7601a4
 --- /dev/null
 +++ b/libgloss/pru/syscalls.S
-@@ -0,0 +1,32 @@
-+/* syscalls.S -- PRU system calls code
+@@ -0,0 +1,78 @@
++/* SPDX-License-Identifier: BSD-2-Clause-FreeBSD
 + *
-+ * Copyright (c) 2014-2018 Dimitar Dimitrov <dimitar@dinux.eu>
++ * syscalls.S -- PRU system calls code
 + *
-+ * The authors hereby grant permission to use, copy, modify, distribute,
-+ * and license this software and its documentation for any purpose, provided
-+ * that existing copyright notices are retained in all copies and that this
-+ * notice is included verbatim in any distributions. No written agreement,
-+ * license, or royalty fee is required for any of the authorized uses.
-+ * Modifications to this software may be copyrighted by their authors
-+ * and need not follow the licensing terms described here, provided that
-+ * the new terms are clearly indicated on the first page of each file where
-+ * they apply.
++ * Copyright (c) 2018-2019 Dimitar Dimitrov <dimitar@dinux.eu>
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
 +#include "newlib.h"
 +
 +#include "syscall.h"
 +
++	.extern _impure_ptr
++
++	/* Handle return from syscall.  */
++	.global	__SC_ret
++	.type	__SC_ret,@function
++	.func
++__SC_ret:
++	/* Check for negative return code */
++	qbbc	__SC_ret_skip_errno_set, r14, 31
++
++	/* Invert return code and store to errno (first int in _impure_ptr).  */
++	rsb	r14, r14, 0
++	ldi32	r1, _impure_ptr
++	sbbo	r14, r1, 0, 4
++	/* Return -1 (for both int32_t or int64_t).  */
++	fill	r14, 8
++
++__SC_ret_skip_errno_set:
++	ret
++	.endfunc
++
 +.macro	SC	fname, id
 +	.global	\fname
-+        .type        \fname,@function
++	.type	\fname,@function
++	.func
 +\fname:
 +	ldi	r1, \id
 +	halt
-+	ret
++	jmp	__SC_ret
++	.endfunc
 +.endm
 +
 +	.text
 +
++	/* Syscalls are used only by simulator.  Real HW
++	   users use other methods for communicating with
++	   the host - remoteproc, rpmsg, shared memory.  */
 +	SC	_exit, SYS_exit
-+	SC	_write, SYS_write
++	SC	_open, SYS_open
++	SC	_close, SYS_close
 +	SC	_read, SYS_read
-diff --git a/libgloss/pru/unlink.c b/libgloss/pru/unlink.c
-new file mode 100644
-index 000000000..a5e490404
---- /dev/null
-+++ b/libgloss/pru/unlink.c
-@@ -0,0 +1,30 @@
-+/* unlink.c -- remove a file.
-+ * 
-+ * Copyright (c) 1995, 1999 Cygnus Support
-+ *
-+ * The authors hereby grant permission to use, copy, modify, distribute,
-+ * and license this software and its documentation for any purpose, provided
-+ * that existing copyright notices are retained in all copies and that this
-+ * notice is included verbatim in any distributions. No written agreement,
-+ * license, or royalty fee is required for any of the authorized uses.
-+ * Modifications to this software may be copyrighted by their authors
-+ * and need not follow the licensing terms described here, provided that
-+ * the new terms are clearly indicated on the first page of each file where
-+ * they apply.
-+ */
-+#include <errno.h>
-+#include "glue.h"
-+
-+#undef errno
-+extern int errno;
-+
-+/*
-+ * unlink -- since we have no file system,
-+ *           we just return an error.
-+ */
-+int
-+_unlink (char * path)
-+{
-+  errno = EIO;
-+  return (-1);
-+}
++	SC	_write, SYS_write
++	SC	_lseek, SYS_lseek
++	SC	_unlink, SYS_unlink
++	SC	_getpid, SYS_getpid
++	SC	_kill, SYS_kill
++	SC	_fstat, SYS_fstat
 diff --git a/newlib/configure.host b/newlib/configure.host
 index 87bf78a3a..6a6066bb2 100644
 --- a/newlib/configure.host
@@ -3675,10 +1316,10 @@ index 911eeb51e..536ac11fc 100644
  #define __IEEE_LITTLE_ENDIAN
  #define __SMALL_BITFIELDS	/* 16 Bit INT */
 diff --git a/newlib/libc/include/machine/setjmp.h b/newlib/libc/include/machine/setjmp.h
-index 9212f840b..a3b33e372 100644
+index 6b37bcce4..25fdea28c 100644
 --- a/newlib/libc/include/machine/setjmp.h
 +++ b/newlib/libc/include/machine/setjmp.h
-@@ -349,6 +349,11 @@ _BEGIN_STD_C
+@@ -352,6 +352,11 @@ _BEGIN_STD_C
  #define _JBTYPE unsigned long
  #endif
  
@@ -3746,35 +1387,34 @@ index 000000000..d6eea0e9c
 +AC_OUTPUT
 diff --git a/newlib/libc/machine/pru/setjmp.s b/newlib/libc/machine/pru/setjmp.s
 new file mode 100644
-index 000000000..f13f66b65
+index 000000000..094d931a9
 --- /dev/null
 +++ b/newlib/libc/machine/pru/setjmp.s
-@@ -0,0 +1,46 @@
-+/*
-+ * Copyright (c) 2014-2018 Dimitar Dimitrov <dimitar@dinux.eu>
+@@ -0,0 +1,45 @@
++/* SPDX-License-Identifier: BSD-2-Clause-FreeBSD
++ *
++ * Copyright (c) 2018-2019 Dimitar Dimitrov <dimitar@dinux.eu>
 + * All rights reserved.
 + *
 + * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions are met:
-+ *
-+ * 1. Redistributions of source code must retain the above copyright notice,
-+ * this list of conditions and the following disclaimer.
-+ *
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
 + * 2. Redistributions in binary form must reproduce the above copyright
-+ * notice, this list of conditions and the following disclaimer in the
-+ * documentation and/or other materials provided with the distribution.
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
 + *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-+ * POSSIBILITY OF SUCH DAMAGE.
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
 +	.section	.text
 +	.align	3
@@ -3797,5 +1437,5 @@ index 000000000..f13f66b65
 +1:
 +	ret
 -- 
-2.11.0
+2.20.1
 

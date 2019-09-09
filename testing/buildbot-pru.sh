@@ -3,7 +3,8 @@
 # Simple script for automatic daily testing of gcc+newlib ToT.
 
 BINUTILS_URL=git://sourceware.org/git/binutils-gdb.git
-GCC_URL=https://github.com/mirrors/gcc
+#GCC_URL=https://github.com/mirrors/gcc
+GCC_URL=svn://gcc.gnu.org/svn/gcc/trunk
 NEWLIB_URL=https://github.com/mirror/newlib-cygwin
 
 REGRESSION_RECIPIENTS="dinuxbg@gmail.com"
@@ -17,10 +18,16 @@ bb_daily_target_test()
   bb_clean
 
   bb_update_source binutils ${BINUTILS_URL}
-  bb_update_source gcc ${GCC_URL}
+  bb_update_source_svn gcc ${GCC_URL}
   bb_update_source newlib ${NEWLIB_URL}
 
-  local GCC_TOT=`cd gcc && git rev-parse HEAD`
+  # Prepare tree for release, and write proper versioning info.
+  pushd ${WORKSPACE}/gcc || error "failed to enter gcc"
+  ./contrib/gcc_update origin master
+  popd
+
+  #local GCC_TOT=`cd gcc && git rev-parse HEAD`
+  local GCC_TOT=r`cd gcc && svn info  --show-item revision`
   local BINUTILS_TOT=`cd binutils && git rev-parse HEAD`
   local NEWLIB_TOT=`cd newlib && git rev-parse HEAD`
 
@@ -32,7 +39,7 @@ bb_daily_target_test()
   bb_config binutils "--disable-gdb --target=pru"
   bb_make binutils "-j`nproc`"
   bb_make binutils "install"
-  bb_make binutils "check RUNTESTFLAGS=--target_board=pru-sim"
+  bb_make binutils "-j`nproc` check RUNTESTFLAGS=--target_board=pru-sim"
 
   export PATH=${PREFIX}/bin:${PATH}
 
@@ -54,9 +61,12 @@ bb_daily_target_test()
   # Make sure documentation is still in order
   bb_make gcc "pdf"
 
+  # Test newlib
+  bb_make newlib "-j`nproc` check RUNTESTFLAGS=--target_board=pru-sim"
+
   # Test GCC
-  bb_make gcc "check-gcc-c -j`nproc` RUNTESTFLAGS=--target_board=pru-sim"
-  bb_make gcc "check-gcc-c++ -j`nproc` RUNTESTFLAGS=--target_board=pru-sim"
+  bb_make gcc "-j`nproc` check-gcc-c RUNTESTFLAGS=--target_board=pru-sim"
+  bb_make gcc "-j`nproc` check-gcc-c++ RUNTESTFLAGS=--target_board=pru-sim"
 
   # Save all the logs
   bb_gather_log_files ${BUILD_TAG}

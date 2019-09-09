@@ -1,7 +1,7 @@
-From dea67264b0080b2a28945870132fbfdfa4ad4a77 Mon Sep 17 00:00:00 2001
+From 5860392d60a7cee264f197d97333ebc3c8a158d2 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Wed, 29 Aug 2018 15:38:05 +0300
-Subject: [PATCH 7/9] HACK: Skip failing LD tests
+Subject: [PATCH 7/8] HACK: Skip failing LD tests
 
 These should be addressed properly. Until fixed, though, skip
 them to allow buildbot test to run.
@@ -41,5 +41,5 @@ index 5b219b7795..bd49754ed3 100644
  # Fails on AVR, IP2K, M68HC11, XC16C because the assembler does not calculate the correct values for the differences of local symbols.
  # Fails on CRX because readelf does not know how to apply CRX reloc number 20 (R_CRX_SWITCH32).
 -- 
-2.11.0
+2.20.1
 
