@@ -3,7 +3,11 @@
 ##  DejaGnu Configuration
 Install Dejagnu:
 
-	apt-get install dejagnu autogen
+	sudo apt-get install dejagnu autogen
+
+Or, for Fedora:
+
+	sudo dnf install dejagnu autogen
 
 Then copy the PRU configuration provided with this package:
 

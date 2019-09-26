@@ -27,12 +27,12 @@ Bug reports should be filed in https://github.com/dinuxbg/gnupru/issues . For ge
 This project has no relation to the TI PRU C compiler. ABI differences between GCC PRU and TI PRU C are tracked in https://github.com/dinuxbg/gnupru/wiki
 
 ## Installing On Debian Jessie
-If you are running Beaglebone Debian Jessie image, then installation is simple:
+If you are running Beaglebone Debian image, then installation is simple:
 
 	sudo apt-get update
 	sudo apt-get install gcc-pru
 
-For other Debian Jessie images, you'll need to add Robert Nelson's package repository. Open /etc/apt/sources.list and add the following line:
+For other Debian armhf images, you'll need to add Robert Nelson's package repository. Open /etc/apt/sources.list and add the following line:
 
 	deb [arch=armhf] http://repos.rcn-ee.com/debian/ jessie main
 
@@ -41,7 +41,11 @@ The toolchain is published as a series of patches inside the patches subdirector
 
 You'll need some prerequisites. For a Debian host:
 
-	sudo apt-get install build-essential libmpfr-dev libgmp-dev libmpc-dev texinfo libncurses5-dev bison flex build-essential
+	sudo apt-get install build-essential libmpfr-dev libgmp-dev libmpc-dev texinfo libncurses5-dev bison flex
+
+Alternatively, for a Fedora host:
+
+	sudo dnf install @development-tools g++ mpfr-devel gmp-devel libmpc-devel texinfo ncurses-devel bison flex
 
 Then it should be a simple matter of:
 
