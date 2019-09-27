@@ -1,4 +1,4 @@
-From df2fe0767795a6d871b7e118f82ccd855cd99890 Mon Sep 17 00:00:00 2001
+From 842a4f8816360a89fe8812aab87e9cc7ab520aa7 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Sun, 11 Mar 2018 22:15:05 +0200
 Subject: [PATCH 2/3] PRU: Align libmath to PRU ABI

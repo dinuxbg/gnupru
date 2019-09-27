@@ -1,6 +1,5 @@
-Test run by dinux on Mon Mar  4 22:27:20 2019
+Test run by dinux on Fri Sep 27 00:30:35 2019
 Target is pru-unknown-elf
-Host   is x86_64-pc-linux-gnu
 
 		=== g++ tests ===
 
@@ -8,7 +7,7 @@ Schedule of variations:
     pru-sim
 
 Running target pru-sim
-Running /home/dinux/projects/pru/testbot-workspace/gcc/gcc/testsuite/g++.dg/compat/compat.exp ...
+Running /home/dinux/projects/pru/local-workspace/gcc/gcc/testsuite/g++.dg/compat/compat.exp ...
 PASS: g++.dg/compat/abi/bitfield1 cp_compat_main_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/bitfield1 cp_compat_x_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
 PASS: g++.dg/compat/abi/bitfield1 cp_compat_y_tst.o compile, "-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE","-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE"
@@ -167,5 +166,5 @@ PASS: g++.dg/compat/init/init-ref2 cp_compat_x_tst.o-cp_compat_y_tst.o execute "
 
 # of expected passes		140
 # of unsupported tests		13
-/home/dinux/projects/pru/testbot-workspace/gcc-build/gcc/xg++  version 9.0.1 20190304 (experimental) (GCC) 
+/home/dinux/projects/pru/local-workspace/gcc-pru-build/gcc/xg++  version 10.0.0 20190926 (experimental) (GCC) 
 

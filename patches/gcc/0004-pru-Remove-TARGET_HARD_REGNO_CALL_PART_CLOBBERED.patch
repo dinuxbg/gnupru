@@ -1,0 +1,79 @@
+From b06c8e71dab2b0aebe87d500577b4932895a2146 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Sun, 15 Sep 2019 18:01:22 +0300
+Subject: [PATCH 4/5] pru: Remove TARGET_HARD_REGNO_CALL_PART_CLOBBERED
+
+Per clarification in [1], macro is supposed to check for partial
+clobbering of single HW registers. Since PRU declares only 8-bit
+HW registers, and ABI does not define individual bit clobbering,
+it is safe to remove the implementation.
+
+gcc/ChangeLog:
+
+2019-09-15  Dimitar Dimitrov  <dimitar@dinux.eu>
+
+	* config/pru/pru.c (pru_hard_regno_call_part_clobbered):
+	(TARGET_HARD_REGNO_CALL_PART_CLOBBERED):
+
+[1] https://gcc.gnu.org/ml/gcc-patches/2019-09/msg00778.html
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ gcc/config/pru/pru.c | 34 ----------------------------------
+ 1 file changed, 34 deletions(-)
+
+diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
+index c1f7849b8c1..fe89503a3f3 100644
+--- a/gcc/config/pru/pru.c
++++ b/gcc/config/pru/pru.c
+@@ -556,37 +556,6 @@ pru_hard_regno_scratch_ok (unsigned int regno)
+ }
+ 
+ 
+-/* Implement TARGET_HARD_REGNO_CALL_PART_CLOBBERED.  */
+-
+-static bool
+-pru_hard_regno_call_part_clobbered (rtx_insn *insn ATTRIBUTE_UNUSED,
+-				    unsigned regno, machine_mode mode)
+-{
+-  HARD_REG_SET caller_saved_set;
+-  HARD_REG_SET callee_saved_set;
+-
+-  CLEAR_HARD_REG_SET (caller_saved_set);
+-  CLEAR_HARD_REG_SET (callee_saved_set);
+-
+-  /* r0 and r1 are caller saved.  */
+-  add_range_to_hard_reg_set (&caller_saved_set, 0, 2 * 4);
+-
+-  add_range_to_hard_reg_set (&caller_saved_set, FIRST_ARG_REGNUM,
+-			     LAST_ARG_REGNUM + 1 - FIRST_ARG_REGNUM);
+-
+-  /* Treat SP as callee saved.  */
+-  add_range_to_hard_reg_set (&callee_saved_set, STACK_POINTER_REGNUM, 4);
+-
+-  /* r3 to r13 are callee saved.  */
+-  add_range_to_hard_reg_set (&callee_saved_set, FIRST_CALLEE_SAVED_REGNUM,
+-			     LAST_CALEE_SAVED_REGNUM + 1
+-			     - FIRST_CALLEE_SAVED_REGNUM);
+-
+-  return overlaps_hard_reg_set_p (caller_saved_set, mode, regno)
+-	 && overlaps_hard_reg_set_p (callee_saved_set, mode, regno);
+-}
+-
+-
+ /* Worker function for `HARD_REGNO_RENAME_OK'.
+    Return nonzero if register OLD_REG can be renamed to register NEW_REG.  */
+ 
+@@ -2934,9 +2903,6 @@ pru_unwind_word_mode (void)
+ 
+ #undef  TARGET_HARD_REGNO_SCRATCH_OK
+ #define TARGET_HARD_REGNO_SCRATCH_OK pru_hard_regno_scratch_ok
+-#undef  TARGET_HARD_REGNO_CALL_PART_CLOBBERED
+-#define TARGET_HARD_REGNO_CALL_PART_CLOBBERED \
+-  pru_hard_regno_call_part_clobbered
+ 
+ #undef TARGET_FUNCTION_ARG
+ #define TARGET_FUNCTION_ARG pru_function_arg
+-- 
+2.20.1
+

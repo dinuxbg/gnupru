@@ -5,9 +5,9 @@
 
 # On which upstream commits to apply patches. I frequently rebase so
 # expect these to be somewhat random.
-GCC_BASECOMMIT=a7d35751fec95d75ab80e626d66cbe5b834f8a13
-BINUTILS_BASECOMMIT=60391a255b720e37ab1efbb7e83bf7dfa270a0fe
-NEWLIB_BASECOMMIT=f39a694c463c1a1ea14e60f5d03652d94e6f76ee
+GCC_BASECOMMIT=a74b91fa21ca8df126c23b704285a433e76ba4dc
+BINUTILS_BASECOMMIT=50fa3001ce25e221ca2e54564b5589d29c4bed19
+NEWLIB_BASECOMMIT=e1a0775dc0545b5f9c81b09a327fc110c538b7b4
 GNUPRUMCU_URL=https://github.com/dinuxbg/gnuprumcu/releases/download/v0.1.0/gnuprumcu-0.1.0.tar.gz
 
 # You can export your (local) repositories to speed up

@@ -1,0 +1,39 @@
+From d06f287914d6de7335f78909851d1d1fda2f5433 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Fri, 6 Sep 2019 22:15:07 +0300
+Subject: [PATCH 3/5] Add comment about register
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ gcc/config/pru/pru.h | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/gcc/config/pru/pru.h b/gcc/config/pru/pru.h
+index 15fb637dec6..787cf401ca4 100644
+--- a/gcc/config/pru/pru.h
++++ b/gcc/config/pru/pru.h
+@@ -125,7 +125,8 @@
+    1      r1		  Caller Saved.  Also used as a temporary by function.
+ 			  profiler and function prologue/epilogue.
+    2      r2       sp	  Stack Pointer.
+-   3*     r3.w0    ra	  Return Address (16-bit).
++   3*     r3.w0		  ABI does not specify it is caller or callee saved.
++   3*     r3.w2    ra	  Return Address (16-bit).
+    4      r4       fp	  Frame Pointer, also called Argument Pointer in ABI.
+    5-13   r5-r13	  Callee Saved Registers.
+    14-29  r14-r29	  Register Arguments.  Caller Saved Registers.
+@@ -148,6 +149,11 @@
+    of 8 bit sub-registers (e.g. RA starts at r12).  When outputting assembly,
+    GCC will take into account the RTL operand size (e.g. r12:HI) in order to
+    translate to the conventional PRU ISA format expected by GAS (r3.w0).
++
++   TI ISA documentation (SPRUHV7C) does not mark r3.w0 as neither
++   caller-saved nor callee-saved.  So until TI clarifies this, let's mark
++   this as fixed.
++
+ */
+ 
+ #define FIXED_REGISTERS				\
+-- 
+2.20.1
+
