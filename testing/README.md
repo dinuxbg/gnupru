@@ -13,7 +13,6 @@ Then copy the PRU configuration provided with this package:
 
 	sudo cp pru-sim.exp /usr/share/dejagnu/baseboards/
 
-
 ## Binutils
 You need to install pru-gcc via some means, and then do a clean build of binutils. The binutils' configure script requires a pru-gcc to be available when configuring the project, in order to setup the LD tests exercising a target compiler.
 

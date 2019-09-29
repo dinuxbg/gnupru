@@ -1,16 +1,14 @@
 #!/bin/bash
 
-# Simple script for automatic daily testing of gcc+newlib ToT.
+# Simple script for manual building and testing of gcc+newlib ToT.
+#
+# It is assumed that source directories are already setup, and
+# desired HEADs are checked out.
 
-BINUTILS_URL=git://sourceware.org/git/binutils-gdb.git
-GCC_URL=https://github.com/mirrors/gcc
-#GCC_URL=svn://gcc.gnu.org/svn/gcc/trunk
-NEWLIB_URL=https://github.com/mirror/newlib-cygwin
 BB_ARCH=pru
 
-REGRESSION_RECIPIENTS="dinuxbg@gmail.com"
-true ${SUMMARY_RECIPIENTS:=dinuxbg@gmail.com}
-
+# Do not send any email for this session
+alias Mail='true'
 
 bb_daily_target_test()
 {
@@ -19,17 +17,7 @@ bb_daily_target_test()
 
   bb_clean
 
-  bb_update_source binutils ${BINUTILS_URL}
-  bb_update_source gcc ${GCC_URL}
-  bb_update_source newlib ${NEWLIB_URL}
-
-  # Prepare tree for release, and write proper versioning info.
-  pushd ${WORKSPACE}/gcc || error "failed to enter gcc"
-  ./contrib/gcc_update origin master
-  popd
-
   local GCC_TOT=`cd gcc && git rev-parse HEAD`
-  #local GCC_TOT=r`cd gcc && svn info  --show-item revision`
   local BINUTILS_TOT=`cd binutils && git rev-parse HEAD`
   local NEWLIB_TOT=`cd newlib && git rev-parse HEAD`
 
@@ -72,24 +60,11 @@ bb_daily_target_test()
 
   # Save all the logs
   bb_gather_log_files ${BUILD_TAG}
-
-  # Send to real mailing list,
-  pushd ${WORKSPACE}/pru-gcc-build || error "failed to enter pru-gcc-build"
-  # TODO - switch to mail list when stability is reached!
-  ../gcc/contrib/test_summary -m ${SUMMARY_RECIPIENTS} | sh
-  popd
-
-  bb_check_for_regressions ${PREV_BUILD_TAG} ${BUILD_TAG}
 }
 
 
 . `dirname ${0}`/buildbot-lib.sh
 
 bb_init ${@}
-
-# Workaround debian's inability to set heirloom as default
-# mkdir -p ${WORKSPACE}/tools/bin
-# ln -s `which s-nail` ${WORKSPACE}/tools/bin/Mail 1>/dev/null 2>&1
-# export PATH=${WORKSPACE}/tools/bin:${PATH}
 
 bb_daily_build

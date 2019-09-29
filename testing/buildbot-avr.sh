@@ -6,6 +6,7 @@ BINUTILS_URL=git://sourceware.org/git/binutils-gdb.git
 GCC_URL=https://github.com/mirrors/gcc
 AVRLIBC_URL=https://github.com/dinuxbg/avr-libc
 WINAVR_URL=https://gitlab.com/dinuxbg/winavr-code
+BB_ARCH=avr
 
 REGRESSION_RECIPIENTS="dinuxbg@gmail.com"
 
@@ -70,7 +71,7 @@ bb_daily_target_test()
   bb_gather_log_files ${BUILD_TAG}
 
   # Send to real mailing list,
-  pushd ${WORKSPACE}/gcc-build || error "failed to enter gcc-build"
+  pushd ${WORKSPACE}/avr-gcc-build || error "failed to enter avr-gcc-build"
   # TODO - switch to mail list when stability is reached!
   ../gcc/contrib/test_summary -m dinuxbg@gmail.com | sh
   popd
@@ -84,8 +85,8 @@ bb_daily_target_test()
 bb_init ${@}
 
 # Workaround debian's inability to set heirloom as default
-mkdir -p ${WORKSPACE}/tools/bin
-ln -s `which s-nail` ${WORKSPACE}/tools/bin/Mail 1>/dev/null 2>&1
-export PATH=${WORKSPACE}/tools/bin:${PATH}
+# mkdir -p ${WORKSPACE}/tools/bin
+# ln -s `which s-nail` ${WORKSPACE}/tools/bin/Mail 1>/dev/null 2>&1
+# export PATH=${WORKSPACE}/tools/bin:${PATH}
 
 bb_daily_build

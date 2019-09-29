@@ -46,7 +46,7 @@ You'll need some prerequisites. For a Debian host:
 
 Alternatively, for a Fedora host:
 
-	sudo dnf install @development-tools g++ mpfr-devel gmp-devel libmpc-devel texinfo ncurses-devel bison flex
+	sudo dnf install @development-tools g++ mpfr-devel gmp-devel libmpc-devel texinfo texinfo-tex texlive-cm-super* texlive-ec ncurses-devel bison flex
 
 Then it should be a simple matter of:
 

@@ -78,7 +78,7 @@ bb_clean()
 {
   print_stage "Cleaning all projects"
   local BDIR
-  for BDIR in `ls -d ${WORKSPACE}/*-build`
+  for BDIR in `ls -d ${WORKSPACE}/${BB_BDIR_PREFIX}-*-build`
   do
     rm -fr ${BDIR}
   done
@@ -93,8 +93,8 @@ bb_config()
   local CONFIGURE
 
   print_stage "Configuring ${PRJ} with parameters \"${CONFIG_PARAMS}\""
-  mkdir -p ${WORKSPACE}/${PRJ}-build
-  pushd ${WORKSPACE}/${PRJ}-build || error "failed to mkdir ${PRJ}-build"
+  mkdir -p ${WORKSPACE}/${BB_BDIR_PREFIX}-${PRJ}-build
+  pushd ${WORKSPACE}/${BB_BDIR_PREFIX}-${PRJ}-build || error "failed to mkdir $${BB_BDIR_PREFIX}-{PRJ}-build"
 
   # HACK: Workaround bug in newlib testsuite's build system.
   # See: https://sourceware.org/ml/newlib/2011/msg00457.html
@@ -114,8 +114,8 @@ bb_make()
   local MAKE_PARAMS="$@"
 
   print_stage "Building ${PRJ} with parameters \"${CONFIG_PARAMS}\""
-  mkdir -p ${WORKSPACE}/${PRJ}-build
-  pushd ${WORKSPACE}/${PRJ}-build || error "missing ${PRJ}-build"
+  mkdir -p ${WORKSPACE}/${BB_BDIR_PREFIX}-${PRJ}-build
+  pushd ${WORKSPACE}/${BB_BDIR_PREFIX}-${PRJ}-build || error "missing ${BB_BDIR_PREFIX}-${PRJ}-build"
 
   make ${MAKE_PARAMS} || { [ ${IGNORE_ERRORS} = false ] &&  error "Could not make ${PRJ}"; }
 
@@ -174,7 +174,7 @@ bb_gather_log_files()
   local BUILD_TAG=${1}
   local F
 
-  find `ls -d ${WORKSPACE}/*-build` -name "*.sum" | while read F
+  find `ls -d ${WORKSPACE}/${BB_BDIR_PREFIX}-*-build` -name "*.sum" | while read F
   do
     cp ${F} ${LOGDIR}/${BUILD_TAG}/ || error "failed to copy ${F}"
     local L=`dirname ${F}`/`basename ${F} .sum`.log
@@ -208,6 +208,9 @@ bb_init()
 {
   [ $# == 1 ] || error "usage: $0 <WORKSPACE>"
 
+  [ -z ${BB_ARCH} ] && error "Please define BB_ARCH"
+  BB_BDIR_PREFIX=${BB_BDIR_PREFIX:-${BB_ARCH}}
+
   WORKSPACE=`realpath "${1}"`
   [ -d "$WORKSPACE" ] || error "$WORKSPACE is not a directory"
 
@@ -221,12 +224,13 @@ bb_daily_build()
 {
   cd $WORKSPACE
 
-  # Before creating our log directory, check what is the previous one.
-  local PREV_BUILD_TAG=`cd ${LOGDIR} && dirname $(ls */pass | sort | tail -1)`
-  [ -z ${PREV_BUILD_TAG} ] && error "failed to determine previous successful build"
-
   local BUILD_TAG=`date +%Y%m%d-%H%M`
   mkdir -p ${LOGDIR}/${BUILD_TAG} || error "failed to create log directory for ${BUILD_TAG}"
+
+  # Check what is the previous one.
+  # First time let's compare with ourselves.
+  local PREV_BUILD_TAG=`cd ${LOGDIR} && dirname $( { ls */pass 2>/dev/null || echo ${BUILD_TAG}/pass ; } | sort | tail -1)`
+  [ -z ${PREV_BUILD_TAG} ] && error "failed to determine previous successful build"
 
   # Execute in a subshell in order to catch build errors and send an email.
   ( set -x; time bb_daily_target_test ${PREV_BUILD_TAG} ${BUILD_TAG} ) >${LOGDIR}/${BUILD_TAG}/build.log 2>&1
