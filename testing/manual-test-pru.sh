@@ -8,7 +8,10 @@
 BB_ARCH=pru
 
 # Do not send any email for this session
-alias Mail='true'
+Mail()
+{
+  true
+}
 
 bb_daily_target_test()
 {

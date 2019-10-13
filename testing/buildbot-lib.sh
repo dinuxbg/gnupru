@@ -214,9 +214,9 @@ bb_init()
   WORKSPACE=`realpath "${1}"`
   [ -d "$WORKSPACE" ] || error "$WORKSPACE is not a directory"
 
-  PREFIX=${PREFIX:-${WORKSPACE}/opt}
+  PREFIX=${PREFIX:-${WORKSPACE}/${BB_ARCH}-opt}
   mkdir -p ${PREFIX}
-  LOGDIR=${LOGDIR:-${WORKSPACE}/logs}
+  LOGDIR=${LOGDIR:-${WORKSPACE}/${BB_ARCH}-logs}
   mkdir -p ${LOGDIR}
 }
 
