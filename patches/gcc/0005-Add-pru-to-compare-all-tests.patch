@@ -1,11 +1,11 @@
-From 636f40d3a3b0913679988259a5eef80d770cf140 Mon Sep 17 00:00:00 2001
+From c62da06e99a2bd1b66961ff60fa43dd119af5a01 Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Tue, 17 Sep 2019 20:49:00 +0300
 Subject: [PATCH 5/5] Add pru to compare-all-tests
 
 contrib/ChangeLog:
 
-2019-09-17  Dimitar Dimitrov  <dimitar@dinux.eu>
+2019-10-13  Dimitar Dimitrov  <dimitar@dinux.eu>
 
 	* compare-all-tests (all_targets): Add pru target.
 
@@ -15,7 +15,7 @@ Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/contrib/compare-all-tests b/contrib/compare-all-tests
-index 502cc64f522..0cd33b1b536 100644
+index 502cc64f522..6d0f29e052f 100644
 --- a/contrib/compare-all-tests
 +++ b/contrib/compare-all-tests
 @@ -34,7 +34,7 @@ s390_opts='-m31 -m31/-mzarch -m64'
@@ -23,7 +23,7 @@ index 502cc64f522..0cd33b1b536 100644
  sparc_opts='-mcpu=v8/-m32 -mcpu=v9/-m32 -m64'
  
 -all_targets='alpha arm avr bfin cris fr30 frv h8300 ia64 iq2000 m32c m32r m68k mcore mips mmix mn10300 pa pdp11 ppc sh sparc v850 vax xstormy16 xtensa' # e500 
-+all_targets='alpha arm avr bfin cris fr30 frv h8300 ia64 iq2000 m32c m32r m68k mcore mips mmix mn10300 pa pdp11 ppc pru sh sparc v850 vax xstormy16 xtensa' # e500 
++all_targets='alpha arm avr bfin cris fr30 frv h8300 ia64 iq2000 m32c m32r m68k mcore mips mmix mn10300 pa pdp11 ppc pru sh sparc v850 vax xstormy16 xtensa' # e500
  
  test_one_file ()
  {

@@ -3,14 +3,14 @@
 ## Introduction
 This is an unofficial GCC/Binutils port for the PRU I/O CPU core that is present in TI Sitara AM33xx SoCs. Older PRU core versions are not supported.
 
-The release is ready for cautious usage. A simulator is used to execute the GCC C regression test suite. Results for this release are:
+A simulator is used to execute the GCC C regression test suite. Results for this release are:
 
-	# of expected passes		97496
-	# of unexpected failures	213
+	# of expected passes		98346
+	# of unexpected failures	219
 	# of unexpected successes	3
-	# of expected failures		360
+	# of expected failures		362
 	# of unresolved testcases	6
-	# of unsupported tests		3023
+	# of unsupported tests		3037
 
 Results from the GCC ABI test suite:
 

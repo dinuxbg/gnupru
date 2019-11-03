@@ -35,6 +35,7 @@ do
     -Wno-psabi) ;;   # Why DejaGnu even passes this flag?
     -fno-diagnostics-show-caret) ;;
     -fno-diagnostics-show-line-numbers) ;;
+    -fdiagnostics-urls=never) ;;
     *) ARGS="${ARGS} ${1}";;
   esac
   shift

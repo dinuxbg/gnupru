@@ -1,21 +1,30 @@
-From afc2ca2677c3d75276b42c9a1b550dd79ed5e708 Mon Sep 17 00:00:00 2001
+From f161a0dcc8f4e2b9293530595e1108113f9a3bdb Mon Sep 17 00:00:00 2001
 From: Dimitar Dimitrov <dimitar@dinux.eu>
 Date: Mon, 17 Jun 2019 22:39:01 +0300
 Subject: [PATCH 2/5] PRU: Simplify machine description
 
 Use the new @insn syntax for simpler gen_* invocation.
 
+gcc/ChangeLog:
+
+2019-10-13  Dimitar Dimitrov  <dimitar@dinux.eu>
+
+	* config/pru/pru.c (pru_emit_doloop): Use new gen_doloop_end_internal
+	and gen_doloop_begin_internal.
+	(pru_reorg_loop): Use gen_pruloop with mode.
+	* config/pru/pru.md: Use new @insn syntax.
+
 Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
 ---
- gcc/config/pru/pru.c  | 43 ++++++++++++-------------------------------
+ gcc/config/pru/pru.c  | 44 +++++++++++++------------------------------
  gcc/config/pru/pru.md |  6 +++---
- 2 files changed, 15 insertions(+), 34 deletions(-)
+ 2 files changed, 16 insertions(+), 34 deletions(-)
 
 diff --git a/gcc/config/pru/pru.c b/gcc/config/pru/pru.c
-index 8fea2a4b729..c1f7849b8c1 100644
+index 59b004b774f..dabea2b59c8 100644
 --- a/gcc/config/pru/pru.c
 +++ b/gcc/config/pru/pru.c
-@@ -2345,26 +2345,13 @@ pru_emit_doloop (rtx *operands, int is_end)
+@@ -2345,26 +2345,14 @@ pru_emit_doloop (rtx *operands, int is_end)
  
    tag = GEN_INT (cfun->machine->doloop_tags - 1);
    machine_mode opmode = GET_MODE (operands[0]);
@@ -43,11 +52,12 @@ index 8fea2a4b729..c1f7849b8c1 100644
 -      else
 -	gcc_unreachable ();
 -    }
-+      emit_insn (gen_doloop_begin_internal (opmode, operands[0], operands[0], tag));
++    emit_insn (gen_doloop_begin_internal (opmode, operands[0],
++					  operands[0], tag));
  }
  
  
-@@ -2607,6 +2594,7 @@ pru_reorg_loop (rtx_insn *insns)
+@@ -2607,6 +2595,7 @@ pru_reorg_loop (rtx_insn *insns)
  	/* Case (1) or (2).  */
  	rtx_code_label *repeat_label;
  	rtx label_ref;
@@ -55,7 +65,7 @@ index 8fea2a4b729..c1f7849b8c1 100644
  
  	/* Create a new label for the repeat insn.  */
  	repeat_label = gen_label_rtx ();
-@@ -2616,23 +2604,16 @@ pru_reorg_loop (rtx_insn *insns)
+@@ -2616,23 +2605,16 @@ pru_reorg_loop (rtx_insn *insns)
  	   will utilize an internal for the PRU core LOOP register.  */
  	label_ref = gen_rtx_LABEL_REF (VOIDmode, repeat_label);
  	machine_mode loop_mode = GET_MODE (loop->begin->loop_count);

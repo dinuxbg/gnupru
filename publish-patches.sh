@@ -38,7 +38,7 @@ extract_patches()
   /bin/mv 00* /tmp/
   git format-patch origin/master
   (cd ${WORKDIR}/gnupru/patches && git rm -fr ${srcdir} && mkdir ${srcdir})
-  mv 00* ${WORKDIR}/gnupru/patches/${srcdir}/ || die
+  mv 00* ${WORKDIR}/gnupru/patches/${srcdir}/ || echo "Congratulations - `basename ${srcdir}` has been entirely mainlined!"
   (cd ${WORKDIR}/gnupru/ && git add patches/${srcdir} download-and-patch.sh)
   popd
 }
