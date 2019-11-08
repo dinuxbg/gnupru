@@ -1,3 +1,9 @@
+binutils-pru (2.33.50.20191103) unstable; urgency=medium
+
+  * Update to latest binutils mainline.
+
+ -- Dimitar Dimitrov <dimitar@dinux.eu>  Fri, 08 Nov 2019 22:09:10 +0200
+
 binutils-pru (2.30.51.20180310) stretch; urgency=medium
 
   * ld: Switched relocations to be more compatible with TI's toolchain. YOU MUST RECOMPILE ALL YOUR SOURCE FILES - object files from old and new binutils cannot be linked together.

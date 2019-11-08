@@ -1,3 +1,10 @@
+gcc-pru (10.0.0.20191103) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Update to latest upstream.
+
+ -- Dimitar Dimitrov <dimitar@dinux.eu>  Fri, 08 Nov 2019 22:27:46 +0200
+
 gcc-pru (8.0.1.20180310) stretch; urgency=medium
 
   * GCC PRU port has been overhauled to better support TI ABI.

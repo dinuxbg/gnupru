@@ -10,7 +10,7 @@ Package: gcc-pru
 Architecture: any
 Section: devel
 Priority: extra
-Depends: ${shlibs:Depends}, ${misc:Depends}, binutils-pru (>= 2.30.51.20180310) gnuprumcu
+Depends: ${shlibs:Depends}, ${misc:Depends}, binutils-pru (>= 2.30.51.20180310), gnuprumcu
 # Recommends: gnuprumcu
 Provides: c-compiler-pru
 Suggests: task-c-devel, gcc-doc (>= 4:4.8), gcc (>= 4:4.8)

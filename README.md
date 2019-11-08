@@ -65,7 +65,8 @@ Building and packaging:
 
 	./download-and-patch.sh           # Download and patch the sources
 	./package-binutils.sh
-	sudo dpkg -i packaging/binutils-pru*.deb
+	./package-gnuprumcu.sh
+	sudo dpkg -i packaging/binutils-pru*.deb packaging/gnuprumcu*.deb
 	./package-gcc-newlib.sh
 	sudo dpkg -i packaging/gcc-pru*.deb
 
