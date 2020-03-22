@@ -1,4 +1,0 @@
-To make it possible to have different versions of gcc packages
-installed for different targets the local and most common documentation have
-been removed from the cross packages. If you want these files aswell you'll
-have to install the same version of the native package as of this package.

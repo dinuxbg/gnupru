@@ -21,6 +21,7 @@ Results from the GCC ABI test suite:
 
 There are several examples to get started:
  * Assorted small examples: https://github.com/dinuxbg/pru-gcc-examples
+ * Beaglemic PDM microphone array: https://gitlab.com/dinuxbg/beaglemic
  * GCC port of the TI PRU training: https://github.com/dinuxbg/pru-software-support-package . Make sure to read ReadMe-GCC.txt.
 
 Bug reports should be filed in https://github.com/dinuxbg/gnupru/issues . For general questions please use http://beagleboard.org/Community/Forums .
@@ -35,7 +36,7 @@ If you are running Beaglebone Debian image, then installation is simple:
 
 For other Debian armhf images, you'll need to add Robert Nelson's package repository. Open /etc/apt/sources.list and add the following line:
 
-	deb [arch=armhf] http://repos.rcn-ee.com/debian/ jessie main
+	deb [arch=armhf] http://repos.rcn-ee.com/debian/ buster main
 
 ## Building From Sources
 The toolchain is published as a series of patches inside the patches subdirectory. The build scripts are tested on a Debian host, but should work on any recent distro.
@@ -53,27 +54,6 @@ Then it should be a simple matter of:
 	export PREFIX=$HOME/bin/pru-gcc   # Define where to install the toolchain
 	./download-and-patch.sh           # Download and patch the sources
 	./build.sh                        # Build
-
-## Creating Debian Packages From Scratch
-There are experimental scripts for packaging binutils and gcc+newlib.
-
-Installing the prerequisites:
-
-	sudo apt-get install dh-autoreconf libgmp-dev libmpfr-dev libmpc-dev libzip-dev autoconf2.64 lsb-release patchutils
-
-Building and packaging:
-
-	./download-and-patch.sh           # Download and patch the sources
-	./package-binutils.sh
-	./package-gnuprumcu.sh
-	sudo dpkg -i packaging/binutils-pru*.deb packaging/gnuprumcu*.deb
-	./package-gcc-newlib.sh
-	sudo dpkg -i packaging/gcc-pru*.deb
-
-Testing the output:
-
-	pru-as --version
-	pru-gcc --version
 
 ## Acknowledgements
  * GCC/Binutils Nios2 port was taken as a base for the PRU port.
