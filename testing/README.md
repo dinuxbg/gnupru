@@ -30,6 +30,22 @@ To execute the GCC C test suite go to the GCC build directory and run:
 	make check-gcc-c RUNTESTFLAGS=--target_board=pru-sim
 	make check-gcc-c++ RUNTESTFLAGS=--target_board=pru-sim
 
+## Comparing builds for regressions
+
+First, build a reference that we'll compare against:
+
+	cd gcc && git checkout origin/master
+	BB_BDIR_PREFIX=base-pru ./gnupru/testing/manual-test-pru.sh .
+
+After that, apply your changes and do the build we'll be testing:
+
+	cd gcc && git checkout my-dev-branch
+	./gnupru/testing/manual-test-pru.sh .
+
+Now do the comparison. Example for size:
+
+	GCC_EXEC_PREFIX=`realpath ./pru-opt/pru/lib`/ bash ./gnupru/testing/compare-all-tests pru
+
 ## Checking ABI compatibility
 It is possible to run part of the GCC testsuite in an "ABI check" mode. The testsuite will compile object files with different compilers, and then check that functions from one object file can call and get correct return value from the other object file.
 
