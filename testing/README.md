@@ -44,7 +44,7 @@ After that, apply your changes and do the build we'll be testing:
 
 Now do the comparison. Example for size:
 
-	GCC_EXEC_PREFIX=`realpath ./pru-opt/pru/lib`/ bash ./gnupru/testing/compare-all-tests pru
+	GCC_EXEC_PREFIX=`realpath ./pru-opt/pru/lib`/ ./gnupru/testing/compare-all-sizes.py pru
 
 ## Checking ABI compatibility
 It is possible to run part of the GCC testsuite in an "ABI check" mode. The testsuite will compile object files with different compilers, and then check that functions from one object file can call and get correct return value from the other object file.
