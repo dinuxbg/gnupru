@@ -53,15 +53,22 @@ class TargetTest:
 
     """ Calculate text segment size.  """
     def calc_text_size(self, line):
-        o = tempfile.NamedTemporaryFile(delete=True)
-        line = line + " -o " + o.name
+        o = tempfile.NamedTemporaryFile(delete=False)
+        tmpname = o.name
+        line = line + " -o " + tmpname
         ignored = subprocess.run(line.split(), check=True, capture_output=True)
 
-        szout = subprocess.run( [ self.triplet + "-size", "-A", o.name ],
+        szout = subprocess.run( [ self.triplet + "-size", "-A", tmpname ],
                 text=True, capture_output=True, check=True,
                 universal_newlines=True).stdout
         o.close()
 
+        try:
+            os.remove(tmpname)
+        except:
+            log.v("failed to remove " + tmpname)
+
+        log.v("executing: " + line)
         for s in szout.splitlines():
             items = s.split()
             if items[0] == ".text":
