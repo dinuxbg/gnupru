@@ -20,6 +20,9 @@ import subprocess
 class Logger:
     def __init__(self):
         self.verbose = False
+        self.progress = False
+        self.nlines = 0
+        self.linei = 0
 
     def i(self, str):
         print(str)
@@ -35,6 +38,16 @@ class Logger:
     def v(self, str):
         if self.verbose:
             print(str)
+
+    def progress_step(self, teststr):
+        if self.progress:
+            bar = ['-', '\\', '|', '/' ]
+
+            sys.stdout.write("                    \r")
+            fmtvals = (bar[self.linei % 4], (self.linei * 100) / self.nlines, teststr)
+            sys.stdout.write("[%s][%2d%%] %s, " % fmtvals)
+            self.linei += 1
+            sys.stdout.flush()
 
 log = Logger()
 
@@ -53,22 +66,22 @@ class TargetTest:
 
     """ Calculate text segment size.  """
     def calc_text_size(self, line):
-        o = tempfile.NamedTemporaryFile(delete=False)
-        tmpname = o.name
+        handle, tmpname = tempfile.mkstemp()
+        os.close(handle)
+
         line = line + " -o " + tmpname
+        log.v("executing: " + line)
         ignored = subprocess.run(line.split(), check=True, capture_output=True)
 
         szout = subprocess.run( [ self.triplet + "-size", "-A", tmpname ],
                 text=True, capture_output=True, check=True,
                 universal_newlines=True).stdout
-        o.close()
 
         try:
-            os.remove(tmpname)
+            os.unlink(tmpname)
         except:
             log.v("failed to remove " + tmpname)
 
-        log.v("executing: " + line)
         for s in szout.splitlines():
             items = s.split()
             if items[0] == ".text":
@@ -93,6 +106,8 @@ class SizeStats:
     def __init__(self):
         self.tests = []
         self.n = 0
+        self.bfails = 0
+        self.pfails = 0
         self.best = sys.maxsize
         self.worst = -sys.maxsize + 1
         self.cumulative_diff = 0
@@ -115,9 +130,20 @@ class SizeStats:
 
     """ Dump short summary of data collected so far.  """
     def dump_stats(self):
+        log.i("")
         log.i("best text diff: {0:d}".format(self.best))
         log.i("worst text diff: {0:d}".format(self.worst))
         log.i("avg text diff: {0:f}".format((self.cumulative_diff / self.n)))
+
+    """ Record a failure to build with base toolchain.  """
+    def add_bfail(self):
+        self.bfails += 1
+        self.progress_step()
+
+    """ Record a failure to build with DUT toolchain.  """
+    def add_pfail(self):
+        self.pfails += 1
+        self.progress_step()
 
     """ Add one more test entry to our database.  """
     def add(self, bsz, psz, line):
@@ -131,9 +157,13 @@ class SizeStats:
         diff = psz - bsz;
         self.cumulative_diff += diff
         if self.best > diff:
-            self.min = diff
+            self.best = diff
         if self.worst < diff:
             self.worst = diff
+        self.progress_step()
+
+    def progress_step(self):
+        log.progress_step("best: %d, worst: %d, bfails: %d, pfails: %d" % (self.best, self.worst, self.bfails, self.pfails))
 
 """ Represent one target we're doing size comparison for.  """
 class Target:
@@ -141,12 +171,15 @@ class Target:
         self.target = name
         self.triplet = "unknown-unknown-unknown"
         self.stats = SizeStats()
+        self.lines = []
+        self.nlines = 0
         self.patterns_to_remove = [
                 [ "^Executing on host: ", "" ],
                 [ "  *\(timeout.*", "" ],
                 # Several consecutive -fdump options could occur,
                 # so to avoid overlap do not terminate with a space.
                 [ " -fdump[-a-z0-9_]*", "" ],
+                [ " -S ", " -c " ],
                 [ " -{1,2}save-temps ", " " ],
                 [ " -o [^ ]*", " -frandom-seed=0 " ] ]
         self.stropts_to_remove = [
@@ -186,6 +219,17 @@ class Target:
         for opt in self.stropts_to_remove:
             line = line.replace(opt, " ")
 
+        self.lines.append(line)
+        self.nlines += 1
+
+    def target_size_tool_available(self):
+        ret = subprocess.run( [ self.triplet + "-size", "--version"] )
+        if ret.returncode == 0:
+            return True
+        else:
+            return False
+
+    def execute_test_line(self, line):
         t = TargetTest(self.target, self.triplet, line)
         bsz, psz = t.test()
 
@@ -193,8 +237,11 @@ class Target:
             """ base test is good """
             if psz < 0:
                 log.e("\nbase passed, but tested gcc failed: " + line)
+                self.stats.add_pfail()
             else:
                 self.stats.add(bsz, psz, line)
+        else:
+            self.stats.add_bfail()
 
     """ Run the size comparison test for this particular target.  """
     def test(self):
@@ -204,31 +251,46 @@ class Target:
         base_dir = "base-" + self.target + "-gcc-build/gcc/testsuite/gcc"
         tested_dir = self.target + "-gcc-build/gcc/testsuite/gcc"
 
+        if not self.target_size_tool_available():
+            log.e("Cannot execute " + self.triplet + "-size")
+            return 1
+
         os.makedirs(tested_dir, exist_ok=True)
         if not os.path.exists(os.path.join(tested_dir, "gcc.dg-struct-layout-1")):
             shutil.copytree(os.path.join(base_dir, "gcc.dg-struct-layout-1"),
                             os.path.join(tested_dir, "gcc.dg-struct-layout-1"))
 
+        log.i("Scanning the log file...")
         with open(os.path.join(base_dir, "gcc.log"), "r") as f:
             for l in f:
                 self.process_line(l.strip())
 
+        log.i("Executing and comparing test cases...")
+        log.nlines = self.nlines
+        for l in self.lines:
+            # TODO - use https://docs.python.org/3/library/concurrent.futures.html
+            self.execute_test_line(l)
+
         self.stats.dump_stats()
         self.stats.dump_csv(self.target)
+
+        return 0
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--verbose", help="print verbosely while executing",
                         action="store_true")
+    parser.add_argument("--progress", help="print progress status during execution",
+                        action="store_true")
     parser.add_argument("target", help="target to run comparison for")
     args = parser.parse_args()
 
     log.verbose = args.verbose
+    log.progress = args.progress
     t = Target(args.target);
-    t.test()
 
-    sys.exit(0)
+    sys.exit(t.test())
 
 # Main body
 if __name__ == '__main__':
