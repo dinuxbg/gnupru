@@ -32,7 +32,7 @@ To execute the GCC C test suite go to the GCC build directory and run:
 
 ## Comparing builds for regressions
 
-First, build a reference that we'll compare against:
+First, build and test the reference that we'll compare against:
 
 	cd gcc && git checkout origin/master
 	BB_BDIR_PREFIX=base-pru ./gnupru/testing/manual-test-pru.sh .
@@ -40,7 +40,7 @@ First, build a reference that we'll compare against:
 After that, apply your changes and do the build we'll be testing:
 
 	cd gcc && git checkout my-dev-branch
-	./gnupru/testing/manual-test-pru.sh .
+	./gnupru/testing/manual-build-pru.sh .
 
 Now do the comparison. Example for size:
 
