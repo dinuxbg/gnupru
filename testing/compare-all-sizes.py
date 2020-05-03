@@ -121,12 +121,18 @@ class SizeStats:
         else:
             return '<unrecognized>'
 
-    """ Dump CSV table for all collected tests.  """
-    def dump_csv(self, target):
+    """
+        Dump CSV table for all collected tests.
+        Table is sorted per size difference (first columnt).
+    """
+    def dump_csv(self, target, full_report):
         with open(target + "-size-comparison.csv", "w") as f:
-            for e in self.tests:
-                f.write(str(e[0]) + ", " + str(e[1]) + ", "
-                        + e[2] + ", \"" + e[3] + "\",\n" )
+            for e in sorted(self.tests, key=lambda row: row[0]):
+                if (full_report or e[0] != 0):
+                    f.write(str(e[0]) + ", "
+                            + str(e[1]) + ", "
+                            + str(e[2]) + ", "
+                            + e[3] + ", \"" + e[4] + "\",\n" )
 
     """ Dump short summary of data collected so far.  """
     def dump_stats(self):
@@ -151,7 +157,7 @@ class SizeStats:
 
         log.vraw("\rbase: {0:8d}, tested: {1:8d}, {2}        ".format(bsz, psz, name))
 
-        self.tests.append( (bsz, psz, name, line) )
+        self.tests.append( (psz - bsz, bsz, psz, name, line) )
         self.cumulative_base_size += bsz
         self.n += 1
         diff = psz - bsz;
@@ -167,8 +173,9 @@ class SizeStats:
 
 """ Represent one target we're doing size comparison for.  """
 class Target:
-    def __init__(self, name):
-        self.target = name
+    def __init__(self, target, full_report=False):
+        self.target = target
+        self.full_report = full_report
         self.triplet = "unknown-unknown-unknown"
         self.stats = SizeStats()
         self.lines = []
@@ -262,7 +269,11 @@ class Target:
 
         log.i("Scanning the log file...")
         with open(os.path.join(base_dir, "gcc.log"), "r") as f:
+            #ii = 0;
             for l in f:
+                #ii += 1
+                #if (ii > 5000):
+                #    break
                 self.process_line(l.strip())
 
         log.i("Executing and comparing test cases...")
@@ -272,7 +283,7 @@ class Target:
             self.execute_test_line(l)
 
         self.stats.dump_stats()
-        self.stats.dump_csv(self.target)
+        self.stats.dump_csv(target=self.target, full_report=self.full_report)
 
         return 0
 
@@ -283,12 +294,14 @@ def main():
                         action="store_true")
     parser.add_argument("--progress", help="print progress status during execution",
                         action="store_true")
+    parser.add_argument("--full-report", help="include all tests in final CSV, even with same size",
+                        action="store_true")
     parser.add_argument("target", help="target to run comparison for")
     args = parser.parse_args()
 
     log.verbose = args.verbose
     log.progress = args.progress
-    t = Target(args.target);
+    t = Target(target=args.target, full_report=args.full_report);
 
     sys.exit(t.test())
 
