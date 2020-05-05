@@ -50,6 +50,7 @@ build_gnuprumcu()
 RETDIR=`pwd`
 
 export PATH=$PREFIX/bin:$PATH
+die "This is development tree. Please use the master branch"
 
 [ -d $SRC ] || die $SRC does not exist. Please run ./download-and-patch.sh
 [ -z "$PREFIX" ] && die Please \"export PREFIX=...\" to define where to install the toolchain

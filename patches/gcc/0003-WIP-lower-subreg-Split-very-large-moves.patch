@@ -1,0 +1,424 @@
+From 23685293eb00379e10427e6bc9a04b243a88d198 Mon Sep 17 00:00:00 2001
+From: Dimitar Dimitrov <dimitar@dinux.eu>
+Date: Mon, 23 Mar 2020 22:16:13 +0200
+Subject: [PATCH 3/3] WIP: lower-subreg: Split very large moves
+
+Signed-off-by: Dimitar Dimitrov <dimitar@dinux.eu>
+---
+ gcc/lower-subreg.c | 203 +++++++++++++++++++++++++++++++--------------
+ gcc/lower-subreg.h |  11 ++-
+ 2 files changed, 149 insertions(+), 65 deletions(-)
+
+diff --git a/gcc/lower-subreg.c b/gcc/lower-subreg.c
+index a11e535b5bf..406d883959d 100644
+--- a/gcc/lower-subreg.c
++++ b/gcc/lower-subreg.c
+@@ -107,12 +107,33 @@ struct target_lower_subreg *this_target_lower_subreg
+    store its byte size in *BYTES and its word size in *WORDS.  */
+ 
+ static inline bool
+-interesting_mode_p (machine_mode mode, unsigned int *bytes,
+-		    unsigned int *words)
++interesting_mode_in_words_p (machine_mode srcmode, machine_mode movwmode,
++		    unsigned int *bytes, unsigned int *words)
+ {
+-  if (!GET_MODE_SIZE (mode).is_constant (bytes))
++  if (!GET_MODE_SIZE (srcmode).is_constant (bytes))
+     return false;
+-  *words = CEIL (*bytes, UNITS_PER_WORD);
++  if (!GET_MODE_SIZE (movwmode).is_constant ())
++    return false;
++  *words = CEIL (*bytes, GET_MODE_SIZE (movwmode).to_constant ());
++  return true;
++}
++
++static inline bool
++interesting_mode_p (machine_mode srcmode, machine_mode *movwmode,
++		    unsigned int *bytes, unsigned int *words)
++{
++  // TODO
++  bool speed_p = false;
++
++  if (!GET_MODE_SIZE (srcmode).is_constant (bytes))
++    return false;
++  if (!choices[speed_p].move_modes_to_split[srcmode].split)
++    return false;
++
++
++  *movwmode =
++    choices[speed_p].move_modes_to_split[srcmode].movwmode;
++  *words = CEIL (*bytes, GET_MODE_SIZE (*movwmode).to_constant ());
+   return true;
+ }
+ 
+@@ -197,6 +218,59 @@ compute_costs (bool speed_p, struct cost_rtxes *rtxes)
+ {
+   unsigned int i;
+   int word_move_zero_cost, word_move_cost;
++  opt_scalar_int_mode w;
++
++  for (i = 0; i < MAX_MACHINE_MODE; i++)
++    {
++      choices[0].move_modes_to_split[i].cost = MAX_COST;
++      choices[1].move_modes_to_split[i].cost = MAX_COST;
++    }
++
++  for (w = word_mode;
++       w.exists();
++       w = GET_MODE_2XWIDER_MODE (w.require ()))
++    {
++      machine_mode movwmode = w.require ();
++
++      PUT_MODE (rtxes->target, movwmode);
++      SET_SRC (rtxes->set) = rtxes->source;
++      word_move_cost = set_rtx_cost (rtxes->set, speed_p);
++
++      for (i = 0; i < MAX_MACHINE_MODE; i++)
++	{
++	  machine_mode mode = (machine_mode) i;
++	  unsigned int size, factor;
++
++	  if (interesting_mode_in_words_p (mode, movwmode, &size, &factor) && factor > 1)
++	    {
++	      unsigned int mode_move_cost;
++
++	      PUT_MODE (rtxes->target, mode);
++	      PUT_MODE (rtxes->source, mode);
++	      mode_move_cost = set_rtx_cost (rtxes->set, speed_p);
++
++	      if (LOG_COSTS)
++		fprintf (stderr,
++			 "%s move w %s: original cost %d, split cost %d * %d\n",
++			 GET_MODE_NAME (mode), GET_MODE_NAME (movwmode),
++			 mode_move_cost, word_move_cost, factor);
++
++	      if (FORCE_LOWERING || mode_move_cost >= word_move_cost * factor)
++		{
++		  choices[speed_p].move_modes_to_split[i].split = true;
++		  if (word_move_cost * factor <=
++		      choices[speed_p].move_modes_to_split[i].cost)
++		    {
++		      choices[speed_p].move_modes_to_split[i].cost =
++			word_move_cost * factor;
++		      choices[speed_p].move_modes_to_split[i].movwmode =
++			movwmode;
++		    }
++		  choices[speed_p].something_to_do = true;
++		}
++	    }
++	}
++    }
+ 
+   PUT_MODE (rtxes->target, word_mode);
+   SET_SRC (rtxes->set) = CONST0_RTX (word_mode);
+@@ -209,30 +283,6 @@ compute_costs (bool speed_p, struct cost_rtxes *rtxes)
+     fprintf (stderr, "%s move: from zero cost %d, from reg cost %d\n",
+ 	     GET_MODE_NAME (word_mode), word_move_zero_cost, word_move_cost);
+ 
+-  for (i = 0; i < MAX_MACHINE_MODE; i++)
+-    {
+-      machine_mode mode = (machine_mode) i;
+-      unsigned int size, factor;
+-      if (interesting_mode_p (mode, &size, &factor) && factor > 1)
+-	{
+-	  unsigned int mode_move_cost;
+-
+-	  PUT_MODE (rtxes->target, mode);
+-	  PUT_MODE (rtxes->source, mode);
+-	  mode_move_cost = set_rtx_cost (rtxes->set, speed_p);
+-
+-	  if (LOG_COSTS)
+-	    fprintf (stderr, "%s move: original cost %d, split cost %d * %d\n",
+-		     GET_MODE_NAME (mode), mode_move_cost,
+-		     word_move_cost, factor);
+-
+-	  if (FORCE_LOWERING || mode_move_cost >= word_move_cost * factor)
+-	    {
+-	      choices[speed_p].move_modes_to_split[i] = true;
+-	      choices[speed_p].something_to_do = true;
+-	    }
+-	}
+-    }
+ 
+   /* For the moves and shifts, the only case that is checked is one
+      where the mode of the target is an integer mode twice the width
+@@ -240,7 +290,7 @@ compute_costs (bool speed_p, struct cost_rtxes *rtxes)
+ 
+      If it is not profitable to split a double word move then do not
+      even consider the shifts or the zero extension.  */
+-  if (choices[speed_p].move_modes_to_split[(int) twice_word_mode])
++  if (choices[speed_p].move_modes_to_split[(int) twice_word_mode].split)
+     {
+       int zext_cost;
+ 
+@@ -332,7 +382,7 @@ operand_for_swap_move_operator (rtx x)
+       && GET_MODE (x) == twice_word_mode
+       && simple_move_operand (XEXP (x, 0))
+       && CONST_INT_P (XEXP (x, 1))
+-      && INTVAL (XEXP (x, 1)) == BITS_PER_WORD)
++      && INTVAL (XEXP (x, 1)) == BITS_PER_WORD) // TODO
+     return XEXP (x, 0);
+ 
+   return NULL_RTX;
+@@ -392,7 +442,7 @@ simple_move (rtx_insn *insn, bool speed_p)
+   if (GET_MODE_CLASS (mode) == MODE_PARTIAL_INT)
+     return NULL_RTX;
+ 
+-  if (!choices[speed_p].move_modes_to_split[(int) mode])
++  if (!choices[speed_p].move_modes_to_split[(int) mode].split)
+     return NULL_RTX;
+ 
+   return set;
+@@ -507,8 +557,9 @@ find_decomposable_subregs (rtx *loc, enum classify_move_insn *pcmi)
+ 	      continue;
+ 	    }
+ 
+-	  if (!interesting_mode_p (GET_MODE (x), &outer_size, &outer_words)
+-	      || !interesting_mode_p (GET_MODE (inner), &inner_size,
++	  machine_mode movwmode;
++	  if (!interesting_mode_p (GET_MODE (x), &movwmode, &outer_size, &outer_words)
++	      || !interesting_mode_p (GET_MODE (inner), &movwmode, &inner_size,
+ 				      &inner_words))
+ 	    continue;
+ 
+@@ -531,7 +582,8 @@ find_decomposable_subregs (rtx *loc, enum classify_move_insn *pcmi)
+ 		 sized integral pseudo which is not allowed by
+ 		 validate_subreg.  */
+ 	      && (!FLOAT_MODE_P (GET_MODE (x))
+-		  || outer_size == UNITS_PER_WORD))
++		  //TODO
++		  || outer_size == GET_MODE_SIZE (movwmode).to_constant ()))
+ 	    {
+ 	      bitmap_set_bit (decomposable_context, regno);
+ 	      iter.skip_subrtxes ();
+@@ -573,8 +625,9 @@ find_decomposable_subregs (rtx *loc, enum classify_move_insn *pcmi)
+ 	     and it keeps the size of the bitmaps down.  */
+ 
+ 	  regno = REGNO (x);
++	  machine_mode movwmode;
+ 	  if (!HARD_REGISTER_NUM_P (regno)
+-	      && interesting_mode_p (GET_MODE (x), &size, &words)
++	      && interesting_mode_p (GET_MODE (x), &movwmode, &size, &words)
+ 	      && words > 1)
+ 	    {
+ 	      switch (*pcmi)
+@@ -583,7 +636,8 @@ find_decomposable_subregs (rtx *loc, enum classify_move_insn *pcmi)
+ 		  bitmap_set_bit (non_decomposable_context, regno);
+ 		  break;
+ 		case DECOMPOSABLE_SIMPLE_MOVE:
+-		  if (targetm.modes_tieable_p (GET_MODE (x), word_mode))
++		  // TODO - how to handle ?
++		  if (targetm.modes_tieable_p (GET_MODE (x), movwmode))
+ 		    bitmap_set_bit (decomposable_context, regno);
+ 		  break;
+ 		case SIMPLE_MOVE:
+@@ -606,7 +660,7 @@ find_decomposable_subregs (rtx *loc, enum classify_move_insn *pcmi)
+     }
+ }
+ 
+-/* Decompose REGNO into word-sized components.  We smash the REG node
++/* Decompose REGNO into TODO-sized components.  We smash the REG node
+    in place.  This ensures that (1) something goes wrong quickly if we
+    fail to make some replacement, and (2) the debug information inside
+    the symbol table is automatically kept up to date.  */
+@@ -622,12 +676,16 @@ decompose_register (unsigned int regno)
+ 
+   regno_reg_rtx[regno] = NULL_RTX;
+ 
+-  if (!interesting_mode_p (GET_MODE (reg), &size, &words))
++  machine_mode movwmode;
++  if (!interesting_mode_p (GET_MODE (reg), &movwmode, &size, &words))
+     gcc_unreachable ();
+ 
+   v = rtvec_alloc (words);
++  // TODO - how to handle?
+   for (i = 0; i < words; ++i)
+-    RTVEC_ELT (v, i) = gen_reg_rtx_offset (reg, word_mode, i * UNITS_PER_WORD);
++    RTVEC_ELT (v, i) = gen_reg_rtx_offset (reg, movwmode,
++					   i * GET_MODE_SIZE
++					   (movwmode).to_constant ());
+ 
+   PUT_CODE (reg, CONCATN);
+   XVEC (reg, 0) = v;
+@@ -647,14 +705,14 @@ static rtx
+ simplify_subreg_concatn (machine_mode outermode, rtx op, poly_uint64 orig_byte)
+ {
+   unsigned int outer_size, outer_words, inner_size, inner_words;
+-  machine_mode innermode, partmode;
++  machine_mode innermode, partmode, movwmode;
+   rtx part;
+   unsigned int final_offset;
+   unsigned int byte;
+ 
+   innermode = GET_MODE (op);
+-  if (!interesting_mode_p (outermode, &outer_size, &outer_words)
+-      || !interesting_mode_p (innermode, &inner_size, &inner_words))
++  if (!interesting_mode_p (outermode, &movwmode, &outer_size, &outer_words)
++      || !interesting_mode_p (innermode, &movwmode, &inner_size, &inner_words))
+     gcc_unreachable ();
+ 
+   /* Must be constant if interesting_mode_p passes.  */
+@@ -856,11 +914,14 @@ can_decompose_p (rtx x)
+       if (HARD_REGISTER_NUM_P (regno))
+ 	{
+ 	  unsigned int byte, num_bytes, num_words;
++	  machine_mode movwmode;
+ 
+-	  if (!interesting_mode_p (GET_MODE (x), &num_bytes, &num_words))
++	  if (!interesting_mode_p (GET_MODE (x), &movwmode, &num_bytes, &num_words))
+ 	    return false;
+-	  for (byte = 0; byte < num_bytes; byte += UNITS_PER_WORD)
+-	    if (simplify_subreg_regno (regno, GET_MODE (x), byte, word_mode) < 0)
++	  // TODO
++	  for (byte = 0; byte < num_bytes; byte += GET_MODE_SIZE
++	       (movwmode).to_constant ())
++	    if (simplify_subreg_regno (regno, GET_MODE (x), byte, movwmode) < 0)
+ 	      return false;
+ 	  return true;
+ 	}
+@@ -903,7 +964,8 @@ resolve_simple_move (rtx set, rtx_insn *insn)
+   dest = SET_DEST (set);
+   orig_mode = GET_MODE (dest);
+ 
+-  if (!interesting_mode_p (orig_mode, &orig_size, &words))
++  machine_mode movwmode;
++  if (!interesting_mode_p (orig_mode, &movwmode, &orig_size, &words))
+     gcc_unreachable ();
+   gcc_assert (words > 1);
+ 
+@@ -1070,13 +1132,16 @@ resolve_simple_move (rtx set, rtx_insn *insn)
+ 	{
+ 	  rtx temp;
+ 
++	  // TODO
+ 	  temp = copy_rtx (XEXP (dest, 0));
+-	  temp = adjust_automodify_address_nv (dest, word_mode, temp,
+-					       j * UNITS_PER_WORD);
++	  temp = adjust_automodify_address_nv (dest, movwmode, temp,
++					       j * GET_MODE_SIZE
++					       (movwmode).to_constant ());
+ 	  emit_move_insn (temp,
+-			  simplify_gen_subreg_concatn (word_mode, src,
++			  simplify_gen_subreg_concatn (movwmode, src,
+ 						       orig_mode,
+-						       j * UNITS_PER_WORD));
++						       j * GET_MODE_SIZE
++						       (movwmode).to_constant ()));
+ 	}
+     }
+   else
+@@ -1086,13 +1151,16 @@ resolve_simple_move (rtx set, rtx_insn *insn)
+       if (REG_P (dest) && !HARD_REGISTER_NUM_P (REGNO (dest)))
+ 	emit_clobber (dest);
+ 
++      // TODO
+       for (i = 0; i < words; ++i)
+-	emit_move_insn (simplify_gen_subreg_concatn (word_mode, dest,
++	emit_move_insn (simplify_gen_subreg_concatn (movwmode, dest,
+ 						     dest_mode,
+-						     i * UNITS_PER_WORD),
+-			simplify_gen_subreg_concatn (word_mode, src,
++						     i * GET_MODE_SIZE
++						     (movwmode).to_constant ()),
++			simplify_gen_subreg_concatn (movwmode, src,
+ 						     orig_mode,
+-						     i * UNITS_PER_WORD));
++						     i * GET_MODE_SIZE
++						     (movwmode).to_constant ()));
+     }
+ 
+   if (real_dest != NULL_RTX)
+@@ -1158,11 +1226,13 @@ resolve_clobber (rtx pat, rtx_insn *insn)
+     return false;
+ 
+   orig_mode = GET_MODE (reg);
+-  if (!interesting_mode_p (orig_mode, &orig_size, &words))
++  machine_mode movwmode;
++  if (!interesting_mode_p (orig_mode, &movwmode, &orig_size, &words))
+     gcc_unreachable ();
+ 
++  // TODO
+   ret = validate_change (NULL_RTX, &XEXP (pat, 0),
+-			 simplify_gen_subreg_concatn (word_mode, reg,
++			 simplify_gen_subreg_concatn (movwmode, reg,
+ 						      orig_mode, 0),
+ 			 0);
+   df_insn_rescan (insn);
+@@ -1172,8 +1242,9 @@ resolve_clobber (rtx pat, rtx_insn *insn)
+     {
+       rtx x;
+ 
+-      x = simplify_gen_subreg_concatn (word_mode, reg, orig_mode,
+-				       i * UNITS_PER_WORD);
++      // TODO
++      x = simplify_gen_subreg_concatn (movwmode, reg, orig_mode,
++				       i * GET_MODE_SIZE (movwmode).to_constant ());
+       x = gen_rtx_CLOBBER (VOIDmode, x);
+       emit_insn_after (x, insn);
+     }
+@@ -1424,17 +1495,21 @@ static void
+ dump_choices (bool speed_p, const char *description)
+ {
+   unsigned int size, factor, i;
++  machine_mode movwmode;
+ 
+   fprintf (dump_file, "Choices when optimizing for %s:\n", description);
+ 
+   for (i = 0; i < MAX_MACHINE_MODE; i++)
+-    if (interesting_mode_p ((machine_mode) i, &size, &factor)
++    if (interesting_mode_p ((machine_mode) i, &movwmode, &size, &factor)
+ 	&& factor > 1)
+-      fprintf (dump_file, "  %s mode %s for copy lowering.\n",
+-	       choices[speed_p].move_modes_to_split[i]
++      fprintf (dump_file, "  %s mode %s using %s for copy lowering.\n",
++	       choices[speed_p].move_modes_to_split[i].split
+ 	       ? "Splitting"
+ 	       : "Skipping",
+-	       GET_MODE_NAME ((machine_mode) i));
++	       GET_MODE_NAME ((machine_mode) i),
++	       choices[speed_p].move_modes_to_split[i].split
++	       ? GET_MODE_NAME (movwmode)
++	       : "<none>");
+ 
+   fprintf (dump_file, "  %s mode %s for zero_extend lowering.\n",
+ 	   choices[speed_p].splitting_zext ? "Splitting" : "Skipping",
+@@ -1485,8 +1560,8 @@ decompose_multiword_subregs (bool decompose_copies)
+       if (regno_reg_rtx[i] != NULL)
+ 	{
+ 	  machine_mode mode = GET_MODE (regno_reg_rtx[i]);
+-	  if (choices[false].move_modes_to_split[(int) mode]
+-	      || choices[true].move_modes_to_split[(int) mode])
++	  if (choices[false].move_modes_to_split[(int) mode].split
++	      || choices[true].move_modes_to_split[(int) mode].split)
+ 	    {
+ 	      useful_modes_seen = true;
+ 	      break;
+diff --git a/gcc/lower-subreg.h b/gcc/lower-subreg.h
+index 8076cb3c469..3ca6fdd3b29 100644
+--- a/gcc/lower-subreg.h
++++ b/gcc/lower-subreg.h
+@@ -20,11 +20,20 @@ along with GCC; see the file COPYING3.  If not see
+ #ifndef LOWER_SUBREG_H
+ #define LOWER_SUBREG_H 1
+ 
++/* Information how to split a move into WORDMODE moves.  */
++struct move_mode_split {
++    /* Whether to split current move.  */
++    bool split;
++    /* In what move modes to split.  */
++    machine_mode movwmode;
++    unsigned int cost;
++};
++
+ /* Information about whether, and where, lower-subreg should be applied.  */
+ struct lower_subreg_choices {
+   /* A boolean vector for move splitting that is indexed by mode and is
+      true for each mode that is to have its copies split.  */
+-  bool move_modes_to_split[MAX_MACHINE_MODE];
++  struct move_mode_split move_modes_to_split[MAX_MACHINE_MODE];
+ 
+   /* True if zero-extensions from word_mode to twice_word_mode should
+      be split.  */
+-- 
+2.20.1
+

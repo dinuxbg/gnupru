@@ -5,9 +5,9 @@
 
 # On which upstream commits to apply patches. I frequently rebase so
 # expect these to be somewhat random.
-GCC_BASECOMMIT=5d739a89b1305202c698fa58c9d482f9ab85526d
-BINUTILS_BASECOMMIT=10d2e6b9c95a7f65f6446eea703a57d7bb4a8ffc
-NEWLIB_BASECOMMIT=57640bee75d18fac5ce6507f9a2c7a712ca750d8
+GCC_BASECOMMIT=e5185cc6be3da99435129cdc0c769d4081e82989
+BINUTILS_BASECOMMIT=aa8509b4ed0fd28d15f671579a8838f035b9a67f
+NEWLIB_BASECOMMIT=72865dc2a34903f88615f4282f157a1b62973770
 GNUPRUMCU_URL=https://github.com/dinuxbg/gnuprumcu/releases/download/v0.2.0/gnuprumcu-0.2.0.tar.gz
 
 # You can export your (local) repositories to speed up
@@ -69,6 +69,8 @@ prepare_source_tarball()
 }
 
 RETDIR=`pwd`
+
+die "This is development tree. Please use the master branch"
 
 [ -d $SRC ] && die Incremental builds not supported. Cleanup and retry, e.g. 'git clean -fdx'
 mkdir -p $SRC
