@@ -33,7 +33,10 @@ build_test_gcc()
   ${SRC}/configure --disable-multilib --enable-languages=c,c++ --prefix=${PREFIX} || die
   make -j$(nproc) || die
   make install
-  make check-gcc-c check-gcc-c++  || die
+  find . -name site.exp | xargs rm -f
+  make -j$(nproc) check-gcc-c || die
+  find . -name site.exp | xargs rm -f
+  make -j$(nproc) check-gcc-c++ || die
   local FILES="gcc/testsuite/gcc/gcc.log gcc/testsuite/gcc/gcc.sum gcc/testsuite/g++/g++.log gcc/testsuite/g++/g++.sum"
   for i in ${FILES}
   do
