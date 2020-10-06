@@ -38,7 +38,7 @@ Alternatively, for a Fedora host:
 Then it should be a simple matter of:
 
 	export PREFIX=$HOME/bin/pru-gcc   # Define where to install the toolchain
-	./download-and-patch.sh           # Download and patch the sources
+	./download-and-prepare.sh         # Download and prepare the sources
 	./build.sh                        # Build
 
 ## Acknowledgements

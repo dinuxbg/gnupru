@@ -51,7 +51,7 @@ RETDIR=`pwd`
 
 export PATH=$PREFIX/bin:$PATH
 
-[ -d $SRC ] || die $SRC does not exist. Please run ./download-and-patch.sh
+[ -d $SRC ] || die $SRC does not exist. Please run ./download-and-prepare.sh
 [ -z "$PREFIX" ] && die Please \"export PREFIX=...\" to define where to install the toolchain
 mkdir -p $PREFIX
 [ -d "$PREFIX" ] || die Could not create installation target directory "$PREFIX"

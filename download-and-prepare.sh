@@ -1,17 +1,14 @@
 #!/bin/bash
 
-# Sample script to download vanilla upstream projects
-# and apply patches for the GCC PRU toolchain.
+# Sample script to download vanilla upstream projects.
 
-# On which upstream commits to apply patches. I frequently rebase so
-# expect these to be somewhat random.
-GCC_URL=http://ftpmirror.gnu.org/gcc/gcc-10.1.0/gcc-10.1.0.tar.xz
-BINUTILS_URL=http://ftpmirror.gnu.org/binutils/binutils-2.34.tar.bz2
+# Official packages to download.
+GCC_URL=http://ftpmirror.gnu.org/gcc/gcc-10.2.0/gcc-10.2.0.tar.xz
+BINUTILS_URL=http://ftpmirror.gnu.org/binutils/binutils-2.35.tar.bz2
 NEWLIB_URL=ftp://sourceware.org/pub/newlib/newlib-3.3.0.tar.gz
-GNUPRUMCU_URL=https://github.com/dinuxbg/gnuprumcu/releases/download/v0.2.0/gnuprumcu-0.2.0.tar.gz
+GNUPRUMCU_URL=https://github.com/dinuxbg/gnuprumcu/releases/download/v0.3.0/gnuprumcu-0.3.0.tar.gz
 
 MAINDIR=`pwd`
-PATCHDIR=`pwd`/patches
 SRC=`pwd`/src
 
 die()
@@ -40,7 +37,7 @@ RETDIR=`pwd`
 [ -d $SRC ] && die Incremental builds not supported. Cleanup and retry, e.g. 'git clean -fdx'
 mkdir -p $SRC
 
-# Checkout baseline and apply patches.
+# Checkout baseline.
 prepare_source_tarball binutils-gdb $BINUTILS_URL
 prepare_source_tarball gcc $GCC_URL
 prepare_source_tarball newlib-cygwin $NEWLIB_URL
