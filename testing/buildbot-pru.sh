@@ -8,7 +8,11 @@ GCC_URL=https://github.com/mirrors/gcc
 NEWLIB_URL=https://github.com/mirror/newlib-cygwin
 BB_ARCH=pru
 
+# Who to send a short regression report to
 REGRESSION_RECIPIENTS="dinuxbg@gmail.com"
+
+# Default full report recipient. Caller can set this
+# environment variable to override the default.
 true ${SUMMARY_RECIPIENTS:=dinuxbg@gmail.com}
 
 
@@ -29,7 +33,6 @@ bb_daily_target_test()
   popd
 
   local GCC_TOT=`cd gcc && git rev-parse HEAD`
-  #local GCC_TOT=r`cd gcc && svn info  --show-item revision`
   local BINUTILS_TOT=`cd binutils && git rev-parse HEAD`
   local NEWLIB_TOT=`cd newlib && git rev-parse HEAD`
 
@@ -75,7 +78,6 @@ bb_daily_target_test()
 
   # Send to real mailing list,
   pushd ${WORKSPACE}/pru-gcc-build || error "failed to enter pru-gcc-build"
-  # TODO - switch to mail list when stability is reached!
   ../gcc/contrib/test_summary -m ${SUMMARY_RECIPIENTS} | sh
   popd
 

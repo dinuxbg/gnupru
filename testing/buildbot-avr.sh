@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Simple script for automatic daily testing of gcc+newlib ToT.
+# Simple script for automatic daily testing of gcc+avrlibc ToT.
 
 BINUTILS_URL=git://sourceware.org/git/binutils-gdb.git
 GCC_URL=https://github.com/mirrors/gcc
@@ -8,7 +8,12 @@ AVRLIBC_URL=https://github.com/dinuxbg/avr-libc
 WINAVR_URL=https://gitlab.com/dinuxbg/winavr-code
 BB_ARCH=avr
 
+# Who to send a short regression report to
 REGRESSION_RECIPIENTS="dinuxbg@gmail.com"
+
+# Default full report recipient. Caller can set this
+# environment variable to override the default.
+true ${SUMMARY_RECIPIENTS:=dinuxbg@gmail.com}
 
 
 bb_daily_target_test()
@@ -22,6 +27,12 @@ bb_daily_target_test()
   bb_update_source gcc ${GCC_URL}
   bb_update_source avrlibc ${AVRLIBC_URL}
   bb_update_source winavr ${WINAVR_URL}
+
+  # On my machine the pru build bot will have taken care of this step.
+  # # Prepare tree for release, and write proper versioning info.
+  # pushd ${WORKSPACE}/gcc || error "failed to enter gcc"
+  # ./contrib/gcc_update origin master
+  # popd
 
   local GCC_TOT=`cd gcc && git rev-parse HEAD`
   local BINUTILS_TOT=`cd binutils && git rev-parse HEAD`
@@ -64,16 +75,15 @@ bb_daily_target_test()
   bb_make --ignore-errors binutils "-k check RUNTESTFLAGS=--target_board=atmega128-sim"
 
   # Test GCC
-  bb_make gcc "check-gcc-c RUNTESTFLAGS=--target_board=atmega128-sim"
-  bb_make gcc "check-gcc-c++ RUNTESTFLAGS=--target_board=atmega128-sim"
+  bb_make gcc "-j`nproc` check-gcc-c RUNTESTFLAGS=--target_board=atmega128-sim"
+  bb_make gcc "-j`nproc` check-gcc-c++ RUNTESTFLAGS=--target_board=atmega128-sim"
 
   # Save all the logs
   bb_gather_log_files ${BUILD_TAG}
 
   # Send to real mailing list,
   pushd ${WORKSPACE}/avr-gcc-build || error "failed to enter avr-gcc-build"
-  # TODO - switch to mail list when stability is reached!
-  ../gcc/contrib/test_summary -m dinuxbg@gmail.com | sh
+  ../gcc/contrib/test_summary -m ${SUMMARY_RECIPIENTS} | sh
   popd
 
   bb_check_for_regressions ${PREV_BUILD_TAG} ${BUILD_TAG}
