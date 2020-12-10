@@ -4,9 +4,10 @@
 
 BINUTILS_URL=git://sourceware.org/git/binutils-gdb.git
 GCC_URL=https://github.com/mirrors/gcc
-#GCC_URL=svn://gcc.gnu.org/svn/gcc/trunk
 NEWLIB_URL=https://github.com/mirror/newlib-cygwin
 BB_ARCH=pru
+
+true ${GCC_BRANCH:=master}
 
 # Who to send a short regression report to
 REGRESSION_RECIPIENTS="dinuxbg@gmail.com"
@@ -24,12 +25,12 @@ bb_daily_target_test()
   bb_clean
 
   bb_update_source binutils ${BINUTILS_URL}
-  bb_update_source gcc ${GCC_URL}
+  bb_update_source gcc ${GCC_URL} ${GCC_BRANCH}
   bb_update_source newlib ${NEWLIB_URL}
 
   # Prepare tree for release, and write proper versioning info.
   pushd ${WORKSPACE}/gcc || error "failed to enter gcc"
-  ./contrib/gcc_update origin master
+  ./contrib/gcc_update origin ${GCC_BRANCH}
   popd
 
   local GCC_TOT=`cd gcc && git rev-parse HEAD`

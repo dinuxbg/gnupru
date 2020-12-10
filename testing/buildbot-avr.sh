@@ -8,6 +8,8 @@ AVRLIBC_URL=https://github.com/dinuxbg/avr-libc
 WINAVR_URL=https://gitlab.com/dinuxbg/winavr-code
 BB_ARCH=avr
 
+true ${GCC_BRANCH:=master}
+
 # Who to send a short regression report to
 REGRESSION_RECIPIENTS="dinuxbg@gmail.com"
 
@@ -24,15 +26,14 @@ bb_daily_target_test()
   bb_clean
 
   bb_update_source binutils ${BINUTILS_URL}
-  bb_update_source gcc ${GCC_URL}
+  bb_update_source gcc ${GCC_URL} ${GCC_BRANCH}
   bb_update_source avrlibc ${AVRLIBC_URL}
   bb_update_source winavr ${WINAVR_URL}
 
-  # On my machine the pru build bot will have taken care of this step.
-  # # Prepare tree for release, and write proper versioning info.
-  # pushd ${WORKSPACE}/gcc || error "failed to enter gcc"
-  # ./contrib/gcc_update origin master
-  # popd
+  # Prepare tree for release, and write proper versioning info.
+  pushd ${WORKSPACE}/gcc || error "failed to enter gcc"
+  ./contrib/gcc_update origin ${GCC_BRANCH}
+  popd
 
   local GCC_TOT=`cd gcc && git rev-parse HEAD`
   local BINUTILS_TOT=`cd binutils && git rev-parse HEAD`

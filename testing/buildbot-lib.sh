@@ -26,6 +26,7 @@ bb_update_source()
 {
   local PRJ=${1}
   local URL=${2}
+  local BRANCH=${3:-master}
   local P
 
   pushd ${WORKSPACE}
@@ -40,7 +41,9 @@ bb_update_source()
   git reset --hard HEAD
   git clean -f -d -x
   git fetch origin || error "failed to sync ${PRJ}"
-  git checkout origin/master || error "failed to checkout ${PRJ}"
+  git checkout origin/${BRANCH} || error "failed to checkout ${PRJ}"
+
+  # Apply any out-of-tree patches.
   [ -d ../${PRJ}-patches ] && ls ../${PRJ-}-patches/* | sort | while read P
   do
     git am -3 ${P} || error "failed to apply ${P}"
