@@ -4,7 +4,6 @@
 
 BINUTILS_URL=git://sourceware.org/git/binutils-gdb.git
 GCC_URL=https://github.com/mirrors/gcc
-#GCC_URL=svn://gcc.gnu.org/svn/gcc/trunk
 NEWLIB_URL=https://github.com/mirror/newlib-cygwin
 BB_ARCH=c6x
 

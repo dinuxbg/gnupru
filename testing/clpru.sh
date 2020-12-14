@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Frontend to the proprietary TI compiler. Used for invoking
+# the GCC ABI checking test suite.
+
 die()
 {
   echo "ERROR: $@"

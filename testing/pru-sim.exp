@@ -1,5 +1,4 @@
-# Copyright (C) 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
-# 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+# Copyright (C) 1997-2020 Free Software Foundation, Inc.
 #
 # This file is part of DejaGnu.
 #
@@ -56,9 +55,6 @@ set_board_info ldflags  "[libgloss_link_flags] [newlib_link_flags] $workaround_l
 
 # No support for signals on this target.
 set_board_info gdb,nosignals 1
-
-# Can't call functions from GDB.
-# set_board_info gdb,cannot_call_functions 1
 
 # Low-end workstations might require even larger timeouts.
 set timeout 120
