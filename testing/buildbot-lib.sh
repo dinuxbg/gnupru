@@ -101,16 +101,17 @@ bb_update_source_svn()
 #
 # Follow contrib/gcc_update's behaviour for filling in version
 # information in places the test and build systems expect it.
+#
+# BRANCH : gcc branch we have checked out
 bb_gcc_touch_source_tree()
 {
+  local BRANCH=${1}
   local C
-  local BRANCH
 
   pushd ${WORKSPACE}/gcc || error "failed to enter gcc"
 
   rm -f LAST_UPDATED gcc/REVISION
   C=`git log -n1 --pretty=tformat:%p:%t:%H`
-  BRANCH=`git name-rev --name-only HEAD || :`
   LC_ALL=C date > LAST_UPDATED
   LC_ALL=C echo "`TZ=UTC date` (revision $revision)" >> LAST_UPDATED
   echo "[${BRANCH} revision ${C}]" > gcc/REVISION

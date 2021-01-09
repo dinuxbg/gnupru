@@ -24,7 +24,7 @@ bb_daily_target_test()
   bb_update_source newlib ${NEWLIB_URL}
 
   # Write conforming versioning info.
-  bb_gcc_touch_source_tree
+  bb_gcc_touch_source_tree master
 
   # Build binutils
   bb_config binutils "--disable-gdb --target=tic6x-none-elf"

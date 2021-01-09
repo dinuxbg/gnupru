@@ -33,7 +33,7 @@ bb_daily_target_test()
   bb_update_source winavr ${WINAVR_URL}
 
   # Write conforming versioning info.
-  bb_gcc_touch_source_tree
+  bb_gcc_touch_source_tree ${GCC_BRANCH}
 
   # Setup avrtest, per:
   #    https://sourceforge.net/p/winavr/code/HEAD/tree/trunk/avrtest/
