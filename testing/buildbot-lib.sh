@@ -34,6 +34,7 @@ bb_update_source()
   local URL=${2}
   local BRANCH=${3:-master}
   local P
+  local C
 
   print_stage "Updating GIT source tree for ${PRJ}"
 
@@ -51,10 +52,14 @@ bb_update_source()
   git fetch origin || error "failed to sync ${PRJ}"
   git checkout origin/${BRANCH} || error "failed to checkout ${PRJ}"
 
+  C=`git rev-parse HEAD`
+  echo "${PRJ} ${C}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
+
   # Apply any out-of-tree patches.
   [ -d ../${PRJ}-patches ] && ls ../${PRJ-}-patches/* | sort | while read P
   do
     git am -3 ${P} || error "failed to apply ${P}"
+    echo "${PRJ} ${P}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
   done
   git tag buildbot-daily-${BUILD_TAG}
 
@@ -80,13 +85,40 @@ bb_update_source_svn()
   pushd ${PRJ} || error "cannot enter ${PRJ}"
   svn revert --recursive . || error "failed to prune remote"
   svn update || error "failed to update SVN ${PRJ}"
+  echo "${PRJ} r`svn info --show-item revision`" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
+
   [ -d ../${PRJ}-patches ] && ls ../${PRJ-}-patches/* | sort | while read P
   do
     echo "ERROR: Local patching not supported for SVN. Sorry"
     exit 1
+    echo "${PRJ} ${P}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
   done
 
   popd
+  popd
+}
+
+# Prepare tree for release, and write proper versioning info.
+#
+# Follow contrib/gcc_update's behaviour for filling in version
+# information in places the test and build systems expect it.
+bb_gcc_touch_source_tree()
+{
+  local C
+  local BRANCH
+
+  pushd ${WORKSPACE}/gcc || error "failed to enter gcc"
+
+  rm -f LAST_UPDATED gcc/REVISION
+  C=`git log -n1 --pretty=tformat:%p:%t:%H`
+  BRANCH=`git name-rev --name-only HEAD || :`
+  LC_ALL=C date > LAST_UPDATED
+  LC_ALL=C echo "`TZ=UTC date` (revision $revision)" >> LAST_UPDATED
+  echo "[${BRANCH} revision ${C}]" > gcc/REVISION
+
+  # Touch generated files which might be out of date.
+  ./contrib/gcc_update --touch
+
   popd
 }
 

@@ -23,18 +23,8 @@ bb_daily_target_test()
   bb_update_source gcc ${GCC_URL}
   bb_update_source newlib ${NEWLIB_URL}
 
-  # Prepare tree for release, and write proper versioning info.
-  pushd ${WORKSPACE}/gcc || error "failed to enter gcc"
-  ./contrib/gcc_update origin master
-  popd
-
-  local GCC_TOT=`cd gcc && git rev-parse HEAD`
-  local BINUTILS_TOT=`cd binutils && git rev-parse HEAD`
-  local NEWLIB_TOT=`cd newlib && git rev-parse HEAD`
-
-  echo "gcc ${GCC_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
-  echo "binutils ${BINUTILS_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
-  echo "newlib ${NEWLIB_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
+  # Write conforming versioning info.
+  bb_gcc_touch_source_tree
 
   # Build binutils
   bb_config binutils "--disable-gdb --target=tic6x-none-elf"

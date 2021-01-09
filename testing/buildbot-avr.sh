@@ -32,20 +32,8 @@ bb_daily_target_test()
   bb_update_source avrlibc ${AVRLIBC_URL}
   bb_update_source winavr ${WINAVR_URL}
 
-  # Prepare tree for release, and write proper versioning info.
-  pushd ${WORKSPACE}/gcc || error "failed to enter gcc"
-  ./contrib/gcc_update origin ${GCC_BRANCH}
-  popd
-
-  local GCC_TOT=`cd gcc && git rev-parse HEAD`
-  local BINUTILS_TOT=`cd binutils && git rev-parse HEAD`
-  local AVRLIBC_TOT=`cd avrlibc && git rev-parse HEAD`
-  local WINAVR_URL=`cd winavr && git rev-parse HEAD`
-
-  echo "gcc ${GCC_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
-  echo "binutils ${BINUTILS_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
-  echo "avr-libc ${AVRLIBC_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
-  echo "winavr ${WINAVR_URL}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
+  # Write conforming versioning info.
+  bb_gcc_touch_source_tree
 
   # Setup avrtest, per:
   #    https://sourceforge.net/p/winavr/code/HEAD/tree/trunk/avrtest/
