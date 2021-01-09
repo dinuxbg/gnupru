@@ -90,18 +90,27 @@ bb_daily_target_test()
 
   # Test GCC
   bb_make gcc "-j`nproc` check-gcc-c RUNTESTFLAGS=--target_board=atmega128-sim"
-
-  # TODO - without libstdc++, we end up with thousands of spurious FAILS.
-  # Enabling libstdc++ is non-trivial for AVR, so it's best to disable C++
-  # checking in order to reduce the noise.
-  # bb_make gcc "-j`nproc` check-gcc-c++ RUNTESTFLAGS=--target_board=atmega128-sim"
+  bb_make gcc "-j`nproc` check-gcc-c++ RUNTESTFLAGS=--target_board=atmega128-sim"
 
   # Save all the logs
   bb_gather_log_files ${BUILD_TAG}
 
   # Send to real mailing list,
   pushd ${WORKSPACE}/avr-gcc-build || error "failed to enter avr-gcc-build"
-  ../gcc/contrib/test_summary -m ${SUMMARY_RECIPIENTS} | sh
+
+  # Without libstdc++, we end up with thousands of spurious FAILS.
+  # Enabling libstdc++ is non-trivial for AVR, so to spare GCC mailing
+  # servers from megabytes of spurious failures, simply remove them.
+  #
+  # We simply track regressions for C++.
+  local AVR_KNOWN_FAILURES=${LOGDIR}/avr-known-failures
+  [ -f $AVR_KNOWN_FAILURES ] || grep '^\(UNSUPPORTED\|FAIL\):' ${LOGDIR}/${BUILD_TAG}/g++.sum | awk '{print $2}' > ${AVR_KNOWN_FAILURES}
+  # Filter out g++.sum
+  cp gcc/testsuite/g++/g++.sum buildbot-sum-tmp
+  cat buildbot-sum-tmp | grep -f ${AVR_KNOWN_FAILURES} -v  > gcc/testsuite/g++/g++.sum
+
+  echo -e "WARNING: Many C++ failures have been omitted due to lack of libstdc++ on AVR!\nOnly G++ regressions are reported below.\n\n" > avr-warning.txt
+  ../gcc/contrib/test_summary -p avr-warning.txt -m ${SUMMARY_RECIPIENTS} | sh
   popd
 
   bb_check_for_regressions ${PREV_BUILD_TAG} ${BUILD_TAG}
