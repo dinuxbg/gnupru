@@ -61,7 +61,6 @@ bb_update_source()
     git am -3 ${P} || error "failed to apply ${P}"
     echo "${PRJ} ${P}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
   done
-  git tag buildbot-daily-${BUILD_TAG}
 
   popd
   popd
