@@ -1,5 +1,14 @@
 # Testing the pru-gcc toolchain
 
+##  Mail Configuration
+The ```Mail``` command line tool must be present and configured to be able to send email.
+
+Example for Debian:
+
+	sudo apt install mailx
+	vim ~/.mailrc
+	# Fill-in your SMTP configuration.
+
 ##  DejaGnu Configuration
 Install Dejagnu:
 

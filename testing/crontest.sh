@@ -1,4 +1,6 @@
 #!/bin/bash
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 # Put it in an empty directory and invoke it from crontab. Example:
 #  0 8 * * * /home/user/testbot-workspace/crontest.sh

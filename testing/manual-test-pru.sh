@@ -1,4 +1,6 @@
 #!/bin/bash
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 # Simple script for manual building and testing of gcc+newlib ToT.
 #

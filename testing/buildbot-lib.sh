@@ -1,4 +1,4 @@
-
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 # Simple automation helpers for daily testing of GNU toolchain.
 #

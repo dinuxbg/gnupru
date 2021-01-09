@@ -1,4 +1,6 @@
 #!/bin/bash
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 # Simple script for automatic daily testing of gcc+avrlibc ToT.
 
@@ -88,7 +90,11 @@ bb_daily_target_test()
 
   # Test GCC
   bb_make gcc "-j`nproc` check-gcc-c RUNTESTFLAGS=--target_board=atmega128-sim"
-  bb_make gcc "-j`nproc` check-gcc-c++ RUNTESTFLAGS=--target_board=atmega128-sim"
+
+  # TODO - without libstdc++, we end up with thousands of spurious FAILS.
+  # Enabling libstdc++ is non-trivial for AVR, so it's best to disable C++
+  # checking in order to reduce the noise.
+  # bb_make gcc "-j`nproc` check-gcc-c++ RUNTESTFLAGS=--target_board=atmega128-sim"
 
   # Save all the logs
   bb_gather_log_files ${BUILD_TAG}
@@ -105,10 +111,5 @@ bb_daily_target_test()
 . `dirname ${0}`/buildbot-lib.sh
 
 bb_init ${@}
-
-# Workaround debian's inability to set heirloom as default
-# mkdir -p ${WORKSPACE}/tools/bin
-# ln -s `which s-nail` ${WORKSPACE}/tools/bin/Mail 1>/dev/null 2>&1
-# export PATH=${WORKSPACE}/tools/bin:${PATH}
 
 bb_daily_build

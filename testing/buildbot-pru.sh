@@ -1,4 +1,6 @@
 #!/bin/bash
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 # Simple script for automatic daily testing of gcc+newlib ToT.
 
@@ -89,10 +91,5 @@ bb_daily_target_test()
 . `dirname ${0}`/buildbot-lib.sh
 
 bb_init ${@}
-
-# Workaround debian's inability to set heirloom as default
-# mkdir -p ${WORKSPACE}/tools/bin
-# ln -s `which s-nail` ${WORKSPACE}/tools/bin/Mail 1>/dev/null 2>&1
-# export PATH=${WORKSPACE}/tools/bin:${PATH}
 
 bb_daily_build

@@ -1,4 +1,6 @@
 #!/bin/bash
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 # Frontend to the proprietary TI compiler. Used for invoking
 # the GCC ABI checking test suite.
