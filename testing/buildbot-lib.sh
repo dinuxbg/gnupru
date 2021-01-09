@@ -7,12 +7,14 @@
 #   LOGDIR
 #   PREFIX
 
+# Print error and exit.
 error()
 {
   echo "ERROR: $@"
   exit 1
 }
 
+# Print a large sign in log.
 print_stage()
 {
   echo "*******************************************************************************"
@@ -22,12 +24,18 @@ print_stage()
   echo "*******************************************************************************"
 }
 
+# Clone if needed, and update a GIT project to latest upstream.
+#   PRJ    : Which GIT project to update.
+#   URL    : Which URL to use for initial clone.
+#   BRANCH : Which upstream branch to checkout.
 bb_update_source()
 {
   local PRJ=${1}
   local URL=${2}
   local BRANCH=${3:-master}
   local P
+
+  print_stage "Updating GIT source tree for ${PRJ}"
 
   pushd ${WORKSPACE}
 
@@ -54,11 +62,16 @@ bb_update_source()
   popd
 }
 
+# Update project which is published in Subversion by upstream.
+#   PRJ    : Which SVN project to update.
+#   URL    : Which URL to use for initial clone.
 bb_update_source_svn()
 {
   local PRJ=${1}
   local URL=${2}
   local P
+
+  print_stage "Updating Subversion source tree for ${PRJ}"
 
   pushd ${WORKSPACE}
 
@@ -77,6 +90,7 @@ bb_update_source_svn()
   popd
 }
 
+# Clean workspace for the currently selected target.
 bb_clean()
 {
   print_stage "Cleaning all projects"
@@ -88,6 +102,8 @@ bb_clean()
   rm -fr ${PREFIX}
 }
 
+# Invoke the ./configure script for project PRJ. Rest of function arguments
+# are passed on to configure.
 bb_config()
 {
   local PRJ="${1}"
@@ -108,6 +124,10 @@ bb_config()
   popd
 }
 
+# Invoke "make" in the build directory for the already-configured
+# given project.
+#
+# Rest of function arguments are passed on to "make".
 bb_make()
 {
   local IGNORE_ERRORS=false
@@ -116,7 +136,7 @@ bb_make()
   shift
   local MAKE_PARAMS="$@"
 
-  print_stage "Building ${PRJ} with parameters \"${CONFIG_PARAMS}\""
+  print_stage "Invoking make for ${PRJ} with parameters \"${MAKE_PARAMS}\""
   mkdir -p ${WORKSPACE}/${BB_BDIR_PREFIX}-${PRJ}-build
   pushd ${WORKSPACE}/${BB_BDIR_PREFIX}-${PRJ}-build || error "missing ${BB_BDIR_PREFIX}-${PRJ}-build"
 
@@ -126,13 +146,16 @@ bb_make()
 }
 
 # Some projects have weird in-tree build rules.
+#
+# Use this helper function to execute arbitrary commands in the
+# given project's source directory.
 bb_source_command()
 {
   local PRJ="${1}"
   shift
   local CMDS="$@"
 
-  print_stage "Building ${PRJ} with parameters \"${CONFIG_PARAMS}\""
+  print_stage "Running custom command \"${CMDS}\" in project ${PRJ}"
   pushd ${WORKSPACE}/${PRJ} || error "missing ${PRJ}"
 
   ${CMDS} || error "Could not build ${PRJ}"
@@ -140,6 +163,7 @@ bb_source_command()
   popd
 }
 
+# Generate email subject string for a detected test case regression.
 regression_email_subject()
 {
   local LOGFILE=${1}
@@ -149,10 +173,13 @@ regression_email_subject()
   echo "[BUILDBOT] Regression detected for ${TARGET}"
 }
 
+# Send email for a detected test case regression.
 bb_email_regression()
 {
   local BUILD_TAG=${1}
   local LOGFILE=${LOGDIR}/${BUILD_TAG}/regression.log
+
+  print_stage "Sending email for detected regression."
 
   # Note: Usually you want to install heirloom-mailx, instead of relying
   # on the bsd-mailx default package.
@@ -160,22 +187,28 @@ bb_email_regression()
   cat ${LOGFILE} | Mail -s "`regression_email_subject ${LOGFILE}`" ${REGRESSION_RECIPIENTS}
 }
 
+# Send an email for a detected build failure.
 bb_email_build_failure()
 {
   local BUILD_TAG=${1}
   local LOGFILE=${2}
 
-  # Note: Usually you want to install heirloom-mailx, instead of relying
-  # on the bsd-mailx default package.
-
+  # Do not call print_stage here.
+  # Output is not being collected to build log at this stage.
   zcat ${LOGFILE} | tail -200 | Mail -s "[BUILDBOT] Build ${BUILD_TAG} failed" ${REGRESSION_RECIPIENTS}
 }
 
-# Gather all log files from all build directories
+# Gather all log files from all build directories and place
+# them in the dedicated log directory for this particular test run.
+#
+# We are interested in all *.sum and their *.log counterparts.
+# *.log files are compressed to save space.
 bb_gather_log_files()
 {
   local BUILD_TAG=${1}
   local F
+
+  print_stage "Gathering log files"
 
   find `ls -d ${WORKSPACE}/${BB_BDIR_PREFIX}-*-build` -name "*.sum" | while read F
   do
@@ -188,10 +221,16 @@ bb_gather_log_files()
 
 # Call this after all sum files have been collected into the
 # daily build's log directory.
+#
+# Function invokes GCC's contrib scripts to check summary files
+# between last good run and current run, so that test case regressions
+# can be detected.
 bb_check_for_regressions()
 {
   local PREV_BUILD_TAG=${1}
   local BUILD_TAG=${2}
+
+  print_stage "Checking log files for regressions since the last run"
 
   # Compare to previous build.  If there are regressions, send an email.
   ( local sum
@@ -207,6 +246,9 @@ bb_check_for_regressions()
   return 0
 }
 
+# This must be the first called function from the main script.
+# It initializes the current test run directory and sets
+# the environment.
 bb_init()
 {
   [ $# == 1 ] || error "usage: $0 <WORKSPACE>"
@@ -223,6 +265,7 @@ bb_init()
   mkdir -p ${LOGDIR}
 }
 
+# Call this from the main script to do the actual build, test and report.
 bb_daily_build()
 {
   cd $WORKSPACE
