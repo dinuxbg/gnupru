@@ -34,6 +34,7 @@ bb_daily_target_test()
   bb_config binutils "--disable-gdb --target=pru"
   bb_make binutils "-j`nproc`"
   bb_make binutils "install"
+  # Check binutils without a target C compiler. All tests must pass.
   bb_make binutils "-j`nproc` check RUNTESTFLAGS=--target_board=pru-sim"
 
   export PATH=${PREFIX}/bin:${PATH}
@@ -62,6 +63,14 @@ bb_daily_target_test()
   # Test GCC
   bb_make gcc "-j`nproc` check-gcc-c RUNTESTFLAGS=--target_board=pru-sim"
   bb_make gcc "-j`nproc` check-gcc-c++ RUNTESTFLAGS=--target_board=pru-sim"
+
+  # Build binutils again - this time with a C compiler present.
+  bb_make binutils "distclean"
+  bb_config binutils "--disable-gdb --target=pru"
+  bb_make binutils "-j`nproc`"
+  bb_make binutils "install"
+  # Check binutils with a target C compiler.  Some tests may fail.
+  bb_make --ignore-errors binutils "-j`nproc` check RUNTESTFLAGS=--target_board=pru-sim"
 
   # Save all the logs
   bb_gather_log_files ${BUILD_TAG}
