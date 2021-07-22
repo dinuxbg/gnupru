@@ -4,9 +4,9 @@
 
 # Official packages to download.
 GCC_URL=http://ftpmirror.gnu.org/gcc/gcc-11.1.0/gcc-11.1.0.tar.xz
-BINUTILS_URL=http://ftpmirror.gnu.org/binutils/binutils-2.36.1.tar.bz2
+BINUTILS_URL=http://ftpmirror.gnu.org/binutils/binutils-2.37.tar.bz2
 NEWLIB_URL=ftp://sourceware.org/pub/newlib/newlib-4.1.0.tar.gz
-GNUPRUMCU_URL=https://github.com/dinuxbg/gnuprumcu/releases/download/v0.5.0/gnuprumcu-0.5.0.tar.gz
+GNUPRUMCU_URL=https://github.com/dinuxbg/gnuprumcu/releases/download/v0.6.0/gnuprumcu-0.6.0.tar.gz
 
 MAINDIR=`pwd`
 SRC=`pwd`/src

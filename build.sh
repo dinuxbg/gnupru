@@ -1,6 +1,14 @@
 #!/bin/bash
 
 # Sample script to build the GCC PRU toolchain.
+#
+# Note: Keep it simple! Don't write a crostool-ng clone. Instead focus on
+# documenting the necessary build steps, while simultaneously producing
+# a functional cross-toolchain binary release.
+#
+# For example, following features are lacking on purpose:
+#    - Downloaded source tarballs are not verified.
+#    - Host binaries are not stripped.
 
 MAINDIR=`pwd`
 SRC=`pwd`/src
@@ -42,7 +50,7 @@ build_newlib()
 build_gnuprumcu()
 {
   cd $BUILD/gnuprumcu
-  $SRC/gnuprumcu/configure --target=pru --prefix=$PREFIX || die Could not configure gnuprumcu
+  $SRC/gnuprumcu/configure --host=pru --prefix=$PREFIX || die Could not configure gnuprumcu
   make -j`nproc` || die Could not build gnuprumcu
   make install || die Could not install gnuprumcu
 }
