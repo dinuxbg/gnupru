@@ -3,14 +3,14 @@
 ## Introduction
 This is a collection of build scripts for the GCC/Binutils port to the PRU I/O CPU core present in TI Sitara AM33xx SoCs. Older PRU core versions are not supported.
 
-A simulator is used to execute the GCC C regression test suite. Results are posted daily to https://gcc.gnu.org/pipermail/gcc-testresults/ .
+A simulator is used to execute the GCC C regression [test suite](./testing/README.md). Results are posted daily to https://gcc.gnu.org/pipermail/gcc-testresults/ .
 
 There are several examples to get started:
  * Assorted small examples: https://github.com/dinuxbg/pru-gcc-examples
  * Beaglemic PDM microphone array: https://gitlab.com/dinuxbg/beaglemic
  * GCC port of the TI PRU training: https://github.com/dinuxbg/pru-software-support-package . Make sure to read ReadMe-GCC.txt.
 
-Bug reports should be filed in https://github.com/dinuxbg/gnupru/issues . For general questions please use http://beagleboard.org/Community/Forums .
+Bug reports should be filed in https://github.com/dinuxbg/gnupru/issues . For general questions please use https://forum.beagleboard.org/ .
 
 This project has no relation to the TI PRU C compiler. ABI differences between GCC PRU and TI PRU C are tracked in https://github.com/dinuxbg/gnupru/wiki
 
@@ -40,6 +40,13 @@ Then it should be a simple matter of:
 	export PREFIX=$HOME/bin/pru-gcc   # Define where to install the toolchain
 	./download-and-prepare.sh         # Download and prepare the sources
 	./build.sh                        # Build
+
+## Building Using Crosstool-ng
+Recently [crosstool-ng](https://github.com/crosstool-ng/crosstool-ng) acquired pru support. Provided you build top-of-tree `crosstool-ng`, you should be able to:
+
+	$ ct-ng pru
+	$ ct-ng build
+	$ PATH=$HOME/x-tools/pru-elf/bin:$PATH
 
 ## Acknowledgements
  * GCC/Binutils Nios2 port was taken as a base for the PRU port.
