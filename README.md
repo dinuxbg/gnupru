@@ -14,7 +14,8 @@ Bug reports should be filed in https://github.com/dinuxbg/gnupru/issues . For ge
 
 This project has no relation to the TI PRU C compiler. ABI differences between GCC PRU and TI PRU C are tracked in https://github.com/dinuxbg/gnupru/wiki
 
-## Installing On Debian Jessie
+## Getting The Cross Toolchain
+### Installing On Beagleboard Debian Jessie
 If you are running Beaglebone Debian image, then installation is simple:
 
 	sudo apt-get update
@@ -24,7 +25,11 @@ For other Debian armhf images, you'll need to add Robert Nelson's package reposi
 
 	deb [arch=armhf] http://repos.rcn-ee.com/debian/ buster main
 
-## Building From Sources
+### Using Prebuilts
+
+In latest [releases](https://github.com/dinuxbg/gnupru/releases/latest), prebuilt tarballs for `amd64` and `armhf` hosts are provided for user conveinence.
+
+### Building From Sources
 The build scripts are tested on a Debian host, but should work on any recent distro.
 
 You'll need some prerequisites. For a Debian host:
@@ -41,7 +46,7 @@ Then it should be a simple matter of:
 	./download-and-prepare.sh         # Download and prepare the sources
 	./build.sh                        # Build
 
-## Building Using Crosstool-ng
+### Building Using Crosstool-ng
 Recently [crosstool-ng](https://github.com/crosstool-ng/crosstool-ng) acquired pru support. Provided you build top-of-tree `crosstool-ng`, you should be able to:
 
 	$ ct-ng pru
