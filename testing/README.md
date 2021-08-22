@@ -34,7 +34,7 @@ Then copy the PRU configuration provided with this package:
 
 All the steps for testing and finding regressions in PRU toolchain have been automated with a simple set of scripts. See the [BuildBot](./BUILDBOT.md) section for instructions how to run those scripts on your computer.
 
-[I])(https://github.com/dinuxbg/) run those exact same scripts to generate the reports for https://gcc.gnu.org/pipermail/gcc-testresults/ , and also to get warnings about newly introduced test failures.
+Those exact same scripts are used to generate the reports for https://gcc.gnu.org/pipermail/gcc-testresults/ , and also to raise warnings about newly introduced test failures.
 
 ## Internals Of Cross-Toolchain Testing
 
