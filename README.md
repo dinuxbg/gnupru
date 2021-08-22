@@ -43,8 +43,8 @@ If you are running a [Beagleboard Debian Image](https://beagleboard.org/latest-i
 
 Latest [releases](https://github.com/dinuxbg/gnupru/releases/latest) provide prebuilt tarballs for `amd64` and `armhf` hosts. Simply download, untar and use them when:
 
- * You want to cross-compile PRU firmware from AMD64 Linux host.
- * You are using an armhf distribution other than [Beagleboard Debian Image](https://beagleboard.org/latest-images).
+ * You want to cross-compile PRU firmware from `amd64` Linux host.
+ * You are using an `armhf` distribution other than [Beagleboard Debian Image](https://beagleboard.org/latest-images).
 
 ### Building Using Crosstool-ng
 
