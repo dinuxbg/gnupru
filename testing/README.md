@@ -1,6 +1,23 @@
 # Testing the pru-gcc toolchain
 
-##  DejaGnu Configuration
+Regression testing is one of the methods to avoid [Compiler Writer's Deadly Sin #13](https://gcc.gnu.org/wiki/DeadlySins).
+
+Listed below are instructions to setup the necessary environment and to run regression tests for the PRU GNU toolchain.
+
+## Table Of Contents
+ * [Setting Up The Environment](#setting-up-the-environment)
+   * [DejaGnu Configuration](#dejagnu-configuration)
+ * [The BuildBot Scripts](#the-buildbot-scripts)
+ * [Internals Of Cross-Toolchain Testing](#internals-of-cross-toolchain-testing)
+   * [Binutils](#binutils)
+   * [GCC](#gcc)
+   * [Comparing builds for test failure regressions](#comparing-builds-for-test-failure-regressions)
+   * [Comparing builds for size regressions](#comparing-builds-for-size-regressions)
+   * [Checking ABI compatibility](#checking-abi-compatibility)
+
+## Setting Up The Environment
+###  DejaGnu Configuration
+
 Install Dejagnu:
 
 	sudo apt-get install dejagnu autogen
@@ -13,14 +30,24 @@ Then copy the PRU configuration provided with this package:
 
 	sudo cp pru-sim.exp /usr/share/dejagnu/baseboards/
 
-## Binutils
+## The BuildBot Scripts
+
+All the steps for testing and finding regressions in PRU toolchain have been automated with a simple set of scripts. See the [BuildBot](./BUILDBOT.md) section for instructions how to run those scripts on your computer.
+
+[I])(https://github.com/dinuxbg/) run those exact same scripts to generate the reports for https://gcc.gnu.org/pipermail/gcc-testresults/ , and also to get warnings about newly introduced test failures.
+
+## Internals Of Cross-Toolchain Testing
+
+I understand that the [BuildBot](./BUILDBOT.md) set of scripts might be too much `BASH` for some. Below I have captured more human-readable documentation for running cross toolchain regression tests.
+
+### Binutils
 You need to install pru-gcc via some means, and then do a clean build of binutils. The binutils' configure script requires a pru-gcc to be available when configuring the project, in order to setup the LD tests exercising a target compiler.
 
 To run the tests go to the binutils build directory and do:
 
 	make check RUNTESTFLAGS=--target_board=pru-sim
 
-## GCC
+### GCC
 First, newlib must be recompiled in "full" mode. Note that a lot of standard features are stripped by default, in order to save valuable space on the constrained PRU. But for checking compliance, we need them all. Here is an example newlib configuration:
 
 	../newlib/configure --target=pru --prefix=$HOME/bin/pru-gcc -enable-newlib-io-long-long --enable-newlib-io-long-double --enable-newlib-io-c99-formats
@@ -30,7 +57,13 @@ To execute the GCC C test suite go to the GCC build directory and run:
 	make check-gcc-c RUNTESTFLAGS=--target_board=pru-sim
 	make check-gcc-c++ RUNTESTFLAGS=--target_board=pru-sim
 
-## Comparing builds for regressions
+### Comparing builds for test failure regressions
+
+Let's say you have built and checked GCC twice - once with an old and then with a new version of GCC sources. The GCC sources include a helpful script to analyse the test results and report tests which passed in the *old* but failed with the *new* version of GCC:
+
+	gcc/contrib/dg-cmp-results.sh "" results-old/gcc.sum results-new/gcc.sum
+
+### Comparing builds for size regressions
 
 First, build and test the reference that we'll compare against:
 
@@ -46,7 +79,7 @@ Now do the comparison. Example for size:
 
 	GCC_EXEC_PREFIX=`realpath ./pru-opt/pru/lib`/ ./gnupru/testing/compare-all-sizes.py pru
 
-## Checking ABI compatibility
+### Checking ABI compatibility
 It is possible to run part of the GCC testsuite in an "ABI check" mode. The testsuite will compile object files with different compilers, and then check that functions from one object file can call and get correct return value from the other object file.
 
 To install, first put the clpru.sh script into your PATH. This wrapper script is needed because TI compiler does not follow the standard command line option interface, that is expected by the GCC testsuite.
