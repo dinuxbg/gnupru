@@ -57,6 +57,10 @@ To execute the GCC C test suite go to the GCC build directory and run:
 	make check-gcc-c RUNTESTFLAGS=--target_board=pru-sim
 	make check-gcc-c++ RUNTESTFLAGS=--target_board=pru-sim
 
+The full regression test might take over an hour to execute. For development you may also run a small subset of it, e.g.:
+
+	make check-gcc-c RUNTESTFLAGS="--target_board=pru-sim pru.exp="
+
 ### Comparing builds for test failure regressions
 
 Let's say you have built and checked GCC twice - once with an old and then with a new version of GCC sources. The GCC sources include a helpful script to analyse the test results and report tests which passed in the *old* but failed with the *new* version of GCC:
