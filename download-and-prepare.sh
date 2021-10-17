@@ -4,7 +4,11 @@
 
 # Official packages to download.
 GCC_URL=http://ftpmirror.gnu.org/gcc/gcc-11.1.0/gcc-11.1.0.tar.xz
-BINUTILS_URL=http://ftpmirror.gnu.org/binutils/binutils-2.37.tar.bz2
+# TODO - switch back to official release once the following bug fix
+# lands in major or minor release (whichever comes first):
+# https://sourceware.org/pipermail/binutils/2021-September/118057.html
+BINUTILS_URL=http://dinux.eu/gnupru/binutils-2.37.20211017.tar.bz2
+#BINUTILS_URL=http://ftpmirror.gnu.org/binutils/binutils-2.37.tar.bz2
 NEWLIB_URL=ftp://sourceware.org/pub/newlib/newlib-4.1.0.tar.gz
 GNUPRUMCU_URL=https://github.com/dinuxbg/gnuprumcu/releases/download/v0.6.0/gnuprumcu-0.6.0.tar.gz
 
