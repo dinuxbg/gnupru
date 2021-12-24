@@ -37,7 +37,7 @@ Several methods to acquire the PRU cross toolchain are listed below, ordered by 
 If you are running a [Beagleboard Debian Image](https://beagleboard.org/latest-images), then installation is simple:
 
 	sudo apt-get update
-	sudo apt-get install gcc-pru
+	sudo apt-get install gcc-pru gnuprumcu
 
 ### Prebuilt Tarballs
 
