@@ -311,7 +311,7 @@ bb_daily_build()
   [ -z ${PREV_BUILD_TAG} ] && error "failed to determine previous successful build"
 
   # Execute in a subshell in order to catch build errors and send an email.
-  ( set -x; time bb_daily_target_test ${PREV_BUILD_TAG} ${BUILD_TAG} ) |& gzip - >${LOGDIR}/${BUILD_TAG}/build.log.gz 2>&1
+  ( set -x; set -o pipefail; time bb_daily_target_test ${PREV_BUILD_TAG} ${BUILD_TAG} |& gzip - >${LOGDIR}/${BUILD_TAG}/build.log.gz )
   ST=$?
   [ "${ST}" = "0" ] || bb_email_build_failure ${BUILD_TAG} ${LOGDIR}/${BUILD_TAG}/build.log.gz
   [ "${ST}" = "0" ] && touch ${LOGDIR}/${BUILD_TAG}/pass
