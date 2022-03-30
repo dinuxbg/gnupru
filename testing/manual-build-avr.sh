@@ -24,12 +24,10 @@ bb_daily_target_test()
   local GCC_TOT=`cd gcc && git rev-parse HEAD`
   local BINUTILS_TOT=`cd binutils && git rev-parse HEAD`
   local AVRLIBC_TOT=`cd avrlibc && git rev-parse HEAD`
-  local WINAVR_URL=`cd winavr && git rev-parse HEAD`
 
   echo "gcc ${GCC_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
   echo "binutils ${BINUTILS_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
   echo "avr-libc ${AVRLIBC_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
-  echo "winavr ${WINAVR_URL}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
 
   # Build binutils
   bb_config binutils "--disable-gdb --target=avr"
@@ -47,13 +45,6 @@ bb_daily_target_test()
   bb_config avrlibc '--host=avr'
   bb_make avrlibc "-j`nproc`"
   bb_make avrlibc "install"
-
-  # avrtest
-  bb_source_command winavr "make -C avrtest"
-
-  # Get the simulator under PATH
-  export PATH=${WORKSPACE}/winavr/avrtest:${PATH}
-
 }
 
 
