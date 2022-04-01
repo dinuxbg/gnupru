@@ -6,7 +6,7 @@
 
 BINUTILS_URL=git://sourceware.org/git/binutils-gdb.git
 GCC_URL=https://github.com/mirrors/gcc
-AVRLIBC_URL=https://github.com/dinuxbg/avr-libc
+AVRLIBC_URL=https://github.com/avrdudes/avr-libc
 WINAVR_URL=https://gitlab.com/dinuxbg/winavr-code
 BB_ARCH=avr
 
@@ -29,7 +29,7 @@ bb_daily_target_test()
 
   bb_update_source binutils ${BINUTILS_URL}
   bb_update_source gcc ${GCC_URL} ${GCC_BRANCH}
-  bb_update_source avrlibc ${AVRLIBC_URL}
+  bb_update_source avrlibc ${AVRLIBC_URL} main
   bb_update_source winavr ${WINAVR_URL}
 
   # Write conforming versioning info.
