@@ -3,12 +3,8 @@
 # Sample script to download vanilla upstream projects.
 
 # Official packages to download.
-# TODO - switch back to official release once GCC 12 is released
-GCC_URL=http://dinux.eu/gnupru/gcc-12.0.RC.gaeedb00a1a.tar.gz
-# GCC_URL=http://ftpmirror.gnu.org/gcc/gcc-11.1.0/gcc-11.1.0.tar.xz
-
+GCC_URL=http://ftpmirror.gnu.org/gcc/gcc-12.1.0/gcc-12.1.0.tar.xz
 BINUTILS_URL=http://ftpmirror.gnu.org/binutils/binutils-2.38.tar.bz2
-
 NEWLIB_URL=ftp://sourceware.org/pub/newlib/newlib-4.2.0.20211231.tar.gz
 GNUPRUMCU_URL=https://github.com/dinuxbg/gnuprumcu/releases/download/v0.7.0/gnuprumcu-0.7.0.tar.gz
 
