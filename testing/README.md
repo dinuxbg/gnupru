@@ -18,7 +18,7 @@ Listed below are instructions to setup the necessary environment and to run regr
 ## Setting Up The Environment
 ###  DejaGnu Configuration
 
-Install Dejagnu:
+Install DejaGnu:
 
 	sudo apt-get install dejagnu autogen
 
@@ -26,8 +26,9 @@ Or, for Fedora:
 
 	sudo dnf install dejagnu autogen
 
-Then copy the PRU configuration provided with this package:
+DejaGnu versions 1.6.3 and later include the necessary PRU simulator configuration.  If you have an older version, you can manually download and install the config file:
 
+	wget 'http://git.savannah.gnu.org/gitweb/?p=dejagnu.git;a=blob_plain;f=baseboards/pru-sim.exp;hb=HEAD' -O pru-sim.exp
 	sudo cp pru-sim.exp /usr/share/dejagnu/baseboards/
 
 ## The BuildBot Scripts
