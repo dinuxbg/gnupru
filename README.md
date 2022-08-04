@@ -67,7 +67,7 @@ Users may find that [Beagleboard Debian Packages](#installing-on-beagleboard-deb
 
 You'll need some prerequisites. For a Debian host:
 
-	sudo apt-get install build-essential libmpfr-dev libgmp-dev libmpc-dev texinfo libncurses5-dev bison flex
+	sudo apt-get install build-essential libmpfr-dev libgmp-dev libmpc-dev texinfo libncurses5-dev bison flex texinfo
 
 Alternatively, for a Fedora host:
 
