@@ -4,7 +4,7 @@
 
 # Simple script for automatic daily testing of gcc+avrlibc ToT.
 
-BINUTILS_URL=git://sourceware.org/git/binutils-gdb.git
+BINUTILS_URL=https://github.com/bminor/binutils-gdb
 GCC_URL=https://github.com/mirrors/gcc
 AVRLIBC_URL=https://github.com/avrdudes/avr-libc
 WINAVR_URL=https://gitlab.com/dinuxbg/winavr-code

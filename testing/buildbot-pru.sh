@@ -4,7 +4,7 @@
 
 # Simple script for automatic daily testing of gcc+newlib ToT.
 
-BINUTILS_URL=git://sourceware.org/git/binutils-gdb.git
+BINUTILS_URL=https://github.com/bminor/binutils-gdb
 GCC_URL=https://github.com/mirrors/gcc
 NEWLIB_URL=https://github.com/mirror/newlib-cygwin
 BB_ARCH=pru
