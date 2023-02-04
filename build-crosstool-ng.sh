@@ -93,13 +93,13 @@ build_arm()
 {
   local tarname=pru-elf-${VERSION}.arm.tar
 
-  ${CT} arm-unknown-linux-gnueabi
+  ${CT} arm-unknown-linux-gnueabihf
   ${CT} build
-  ${CT} arm-unknown-linux-gnueabi,pru
-  PATH=$HOME/x-tools/arm-unknown-linux-gnueabi/bin/:$PATH ${CT} build
+  ${CT} arm-unknown-linux-gnueabihf,pru
+  PATH=$HOME/x-tools/arm-unknown-linux-gnueabihf/bin/:$PATH ${CT} build
 
   rm -f ${tarname}*
-  tar -C $HOME/x-tools/HOST-arm-unknown-linux-gnueabi/ -caf ${tarname} pru-elf
+  tar -C $HOME/x-tools/HOST-arm-unknown-linux-gnueabihf/ -caf ${tarname} pru-elf
   xz -9 ${tarname}
 }
 
