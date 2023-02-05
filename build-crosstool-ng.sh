@@ -60,6 +60,32 @@ build_crosstool_ng()
 
 
 #=============================================================================
+
+# Replace the EXE symbolic links with equivalent
+# BAT files.  For example, remove:
+#   pru-gcc.exe -> pru-elf-gcc.exe
+# and replace with a BAT file calling the original:
+#   pru-gcc.bat
+convert_symlink_to_bat()
+{
+ local dst=${1}
+ local src=`realpath ${1}`
+ local tool=`basename ${dst} .exe | cut -c5-`
+ local new_dst=`dirname ${dst}`/`basename ${dst} .exe`.bat
+ rm -f ${dst}
+ echo "pru-elf-${tool}.exe %*" > ${new_dst}
+}
+
+# Remove the given symbolic link, and replace it
+# with a copy of the real file.
+dup_symlink_to_file()
+{
+ local dst=${1}
+ local src=`realpath ${1}`
+ rm -f ${dst}
+ cp -f ${src} ${dst}
+}
+
 build_mingw()
 {
   # If binfmt is enabled for Wine EXEs, then some toolchain
@@ -82,6 +108,11 @@ build_mingw()
   cp $HOME/x-tools/x86_64-w64-mingw32/x86_64-w64-mingw32/sysroot/usr/x86_64-w64-mingw32/bin/libwinpthread-1.dll $HOME/x-tools/HOST-x86_64-w64-mingw32/pru-elf/bin/
   chmod +w $HOME/x-tools/HOST-x86_64-w64-mingw32/pru-elf/libexec/gcc/pru-elf/*
   cp $HOME/x-tools/x86_64-w64-mingw32/x86_64-w64-mingw32/sysroot/usr/x86_64-w64-mingw32/bin/libwinpthread-1.dll $HOME/x-tools/HOST-x86_64-w64-mingw32/pru-elf/libexec/gcc/pru-elf/*/
+
+  # The 7za+Windows combination does not support symbolic links. Perform workarounds.
+  chmod -R +w $HOME/x-tools/HOST-x86_64-w64-mingw32/pru-elf/
+  find $HOME/x-tools/HOST-x86_64-w64-mingw32/pru-elf -type l -a -iname "*.exe" | while read F; do convert_symlink_to_bat ${F}; done
+  find $HOME/x-tools/HOST-x86_64-w64-mingw32/pru-elf -type l -a -iname "*.dll" | while read F; do dup_symlink_to_file ${F}; done
 
   # Finally - we can package.
   pushd $HOME/x-tools/HOST-x86_64-w64-mingw32/
