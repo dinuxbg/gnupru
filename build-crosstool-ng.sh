@@ -86,6 +86,24 @@ dup_symlink_to_file()
  cp -f ${src} ${dst}
 }
 
+# Build and install GNU make for Windows.
+build_install_make.exe()
+{
+  # Find the latest source package. Should have been
+  # downloaded by previous crosstool-ng builds.
+  local make_tar=`realpath $HOME/src/make-* | sort -n | tail -1`
+  local builddir=`mktemp -d`
+  pushd ${builddir}
+  tar xaf ${make_tar}
+  pushd make*
+  ./configure --host=x86_64-w64-mingw32
+  make -j${nproc}
+  cp make.exe $HOME/x-tools/HOST-x86_64-w64-mingw32/pru-elf/bin/
+  popd
+  popd
+  rm -fr ${builddir}
+}
+
 build_mingw()
 {
   # If binfmt is enabled for Wine EXEs, then some toolchain
@@ -113,6 +131,9 @@ build_mingw()
   chmod -R +w $HOME/x-tools/HOST-x86_64-w64-mingw32/pru-elf/
   find $HOME/x-tools/HOST-x86_64-w64-mingw32/pru-elf -type l -a -iname "*.exe" | while read F; do convert_symlink_to_bat ${F}; done
   find $HOME/x-tools/HOST-x86_64-w64-mingw32/pru-elf -type l -a -iname "*.dll" | while read F; do dup_symlink_to_file ${F}; done
+
+  # Install GNU make executable in the release tarball, for user's convenience.
+  PATH=$HOME/x-tools/x86_64-w64-mingw32/bin/:$PATH build_install_make.exe
 
   # Finally - we can package.
   pushd $HOME/x-tools/HOST-x86_64-w64-mingw32/
