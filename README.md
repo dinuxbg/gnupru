@@ -13,7 +13,9 @@
 
 ## Introduction
 
-This is a collection of documentation and build scripts for the GNU toolchain targeting the PRU I/O CPU core present in TI Sitara AM33xx SoCs. Older PRU core versions are not supported.
+This is a collection of documentation and build scripts for the GNU toolchain targeting the [PRU](https://beagleboard.org/pru) I/O CPU. PRU cores present in TI Sitara AM33xx and later SoCs are supported.
+
+Support for older PRU core versions is not planned.
 
 A simulator is used to execute the GCC C regression [test suite](./testing/README.md). Results are posted daily to https://gcc.gnu.org/pipermail/gcc-testresults/ .
 
@@ -25,7 +27,7 @@ This project has no relation to the TI PRU C compiler. ABI differences between G
 
 There are several examples to get started:
  * Assorted small examples: https://github.com/dinuxbg/pru-gcc-examples
- * Beaglemic PDM microphone array: https://gitlab.com/dinuxbg/beaglemic
+ * BeagleMic PDM microphone array: https://gitlab.com/dinuxbg/beaglemic
  * GCC port of the TI PRU training: https://github.com/dinuxbg/pru-software-support-package . Make sure to read ReadMe-GCC.txt.
 
 ## Getting The Cross Toolchain
@@ -41,10 +43,12 @@ If you are running a [Beagleboard Debian Image](https://beagleboard.org/latest-i
 
 ### Prebuilt Tarballs
 
-Latest [releases](https://github.com/dinuxbg/gnupru/releases/latest) provide prebuilt tarballs for `amd64` and `armhf` hosts. Simply download, untar and use them when:
+Latest [releases](https://github.com/dinuxbg/gnupru/releases/latest) provide prebuilt tarballs for several hosts: `amd64` Linux, `armhf` Linux, Windows. Simply download, untar and use them when:
 
- * You want to cross-compile PRU firmware from `amd64` Linux host.
+ * You want to cross-compile PRU firmware from `amd64` Linux or Windows host.
  * You are using an `armhf` distribution other than [Beagleboard Debian Image](https://beagleboard.org/latest-images).
+
+*Note for maintainers: These prebuilt release tarballs are prepared using the `build-crosstool-ng.sh` script.*
 
 ### Building Using Crosstool-ng
 
@@ -54,12 +58,11 @@ Recently [crosstool-ng](https://github.com/crosstool-ng/crosstool-ng) acquired p
 	$ ct-ng build
 	$ PATH=$HOME/x-tools/pru-elf/bin:$PATH
 
-
 ### Building From Sources
 
-The custom build scripts are tested on a Debian host, but should work on any recent distro. They are intended to be simple enough, so that they can act as a documentation how to cross-compile a toolchain. They intentionally lack some features:
+The custom build scripts are should work on any recent Linux distro. They are intended to be simple enough, so that they can act as a documentation how to cross-compile a toolchain. They intentionally lack some features:
 
- * Downloaded source tarballs are not verified.
+ * Downloaded source tarballs are **not** verified.
  * Host binaries are not stripped, leading to bigger host executables sizes. Target firmware size is not affected, though!
  * Code complexity is kept at only about 100 lines of simple `BASH` statements.
 
