@@ -66,37 +66,6 @@ bb_update_source()
   popd
 }
 
-# Update project which is published in Subversion by upstream.
-#   PRJ    : Which SVN project to update.
-#   URL    : Which URL to use for initial clone.
-bb_update_source_svn()
-{
-  local PRJ=${1}
-  local URL=${2}
-  local P
-
-  print_stage "Updating Subversion source tree for ${PRJ}"
-
-  pushd ${WORKSPACE}
-
-  [ -d "${PRJ}" ] || svn co ${URL} ${PRJ} || error "initial ${URL} clone failed"
-
-  pushd ${PRJ} || error "cannot enter ${PRJ}"
-  svn revert --recursive . || error "failed to prune remote"
-  svn update || error "failed to update SVN ${PRJ}"
-  echo "${PRJ} r`svn info --show-item revision`" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
-
-  [ -d ../${PRJ}-patches ] && ls ../${PRJ-}-patches/* | sort | while read P
-  do
-    echo "ERROR: Local patching not supported for SVN. Sorry"
-    exit 1
-    echo "${PRJ} ${P}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
-  done
-
-  popd
-  popd
-}
-
 # Prepare tree for release, and write proper versioning info.
 #
 # Follow contrib/gcc_update's behaviour for filling in version
