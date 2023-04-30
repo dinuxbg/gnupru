@@ -38,5 +38,7 @@ do
   gunzip *.gz
   DATE_TAG=`basename "${d}"`
   t-upload-git-push "${DST}" bb/${TAG}/${DATE_TAG}  *.log *.sum versions.txt
+
+  rm -f *
 done
 popd
