@@ -285,5 +285,10 @@ bb_daily_build()
   [ "${ST}" = "0" ] || bb_email_build_failure ${BUILD_TAG} ${LOGDIR}/${BUILD_TAG}/build.log.gz
   [ "${ST}" = "0" ] && touch ${LOGDIR}/${BUILD_TAG}/pass
 
+  # Also add it to the Bunsen GIT. Make it optional, for now.
+  local LOGDIR_BASE=`basename ${LOGDIR}`
+  local BUNSEN_TAG=`echo ${LOGDIR_BASE} | sed -e 's@\([a-z0-9_-]\+\)-logs@\1@g'`
+  ${WORKSPACE}/gnupru/testing/logdir2bunsen.sh ${BUNSEN_TAG} ${WORKSPACE}/buildbot-logs.git ${LOGDIR}/${BUILD_TAG} || echo "FAILED TO PUSH TO BUNSEN GIT"
+
   exit ${ST}
 }
