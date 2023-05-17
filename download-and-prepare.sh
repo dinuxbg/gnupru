@@ -3,14 +3,11 @@
 # Sample script to download vanilla upstream projects.
 
 # Official packages to download.
-
-# TODO - wait for GCC 13 release!  
-#GCC_URL=http://ftpmirror.gnu.org/gcc/gcc-13.0/gcc-13.0.tar.xz
-GCC_URL=https://gcc.gnu.org/pub/gcc/snapshots/13-20230129/gcc-13-20230129.tar.xz
+GCC_URL=http://ftpmirror.gnu.org/gcc/gcc-13.1.0/gcc-13.1.0.tar.xz
 
 # TODO - wait for 2.41 release!
 #BINUTILS_URL=http://ftpmirror.gnu.org/binutils/binutils-2.41.tar.bz2
-BINUTILS_URL=https://github.com/bminor/binutils-gdb/archive/ba268471bf9a2b76efc0d7a9c05291f7e8cd4424.tar.gz
+BINUTILS_URL=https://github.com/bminor/binutils-gdb/archive/35130e73da95371af99734cda3ef8915a6eb5e7a.tar.gz
 
 NEWLIB_URL=ftp://sourceware.org/pub/newlib/newlib-4.2.0.20211231.tar.gz
 GNUPRUMCU_URL=https://github.com/dinuxbg/gnuprumcu/releases/download/v0.9.1/gnuprumcu-0.9.1.tar.gz
