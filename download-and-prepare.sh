@@ -10,7 +10,7 @@ GCC_URL=http://ftpmirror.gnu.org/gcc/gcc-13.1.0/gcc-13.1.0.tar.xz
 BINUTILS_URL=https://github.com/bminor/binutils-gdb/archive/35130e73da95371af99734cda3ef8915a6eb5e7a.tar.gz
 
 NEWLIB_URL=ftp://sourceware.org/pub/newlib/newlib-4.2.0.20211231.tar.gz
-GNUPRUMCU_URL=https://github.com/dinuxbg/gnuprumcu/releases/download/v0.9.1/gnuprumcu-0.9.1.tar.gz
+GNUPRUMCU_URL=https://github.com/dinuxbg/gnuprumcu/releases/download/v0.9.3/gnuprumcu-0.9.3.tar.gz
 
 MAINDIR=`pwd`
 SRC=`pwd`/src
