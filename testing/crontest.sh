@@ -25,11 +25,13 @@ then
   LOGDIR=`pwd`/avr-gcc-13-logs GCC_BRANCH=releases/gcc-13 ./gnupru/testing/buildbot-avr.sh .
   GCC_BRANCH=master ./gnupru/testing/buildbot-avr.sh .
 
+  GCC_BRANCH=master ./gnupru/testing/buildbot-arm.sh .
+
   LOGDIR=`pwd`/pru-gcc-11-logs GCC_BRANCH=releases/gcc-11 ./gnupru/testing/buildbot-pru.sh .
   LOGDIR=`pwd`/pru-gcc-12-logs GCC_BRANCH=releases/gcc-12 ./gnupru/testing/buildbot-pru.sh .
   LOGDIR=`pwd`/pru-gcc-13-logs GCC_BRANCH=releases/gcc-13 ./gnupru/testing/buildbot-pru.sh .
 
-  rm -fr avr-*-build pru-*-build
+  rm -fr avr-*-build riscv32-*-build arm-*-build
 fi
 
 # Test PRU everyday.
