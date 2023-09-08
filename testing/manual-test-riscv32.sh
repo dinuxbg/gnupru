@@ -40,17 +40,17 @@ bb_daily_target_test()
   export PATH=${PREFIX}/bin:${PATH}
 
   # GCC pass 1: no libc yet
-  bb_config gcc "--target=riscv32-none-elf --with-newlib --without-headers --enable-languages=c --disable-libssp --enable-checking=yes,rtl"
+  bb_config gcc "--target=riscv32-none-elf --with-multilib-list=ilp32 --with-abi=ilp32 --with-arch=rv32g --with-newlib --without-headers --enable-languages=c --disable-libssp --enable-checking=yes,rtl"
   bb_make gcc "-j`nproc`"
   bb_make gcc "install"
 
   # Libc
-  bb_config newlib "--target=riscv32-none-elf --enable-newlib-io-long-long --enable-newlib-io-long-double --enable-newlib-io-c99-formats"
+  bb_config newlib "--target=riscv32-none-elf --with-multilib-list=ilp32 --with-abi=ilp32 --with-arch=rv32g --enable-newlib-io-long-long --enable-newlib-io-long-double --enable-newlib-io-c99-formats"
   bb_make newlib "-j`nproc`"
   bb_make newlib "install"
 
   # GCC pass 2: full feature set
-  bb_config gcc "--target=riscv32-none-elf --with-newlib --enable-languages=c,c++ --disable-libssp --enable-checking=yes,rtl"
+  bb_config gcc "--target=riscv32-none-elf --with-multilib-list=ilp32 --with-abi=ilp32 --with-arch=rv32g --with-newlib --enable-languages=c,c++ --disable-libssp --enable-checking=yes,rtl"
   bb_make gcc "-j`nproc`"
   bb_make gcc "install"
 
