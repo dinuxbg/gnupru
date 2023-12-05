@@ -6,7 +6,7 @@
 
 BINUTILS_URL=https://github.com/bminor/binutils-gdb
 GCC_URL=https://github.com/mirrors/gcc
-NEWLIB_URL=https://github.com/mirror/newlib-cygwin
+NEWLIB_URL=https://github.com/bminor/newlib
 BB_ARCH=pru
 
 true ${GCC_BRANCH:=master}
