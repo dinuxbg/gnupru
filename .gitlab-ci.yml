@@ -14,6 +14,7 @@ pages:
     - ./package-binutils.sh
     - dpkg -i ./packaging-build/binutils-pru_*.deb
     - mkdir -p ./public/dists/stable/main/binary-arm64/
+    - mkdir -p ./public/pool/
     - cp -v ./packaging-build/*.deb ./public/pool/ || true
     - cp -v ./packaging-build/*.build ./public/ || true
     - cp -v ./packaging-build/*.buildinfo ./public/ || true
