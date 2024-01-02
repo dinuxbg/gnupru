@@ -6,7 +6,7 @@ before_script:
 
 pages:
   tags:
-    - docker-arm64
+    - docker-aarch64-ci
   stage: build
   script:
     - ./download-and-prepare.sh
