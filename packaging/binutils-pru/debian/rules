@@ -1,0 +1,31 @@
+#!/usr/bin/make -f
+# See debhelper(7) (uncomment to enable)
+# output every command that modifies files on the build system.
+#export DH_VERBOSE = 1
+
+
+# Install to /usr/lib/gnupru, and create symlinks in /usr/bin to
+# the real executables.
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		--target=pru \
+		--disable-gdb \
+		--disable-sim \
+		--disable-libctf \
+		--disable-nls \
+		--prefix=/usr/lib/gnupru \
+
+BINUTILS_EXECUTABLES=addr2line ar as c++filt elfedit gprof ld ld.bfd nm objcopy objdump ranlib readelf size strings strip
+
+override_dh_install:
+	dh_install
+	mkdir -p debian/binutils-pru/usr/bin
+	for i in $(BINUTILS_EXECUTABLES); do ln -s /usr/lib/gnupru/bin/pru-$$i debian/binutils-pru/usr/bin/pru-$$i ; done
+
+# No need for autoreconf.
+# Besides, binutils insists on using the obsolete 2.69 version.
+override_dh_autoreconf:

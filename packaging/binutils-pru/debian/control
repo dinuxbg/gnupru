@@ -1,0 +1,27 @@
+Source: binutils-pru
+Section: devel
+Priority: extra
+Maintainer: Dimitar Dimitrov <dinuxbg@gmail.com>
+Standards-Version: 4.1.3
+Build-Depends:
+ bison
+ , flex
+ , gettext
+ , texinfo
+ , binutils (>= 2.9.5.0.12)
+ , gcc (>= 2.95.2)
+ , debhelper (>= 10)
+ , tar (>= 1.13.18)
+ , bzip2
+ , findutils(>=4.2.31)
+
+Package: binutils-pru
+Section: devel
+Architecture: any
+Priority: extra
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Binary utilities supporting TI's PRU targets
+ The programs in this package are used to manipulate binary and object
+  files that may have been created for TI's PRU architecture. 
+   This package is primarily intended for PRU developers and 
+    cross-compilers.

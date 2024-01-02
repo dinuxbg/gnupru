@@ -1,7 +1,7 @@
 image: robertcnelson/debian-bookworm-beagle-devscripts:latest
 
 before_script:
-  - apt-get update -qq && apt-get install -y -qq build-essential libmpfr-dev libgmp-dev libmpc-dev texinfo libncurses5-dev bison flex texinfo wget
+  - apt-get update -qq && apt-get install -y -qq build-essential libmpfr-dev libgmp-dev libmpc-dev texinfo libncurses5-dev bison flex texinfo wget bison flex gettext debhelper tar findutils autotools-dev dh-autoreconf
 
 build:
   tags:
@@ -10,4 +10,15 @@ build:
   script:
     - ./download-and-prepare.sh
     - export PREFIX=$HOME/bin/pru-gcc ; ./build.sh
-
+    - ./package-binutils.sh
+    - dpkg -i ./packaging-build/binutils-pru_*.deb
+    - mkdir -p ./public/dists/stable/main/binary-arm64/
+    - cp -v ./packaging-build/*.deb ./public/pool/ || true
+    - cp -v ./packaging-build/*.build ./public/ || true
+    - cp -v ./packaging-build/*.buildinfo ./public/ || true
+    - cd ./public ; dpkg-scanpackages ./pool/ | gzip > ./dists/stable/main/binary-arm64/Packages.gz || true ; cd ../
+    - apindex public
+  artifacts:
+    when: on_success
+    paths:
+      - public
