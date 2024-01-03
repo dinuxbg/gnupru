@@ -22,7 +22,6 @@ pages:
     - echo " -- $GITLAB_USER_NAME <$GITLAB_USER_EMAIL>  $(LANG=C date -R)" >> ./packaging/binutils-pru/debian/changelog
     - echo "" >> ./packaging/binutils-pru/debian/changelog
     - ./download-and-prepare.sh
-    - export PREFIX=$HOME/bin/pru-gcc ; ./build.sh
     - ./package-binutils.sh
     - dpkg -i ./packaging-build/binutils-pru_*.deb
     - mkdir -p ./public/dists/stable/main/binary-arm64/
