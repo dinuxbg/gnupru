@@ -9,6 +9,12 @@ pages:
     - docker-aarch64-ci
   stage: build
   script:
+    - echo "binutils-pru (2.41-0.$(LANG=C date +%Y%m%d)~bookworm) bookworm; urgency=low" > ./packaging/binutils-pru/debian/changelog
+    - echo "" >> ./packaging/binutils-pru/debian/changelog
+    - echo "  * ci build of $CI_PROJECT_URL" >> ./packaging/binutils-pru/debian/changelog
+    - echo "" >> ./packaging/binutils-pru/debian/changelog
+    - echo " -- $GITLAB_USER_NAME <$GITLAB_USER_EMAIL>  $(LANG=C date -R)" >> ./packaging/binutils-pru/debian/changelog
+    - echo "" >> ./packaging/binutils-pru/debian/changelog
     - ./download-and-prepare.sh
     - export PREFIX=$HOME/bin/pru-gcc ; ./build.sh
     - ./package-binutils.sh
