@@ -3,8 +3,6 @@
 set -e
 set -x
 
-# apt install bison flex gettext texinfo binutils gcc debhelper tar findutils autotools-dev dh-autoreconf
-
 # --------------- Binutils ------------------
 mkdir -p packaging-build/binutils-pru
 pushd packaging-build/binutils-pru

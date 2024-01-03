@@ -1,6 +1,12 @@
 image: robertcnelson/beagle-devscripts-debian-12-arm64:latest
 # https://git.beagleboard.org/beagleboard/ci-docker-images
 
+# To test the artifacts of this CI pipeline:
+#  $ sudo sh -c "echo 'deb [trusted=yes] https://beagleboard.beagleboard.io/gnupru stable main' > /etc/apt/sources.list.d/gnupru.list"
+#  $ sudo apt update
+#  $ sudo apt install pru-gcc gnuprumcu
+
+
 before_script:
   - apt-get update -qq && apt-get install -y -qq build-essential libmpfr-dev libgmp-dev libmpc-dev texinfo libncurses5-dev bison flex texinfo wget bison flex gettext debhelper tar findutils autotools-dev dh-autoreconf
 
