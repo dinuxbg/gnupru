@@ -8,7 +8,7 @@ image: robertcnelson/beagle-devscripts-debian-12-arm64:latest
 
 
 before_script:
-  - apt-get update -qq && apt-get install -y -qq build-essential libmpfr-dev libgmp-dev libmpc-dev texinfo libncurses5-dev bison flex texinfo wget bison flex gettext debhelper tar findutils autotools-dev dh-autoreconf
+  - apt-get update -qq && apt-get install -y -qq build-essential libmpfr-dev libgmp-dev libmpc-dev texinfo libncurses5-dev bison flex texinfo wget bison flex gettext debhelper tar findutils autotools-dev dh-autoreconf zlib1g-dev
 
 pages:
   tags:
@@ -21,9 +21,27 @@ pages:
     - echo "" >> ./packaging/binutils-pru/debian/changelog
     - echo " -- $GITLAB_USER_NAME <$GITLAB_USER_EMAIL>  $(LANG=C date -R)" >> ./packaging/binutils-pru/debian/changelog
     - echo "" >> ./packaging/binutils-pru/debian/changelog
+    - echo "gcc-pru (13.2.0-0.$(LANG=C date +%Y%m%d)~bookworm) bookworm; urgency=low" > ./packaging/gcc-pru/debian/changelog
+    - echo "" >> ./packaging/gcc-pru/debian/changelog
+    - echo "  * ci build of $CI_PROJECT_URL" >> ./packaging/gcc-pru/debian/changelog
+    - echo "" >> ./packaging/gcc-pru/debian/changelog
+    - echo " -- $GITLAB_USER_NAME <$GITLAB_USER_EMAIL>  $(LANG=C date -R)" >> ./packaging/gcc-pru/debian/changelog
+    - echo "" >> ./packaging/gcc-pru/debian/changelog
     - ./download-and-prepare.sh
     - ./package-binutils.sh
     - dpkg -i ./packaging-build/binutils-pru_*.deb
+    - ./package-gcc.sh
+    - dpkg -i ./packaging-build/gcc-pru_*.deb
+    - mkdir -p packaging-build/gnuprumcu; pushd packaging-build/gnuprumcu; tar --strip-components=1 -xaf ../../src/gnuprumcu.tar.gz; popd
+    - echo "gnuprumcu (0.9.5-0.$(LANG=C date +%Y%m%d)~bookworm) bookworm; urgency=low" > ./packaging-build/gnuprumcu/debian/changelog
+    - echo "" >> ./packaging-build/gnuprumcu/debian/changelog
+    - echo "  * ci build of $CI_PROJECT_URL" >> ./packaging-build/gnuprumcu/debian/changelog
+    - echo "" >> ./packaging-build/gnuprumcu/debian/changelog
+    - echo " -- $GITLAB_USER_NAME <$GITLAB_USER_EMAIL>  $(LANG=C date -R)" >> ./packaging-build/gnuprumcu/debian/changelog
+    - echo "" >> ./packaging-build/gnuprumcu/debian/changelog
+    - sed -i -e 's@--prefix=/usr/lib@--prefix=/usr/lib/gnupru@g' ./packaging-build/gnuprumcu/debian/rules
+    - pushd packaging-build/gnuprumcu; debuild -i -us -uc -b; popd
+    - dpkg -i ./packaging-build/gnuprumcu_*.deb
     - mkdir -p ./public/dists/stable/main/binary-arm64/
     - mkdir -p ./public/pool/
     - cp -v ./packaging-build/*.deb ./public/pool/ || true

@@ -1,0 +1,35 @@
+Source: gcc-pru
+Section: devel
+Priority: extra
+Maintainer: Dimitar Dimitrov <dinuxbg@gmail.com>
+Standards-Version: 4.1.3
+Build-Depends:
+ m4
+ , libtool
+ , bzip2
+ , binutils-pru (>= 2.41)
+ , bison
+ , flex
+ , gettext
+ , texinfo
+ , zlib1g-dev
+ , debhelper (>= 10)
+ , tar (>= 1.13.18)
+ , libmpfr-dev
+ , lsb-release
+ , patchutils
+ , libmpc-dev
+ , dpkg (>= 1.16.2)
+ , dh-autoreconf
+
+Package: gcc-pru
+Architecture: any
+Section: devel
+Priority: extra
+Depends: ${shlibs:Depends}, ${misc:Depends}, binutils-pru (>= 2.41)
+Provides: c-compiler-pru
+Recommends: gnuprumcu
+Suggests: task-c-devel, gcc-doc (>= 4:4.8), gcc (>= 4:4.8)
+Description: GNU C compiler (cross compiler for pru)
+ This is the GNU C compiler, a fairly portable optimizing compiler which
+ supports multiple languages.  This package includes support for C.

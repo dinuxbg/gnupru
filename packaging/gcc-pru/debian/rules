@@ -1,0 +1,44 @@
+#!/usr/bin/make -f
+# See debhelper(7) (uncomment to enable)
+# output every command that modifies files on the build system.
+#export DH_VERBOSE = 1
+
+# TODO - check with upstream why libcpp build fails with
+# tightened options.
+export DEB_BUILD_MAINT_OPTIONS=hardening=-format,-fortify nocheck nodoc
+
+# Install to /usr/lib/gnupru, and create symlinks in /usr/bin to
+# the real executables.
+
+%:
+	dh $@ --builddirectory=build
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		--target=pru \
+		--disable-nls \
+		--with-newlib \
+		--enable-languages=c,c++ \
+		--prefix=/usr/lib/gnupru
+
+GCC_EXECUTABLES=c++ cpp g++ gcc lto-dump gcc-ar gcc-nm gcc-ranlib
+
+# TODO - remove the following line once libgloss installation is fixed!
+override_dh_auto_install:
+	mkdir -p debian/gcc-pru/usr/lib/gnupru/pru/lib
+	dh_auto_install
+
+override_dh_install:
+	dh_install
+	# Put symbolic links to the real executables in /usr/bin.
+	mkdir -p debian/gcc-pru/usr/bin
+	for i in $(GCC_EXECUTABLES); do ln -s /usr/lib/gnupru/bin/pru-$$i debian/gcc-pru/usr/bin/pru-$$i ; done
+
+# No need for autoreconf.
+# Besides, gcc insists on using the obsolete 2.69 version.
+override_dh_autoreconf:
+	true
+
+# GCC'c testsuite is enormous, and requires special setup.  Skip it.
+override_dh_auto_test:
+	true
