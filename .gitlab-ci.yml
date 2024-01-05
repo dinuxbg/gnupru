@@ -4,7 +4,7 @@ image: robertcnelson/beagle-devscripts-debian-12-arm64:latest
 # To test the artifacts of this CI pipeline:
 #  $ sudo sh -c "echo 'deb [trusted=yes] https://beagleboard.beagleboard.io/gnupru stable main' > /etc/apt/sources.list.d/gnupru.list"
 #  $ sudo apt update
-#  $ sudo apt install pru-gcc gnuprumcu
+#  $ sudo apt install gcc-pru gnuprumcu
 
 
 before_script:
