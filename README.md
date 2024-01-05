@@ -1,3 +1,5 @@
+![build status](https://git.beagleboard.org/beagleboard/gnupru/badges/master/pipeline.svg)
+
 # Port of GNU GCC and Binutils for the TI PRU I/O processor.
 
 ## Table Of Contents
