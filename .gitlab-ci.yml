@@ -24,13 +24,18 @@ package-binutils:
   dependencies:
     - download-sources
   script:
-    - echo "binutils-pru (2.41-0.$(LANG=C date +%Y%m%d)~bookworm) bookworm; urgency=low" > ./packaging/binutils-pru/debian/changelog
+    - echo "binutils-pru ($(./extract-version.sh binutils)-0.$(LANG=C date +%Y%m%d)~bookworm) bookworm; urgency=low" > ./packaging/binutils-pru/debian/changelog
     - echo "" >> ./packaging/binutils-pru/debian/changelog
     - echo "  * ci build of $CI_PROJECT_URL" >> ./packaging/binutils-pru/debian/changelog
     - echo "" >> ./packaging/binutils-pru/debian/changelog
     - echo " -- $GITLAB_USER_NAME <$GITLAB_USER_EMAIL>  $(LANG=C date -R)" >> ./packaging/binutils-pru/debian/changelog
     - echo "" >> ./packaging/binutils-pru/debian/changelog
-    - ./package-binutils.sh
+    - mkdir -p packaging-build/binutils-pru
+    - pushd packaging-build/binutils-pru
+    - tar --strip-components=1 -xaf ../../src/binutils-gdb.tar.gz
+    - cp -Rfp ../../packaging/binutils-pru/debian/ .
+    - debuild -i -us -uc -b
+    - popd
     - dpkg -i ./packaging-build/binutils-pru_*.deb
 
 package-gcc:
@@ -40,13 +45,21 @@ package-gcc:
   dependencies:
     - package-binutils
   script:
-    - echo "gcc-pru (13.2.0-0.$(LANG=C date +%Y%m%d)~bookworm) bookworm; urgency=low" > ./packaging/gcc-pru/debian/changelog
+    - echo "gcc-pru ($(./extract-version.sh gcc)-0.$(LANG=C date +%Y%m%d)~bookworm) bookworm; urgency=low" > ./packaging/gcc-pru/debian/changelog
     - echo "" >> ./packaging/gcc-pru/debian/changelog
     - echo "  * ci build of $CI_PROJECT_URL" >> ./packaging/gcc-pru/debian/changelog
     - echo "" >> ./packaging/gcc-pru/debian/changelog
     - echo " -- $GITLAB_USER_NAME <$GITLAB_USER_EMAIL>  $(LANG=C date -R)" >> ./packaging/gcc-pru/debian/changelog
     - echo "" >> ./packaging/gcc-pru/debian/changelog
-    - ./package-gcc.sh
+    - mkdir -p packaging-build/gcc-pru
+    - pushd packaging-build/gcc-pru
+    - tar --strip-components=1 -xaf ../../src/gcc.tar.gz
+    - tar -xaf ../../src/newlib-cygwin.tar.gz
+    - mv newlib-*/libgloss newlib-*/newlib .
+    - rm -fr newlib-*
+    - cp -Rfp ../../packaging/gcc-pru/debian/ .
+    - debuild -i -us -uc -b
+    - popd
     - dpkg -i ./packaging-build/gcc-pru_*.deb
 
 package-gnuprumcu:
@@ -56,15 +69,18 @@ package-gnuprumcu:
   dependencies:
     - package-gcc
   script:
-    - mkdir -p packaging-build/gnuprumcu; pushd packaging-build/gnuprumcu; tar --strip-components=1 -xaf ../../src/gnuprumcu.tar.gz; popd
-    - echo "gnuprumcu (0.9.5-0.$(LANG=C date +%Y%m%d)~bookworm) bookworm; urgency=low" > ./packaging-build/gnuprumcu/debian/changelog
-    - echo "" >> ./packaging-build/gnuprumcu/debian/changelog
-    - echo "  * ci build of $CI_PROJECT_URL" >> ./packaging-build/gnuprumcu/debian/changelog
-    - echo "" >> ./packaging-build/gnuprumcu/debian/changelog
-    - echo " -- $GITLAB_USER_NAME <$GITLAB_USER_EMAIL>  $(LANG=C date -R)" >> ./packaging-build/gnuprumcu/debian/changelog
-    - echo "" >> ./packaging-build/gnuprumcu/debian/changelog
-    - sed -i -e 's@--prefix=/usr/lib@--prefix=/usr/lib/gnupru@g' ./packaging-build/gnuprumcu/debian/rules
-    - pushd packaging-build/gnuprumcu; debuild -i -us -uc -b; popd
+    - mkdir -p packaging-build/gnuprumcu
+    - pushd packaging-build/gnuprumcu
+    - tar --strip-components=1 -xaf ../../src/gnuprumcu.tar.gz
+    - echo "gnuprumcu ($(./extract-version.sh gnuprumcu)-0.$(LANG=C date +%Y%m%d)~bookworm) bookworm; urgency=low" > ./debian/changelog
+    - echo "" >> ./debian/changelog
+    - echo "  * ci build of $CI_PROJECT_URL" >> ./debian/changelog
+    - echo "" >> ./debian/changelog
+    - echo " -- $GITLAB_USER_NAME <$GITLAB_USER_EMAIL>  $(LANG=C date -R)" >> ./debian/changelog
+    - echo "" >> ./debian/changelog
+    - sed -i -e 's@--prefix=/usr/lib@--prefix=/usr/lib/gnupru@g' ./gnuprumcu/debian/rules
+    - debuild -i -us -uc -b
+    - popd
     - dpkg -i ./packaging-build/gnuprumcu_*.deb
 
 test-compile-examples:
