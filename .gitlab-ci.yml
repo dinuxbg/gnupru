@@ -10,20 +10,14 @@ image: robertcnelson/beagle-devscripts-debian-12-arm64:latest
 before_script:
   - apt-get update -qq && apt-get install -y -qq build-essential libmpfr-dev libgmp-dev libmpc-dev texinfo libncurses5-dev bison flex texinfo wget bison flex gettext debhelper tar findutils autotools-dev dh-autoreconf zlib1g-dev lsb-release
 
-download-sources:
+pages:
   tags:
     - docker-aarch64-ci
   stage: build
   script:
+    - # ----------------------- Download sources -----------------------
     - ./download-and-prepare.sh
-
-package-binutils:
-  tags:
-    - docker-aarch64-ci
-  stage: build
-  dependencies:
-    - download-sources
-  script:
+    - # ----------------------- Package Binutils -----------------------
     - echo "binutils-pru ($(./extract-version.sh binutils)-0.$(LANG=C date +%Y%m%d)~bookworm) bookworm; urgency=low" > ./packaging/binutils-pru/debian/changelog
     - echo "" >> ./packaging/binutils-pru/debian/changelog
     - echo "  * ci build of $CI_PROJECT_URL" >> ./packaging/binutils-pru/debian/changelog
@@ -37,14 +31,7 @@ package-binutils:
     - debuild -i -us -uc -b
     - popd
     - dpkg -i ./packaging-build/binutils-pru_*.deb
-
-package-gcc:
-  tags:
-    - docker-aarch64-ci
-  stage: build
-  dependencies:
-    - package-binutils
-  script:
+    - # ----------------------- Package GCC -----------------------
     - echo "gcc-pru ($(./extract-version.sh gcc)-0.$(LANG=C date +%Y%m%d)~bookworm) bookworm; urgency=low" > ./packaging/gcc-pru/debian/changelog
     - echo "" >> ./packaging/gcc-pru/debian/changelog
     - echo "  * ci build of $CI_PROJECT_URL" >> ./packaging/gcc-pru/debian/changelog
@@ -61,14 +48,7 @@ package-gcc:
     - debuild -i -us -uc -b
     - popd
     - dpkg -i ./packaging-build/gcc-pru_*.deb
-
-package-gnuprumcu:
-  tags:
-    - docker-aarch64-ci
-  stage: build
-  dependencies:
-    - package-gcc
-  script:
+    - # ----------------------- Package Gnuprumcu -----------------------
     - mkdir -p packaging-build/gnuprumcu
     - pushd packaging-build/gnuprumcu
     - tar --strip-components=1 -xaf ../../src/gnuprumcu.tar.gz
@@ -82,26 +62,7 @@ package-gnuprumcu:
     - debuild -i -us -uc -b
     - popd
     - dpkg -i ./packaging-build/gnuprumcu_*.deb
-
-test-compile-examples:
-  tags:
-    - docker-aarch64-ci
-  stage: test
-  dependencies:
-    - package-gnuprumcu
-  script:
-    - git clone --depth=1 https://github.com/dinuxbg/pru-gcc-examples
-    - cd pru-gcc-examples/
-    - make check-build
-
-pages:
-  tags:
-    - docker-aarch64-ci
-  stage: deploy
-  dependencies:
-    - package-gnuprumcu
-    - test-compile-examples
-  script:
+    - # ----------------------- Publish -----------------------
     - mkdir -p ./public/dists/stable/main/binary-arm64/
     - mkdir -p ./public/pool/
     - cp -v ./packaging-build/*.deb ./public/pool/ || true
@@ -113,3 +74,15 @@ pages:
     when: on_success
     paths:
       - public
+
+test-compile-examples:
+  tags:
+    - docker-aarch64-ci
+  stage: test
+  dependencies:
+    - pages
+  script:
+    - dpkg -i ./public/pool/{binutils-pru,gcc-pru,gnuprumcu}_*.deb
+    - git clone --depth=1 https://github.com/dinuxbg/pru-gcc-examples
+    - cd pru-gcc-examples/
+    - make check-build
