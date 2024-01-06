@@ -58,7 +58,7 @@ pages:
     - echo "" >> ./debian/changelog
     - echo " -- $GITLAB_USER_NAME <$GITLAB_USER_EMAIL>  $(LANG=C date -R)" >> ./debian/changelog
     - echo "" >> ./debian/changelog
-    - sed -i -e 's@--prefix=/usr/lib@--prefix=/usr/lib/gnupru@g' ./gnuprumcu/debian/rules
+    - sed -i -e 's@--prefix=/usr/lib@--prefix=/usr/lib/gnupru@g' ./debian/rules
     - debuild -i -us -uc -b
     - popd
     - dpkg -i ./packaging-build/gnuprumcu_*.deb
