@@ -15,9 +15,9 @@ pages:
     - docker-aarch64-ci
   stage: build
   script:
-    - # ----------------------- Download sources -----------------------
+    - echo ----------------------- Download sources -----------------------
     - ./download-and-prepare.sh
-    - # ----------------------- Package Binutils -----------------------
+    - echo ----------------------- Package Binutils -----------------------
     - echo "binutils-pru ($(./extract-version.sh binutils)-0.$(LANG=C date +%Y%m%d)~bookworm) bookworm; urgency=low" > ./packaging/binutils-pru/debian/changelog
     - echo "" >> ./packaging/binutils-pru/debian/changelog
     - echo "  * ci build of $CI_PROJECT_URL" >> ./packaging/binutils-pru/debian/changelog
@@ -31,7 +31,7 @@ pages:
     - debuild -i -us -uc -b
     - popd
     - dpkg -i ./packaging-build/binutils-pru_*.deb
-    - # ----------------------- Package GCC -----------------------
+    - echo ----------------------- Package GCC -----------------------
     - echo "gcc-pru ($(./extract-version.sh gcc)-0.$(LANG=C date +%Y%m%d)~bookworm) bookworm; urgency=low" > ./packaging/gcc-pru/debian/changelog
     - echo "" >> ./packaging/gcc-pru/debian/changelog
     - echo "  * ci build of $CI_PROJECT_URL" >> ./packaging/gcc-pru/debian/changelog
@@ -48,7 +48,7 @@ pages:
     - debuild -i -us -uc -b
     - popd
     - dpkg -i ./packaging-build/gcc-pru_*.deb
-    - # ----------------------- Package Gnuprumcu -----------------------
+    - echo ----------------------- Package Gnuprumcu -----------------------
     - mkdir -p packaging-build/gnuprumcu
     - pushd packaging-build/gnuprumcu
     - tar --strip-components=1 -xaf ../../src/gnuprumcu.tar.gz
@@ -62,7 +62,7 @@ pages:
     - debuild -i -us -uc -b
     - popd
     - dpkg -i ./packaging-build/gnuprumcu_*.deb
-    - # ----------------------- Publish -----------------------
+    - echo ----------------------- Publish -----------------------
     - mkdir -p ./public/dists/stable/main/binary-arm64/
     - mkdir -p ./public/pool/
     - cp -v ./packaging-build/*.deb ./public/pool/ || true
