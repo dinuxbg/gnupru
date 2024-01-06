@@ -97,9 +97,10 @@ test-compile-examples:
 pages:
   tags:
     - docker-aarch64-ci
-  stage: build
+  stage: deploy
   dependencies:
     - package-gnuprumcu
+    - test-compile-examples
   script:
     - mkdir -p ./public/dists/stable/main/binary-arm64/
     - mkdir -p ./public/pool/
