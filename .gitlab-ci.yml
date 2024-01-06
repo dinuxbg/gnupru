@@ -8,7 +8,7 @@ image: robertcnelson/beagle-devscripts-debian-12-arm64:latest
 
 
 before_script:
-  - apt-get update -qq && apt-get install -y -qq build-essential libmpfr-dev libgmp-dev libmpc-dev texinfo libncurses5-dev bison flex texinfo wget bison flex gettext debhelper tar findutils autotools-dev dh-autoreconf zlib1g-dev lsb-release
+  - apt-get update -qq && apt-get install -y -qq build-essential libmpfr-dev libgmp-dev libmpc-dev texinfo libncurses5-dev bison flex texinfo wget bison flex gettext debhelper tar findutils autotools-dev dh-autoreconf zlib1g-dev lsb-release git
 
 pages:
   tags:
