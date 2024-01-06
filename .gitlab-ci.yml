@@ -52,7 +52,7 @@ pages:
     - mkdir -p packaging-build/gnuprumcu
     - pushd packaging-build/gnuprumcu
     - tar --strip-components=1 -xaf ../../src/gnuprumcu.tar.gz
-    - echo "gnuprumcu ($(./extract-version.sh gnuprumcu)-0.$(LANG=C date +%Y%m%d)~bookworm) bookworm; urgency=low" > ./debian/changelog
+    - echo "gnuprumcu ($(cd ../../; ./extract-version.sh gnuprumcu)-0.$(LANG=C date +%Y%m%d)~bookworm) bookworm; urgency=low" > ./debian/changelog
     - echo "" >> ./debian/changelog
     - echo "  * ci build of $CI_PROJECT_URL" >> ./debian/changelog
     - echo "" >> ./debian/changelog
