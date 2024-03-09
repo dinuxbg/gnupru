@@ -120,8 +120,8 @@ build_mingw()
   # We must use the mingw we just built.
   PATH=$HOME/x-tools/x86_64-w64-mingw32/bin/:$PATH ${CT} build
 
-  # I'm not sure why crosstool-ng does not install the necessary runtime DLLs.
-  # Let's manually copy them.
+  # Crosstool-ng does not install the necessary runtime DLLs. Let's manually copy them.
+  # https://github.com/crosstool-ng/crosstool-ng/issues/1869
   chmod +w $HOME/x-tools/HOST-x86_64-w64-mingw32/pru-elf/bin/
   cp $HOME/x-tools/x86_64-w64-mingw32/x86_64-w64-mingw32/sysroot/usr/x86_64-w64-mingw32/bin/libwinpthread-1.dll $HOME/x-tools/HOST-x86_64-w64-mingw32/pru-elf/bin/
   chmod +w $HOME/x-tools/HOST-x86_64-w64-mingw32/pru-elf/libexec/gcc/pru-elf/*
