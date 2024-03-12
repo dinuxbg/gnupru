@@ -86,6 +86,10 @@ bb_daily_target_test()
   # Send to real mailing list,
   pushd ${WORKSPACE}/avr-gcc-build || error "failed to enter avr-gcc-build"
 
+  # Don't spam GCC testresults mailing list for what is probably a local setup issue.
+  [ `grep '^FAIL:' gcc/testsuite/gcc/gcc.sum | wc -l` -gt 1000 ] && error "too many C failures"
+  [ `grep '^FAIL:' gcc/testsuite/g++/g++.sum | wc -l` -gt 12000 ] && error "too many C++ failures"
+
   # Without libstdc++, we end up with thousands of spurious FAILS.
   # Enabling libstdc++ is non-trivial for AVR, so to spare GCC mailing
   # servers from megabytes of spurious failures, simply remove them.

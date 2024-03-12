@@ -78,6 +78,10 @@ bb_daily_target_test()
   # Save all the logs
   bb_gather_log_files ${BUILD_TAG}
 
+  # Don't spam GCC testresults mailing list for what is probably a local setup issue.
+  [ `grep '^FAIL:' ${WORKSPACE}/pru-gcc-build/gcc/testsuite/gcc/gcc.sum | wc -l` -gt 1000 ] && error "too many C failures"
+  [ `grep '^FAIL:' ${WORKSPACE}/pru-gcc-build/gcc/testsuite/g++/g++.sum | wc -l` -gt 3000 ] && error "too many C++ failures"
+
   # Send to real mailing list,
   pushd ${WORKSPACE}/pru-gcc-build || error "failed to enter pru-gcc-build"
   ../gcc/contrib/test_summary -m ${SUMMARY_RECIPIENTS} | sh
