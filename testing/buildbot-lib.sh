@@ -79,14 +79,7 @@ bb_gcc_touch_source_tree()
 
   pushd ${WORKSPACE}/gcc || error "failed to enter gcc"
 
-  rm -f LAST_UPDATED gcc/REVISION
-  C=`git log -n1 --pretty=tformat:%p:%t:%H`
-  LC_ALL=C date > LAST_UPDATED
-  LC_ALL=C echo "`TZ=UTC date` (revision $revision)" >> LAST_UPDATED
-  echo "[${BRANCH} revision ${C}]" > gcc/REVISION
-
-  # Touch generated files which might be out of date.
-  ./contrib/gcc_update --touch
+  LC_ALL=C ./contrib/gcc_update origin -r `git rev-parse HEAD`
 
   popd
 }
