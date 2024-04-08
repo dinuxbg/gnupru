@@ -7,7 +7,7 @@
 # It is assumed that source directories are already setup, and
 # desired HEADs are checked out.
 
-BB_ARCH=riscv32
+BB_ARCH=riscv
 
 # Do not send any email for this session
 Mail()
@@ -31,7 +31,7 @@ bb_daily_target_test()
   echo "newlib ${NEWLIB_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
 
   # Build binutils
-  bb_config binutils "--disable-gdb --target=riscv32-none-elf"
+  bb_config binutils "--disable-gdb --target=riscv-none-elf"
   bb_make binutils "-j`nproc`"
   bb_make binutils "install"
   # Check binutils without a target C compiler. All tests must pass.
@@ -40,17 +40,17 @@ bb_daily_target_test()
   export PATH=${PREFIX}/bin:${PATH}
 
   # GCC pass 1: no libc yet
-  bb_config gcc "--target=riscv32-none-elf --with-multilib-list=ilp32 --with-abi=ilp32 --with-arch=rv32g --with-newlib --without-headers --enable-languages=c --disable-libssp --enable-checking=yes,rtl"
+  bb_config gcc "--target=riscv-none-elf --with-multilib-list=ilp32 --with-abi=ilp32 --with-arch=rv32g --with-newlib --without-headers --enable-languages=c --disable-libssp --enable-checking=yes,rtl"
   bb_make gcc "-j`nproc`"
   bb_make gcc "install"
 
   # Libc
-  bb_config newlib "--target=riscv32-none-elf --with-multilib-list=ilp32 --with-abi=ilp32 --with-arch=rv32g --enable-newlib-io-long-long --enable-newlib-io-long-double --enable-newlib-io-c99-formats"
+  bb_config newlib "--target=riscv-none-elf --with-multilib-list=ilp32 --with-abi=ilp32 --with-arch=rv32g --enable-newlib-io-long-long --enable-newlib-io-long-double --enable-newlib-io-c99-formats"
   bb_make newlib "-j`nproc`"
   bb_make newlib "install"
 
   # GCC pass 2: full feature set
-  bb_config gcc "--target=riscv32-none-elf --with-multilib-list=ilp32 --with-abi=ilp32 --with-arch=rv32g --with-newlib --enable-languages=c,c++ --disable-libssp --enable-checking=yes,rtl"
+  bb_config gcc "--target=riscv-none-elf --with-multilib-list=ilp32 --with-abi=ilp32 --with-arch=rv32g --with-newlib --enable-languages=c,c++ --disable-libssp --enable-checking=yes,rtl"
   bb_make gcc "-j`nproc`"
   bb_make gcc "install"
 
@@ -66,7 +66,7 @@ bb_daily_target_test()
 
   # Build binutils again - this time with a C compiler present.
   bb_make binutils "distclean"
-  bb_config binutils "--disable-gdb --target=riscv32-none-elf"
+  bb_config binutils "--disable-gdb --target=riscv-none-elf"
   bb_make binutils "-j`nproc`"
   bb_make binutils "install"
   # Check binutils with a target C compiler.  Some tests may fail.

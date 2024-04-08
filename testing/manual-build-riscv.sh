@@ -7,9 +7,9 @@
 # It is assumed that source directories are already setup, and
 # desired HEADs are checked out.
 
-BB_ARCH=riscv32
+BB_ARCH=riscv
 
-BTARGET=riscv32-none-elf
+BTARGET=riscv-none-elf
 
 # Do not send any email for this session
 Mail()
