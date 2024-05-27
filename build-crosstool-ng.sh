@@ -96,7 +96,9 @@ build_install_make.exe()
   pushd ${builddir}
   tar xaf ${make_tar}
   pushd make*
-  ./configure --host=x86_64-w64-mingw32
+  # TODO - GNU make 4.4 has implicit function declarations.
+  # Remove the custom CFLAGS for the next version.
+  ./configure --host=x86_64-w64-mingw32 CFLAGS='-O2 -Wno-implicit-function-declaration'
   make -j${nproc}
   cp make.exe $HOME/x-tools/HOST-x86_64-w64-mingw32/pru-elf/bin/
   popd
