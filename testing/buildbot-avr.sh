@@ -7,7 +7,7 @@
 BINUTILS_URL=https://github.com/bminor/binutils-gdb
 GCC_URL=https://github.com/mirrors/gcc
 AVRLIBC_URL=https://github.com/avrdudes/avr-libc
-WINAVR_URL=https://gitlab.com/dinuxbg/winavr-code
+ATEST_URL=https://github.com/sprintersb/atest
 BB_ARCH=avr
 
 true ${GCC_BRANCH:=master}
@@ -30,7 +30,7 @@ bb_daily_target_test()
   bb_update_source binutils ${BINUTILS_URL}
   bb_update_source gcc ${GCC_URL} ${GCC_BRANCH}
   bb_update_source avrlibc ${AVRLIBC_URL} main
-  bb_update_source winavr ${WINAVR_URL}
+  bb_update_source atest ${ATEST_URL}
 
   # Write conforming versioning info.
   bb_gcc_touch_source_tree ${GCC_BRANCH}
@@ -41,7 +41,7 @@ bb_daily_target_test()
   export DEJAGNU=${PREFIX}/dejagnurc
   mkdir -p `dirname ${DEJAGNU}`
   echo "# WARNING - automatically generated!" > ${DEJAGNU}
-  echo "set avrtest_dir \"${WORKSPACE}/winavr/avrtest\"" >> ${DEJAGNU}
+  echo "set avrtest_dir \"${WORKSPACE}/atest\"" >> ${DEJAGNU}
   echo "set avrlibc_include_dir \"${PREFIX}/avr/include\"" >> ${DEJAGNU}
   echo 'set boards_dir {}' >> ${DEJAGNU}
   echo 'lappend boards_dir "${avrtest_dir}/dejagnuboards"' >> ${DEJAGNU}
@@ -64,10 +64,10 @@ bb_daily_target_test()
   bb_make avrlibc "install"
 
   # avrtest
-  bb_source_command winavr "make -C avrtest"
+  bb_source_command atest "make"
 
   # Get the simulator under PATH. Needed for gcc test suite.
-  export PATH=${WORKSPACE}/winavr/avrtest:${PATH}
+  export PATH=${WORKSPACE}/atest:${PATH}
 
   # Test binutils. Do not let random test case failures to mark
   # the entire build as bad.

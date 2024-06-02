@@ -24,12 +24,12 @@ bb_daily_target_test()
   local GCC_TOT=`cd gcc && git rev-parse HEAD`
   local BINUTILS_TOT=`cd binutils && git rev-parse HEAD`
   local AVRLIBC_TOT=`cd avrlibc && git rev-parse HEAD`
-  local WINAVR_URL=`cd winavr && git rev-parse HEAD`
+  local ATEST_URL=`cd atest && git rev-parse HEAD`
 
   echo "gcc ${GCC_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
   echo "binutils ${BINUTILS_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
   echo "avr-libc ${AVRLIBC_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
-  echo "winavr ${WINAVR_URL}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
+  echo "atest ${ATEST_URL}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
 
   # Setup avrtest, per:
   #    https://sourceforge.net/p/winavr/code/HEAD/tree/trunk/avrtest/
@@ -37,7 +37,7 @@ bb_daily_target_test()
   export DEJAGNU=${PREFIX}/dejagnurc
   mkdir -p `dirname ${DEJAGNU}`
   echo "# WARNING - automatically generated!" > ${DEJAGNU}
-  echo "set avrtest_dir \"${WORKSPACE}/winavr/avrtest\"" >> ${DEJAGNU}
+  echo "set avrtest_dir \"${WORKSPACE}/atest\"" >> ${DEJAGNU}
   echo "set avrlibc_include_dir \"${PREFIX}/avr/include\"" >> ${DEJAGNU}
   echo 'set boards_dir {}' >> ${DEJAGNU}
   echo 'lappend boards_dir "${avrtest_dir}/dejagnuboards"' >> ${DEJAGNU}
@@ -60,10 +60,10 @@ bb_daily_target_test()
   bb_make avrlibc "install"
 
   # avrtest
-  bb_source_command winavr "make -C avrtest"
+  bb_source_command atest "make"
 
   # Get the simulator under PATH. Needed for gcc test suite.
-  export PATH=${WORKSPACE}/winavr/avrtest:${PATH}
+  export PATH=${WORKSPACE}/atest:${PATH}
 
   # Test binutils. Do not let random test case failures to mark
   # the entire build as bad.
