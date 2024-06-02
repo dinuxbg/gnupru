@@ -33,10 +33,13 @@ while [ $# != 0 ]
 do
   case ${1} in
     -o) ARGS="${ARGS} --output_file";;
-    -v) ARGS="${ARGS} --compiler_revision"; echo -n 'TI clpru ';;
+    --version) ARGS="${ARGS} --compiler_revision"; echo -n 'TI clpru ';;
     -w) ARGS="${ARGS} --no_warnings";;
     -fdiagnostics-color=*) ;;
+    -Wno-complain-wrong-lang) ;;
+    -fdiagnostics-plain-output) ;;
     -mmcu=sim) ;;
+    -Wno-abi) ;;
     -Wno-psabi) ;;   # Why DejaGnu even passes this flag?
     -fno-diagnostics-show-caret) ;;
     -fno-diagnostics-show-line-numbers) ;;

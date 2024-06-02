@@ -91,7 +91,7 @@ To install, first put the clpru.sh script into your PATH. This wrapper script is
 
 	ln -s gnupru/testing/clpru.sh $HOME/bin/
 
-To execute the GCC ABI regression test suite against the TI toolchain do:
+To execute the quick GCC ABI regression test suite against the TI toolchain do:
 
 	# Cleanup (important for incremental checks)
 	find . -name site.exp | xargs rm -f
@@ -100,6 +100,11 @@ To execute the GCC ABI regression test suite against the TI toolchain do:
 	# Cleanup and check C++
 	find . -name site.exp | xargs rm -f
 	make check-gcc-c++ RUNTESTFLAGS="--target_board=pru-sim compat.exp" COMPAT_OPTIONS="[list [list {-O2 -mmcu=sim -DSKIP_COMPLEX -DSKIP_ATTRIBUTE} {-v3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE}]]" ALT_CC_UNDER_TEST=`which clpru.sh`
+
+More elaborate ABI test suite can be run by enabling more tests:
+
+	find . -name site.exp | xargs rm -f
+	make -k check-gcc-c RUNTESTFLAGS="--target_board=pru-sim compat.exp struct-layout-1.exp" COMPAT_OPTIONS="[list [list {-O2 -mmcu=sim -Wl,-lc -Wl,-lgloss -Wl,`pru-gcc -print-libgcc-file-name` -DSKIP_COMPLEX -DSKIP_ATTRIBUTE} {-v 3 -O2 --display_error_number --endian=little --hardware_mac=on --symdebug:none -DSKIP_COMPLEX -DSKIP_ATTRIBUTE}]]" ALT_CC_UNDER_TEST=`which clpru.sh` RUN_ALL_COMPAT_TESTS=1
 
 A few notes about the options:
 * --hardware_mac=on is needed since GCC does not currently support turning off MAC instruction generation. Please let me know if you see a real usecase for this feature, and I may reconsider.
