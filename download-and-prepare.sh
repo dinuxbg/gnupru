@@ -3,8 +3,8 @@
 # Sample script to download vanilla upstream projects.
 
 # Official packages to download.
-GCC_URL=http://ftpmirror.gnu.org/gcc/gcc-14.1.0/gcc-14.1.0.tar.xz
-BINUTILS_URL=http://ftpmirror.gnu.org/binutils/binutils-2.42.tar.bz2
+GCC_URL=http://ftpmirror.gnu.org/gcc/gcc-14.2.0/gcc-14.2.0.tar.xz
+BINUTILS_URL=http://ftpmirror.gnu.org/binutils/binutils-2.43.tar.bz2
 NEWLIB_URL=http://sourceware.org/pub/newlib/newlib-4.4.0.20231231.tar.gz
 GNUPRUMCU_URL=https://github.com/dinuxbg/gnuprumcu/releases/download/v0.9.5/gnuprumcu-0.9.5.tar.gz
 
