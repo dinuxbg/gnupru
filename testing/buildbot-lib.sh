@@ -243,15 +243,23 @@ bb_check_for_regressions()
 # This must be the first called function from the main script.
 # It initializes the current test run directory and sets
 # the environment.
-bb_init()
+bb_init_workspace()
+{
+  [ $# == 1 ] || error "usage: $0 <WORKSPACE>"
+
+  WORKSPACE=`realpath "${1}"`
+  [ -d "$WORKSPACE" ] || error "$WORKSPACE is not a directory"
+}
+
+# This must be the second called function from the main script.
+# It initializes the current test run directory and sets
+# the environment.
+bb_init_builddir()
 {
   [ $# == 1 ] || error "usage: $0 <WORKSPACE>"
 
   [ -z ${BB_ARCH} ] && error "Please define BB_ARCH"
   BB_BDIR_PREFIX=${BB_BDIR_PREFIX:-${BB_ARCH}}
-
-  WORKSPACE=`realpath "${1}"`
-  [ -d "$WORKSPACE" ] || error "$WORKSPACE is not a directory"
 
   PREFIX=${PREFIX:-${WORKSPACE}/${BB_ARCH}-opt}
   mkdir -p ${PREFIX}

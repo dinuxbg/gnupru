@@ -28,10 +28,12 @@ See the crontest.sh for an example script that you execute from a crontab job.
 # Phases Of The BuildBot
 
 ## Setup
-Each top-level script starts with loading helper library functions and calling bb_init.
+Each top-level script starts with loading helper library functions and calling bb_init_workspace and bb_init_builddir.
 
 	. `dirname ${0}`/buildbot-lib.sh
-	bb_init ${@}
+	bb_init_workspace ${@}
+	bb_init_builddir ${@}
+
 
 ## Start
 Actual work starts from the top-level script with:

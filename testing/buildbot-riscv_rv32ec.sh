@@ -4,13 +4,7 @@
 
 # Simple script for automatic daily testing of gcc+newlib ToT.
 
-BINUTILS_URL=https://github.com/bminor/binutils-gdb
-GCC_URL=https://github.com/mirrors/gcc
-NEWLIB_URL=https://github.com/bminor/newlib
-
 BB_ARCH=riscv_rv32ec
-
-true ${GCC_BRANCH:=master}
 
 BB_GCC_TARGET_OPTIONS="--target=riscv32-none-elf --with-multilib-generator=rv32ec-ilp32e-- --with-abi=ilp32e --with-arch=rv32ec"
 
@@ -28,13 +22,6 @@ bb_daily_target_test()
   local BUILD_TAG=${2}
 
   bb_clean
-
-  bb_update_source binutils ${BINUTILS_URL}
-  bb_update_source gcc ${GCC_URL} ${GCC_BRANCH}
-  bb_update_source newlib ${NEWLIB_URL}
-
-  # Write conforming versioning info.
-  bb_gcc_touch_source_tree ${GCC_BRANCH}
 
   # Setup testing for RV32EC
   export DEJAGNU=${PREFIX}/dejagnurc
@@ -110,6 +97,7 @@ bb_daily_target_test()
 
 . `dirname ${0}`/buildbot-lib.sh
 
-bb_init ${@}
+bb_init_workspace ${@}
+bb_init_builddir ${@}
 
 bb_daily_build

@@ -4,13 +4,7 @@
 
 # Simple script for automatic daily testing of gcc+avrlibc ToT.
 
-BINUTILS_URL=https://github.com/bminor/binutils-gdb
-GCC_URL=https://github.com/mirrors/gcc
-AVRLIBC_URL=https://github.com/avrdudes/avr-libc
-ATEST_URL=https://github.com/sprintersb/atest
 BB_ARCH=avr
-
-true ${GCC_BRANCH:=master}
 
 # Who to send a short regression report to
 REGRESSION_RECIPIENTS="dinuxbg@gmail.com"
@@ -26,14 +20,6 @@ bb_daily_target_test()
   local BUILD_TAG=${2}
 
   bb_clean
-
-  bb_update_source binutils ${BINUTILS_URL}
-  bb_update_source gcc ${GCC_URL} ${GCC_BRANCH}
-  bb_update_source avrlibc ${AVRLIBC_URL} main
-  bb_update_source atest ${ATEST_URL}
-
-  # Write conforming versioning info.
-  bb_gcc_touch_source_tree ${GCC_BRANCH}
 
   # Setup avrtest, per:
   #    https://sourceforge.net/p/winavr/code/HEAD/tree/trunk/avrtest/
@@ -111,6 +97,7 @@ bb_daily_target_test()
 
 . `dirname ${0}`/buildbot-lib.sh
 
-bb_init ${@}
+bb_init_workspace ${@}
+bb_init_builddir ${@}
 
 bb_daily_build

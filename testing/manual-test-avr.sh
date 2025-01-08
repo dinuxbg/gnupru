@@ -84,6 +84,7 @@ bb_daily_target_test()
 
 . `dirname ${0}`/buildbot-lib.sh
 
-bb_init ${@}
+bb_init_workspace ${@}
+bb_init_builddir ${@}
 
 bb_daily_build

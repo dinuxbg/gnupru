@@ -4,12 +4,7 @@
 
 # Simple script for automatic daily testing of gcc+newlib ToT.
 
-BINUTILS_URL=https://github.com/bminor/binutils-gdb
-GCC_URL=https://github.com/mirrors/gcc
-NEWLIB_URL=https://github.com/bminor/newlib
 BB_ARCH=pru
-
-true ${GCC_BRANCH:=master}
 
 # Who to send a short regression report to
 REGRESSION_RECIPIENTS="dinuxbg@gmail.com"
@@ -25,13 +20,6 @@ bb_daily_target_test()
   local BUILD_TAG=${2}
 
   bb_clean
-
-  bb_update_source binutils ${BINUTILS_URL}
-  bb_update_source gcc ${GCC_URL} ${GCC_BRANCH}
-  bb_update_source newlib ${NEWLIB_URL}
-
-  # Write conforming versioning info.
-  bb_gcc_touch_source_tree ${GCC_BRANCH}
 
   # Build binutils
   bb_config binutils "--disable-gdb --target=pru"
@@ -93,6 +81,7 @@ bb_daily_target_test()
 
 . `dirname ${0}`/buildbot-lib.sh
 
-bb_init ${@}
+bb_init_workspace ${@}
+bb_init_builddir ${@}
 
 bb_daily_build
