@@ -6,6 +6,7 @@
 #  0 8 * * * /home/user/testbot-workspace/crontest.sh
 
 
+renice +10 $$ 2>/dev/null 1>/dev/null
 
 cd `dirname ${0}`
 
