@@ -35,8 +35,9 @@ then
 
   ./gnupru/testing/buildbot-sync.sh .
   ./gnupru/testing/buildbot-avr.sh .
+  ./gnupru/testing/buildbot-riscv_rv32ec.sh .
 
-  rm -fr avr-*-build riscv32-*-build arm-*-build
+  rm -fr avr-*-build riscv32-*-build arm-*-build riscv_rv32ec-*-build
 fi
 
 # Test PRU everyday.
