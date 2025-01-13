@@ -24,9 +24,7 @@ bb_daily_target_test()
 
   bb_clean
 
-  local GCC_TOT=`cd gcc && git rev-parse HEAD`
-  local BINUTILS_TOT=`cd binutils && git rev-parse HEAD`
-  local NEWLIB_TOT=`cd newlib && git rev-parse HEAD`
+  bb_record_git_heads binutils gcc newlib
 
   # Setup testing for RV32EC
   export DEJAGNU=${PREFIX}/dejagnurc
@@ -36,10 +34,6 @@ bb_daily_target_test()
   echo "set_board_info sim,options \"--model RV32EC\"" > ${PREFIX}/riscv-rv32ec-sim.exp
   echo "set_board_info cflags   \" --specs=sim.specs [libgloss_include_flags] [newlib_include_flags]\"" >> ${PREFIX}/riscv-rv32ec-sim.exp
   echo "load_base_board_description \"riscv-sim\"" >> ${PREFIX}/riscv-rv32ec-sim.exp
-
-  echo "gcc ${GCC_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
-  echo "binutils ${BINUTILS_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
-  echo "newlib ${NEWLIB_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
 
   # Build binutils
   bb_config binutils "--disable-gdb --target=riscv32-none-elf"

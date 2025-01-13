@@ -21,15 +21,7 @@ bb_daily_target_test()
 
   bb_clean
 
-  local GCC_TOT=`cd gcc && git rev-parse HEAD`
-  local BINUTILS_TOT=`cd binutils && git rev-parse HEAD`
-  local AVRLIBC_TOT=`cd avrlibc && git rev-parse HEAD`
-  local ATEST_URL=`cd atest && git rev-parse HEAD`
-
-  echo "gcc ${GCC_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
-  echo "binutils ${BINUTILS_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
-  echo "avr-libc ${AVRLIBC_TOT}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
-  echo "atest ${ATEST_URL}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
+  bb_record_git_heads binutils gcc avrlibc atest
 
   # Setup avrtest, per:
   #    https://sourceforge.net/p/winavr/code/HEAD/tree/trunk/avrtest/

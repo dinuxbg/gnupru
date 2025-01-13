@@ -23,6 +23,8 @@ bb_daily_target_test()
 
   bb_clean
 
+  bb_record_git_heads binutils gcc newlib
+
   # Setup testing for RV32EC
   export DEJAGNU=${PREFIX}/dejagnurc
   mkdir -p `dirname ${DEJAGNU}`

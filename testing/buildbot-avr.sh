@@ -21,6 +21,8 @@ bb_daily_target_test()
 
   bb_clean
 
+  bb_record_git_heads binutils gcc avrlibc atest
+
   # Setup avrtest, per:
   #    https://sourceforge.net/p/winavr/code/HEAD/tree/trunk/avrtest/
   #    https://lists.gnu.org/archive/html/avr-gcc-list/2009-09/msg00016.html

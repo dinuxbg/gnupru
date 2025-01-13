@@ -52,18 +52,26 @@ bb_update_source()
   git fetch origin || error "failed to sync ${PRJ}"
   git checkout origin/${BRANCH} || error "failed to checkout ${PRJ}"
 
-  C=`git rev-parse HEAD`
-  echo "${PRJ} ${C}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
+  popd
+  popd
+}
 
-  # Apply any out-of-tree patches.
-  [ -d ../${PRJ}-patches ] && ls ../${PRJ-}-patches/* | sort | while read P
+# Record the GIT commit HEADs of the given projects.
+#   PRJ1 PRJ2 ...    : Which GIT projects to update.
+bb_record_git_heads()
+{
+  local PRJ
+  local C
+
+  while [ $# != 0 ]
   do
-    git am -3 ${P} || error "failed to apply ${P}"
-    echo "${PRJ} ${P}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
+    PRJ=${1}
+    shift
+    pushd ${WORKSPACE}/${PRJ} || error "cannot enter ${PRJ}"
+    C=`git rev-parse HEAD`
+    echo "${PRJ} ${C}" >> ${LOGDIR}/${BUILD_TAG}/versions.txt
+    popd
   done
-
-  popd
-  popd
 }
 
 # Prepare tree for release, and write proper versioning info.

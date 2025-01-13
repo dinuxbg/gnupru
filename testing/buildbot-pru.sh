@@ -21,6 +21,8 @@ bb_daily_target_test()
 
   bb_clean
 
+  bb_record_git_heads binutils gcc newlib
+
   # Build binutils
   bb_config binutils "--disable-gdb --target=pru"
   bb_make binutils "-j`nproc`"
