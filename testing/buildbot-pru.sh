@@ -65,6 +65,8 @@ bb_daily_target_test()
   # Check binutils with a target C compiler.  Some tests may fail.
   bb_make --ignore-errors binutils "-j`nproc` check RUNTESTFLAGS=--target_board=pru-sim"
 
+  bb_run_embench cc=pru-gcc cflags="-Oz -flto -std=c17" ldflags="" user_libs="m"
+
   # Save all the logs
   bb_gather_log_files ${BUILD_TAG}
 

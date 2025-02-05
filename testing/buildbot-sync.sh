@@ -9,6 +9,7 @@ GCC_URL=https://github.com/mirrors/gcc
 NEWLIB_URL=https://github.com/bminor/newlib
 AVRLIBC_URL=https://github.com/avrdudes/avr-libc
 ATEST_URL=https://github.com/sprintersb/atest
+EMBENCH_IOT_URL=https://github.com/embench/embench-iot
 
 true ${GCC_BRANCH:=master}
 
@@ -27,6 +28,7 @@ bb_daily_update_sources()
   bb_update_source newlib ${NEWLIB_URL}
   bb_update_source avrlibc ${AVRLIBC_URL} main
   bb_update_source atest ${ATEST_URL}
+  bb_update_source embench ${EMBENCH_IOT_URL} embench-2.0-branch
 
   # Write conforming versioning info.
   bb_gcc_touch_source_tree ${GCC_BRANCH}

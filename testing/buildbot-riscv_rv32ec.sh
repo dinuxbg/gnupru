@@ -83,6 +83,8 @@ bb_daily_target_test()
   # Check binutils with a target C compiler.  Some tests may fail.
   bb_make --ignore-errors binutils "-j`nproc` check RUNTESTFLAGS=--target_board=riscv-rv32ec-sim"
 
+  bb_run_embench cc=riscv32-none-elf-gcc cflags="-Oz -flto -march=rv32ec -mabi=ilp32e" ldflags="" user_libs="m"
+
   # Save all the logs
   bb_gather_log_files ${BUILD_TAG}
 

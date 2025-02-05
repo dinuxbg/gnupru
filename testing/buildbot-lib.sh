@@ -165,6 +165,28 @@ bb_source_command()
   popd
 }
 
+# Run the embench-iot for code size.
+bb_run_embench()
+{
+  local PRJ=embench
+  local EMBENCH_SRC=${WORKSPACE}/embench
+
+  print_stage "Runnimg embench-iot ${PRJ} with parameters \"${@}\""
+  mkdir -p ${WORKSPACE}/${BB_BDIR_PREFIX}-${PRJ}-build
+  pushd ${EMBENCH_SRC}
+
+  # For now, let's not treat embench errors as fatal.
+  scons \
+      --config-dir=examples/native/size/ \
+      --build-dir=${WORKSPACE}/${BB_BDIR_PREFIX}-${PRJ}-build \
+      gsf=1 \
+      "${@}"
+
+  ./benchmark_size.py --builddir ${WORKSPACE}/${BB_BDIR_PREFIX}-${PRJ}-build --absolute > ${WORKSPACE}/${BB_BDIR_PREFIX}-${PRJ}-build/embench.report
+
+  popd
+}
+
 # Generate email subject string for a detected test case regression.
 regression_email_subject()
 {
@@ -218,6 +240,10 @@ bb_gather_log_files()
     local L=`dirname ${F}`/`basename ${F} .sum`.log
     cp ${L} ${LOGDIR}/${BUILD_TAG}/ || error "failed to copy ${L}"
     gzip -9 ${LOGDIR}/${BUILD_TAG}/`basename ${L}`
+  done
+  find `ls -d ${WORKSPACE}/${BB_BDIR_PREFIX}-*-build` -name "*.report" | while read F
+  do
+    cp ${F} ${LOGDIR}/${BUILD_TAG}/ || error "failed to copy ${F}"
   done
 }
 
