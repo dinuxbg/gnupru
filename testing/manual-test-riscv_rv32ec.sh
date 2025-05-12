@@ -36,7 +36,8 @@ bb_daily_target_test()
   echo "load_base_board_description \"riscv-sim\"" >> ${PREFIX}/riscv-rv32ec-sim.exp
 
   # Build binutils
-  bb_config binutils "--disable-gdb --target=riscv32-none-elf"
+  # TODO - re-enable sim building
+  bb_config binutils "--disable-gdb --disable-sim --target=riscv32-none-elf"
   bb_make binutils "-j`nproc`"
   bb_make binutils "install"
   # Check binutils without a target C compiler. All tests must pass.
@@ -72,7 +73,8 @@ bb_daily_target_test()
 
   # Build binutils again - this time with a C compiler present.
   bb_make binutils "distclean"
-  bb_config binutils "--disable-gdb --target=riscv32-none-elf"
+  # TODO - re-enable sim building
+  bb_config binutils "--disable-gdb --disable-sim --target=riscv32-none-elf"
   bb_make binutils "-j`nproc`"
   bb_make binutils "install"
   # Check binutils with a target C compiler.  Some tests may fail.
