@@ -11,7 +11,7 @@ die()
   exit 1
 }
 
-[ $# != 2 ] || die "Usage: $0 VERSION"
+[ $# != 1 ] && die "Usage: $0 VERSION"
 VERSION=${1}
 shift
 
