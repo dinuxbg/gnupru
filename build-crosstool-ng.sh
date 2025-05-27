@@ -97,8 +97,9 @@ build_install_make.exe()
   tar xaf ${make_tar}
   pushd make*
   # TODO - GNU make 4.4 has implicit function declarations.
+  # TODO - GNU make 4.4 has invalid declaration for getenv
   # Remove the custom CFLAGS for the next version.
-  ./configure --host=x86_64-w64-mingw32 CFLAGS='-O2 -Wno-implicit-function-declaration'
+  ./configure --host=x86_64-w64-mingw32 CFLAGS='-O2 -Wno-implicit-function-declaration -std=gnu17'
   make -j${nproc}
   cp make.exe $HOME/x-tools/HOST-x86_64-w64-mingw32/pru-elf/bin/
   popd
