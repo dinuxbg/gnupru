@@ -1,3 +1,9 @@
+gcc-pru (15.1.0) bookworm; urgency=low
+
+  * Bump to GCC mainline 15.1.0
+
+ -- Dimitar Dimitrov <dimitar@dinux.eu>  Thu, 29 May 2025 22:59:11 +0200
+
 gcc-pru (13.2.0-0bbbio0~bookworm+20230804) bookworm; urgency=low
 
   * Rebuild for repos.rcn-ee.com

@@ -1,3 +1,9 @@
+binutils-pru (2.44) bookworm; urgency=low
+
+  * Binutils 2.44.
+
+ -- Dimitar Dimitrov <dimitar@dinux.eu>  Thu, 29 May 2025 21:14:12 +0200
+
 binutils-pru (2.41-0bbbio0~bookworm+20230804) bookworm; urgency=low
 
   * Bump to mainline version 2.41.
