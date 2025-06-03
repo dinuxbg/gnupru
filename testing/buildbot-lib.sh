@@ -104,6 +104,15 @@ bb_clean()
   rm -fr ${PREFIX}
 }
 
+# Clean only the specified project.
+bb_project_clean()
+{
+  local PRJ="${1}"
+  shift
+  print_stage "Cleaning ${PRJ}"
+  rm -fr ${WORKSPACE}/${BB_BDIR_PREFIX}-${PRJ}-build
+}
+
 # Invoke the ./configure script for project PRJ. Rest of function arguments
 # are passed on to configure.
 bb_config()
