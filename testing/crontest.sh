@@ -21,10 +21,6 @@ export SUMMARY_RECIPIENTS=dinuxbg@gmail.com
 if [ x`date +%u` = x7 -a x$((`date +%U` % 2)) = x0 ]
 then
   # Test AVR and PRU on all active branches.
-  GCC_BRANCH=releases/gcc-12 ./gnupru/testing/buildbot-sync.sh .
-  LOGDIR=`pwd`/avr-gcc-12-logs ./gnupru/testing/buildbot-avr.sh .
-  LOGDIR=`pwd`/pru-gcc-12-logs ./gnupru/testing/buildbot-pru.sh .
-
   GCC_BRANCH=releases/gcc-13 ./gnupru/testing/buildbot-sync.sh .
   LOGDIR=`pwd`/avr-gcc-13-logs ./gnupru/testing/buildbot-avr.sh .
   LOGDIR=`pwd`/pru-gcc-13-logs ./gnupru/testing/buildbot-pru.sh .
