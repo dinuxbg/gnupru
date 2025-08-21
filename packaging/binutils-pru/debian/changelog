@@ -1,3 +1,9 @@
+binutils-pru (2.45) trixie; urgency=low
+
+  * Binutils 2.45.
+
+ -- Dimitar Dimitrov <dimitar@dinux.eu>  Thu, 21 Aug 2025 22:14:12 +0200
+
 binutils-pru (2.44) bookworm; urgency=low
 
   * Binutils 2.44.
