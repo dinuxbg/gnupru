@@ -54,7 +54,7 @@ bb_daily_target_test()
 
   # GCC pass 2: full feature set
   bb_project_clean gcc
-  bb_config gcc "--target=${CROSS_TARGET} --with-sysroot=${PREFIX}/sysroot --with-native-system-header-dir=/include --enable-shared --enable-tls --enable-languages=c,c++,fortran --disable-nls --disable-bootstrap"
+  bb_config gcc "--target=${CROSS_TARGET} --with-sysroot=${PREFIX}/sysroot --with-native-system-header-dir=/include --enable-shared --enable-tls --enable-languages=c,c++,fortran --disable-nls --disable-bootstrap --disable-multilib"
   bb_make gcc "-j`nproc`"
   bb_make gcc "install"
 
