@@ -61,6 +61,13 @@ bb_daily_target_test()
   # Required for userspace QEMU to work
   export QEMU_LD_PREFIX=${PREFIX}/sysroot
 
+  # TODO - fixme!
+  # Unlike other targets, powerpc64 with multilib disabled
+  # still hardcodes the "lib64/ld64.so.1" path.
+  pushd ${PREFIX}/sysroot
+  ln -s lib lib64
+  popd
+
   # Test glibc
   bb_make --ignore-errors glibc "-j`nproc` check"
 
