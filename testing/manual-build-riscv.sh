@@ -44,7 +44,13 @@ bb_daily_target_test()
   bb_make newlib "install"
 
   # GCC pass 2: full feature set
-  bb_config gcc "--target=${BTARGET} --with-newlib --enable-languages=c,c++ --enable-checking=yes,rtl --disable-libssp"
+  bb_config gcc "--target=${BTARGET} \
+	  --with-newlib \
+	  --with-sysroot=${PREFIX}/pru \
+	  --with-native-system-header-dir=/include \
+	  --enable-languages=c,c++ \
+	  --enable-checking=yes,rtl \
+	  --disable-libssp"
   bb_make gcc "-j`nproc`"
   bb_make gcc "install"
 

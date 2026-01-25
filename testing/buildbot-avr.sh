@@ -41,7 +41,13 @@ bb_daily_target_test()
 
   export PATH=${PREFIX}/bin:${PATH}
 
-  bb_config gcc "--target=avr --enable-languages=c,c++ --disable-nls --disable-libssp --with-dwarf2"
+  bb_config gcc "--target=avr \
+	  --with-sysroot=${PREFIX}/pru \
+	  --with-native-system-header-dir=/include \
+	  --enable-languages=c,c++ \
+	  --disable-nls \
+	  --disable-libssp \
+	  --with-dwarf2"
   bb_make gcc "-j`nproc`"
   bb_make gcc "install"
 
