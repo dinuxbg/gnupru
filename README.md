@@ -17,7 +17,7 @@
 
 This is a collection of documentation and build scripts for the GNU toolchain targeting the [PRU](https://beagleboard.org/pru) I/O CPU. PRU cores present in TI Sitara AM33xx and later SoCs are supported.
 
-Support for older PRU core versions is not planned.
+Support for some of the older PRU core versions is experimental (e.g. AM18xx SoCs).
 
 A simulator is used to execute the GCC C regression [test suite](./testing/README.md). Results are posted daily to https://gcc.gnu.org/pipermail/gcc-testresults/ .
 
@@ -63,7 +63,7 @@ Recently [crosstool-ng](https://github.com/crosstool-ng/crosstool-ng) acquired p
 
 ### Building From Sources
 
-The custom build scripts are should work on any recent Linux distro. They are intended to be simple enough, so that they can act as a documentation how to cross-compile a toolchain. They intentionally lack some features:
+The custom build scripts should work on any recent Linux distro. They are intended to be simple enough, so that they can act as a documentation how to cross-compile a toolchain. They intentionally lack some features:
 
  * Downloaded source tarballs are **not** verified.
  * Host binaries are not stripped, leading to bigger host executables sizes. Target firmware size is not affected, though!
