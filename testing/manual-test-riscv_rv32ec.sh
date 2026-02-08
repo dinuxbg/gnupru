@@ -59,7 +59,7 @@ bb_daily_target_test()
   # GCC pass 2: full feature set
   bb_config gcc "${BB_GCC_TARGET_OPTIONS} \
 	  --with-newlib \
-	  --with-sysroot=${PREFIX}/pru \
+	  --with-sysroot=${PREFIX}/riscv32-none-elf \
 	  --with-native-system-header-dir=/include \
 	  --enable-languages=c,c++ \
 	  --disable-libssp \

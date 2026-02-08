@@ -44,7 +44,7 @@ bb_daily_target_test()
   # GCC pass 2: full feature set
   bb_config gcc "--target=arm-none-eabi \
 	  --with-newlib \
-	  --with-sysroot=${PREFIX}/pru \
+	  --with-sysroot=${PREFIX}/arm-none-eabi \
 	  --with-native-system-header-dir=/include \
 	  --enable-languages=c,c++ \
 	  --enable-checking=yes,rtl \
