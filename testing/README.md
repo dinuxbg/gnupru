@@ -124,6 +124,34 @@ Simplified struct-by-value-22 case:
 	    testvoid(&s);
 	}
 
+## Known LD test failures
+
+ * `preinit_array` not supported by PRU linker script.
+   * preinit array
+   * static preinit array
+
+ * Should have used `+__attribute__(( constructor ))` instead of placing 32-bit function pointers into the 16-bot `init_array` section.
+   * init array
+   * fini array
+   * init array mixed
+   * static init array
+   * static fini array
+   * static init array mixed
+
+ * `-fPIC` is not supported.
+   * PR binutils/23460
+   * PR binutils/23460
+
+ * argv[0][0] is not passed by PRU simulator
+   * LTO 15a
+
+ * Requires support for shared libraries
+   * Build pr22983
+
+ * See 493ffac5aad8c39215702435c2506fd4d3077191
+   * S-records
+   * S-records with constructors
+
 ## See Also
  * https://github.com/riscv-collab/riscv-gnu-toolchain
  * https://builder.sourceware.org/
