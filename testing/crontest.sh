@@ -21,10 +21,6 @@ export SUMMARY_RECIPIENTS=dinuxbg@gmail.com
 if [ x`date +%u` = x7 -a x$((`date +%U` % 2)) = x0 ]
 then
   # Test AVR and PRU on all active branches.
-  GCC_BRANCH=releases/gcc-13 ./gnupru/testing/buildbot-sync.sh .
-  LOGDIR=`pwd`/avr-gcc-13-logs ./gnupru/testing/buildbot-avr.sh .
-  LOGDIR=`pwd`/pru-gcc-13-logs ./gnupru/testing/buildbot-pru.sh .
-
   GCC_BRANCH=releases/gcc-14 ./gnupru/testing/buildbot-sync.sh .
   LOGDIR=`pwd`/avr-gcc-14-logs ./gnupru/testing/buildbot-avr.sh .
   LOGDIR=`pwd`/pru-gcc-14-logs ./gnupru/testing/buildbot-pru.sh .
@@ -32,11 +28,16 @@ then
   GCC_BRANCH=releases/gcc-15 ./gnupru/testing/buildbot-sync.sh .
   LOGDIR=`pwd`/avr-gcc-15-logs ./gnupru/testing/buildbot-avr.sh .
   LOGDIR=`pwd`/pru-gcc-15-logs ./gnupru/testing/buildbot-pru.sh .
-  LOGDIR=`pwd`/riscv_rv32ec-gcc-15-logs ./gnupru/testing/buildbot-riscv_rv32ec.sh .
+
+  GCC_BRANCH=releases/gcc-16 ./gnupru/testing/buildbot-sync.sh .
+  LOGDIR=`pwd`/avr-gcc-16-logs ./gnupru/testing/buildbot-avr.sh .
+  LOGDIR=`pwd`/pru-gcc-16-logs ./gnupru/testing/buildbot-pru.sh .
 
   ./gnupru/testing/buildbot-sync.sh .
   ./gnupru/testing/buildbot-avr.sh .
-  ./gnupru/testing/buildbot-riscv_rv32ec.sh .
+  # Too many failures due to missing ABI/CPU flags in test cases.
+  # Do not bother mainline with noise.
+  SUMMARY_RECIPIENTS=dinuxbg@gmail.com ./gnupru/testing/buildbot-riscv_rv32ec.sh .
 
   rm -fr avr-*-build riscv32-*-build arm-*-build riscv_rv32ec-*-build
 fi
