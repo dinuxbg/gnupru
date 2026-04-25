@@ -1,3 +1,9 @@
+binutils-pru (2.46) trixie; urgency=low
+
+  * Binutils 2.46.
+
+ -- Dimitar Dimitrov <dimitar@dinux.eu>  Thu, 30 Apr 2026 23:24:27 +0200
+
 binutils-pru (2.45) trixie; urgency=low
 
   * Binutils 2.45.

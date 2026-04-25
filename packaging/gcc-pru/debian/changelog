@@ -1,3 +1,9 @@
+gcc-pru (16.1.0) trixie; urgency=low
+
+  * Bump to GCC mainline 16.1.0
+
+ -- Dimitar Dimitrov <dimitar@dinux.eu>  Thu, 30 Apr 2026 23:26:10 +0200
+
 gcc-pru (15.1.0) bookworm; urgency=low
 
   * Bump to GCC mainline 15.1.0

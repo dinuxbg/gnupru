@@ -3,12 +3,10 @@
 # Sample script to download vanilla upstream projects.
 
 # Official packages to download.
-# TODO - switch back to release tarballs once GCC-16 is released!
-# GCC_URL=http://ftpmirror.gnu.org/gcc/gcc-15.1.0/gcc-15.1.0.tar.xz
-GCC_URL=https://gcc.gnu.org/pub/gcc/snapshots/16-20250824/gcc-16-20250824.tar.xz
-BINUTILS_URL=http://ftpmirror.gnu.org/binutils/binutils-2.45.tar.bz2
-NEWLIB_URL=http://sourceware.org/pub/newlib/newlib-4.5.0.20241231.tar.gz
-GNUPRUMCU_URL=https://github.com/dinuxbg/gnuprumcu/releases/download/v0.9.8/gnuprumcu-0.9.8.tar.gz
+GCC_URL=http://ftpmirror.gnu.org/gcc/gcc-16.1.0/gcc-16.1.0.tar.xz
+BINUTILS_URL=http://ftpmirror.gnu.org/binutils/binutils-2.46.0.tar.bz2
+NEWLIB_URL=http://sourceware.org/pub/newlib/newlib-4.6.0.20260123.tar.gz
+GNUPRUMCU_URL=https://github.com/dinuxbg/gnuprumcu/releases/download/v1.0.0/gnuprumcu-1.0.0.tar.gz
 
 MAINDIR=`pwd`
 SRC=`pwd`/src

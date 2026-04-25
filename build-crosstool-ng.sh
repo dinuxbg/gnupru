@@ -158,6 +158,20 @@ build_arm()
   xz -9 ${tarname}
 }
 
+build_aarch64()
+{
+  local tarname=pru-elf-${VERSION}.aarch64.tar
+
+  ${CT} aarch64-unknown-linux-gnu
+  ${CT} build
+  ${CT} aarch64-unknown-linux-gnu,pru
+  PATH=$HOME/x-tools/aarch64-unknown-linux-gnu/bin/:$PATH ${CT} build
+
+  rm -f ${tarname}*
+  tar -C $HOME/x-tools/HOST-aarch64-unknown-linux-gnu/ -caf ${tarname} pru-elf
+  xz -9 ${tarname}
+}
+
 build_x86()
 {
   local tarname=pru-elf-${VERSION}.amd64.tar
@@ -175,6 +189,7 @@ build_x86()
 #=============================================================================
 build_crosstool_ng
 build_arm
+build_aarch64
 build_x86
 build_mingw
 
