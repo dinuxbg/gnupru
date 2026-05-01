@@ -18,7 +18,7 @@ pages:
     - echo ----------------------- Download sources -----------------------
     - ./download-and-prepare.sh
     - echo ----------------------- Package Binutils -----------------------
-    - echo "binutils-pru ($(./extract-version.sh binutils)-0.$(LANG=C date +%Y%m%d)~bookworm) bookworm; urgency=low" > ./packaging/binutils-pru/debian/changelog
+    - echo "binutils-pru ($(./extract-version.sh binutils)-0.$(LANG=C date +%Y%m%d)~trixie) trixie; urgency=low" > ./packaging/binutils-pru/debian/changelog
     - echo "" >> ./packaging/binutils-pru/debian/changelog
     - echo "  * ci build of $CI_PROJECT_URL" >> ./packaging/binutils-pru/debian/changelog
     - echo "" >> ./packaging/binutils-pru/debian/changelog
@@ -32,7 +32,7 @@ pages:
     - popd
     - dpkg -i ./packaging-build/binutils-pru_*.deb
     - echo ----------------------- Package GCC -----------------------
-    - echo "gcc-pru ($(./extract-version.sh gcc)-0.$(LANG=C date +%Y%m%d)~bookworm) bookworm; urgency=low" > ./packaging/gcc-pru/debian/changelog
+    - echo "gcc-pru ($(./extract-version.sh gcc)-0.$(LANG=C date +%Y%m%d)~trixie) trixie; urgency=low" > ./packaging/gcc-pru/debian/changelog
     - echo "" >> ./packaging/gcc-pru/debian/changelog
     - echo "  * ci build of $CI_PROJECT_URL" >> ./packaging/gcc-pru/debian/changelog
     - echo "" >> ./packaging/gcc-pru/debian/changelog
@@ -52,7 +52,7 @@ pages:
     - mkdir -p packaging-build/gnuprumcu
     - pushd packaging-build/gnuprumcu
     - tar --strip-components=1 -xaf ../../src/gnuprumcu.tar.gz
-    - echo "gnuprumcu ($(cd ../../; ./extract-version.sh gnuprumcu)-0.$(LANG=C date +%Y%m%d)~bookworm) bookworm; urgency=low" > ./debian/changelog
+    - echo "gnuprumcu ($(cd ../../; ./extract-version.sh gnuprumcu)-0.$(LANG=C date +%Y%m%d)~trixie) trixie; urgency=low" > ./debian/changelog
     - echo "" >> ./debian/changelog
     - echo "  * ci build of $CI_PROJECT_URL" >> ./debian/changelog
     - echo "" >> ./debian/changelog
